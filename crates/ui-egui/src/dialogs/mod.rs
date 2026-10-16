@@ -85,6 +85,7 @@ pub mod save_swatch_library;
 pub mod script_check;
 mod shapes;
 pub mod shortcut_import;
+pub(crate) mod simplify_slider;
 pub mod slices;
 pub mod spot_colors;
 pub(crate) mod svg_options;
@@ -301,6 +302,7 @@ registry! {
     Plugin: [plugin::KIND] => plugin::SPEC,
     ScriptCheck: [script_check::KIND] => script_check::SPEC,
     VectorHalftone: [halftone::KIND] => halftone::SPEC,
+    SimplifySlider: [simplify_slider::KIND] => simplify_slider::SPEC,
     PerspectiveGrid: [perspective_grid::KIND] => perspective_grid::SPEC,
     Envelope: [envelope::WARP, envelope::MESH, envelope::OPTIONS] => envelope::SPEC,
     LiquifyOptions: [liquify::KIND] => liquify::SPEC,
