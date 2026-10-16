@@ -34,7 +34,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Cut Artboard",
             [],
             None,
-            "{index?, art?} artboard.copy, then delete the artboard and that art in one undo step (not the only artboard); edit.cut runs this while the Artboard tool is chosen → {copied: objects}",
+            "{index?, art?} artboard.copy, then delete the artboard and that art in one undo step (not the only artboard, nor a locked one; art also on another locked artboard stays, and is left off the clipboard, unless prefs moveLockedWithArtboard); edit.cut runs this while the Artboard tool is chosen → {copied: objects}",
             has_doc,
             |s, p| artboard_copy(s, p, true)
         ),
@@ -93,10 +93,26 @@ pub(crate) fn artboard_indices(d: &vectorcraft_doc::Document, p: &Value, cmd: &s
     Ok(indices)
 }
 
-pub(crate) fn artboard_art(s: &Session, i: usize, art: bool) -> Result<Vec<NodeId>> {
+/// An error when one of artboards `indices` of `d` is locked: a locked artboard isn't moved,
+/// resized or deleted.
+pub(crate) fn refuse_locked(d: &vectorcraft_doc::Document, indices: &[usize]) -> Result<()> {
+    match indices.iter().any(|i| d.artboards.get(*i).is_some_and(|a| a.locked)) {
+        true => Err(EngineError::Other("the artboard is locked".into())),
+        false => Ok(()),
+    }
+}
+
+/// With `moving` (a move or a cut), the art also on another locked artboard stays unless prefs
+/// moveLockedWithArtboard ([`vectorcraft_doc::Document::art_moving_with`]); a copy takes it.
+pub(crate) fn artboard_art(s: &Session, i: usize, art: bool, moving: bool) -> Result<Vec<NodeId>> {
     let d = &s.doc()?.doc;
     let rect = d.artboards.get(i).map(|a| a.rect).ok_or_else(|| EngineError::Other("no such artboard".into()))?;
-    Ok(if art { d.art_on_artboard(rect, s.prefs.move_locked_with_artboard) } else { vec![] })
+    let all = s.prefs.move_locked_with_artboard;
+    Ok(match (art, moving) {
+        (false, _) => vec![],
+        (true, false) => d.art_on_artboard(rect, all),
+        (true, true) => d.art_moving_with(i, all),
+    })
 }
 
 /// How far a copy of `rect` moves to sit right of the last artboard (Duplicate Artboards, Paste).
@@ -107,7 +123,7 @@ pub(crate) fn beside_artboards(d: &vectorcraft_doc::Document, rect: Rect) -> Vec
 
 fn artboard_duplicate(s: &mut Session, p: &Value) -> Result<Value> {
     let (i, art) = board_and_art(s, p);
-    let art = artboard_art(s, i, art)?;
+    let art = artboard_art(s, i, art, false)?;
     let sc = Scaling { patterns: super::object::transform_patterns(s, p, &art)?, ..Scaling::default() };
     let (index, ids) = s.edit("Duplicate Artboard", |d, _| {
         let dv = d.artboards.get(i).map(|a| beside_artboards(d, a.rect)).unwrap_or_default();
@@ -120,10 +136,13 @@ fn artboard_duplicate(s: &mut Session, p: &Value) -> Result<Value> {
 /// then deletes them.
 pub(crate) fn artboard_copy(s: &mut Session, p: &Value, cut: bool) -> Result<Value> {
     let (i, art) = board_and_art(s, p);
-    let art = artboard_art(s, i, art)?;
+    let art = artboard_art(s, i, art, cut)?;
     let st = s.doc()?;
     if cut && st.doc.artboards.len() <= 1 {
         return Err(EngineError::Other("a document needs at least one artboard".into()));
+    }
+    if cut {
+        refuse_locked(&st.doc, &[i])?;
     }
     let board = st.doc.artboards.get(i).cloned().ok_or_else(|| EngineError::Other("no such artboard".into()))?;
     let clip = Clipboard { source_artboard: Some(board.rect), artboard: Some(board), ..Clipboard::copy(st, &art) };
@@ -162,11 +181,12 @@ pub(crate) fn copy_artboard(d: &mut vectorcraft_doc::Document, i: usize, dv: Vec
     Ok((index, copies))
 }
 
-/// Add a copy of artboard `src` at `rect`, with an id of its own and its name, or `<name> copy`
-/// (`<name> copy 2`…) when that is taken → its index.
+/// Add a copy of artboard `src` at `rect`, unlocked, with an id of its own and its name, or
+/// `<name> copy` (`<name> copy 2`…) when that is taken → its index.
 pub(crate) fn push_artboard_copy(d: &mut vectorcraft_doc::Document, src: &vectorcraft_doc::Artboard, rect: Rect) -> usize {
     let mut a = src.clone();
     a.id = d.next_artboard_id();
+    a.locked = false;
     let taken = |name: &str| d.artboards.iter().any(|a| a.name == name);
     a.name = [src.name.clone(), format!("{} copy", src.name)]
         .into_iter()

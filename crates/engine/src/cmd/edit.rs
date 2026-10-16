@@ -288,6 +288,7 @@ fn undo(s: &mut Session, _: &Value) -> Result<Value> {
     st.history.trim();
     st.revision += 1;
     st.selection.prune(&st.doc);
+    st.sync_new_art();
     super::maskedit::follow_history(st, editing);
     Ok(json!({ "undone": label }))
 }
@@ -306,6 +307,7 @@ fn redo(s: &mut Session, _: &Value) -> Result<Value> {
     st.history.trim();
     st.revision += 1;
     st.selection.prune(&st.doc);
+    st.sync_new_art();
     super::maskedit::follow_history(st, editing);
     Ok(json!({ "redone": label }))
 }

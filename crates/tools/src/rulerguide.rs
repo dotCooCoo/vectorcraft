@@ -588,6 +588,7 @@ mod tests {
             id,
             name: "B".into(),
             rect: vectorcraft_geom::Rect::new(600.0, 0.0, 900.0, 300.0),
+            locked: false,
             show_center_mark: false,
             show_cross_hairs: false,
         });

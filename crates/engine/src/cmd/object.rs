@@ -1056,6 +1056,8 @@ fn isolate(s: &mut Session, p: &Value) -> Result<Value> {
     let isolation = st.doc.node(id).filter(|n| n.extras().shaper.is_some()).and_then(|n| n.children()).and_then(|c| c.first()).map_or(id, |n| n.id);
     st.isolation = Some(isolation);
     st.selection.clear();
+    // New art on a locked artboard, now deselected, is protected.
+    st.sync_new_art();
     st.revision += 1;
     ok()
 }
@@ -1066,6 +1068,8 @@ fn exit_isolation(s: &mut Session, _: &Value) -> Result<Value> {
         super::distortcmds::finish_edit_text(st, i);
         let target = st.doc.parent_of(i).filter(|p| st.doc.node(*p).is_some_and(|n| n.extras().shaper.is_some())).unwrap_or(i);
         st.selection.set([target]);
+        // The art on a locked artboard can't be selected.
+        st.protect_locked_artboards(&[], &Default::default(), None);
     }
     st.revision += 1;
     ok()
