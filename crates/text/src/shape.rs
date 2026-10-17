@@ -391,7 +391,8 @@ pub(crate) fn shape_range(
             let next_script = shaping_script(c);
             let strong_script = !matches!(next_script, Script::Common | Script::Inherited);
             let script_change = strong_script && script != Script::Common && script != next_script;
-            // Combining marks stay with their base.
+            // Combining marks, zero width joiners and non-joiners, and variation selectors stay
+            // with the character before them.
             if (face.id() != seg.face.id() || small != seg.small || level != seg.level || script_change) && !is_mark(c) {
                 if i > seg.range.start {
                     seg.range.end = i;
@@ -511,7 +512,7 @@ struct Segment<'a> {
 fn is_mark(c: char) -> bool {
     use unicode_general_category::{GeneralCategory, get_general_category};
     matches!(get_general_category(c), GeneralCategory::NonspacingMark | GeneralCategory::SpacingMark | GeneralCategory::EnclosingMark)
-        || matches!(c, '\u{200D}' | '\u{FE00}'..='\u{FE0F}')
+        || matches!(c, '\u{200C}' | '\u{200D}' | '\u{FE00}'..='\u{FE0F}')
 }
 
 fn shape_segment(text: &str, context: &Range<usize>, seg: &Segment, feats: &OtFeatures, out: &mut Vec<SGlyph>) {
