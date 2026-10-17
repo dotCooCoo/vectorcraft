@@ -315,7 +315,9 @@ impl Tool for FreeTransformTool {
         match self.drag.map(|d| d.op).or_else(|| self.classify(cx, r, p, m)) {
             Some(Op::Rotate) => Cursor::rotate_about(r.center(), p),
             Some(Op::Move) => Cursor::Move,
-            Some(Op::Scale(h) | Op::Shear(h)) => match h {
+            Some(Op::Shear(Handle::Top | Handle::Bottom)) => Cursor::ShearH,
+            Some(Op::Shear(_)) => Cursor::ShearV,
+            Some(Op::Scale(h)) => match h {
                 Handle::Top | Handle::Bottom => Cursor::ResizeV,
                 Handle::Left | Handle::Right => Cursor::ResizeH,
                 Handle::TopLeft | Handle::BottomRight => Cursor::ResizeNwSe,
@@ -399,6 +401,27 @@ mod tests {
         let m = Affine::new([c[0], c[1], c[2], c[3], c[4], c[5]]);
         assert!((m * Point::new(100.0, 200.0)).distance(Point::new(100.0, 200.0)) < 1e-9);
         assert!((m * Point::new(100.0, 100.0)).distance(Point::new(120.0, 100.0)) < 1e-9);
+    }
+
+    #[test]
+    fn cmd_over_a_side_shows_the_shear_cursor_along_it() {
+        let (d, id) = doc_with_rect();
+        let mut s = Selection::default();
+        s.add(id);
+        let p = paint();
+        let cx = cx(&d, &s, &p);
+        let mut t = FreeTransformTool::default();
+        let cmd = Mods { cmd: true, ..Default::default() };
+        let (top, left) = (Point::new(150.0, 100.0), Point::new(100.0, 150.0));
+        assert_eq!(t.cursor(&cx, top, cmd), Cursor::ShearH);
+        assert_eq!(t.cursor(&cx, left, cmd), Cursor::ShearV);
+        // Without Cmd the sides scale; corners never shear.
+        assert_eq!(t.cursor(&cx, top, Mods::default()), Cursor::ResizeV);
+        assert_eq!(t.cursor(&cx, Point::new(200.0, 200.0), cmd), Cursor::Crosshair);
+        // The cursor stays while the shear is dragged.
+        t.pointer(&cx, &ev(PointerKind::Down, 150.0, 100.0).with_mods(cmd));
+        t.pointer(&cx, &ev(PointerKind::Drag, 170.0, 100.0).with_mods(cmd));
+        assert_eq!(t.cursor(&cx, Point::new(170.0, 100.0), cmd), Cursor::ShearH);
     }
 
     #[test]

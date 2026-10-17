@@ -391,13 +391,22 @@ fn use_precise_cursors_swaps_the_tools_own_pointers_for_a_crosshair() {
         ("pen", Cursor::Pen),
         ("addAnchor", Cursor::PenAdd),
         ("deleteAnchor", Cursor::PenDelete),
-        ("anchorPoint", Cursor::Pen),
-        ("curvature", Cursor::Pen),
-        ("mesh", Cursor::PenAdd),
+        ("anchorPoint", Cursor::AnchorPoint),
+        ("curvature", Cursor::Curvature),
+        ("mesh", Cursor::MeshAdd),
         ("eyedropper", Cursor::Eyedropper),
         ("slice", Cursor::Slice),
         ("blend", Cursor::Blend),
         ("shapeBuilder", Cursor::ShapeBuilder),
+        ("paintbrush", Cursor::Paintbrush),
+        ("blobBrush", Cursor::BlobBrush),
+        ("shaper", Cursor::Shaper),
+        ("pencil", Cursor::Pencil),
+        ("smooth", Cursor::Smooth),
+        ("pathEraser", Cursor::PathEraser),
+        ("join", Cursor::Join),
+        ("eraser", Cursor::Eraser),
+        ("knife", Cursor::Knife),
     ];
     for (tool, c) in own {
         assert_eq!(cursor(&mut s, tool), c, "{tool} off");
@@ -415,15 +424,6 @@ fn use_precise_cursors_swaps_the_tools_own_pointers_for_a_crosshair() {
         "polygon",
         "star",
         "flare",
-        "paintbrush",
-        "blobBrush",
-        "shaper",
-        "pencil",
-        "smooth",
-        "pathEraser",
-        "join",
-        "eraser",
-        "knife",
         "mirrorCut",
         "lineCut",
         "rectCut",
@@ -440,7 +440,7 @@ fn use_precise_cursors_swaps_the_tools_own_pointers_for_a_crosshair() {
         assert_eq!(cursor(&mut s, tool), Cursor::Crosshair, "{tool} on");
     }
     assert_eq!(cursor(&mut s, "type"), Cursor::Text);
-    assert_eq!(cursor(&mut s, "scissors"), Cursor::NotAllowed);
+    assert_eq!(cursor(&mut s, "scissors"), Cursor::ScissorsNotAllowed);
     s.execute("prefs.set", &json!({"key": "usePreciseCursors", "value": false})).unwrap();
     for (tool, c) in own {
         assert_eq!(cursor(&mut s, tool), c, "{tool} off again");
@@ -467,6 +467,8 @@ fn precise_cursors_replace_every_pen_state() {
         Cursor::BlendAnchor,
         Cursor::ShapeBuilder,
         Cursor::ShapeBuilderErase,
+        Cursor::AnchorPoint,
+        Cursor::Curvature,
     ] {
         assert_eq!(c.precise(), Cursor::Crosshair, "{c:?}");
     }
@@ -1282,6 +1284,18 @@ fn show_font_names_in_english_preference_is_stored() {
     assert!(!s.prefs.font_names_in_english);
     set_pref(&mut s, "fontNamesInEnglish", json!(true));
     assert!(s.prefs.font_names_in_english);
+}
+
+/// Preferences › Type › Highlight Alternate Glyphs (#394): off by default so OpenType
+/// substitutions are not pink on every canvas until the user turns the preference on.
+#[test]
+fn highlight_alternate_glyphs_preference_is_off_by_default() {
+    let mut s = Session::new();
+    assert!(!s.prefs.highlight_alternate_glyphs, "off by default");
+    set_pref(&mut s, "highlightAlternateGlyphs", json!(true));
+    assert!(s.prefs.highlight_alternate_glyphs);
+    set_pref(&mut s, "highlightAlternateGlyphs", json!(false));
+    assert!(!s.prefs.highlight_alternate_glyphs);
 }
 
 /// Preferences › Hyphenation › Exceptions (#394): `prefs.set` pushes the list into the hyphenator

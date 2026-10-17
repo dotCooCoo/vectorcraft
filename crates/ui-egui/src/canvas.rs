@@ -302,6 +302,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         hidden: vec![],
         rot: v.rotation,
         anti_alias: app.session.prefs.anti_aliased_artwork,
+        highlight_alternate_glyphs: app.session.prefs.highlight_alternate_glyphs,
         placed: vectorcraft_render::placed_document::generation(),
         pixel,
         smooth_images,
@@ -354,6 +355,8 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
             guide: key.guide,
             mask_view,
             highlight_substitutions: true,
+            // Type › Highlight Alternate Glyphs (#394): pink behind OpenType substitutions.
+            highlight_alternate_glyphs: app.session.prefs.highlight_alternate_glyphs,
             // General › Anti-aliased Artwork: off, edges are hard on screen (raster effects and
             // pattern tiles stay smooth), as in Illustrator.
             anti_alias: if app.session.prefs.anti_aliased_artwork { vectorcraft_render::AntiAlias::Art } else { vectorcraft_render::AntiAlias::None },
@@ -576,11 +579,20 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 fn cursor_icon(c: Cursor) -> egui::CursorIcon {
     use egui::CursorIcon as C;
     match c {
-        Cursor::Arrow | Cursor::ArrowHollow | Cursor::CornerRadius | Cursor::PathBracket | Cursor::TypeWidget => C::Default,
+        Cursor::Arrow
+        | Cursor::ArrowHollow
+        | Cursor::DirectAnchor
+        | Cursor::DirectAnchorSelected
+        | Cursor::ReshapeSegment
+        | Cursor::GroupSelection
+        | Cursor::CornerRadius
+        | Cursor::PathBracket
+        | Cursor::TypeWidget => C::Default,
+        Cursor::SelectionCopy => C::Copy,
         Cursor::Move => C::Move,
         Cursor::Crosshair => C::Crosshair,
-        Cursor::ResizeH => C::ResizeHorizontal,
-        Cursor::ResizeV => C::ResizeVertical,
+        Cursor::ResizeH | Cursor::ShearH => C::ResizeHorizontal,
+        Cursor::ResizeV | Cursor::ShearV => C::ResizeVertical,
         Cursor::ResizeNwSe => C::ResizeNwSe,
         Cursor::ResizeNeSw => C::ResizeNeSw,
         Cursor::Rotate | Cursor::RotateToward(_) => C::Alias,
@@ -591,7 +603,9 @@ fn cursor_icon(c: Cursor) -> egui::CursorIcon {
         | Cursor::PenClose
         | Cursor::PenContinue
         | Cursor::PenJoin
-        | Cursor::PenConvert => C::Crosshair,
+        | Cursor::PenConvert
+        | Cursor::AnchorPoint
+        | Cursor::Curvature => C::Crosshair,
         Cursor::Text => C::Text,
         Cursor::Hand => C::Grab,
         Cursor::HandGrab => C::Grabbing,
@@ -606,6 +620,34 @@ fn cursor_icon(c: Cursor) -> egui::CursorIcon {
         Cursor::Width | Cursor::WidthAdd => C::Crosshair,
         Cursor::WidthPoint => C::Move,
         Cursor::Blend | Cursor::BlendObject | Cursor::BlendAnchor | Cursor::ShapeBuilder | Cursor::ShapeBuilderErase => C::Crosshair,
+        Cursor::TypeVertical => C::VerticalText,
+        // Not drawn yet: the cursor each borrows.
+        Cursor::Lasso
+        | Cursor::MagicWand
+        | Cursor::Pencil
+        | Cursor::Paintbrush
+        | Cursor::BlobBrush
+        | Cursor::Eraser
+        | Cursor::Smooth
+        | Cursor::PathEraser
+        | Cursor::Join
+        | Cursor::Knife
+        | Cursor::Shaper
+        | Cursor::LivePaintBucket
+        | Cursor::Measure
+        | Cursor::PrintTiling
+        | Cursor::SymbolSprayer
+        | Cursor::SymbolShifter
+        | Cursor::SymbolScruncher
+        | Cursor::SymbolSizer
+        | Cursor::SymbolSpinner
+        | Cursor::SymbolStainer
+        | Cursor::SymbolScreener
+        | Cursor::SymbolStyler
+        | Cursor::Scissors
+        | Cursor::ScissorsNotAllowed
+        | Cursor::MeshAdd
+        | Cursor::PuppetPin => cursor_icon(c.stand_in().unwrap_or(Cursor::Crosshair)),
     }
 }
 

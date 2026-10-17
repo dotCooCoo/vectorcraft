@@ -70,6 +70,7 @@ from G14 and the budget run of G15: **~170–270 h** one agent, ~50–80 h wall 
   OS cursor display and Caps Lock remain unverified.
 - **Done (#1251):** Eyedropper source reads are independent of locks and isolation, including Shift/Shift+Alt and gradient stops. Source and selection preservation, unchanged Alt reverse/selection restrictions, hidden art and Undo/Redo have regression coverage. This addresses the reported behavior, with no new full-parity measurement.
 - **Done (#1253):** adding paint to an unpainted zero-width stroke restores the existing 1 pt default, including new-art defaults and Swap Fill/Stroke. The real Eyedropper inheritance sequence, targeted appearance items, preserved widths and Undo/Redo have regression coverage.
+- **Missing:** a busy cursor while a long operation runs (a big file opening, a heavy effect): VectorCraft has no busy state to show it yet. Once it has one, its `Cursor` value goes in the cursor list (`crates/tools/src/cursors.toml`).
 - **Missing:** Average and Join in one step, with a corner or smooth choice for the joined anchor. `path.average` and `path.join` are separate commands and Join has no such choice (coinciding anchors merge into one since #1533). [ui-parity.md](ui-parity.md) listed "Join with corner/smooth choice" as done until 2026-10-13. About 1–2 h (estimated), inside the estimate below.
 - **Implemented (#1760):** Effect › Warp has a shared style selector with original previews, orientation buttons and percent sliders. Existing effects retain their stack slot and target. Focused checks passed and original captures were reviewed; optional Properties integration and remembered defaults remain outside this change.
 - **Done (#2120):** Smart Guides line extension: dragging the end of a straight segment with Direct Selection or Curvature, the point snaps to the segment's own direction at any angle and the guide runs along it from the other end. Inside the estimate below.
@@ -192,8 +193,8 @@ from G14 and the budget run of G15: **~170–270 h** one agent, ~50–80 h wall 
 
 ## G12 Preferences and panels that don't act yet
 
+- **Missing:** ~14 Preferences options stored but not acted on (#394: Open
 - **Done:** quick Image Trace presets reveal Threshold and Advanced controls (Paths, Corners, Noise); Properties can reopen them. Other context-specific Properties gaps remain.
-
 - **Missing:** ~15 Preferences options stored but not acted on (#394: Highlight Alternate Glyphs, Open
   Documents As Tabs, Real-time Drawing, hyphenation language, devices…), Properties panel per
   context, context menus beyond the canvas, Layers panel row menus and Collect for Export, SVG Interactivity.
@@ -333,6 +334,7 @@ from G14 and the budget run of G15: **~170–270 h** one agent, ~50–80 h wall 
 | 2026-10-16 | minor | Batch exporting in Export for Screens (#1935): a file name pattern (document and item names, a counter, the date), folders per format, item or both, Layers and Selection tabs with thumbnails, EPS, AI and VectorCraft rows, a PDF row with printer's marks, and export presets (built-in Logo Package and Print-Ready PDF, saved ones); scores and hours unchanged (estimated) |
 | 2026-10-16 | minor | G2: Effect › Sketch › Halftone Pattern (Size, Contrast, Pattern Type Circle, Dot or Line; black ink on white paper, Size in points at any Document Raster Effects resolution); measured Photoshop filters 30/57, 27 remaining (22–38 h). |
 | 2026-10-16 | minor | G1: Smart Guides line extension for a dragged end of a straight segment, at any angle (#2120); estimate unchanged |
+| 2026-10-15 | minor | G1: no busy cursor during long operations, listed; estimate unchanged |
 | 2026-10-14 | minor | G16: Brazilian Portuguese (`pt-br`) catalog complete under the tests (#1914); three key languages remain (Hindi, Arabic, Indonesian), 55–90 → 50–85 h |
 | 2026-10-14 | minor | G6: dataset CSV import/export (`dataset.import` / `dataset.export`); remaining: scripting surface, Batch, graph variables; estimate 6–12 → 4–8 h |
 | 2026-10-14 | minor | G6: image variables (`VariableKind::Image`, `variable.makeImageDynamic`, path values on `dataset.select` keeping bounds); remaining: scripting surface, Batch, graph variables, dataset import/export; estimate 8–14 → 6–12 h |
