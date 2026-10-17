@@ -218,6 +218,44 @@ pub fn vertical_punctuation_font(alternates: bool) -> Option<Vec<u8>> {
     Some(builder.build())
 }
 
+/// The family of [`pair_kerning_font`].
+pub const PAIR_KERNING_FAMILY: &str = "Pairtest Sans";
+
+/// The bundled Source Sans 3 Regular as family [`PAIR_KERNING_FAMILY`], its `GPOS` replaced by two
+/// `kern` pairs, A followed by V and S followed by S: each takes 60 units off the first glyph's
+/// advance (the pair's first value record) and moves the second 100 units left (its second).
+/// `None` when it can't be built.
+pub fn pair_kerning_font() -> Option<Vec<u8>> {
+    use write_fonts::tables::gpos::{Gpos, PairPos, PairSet, PairValueRecord, PositionLookup, PositionLookupList, ValueRecord};
+    use write_fonts::tables::layout::{CoverageFormat1, Feature, FeatureList, FeatureRecord, LangSys, Lookup, Script, ScriptList, ScriptRecord};
+    use write_fonts::types::GlyphId16;
+
+    const BASE: &[u8] = include_bytes!("../../../assets/fonts/SourceSans3-Regular.ttf");
+    let font = skrifa::FontRef::new(BASE).ok()?;
+    let charmap = font.charmap();
+    let gid = |c| Some(GlyphId16::new(u16::try_from(charmap.map(c)?.to_u32()).ok()?));
+    let pair = |second| PairValueRecord::new(second, ValueRecord::new().with_x_advance(-60), ValueRecord::new().with_x_placement(-100));
+    let mut pairs = [(gid('A')?, gid('V')?), (gid('S')?, gid('S')?)];
+    pairs.sort_by_key(|p| p.0);
+    let coverage = CoverageFormat1::new(pairs.iter().map(|p| p.0).collect());
+    let pos = PairPos::format_1(coverage.into(), pairs.iter().map(|p| PairSet::new(vec![pair(p.1)])).collect());
+    let scripts = ScriptList::new(vec![ScriptRecord::new(Tag::new(b"DFLT"), Script::new(Some(LangSys::new(vec![0])), vec![]))]);
+    let features = FeatureList::new(vec![FeatureRecord::new(Tag::new(b"kern"), Feature::new(None, vec![0]))]);
+    let lookups = PositionLookupList::new(vec![PositionLookup::Pair(Lookup::new(Default::default(), vec![pos]))]);
+    let family = PAIR_KERNING_FAMILY;
+    let name = name_table(&[(1, family), (2, "Regular"), (4, "Pairtest Sans Regular"), (6, "PairtestSans-Regular")])?;
+    let mut builder = FontBuilder::new();
+    builder.add_table(&Gpos::new(scripts, features, lookups)).ok()?;
+    builder.add_raw(Tag::new(b"name"), name);
+    for r in font.table_directory.table_records() {
+        let tag = Tag::new(&r.tag().to_be_bytes());
+        if tag != Tag::new(b"kern") && !builder.contains(tag) {
+            builder.add_raw(tag, font.table_data(r.tag())?.as_bytes());
+        }
+    }
+    Some(builder.build())
+}
+
 /// The family of [`twin_font`]: two versions of one family and style.
 pub const TWIN_FAMILY: &str = "Twintest Sans";
 

@@ -675,6 +675,30 @@ fn crop_image_shows_a_box_that_apply_crops_to() {
     assert!(!crate::menus::enabled(&app, "ui.cropImage") && app.run("ui.cropImage", json!({})).is_err());
 }
 
+/// Crop Image's Apply and Object › Rasterize say in the status bar when the image couldn't be
+/// decoded, as raster exports do.
+#[test]
+fn crop_and_rasterize_say_in_the_status_bar_when_an_image_could_not_be_decoded() {
+    const WARNING: &str = "an image couldn't be decoded and is missing from the picture";
+    // A PNG whose header reads (so it places at its size) but whose pixel data is cut short.
+    let mut cut = png(100, 50, 72.0);
+    let idat = cut.windows(4).position(|w| w == b"IDAT").unwrap();
+    cut.truncate(idat + 8);
+    let mut app = app();
+    app.run("file.place", json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&cut)})).unwrap();
+    let whole = selected_image(&app).geometric_bounds().unwrap();
+    app.run("ui.cropImage", json!({})).unwrap();
+    app.run("tool.setOption", json!({"key": "rect", "value": [whole.x0, whole.y0, whole.width() / 2.0, whole.height()]})).unwrap();
+    app.status("");
+    tool_key(&mut app, vectorcraft_tools::ToolKey::Enter);
+    assert_eq!(app.ui.status, WARNING, "Crop Image's Apply");
+    // Undo puts the image back as placed; then Rasterize runs on it.
+    app.run("edit.undo", json!({})).unwrap();
+    app.status("");
+    app.run("object.rasterize", json!({"ppi": 72})).unwrap();
+    assert_eq!(app.ui.status, WARNING, "Rasterize");
+}
+
 /// One headless frame of the whole window at `time` → how long the app asked to wait before the
 /// next one.
 fn frame_at(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64) -> std::time::Duration {

@@ -35,6 +35,15 @@ pub fn specs() -> Vec<CommandSpec> {
             create_outlines
         ),
         cmd!(
+            "type.opticalMarginAlignment",
+            "Optical Margin Alignment",
+            ["Type"],
+            None,
+            "{ids?|id?, on?: bool} turn Optical Margin Alignment on or off for the selected type (on omitted: the opposite of the first object's setting): in every left-to-right paragraph of point and area type, quotation marks, hyphens, full stops and commas at a line's start or end hang wholly outside the margin there; asterisks, tildes, ellipses, en and em dashes, colons and semicolons hang by half; and A, V, W, Y, v, w and y hang by a tenth of their advance; a left-aligned line hangs at its left margin, a right-aligned line hangs at its right margin, and centered and justified lines hang at both → {on, ids}",
+            has_selection,
+            optical_margin_alignment
+        ),
+        cmd!(
             "text.setText",
             "Set Text",
             [],
@@ -95,6 +104,28 @@ fn orientation(s: &mut Session, p: &Value, vertical: bool) -> Result<Value> {
         Ok(())
     })?;
     Ok(json!({"vertical": vertical, "ids": ids.iter().map(|id| id.0).collect::<Vec<_>>()}))
+}
+
+/// Type › Optical Margin Alignment: set `on` (without it, the opposite of the first object's
+/// setting) on every selected text object, in one undo step.
+fn optical_margin_alignment(s: &mut Session, p: &Value) -> Result<Value> {
+    let ids = text_targets(s, p, "Optical Margin Alignment")?;
+    let first = ids.first().and_then(|id| match s.doc().ok()?.doc.node(*id).map(|n| &n.kind) {
+        Some(NodeKind::Text(t)) => Some(t.optical_margin),
+        _ => None,
+    });
+    let on = p.get("on").and_then(Value::as_bool).unwrap_or(!first.unwrap_or(false));
+    s.edit("Optical Margin Alignment", |d, _| {
+        for id in &ids {
+            let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) else {
+                return Err(EngineError::NoNode(*id));
+            };
+            t.optical_margin = on;
+            refresh_bounds(t);
+        }
+        Ok(())
+    })?;
+    Ok(json!({"on": on, "ids": ids.iter().map(|id| id.0).collect::<Vec<_>>()}))
 }
 
 /// Recompute the layout caches (bounds and baselines) after a text edit. Every engine text edit ends here (typing
@@ -269,10 +300,32 @@ pub(crate) fn with_overflow(s: &Session, ids: &[NodeId], mut result: Value) -> V
     result
 }
 
+/// Adds `bounds` to the result of a command that made the type object `id`: the same
+/// `{x, y, width, height}` box `document.inspect` reports for it (after `justify`, so a script can
+/// place the new type without a helper object); `null` when it has none.
+pub(crate) fn with_bounds(s: &Session, id: Option<NodeId>, mut result: Value) -> Value {
+    let Ok(st) = s.doc() else { return result };
+    let symbols = st.doc.symbol_boxes();
+    let b = id.and_then(|i| st.doc.node(i)).and_then(|n| n.geometric_bounds_with(&symbols));
+    result["bounds"] = crate::inspect::rect_json(b);
+    result
+}
+
 /// The warning that Print gives for `ids`, area type and type on a path whose text doesn't fit
 /// (as [`with_overflow`] finds it): the text past the end of their frames doesn't print. It names
 /// the first 20 ids and counts the rest; `None` when `ids` is empty.
 pub(crate) fn overflow_warning(ids: &[NodeId]) -> Option<String> {
+    overflow_note(ids, "doesn't print")
+}
+
+/// [`overflow_warning`] as an export that draws type gives it: the text past the end of the frames
+/// isn't drawn in the export.
+pub(crate) fn export_overflow_warning(ids: &[NodeId]) -> Option<String> {
+    overflow_note(ids, "isn't drawn in the export")
+}
+
+/// [`overflow_warning`], saying that the text past the end of the frames `left_out`.
+fn overflow_note(ids: &[NodeId], left_out: &str) -> Option<String> {
     const NAMED: usize = 20;
     let (named, rest) = ids.split_at(ids.len().min(NAMED));
     let mut list = named.iter().map(|i| i.0.to_string()).collect::<Vec<_>>().join(", ");
@@ -281,8 +334,8 @@ pub(crate) fn overflow_warning(ids: &[NodeId]) -> Option<String> {
     }
     match ids {
         [] => None,
-        [_] => Some(format!("1 text object doesn't fit its frame: the text past the end of the frame doesn't print (id {list})")),
-        _ => Some(format!("{} text objects don't fit their frames: the text past the end of each frame doesn't print (ids {list})", ids.len())),
+        [_] => Some(format!("1 text object doesn't fit its frame: the text past the end of the frame {left_out} (id {list})")),
+        _ => Some(format!("{} text objects don't fit their frames: the text past the end of each frame {left_out} (ids {list})", ids.len())),
     }
 }
 
@@ -783,6 +836,30 @@ fn reshape_area(s: &mut Session, p: &Value) -> Result<Value> {
 mod area_tests {
     use super::*;
 
+    /// #2413: `text.create` and `text.createInPath` return the new type's `bounds`, the box
+    /// `document.inspect` reports for it, so a script can place it without a helper object.
+    #[test]
+    fn text_create_returns_the_inspect_bounds() {
+        let mut s = Session::new();
+        s.execute("file.new", &json!({"width": 600, "height": 400})).unwrap();
+        let inspected = |s: &mut Session, id: &Value| {
+            let doc = s.execute("document.inspect", &json!({})).unwrap();
+            fn find(v: &Value, id: &Value) -> Option<Value> {
+                if &v["id"] == id {
+                    return Some(v["bounds"].clone());
+                }
+                v.get("children").or_else(|| v.get("layers"))?.as_array()?.iter().find_map(|c| find(c, id))
+            }
+            find(&doc, id).unwrap()
+        };
+        let made = s.execute("text.create", &json!({"x": 300, "y": 100, "text": "Hello", "size": 24, "justify": "center"})).unwrap();
+        assert!(made["bounds"]["width"].as_f64().unwrap() > 10.0, "{made}");
+        assert_eq!(made["bounds"], inspected(&mut s, &made["id"]));
+        let rect = s.execute("shape.rectangle", &json!({"x": 10, "y": 200, "width": 100, "height": 50})).unwrap();
+        let area = s.execute("text.createInPath", &json!({"path": rect["id"], "mode": "area", "text": "Boxed"})).unwrap();
+        assert_eq!(area["bounds"], inspected(&mut s, &area["id"]));
+    }
+
     /// #1748: `text.create` takes `justify`; point type then lines up on its point (centred on
     /// it, or ending there), and `text.setStyle` moves it the same way afterwards.
     #[test]
@@ -886,6 +963,57 @@ mod area_tests {
         assert_eq!(para(&s).burasagari, Burasagari::Standard);
         let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
         assert_eq!(old.burasagari, Burasagari::None);
+    }
+
+    /// Type › Optical Margin Alignment: `type.opticalMarginAlignment` sets or toggles the flag on
+    /// the selected type in one undo step, the opening quotation mark then hangs left of the
+    /// frame, and the flag is saved only when on and survives a native save.
+    #[test]
+    fn optical_margin_alignment_is_set_per_object_and_saved_only_when_on() {
+        let mut s = Session::new();
+        s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
+        let id = s
+            .execute("text.create", &json!({"x": 10, "y": 10, "size": 40, "text": "“Quoted” words", "area": {"width": 300, "height": 100}}))
+            .unwrap()["id"]
+            .as_u64()
+            .unwrap();
+        let text = |s: &Session| match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
+            NodeKind::Text(t) => (**t).clone(),
+            _ => panic!("text"),
+        };
+        // The left edge of the glyphs in text space, where the frame's left edge is at 0.
+        let left = |s: &Session| text(s).cached_bounds.unwrap().x0;
+        // New type: off, and not saved.
+        assert!(!text(&s).optical_margin);
+        assert!(serde_json::to_value(text(&s)).unwrap().get("opticalMarginAlignment").is_none());
+        let inside = left(&s);
+        assert!(inside >= 0.0, "{inside}");
+        // Nothing but a rectangle selected: an error.
+        let rect = s.execute("shape.rectangle", &json!({"x": 0, "y": 200, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        s.execute("select.set", &json!({"ids": [rect]})).unwrap();
+        assert!(s.execute("type.opticalMarginAlignment", &json!({})).is_err());
+        // Toggled on: the quotation mark hangs outside the frame.
+        s.execute("select.set", &json!({"ids": [id]})).unwrap();
+        assert_eq!(s.execute("type.opticalMarginAlignment", &json!({})).unwrap()["on"], true);
+        assert!(text(&s).optical_margin);
+        assert!(left(&s) < inside - 5.0, "{} {inside}", left(&s));
+        assert_eq!(serde_json::to_value(text(&s)).unwrap()["opticalMarginAlignment"], true);
+        // `on` sets it; without `on` it toggles.
+        assert_eq!(s.execute("type.opticalMarginAlignment", &json!({"on": true})).unwrap()["on"], true);
+        assert!(text(&s).optical_margin);
+        assert_eq!(s.execute("type.opticalMarginAlignment", &json!({})).unwrap()["on"], false);
+        assert!(!text(&s).optical_margin);
+        assert_eq!(left(&s), inside);
+        // One undo step each.
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert!(text(&s).optical_margin);
+        // Saved and reopened as it was; a document from before it reads as off.
+        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
+        assert!(t.optical_margin);
+        let mut old = serde_json::to_value(text(&s)).unwrap();
+        old.as_object_mut().unwrap().remove("opticalMarginAlignment");
+        assert!(!serde_json::from_value::<TextObject>(old).unwrap().optical_margin);
     }
 
     /// Paragraph panel menu › Hyphenation…: `text.setFormat` sets each paragraph's hyphenation

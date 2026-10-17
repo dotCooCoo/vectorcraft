@@ -134,6 +134,7 @@ pub const ICON_PANELS: &[(&str, &str, &str)] = &[
     ("transform", "Transform", "dc-transform-panel"),
     ("align", "Align", "dc-align"),
     ("pathfinder", "Pathfinder", "dc-pathfinder"),
+    (crate::panels::blend::ID, "Blend", "dc-blend"),
     ("character", "Character", "type"),
     ("paragraph", "Paragraph", "pilcrow"),
     ("glyphs", "Glyphs", "text-cursor-input"),
@@ -151,6 +152,7 @@ pub const ICON_PANELS: &[(&str, &str, &str)] = &[
     ("magicWand", "Magic Wand", "wand-sparkles"),
     (crate::panels::flattener_preview::ID, "Flattener Preview", "eye"),
     ("attributes", "Attributes", "settings"),
+    (crate::panels::svg_interactivity::ID, "SVG Interactivity", "spline-pointer"),
     ("colorThemes", "Color Themes", "sun"),
     (crate::panels::links::ID, "Links", "link"),
     (crate::panels::asset_export::ID, "Asset Export", "share-2"),
@@ -450,6 +452,10 @@ pub struct UiState {
     /// dialog opens on them (#1152).
     #[serde(default)]
     pub offset_path: Value,
+    /// The Move dialog's checkboxes as it was last confirmed with (copy, objects, preview; null:
+    /// never used): it opens with them.
+    #[serde(default)]
+    pub move_options: Value,
     /// The DXF Import Options chosen last (fit, scaleLineweights, center, mergeLayers; null:
     /// never used).
     #[serde(default)]
@@ -779,6 +785,7 @@ impl Default for UiState {
             dxf_options: Value::Null,
             eps_options: Value::Null,
             offset_path: Value::Null,
+            move_options: Value::Null,
             dxf_import: Value::Null,
             home: None,
             layers_panel: Default::default(),

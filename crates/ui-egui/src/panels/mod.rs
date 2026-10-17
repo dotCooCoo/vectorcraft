@@ -9,6 +9,7 @@ pub mod appearance;
 pub mod artboards;
 pub mod asset_export;
 pub mod attributes;
+pub mod blend;
 pub mod brushes;
 pub mod character;
 pub mod color;
@@ -36,6 +37,7 @@ pub mod pattern_options;
 pub mod properties;
 pub mod separations;
 pub mod stroke;
+pub mod svg_interactivity;
 pub mod swatches;
 pub mod symbols;
 pub mod tabs;
@@ -146,6 +148,7 @@ pub fn show_icon_panel(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) {
         "graphicStyles" => graphic_styles::show(app, ui),
         "align" => align::show(app, ui),
         "pathfinder" => pathfinder::show(app, ui),
+        blend::ID => blend::show(app, ui),
         "transform" => transform::show(app, ui),
         "history" => history::show(app, ui),
         "actions" => actions::show(app, ui),
@@ -169,6 +172,7 @@ pub fn show_icon_panel(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) {
         "tabs" => tabs::show(app, ui),
         flattener_preview::ID => flattener_preview::show(app, ui),
         "attributes" => attributes::show(app, ui),
+        svg_interactivity::ID => svg_interactivity::show(app, ui),
         variables::ID => variables::show(app, ui),
         "colorThemes" => color_themes::show(app, ui),
         links::ID => links::show(app, ui),
@@ -216,6 +220,7 @@ pub fn panel_menu_items(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) -> bool
         "libraries" => libraries::menu(app, ui),
         flattener_preview::ID => flattener_preview::menu(app, ui),
         "attributes" => attributes::menu(app, ui),
+        svg_interactivity::ID => svg_interactivity::menu(app, ui),
         "colorThemes" => color_themes::menu(app, ui),
         "layers" => layers::menu(app, ui),
         links::ID => links::menu(app, ui),
@@ -385,13 +390,13 @@ pub(crate) fn paint_chip(app: &mut VectorcraftApp, ui: &mut Ui, stroke: bool, si
     let (fill, stroke_paint) = current_paints(app);
     let mixed = mixed_paints(app, ui.ctx());
     let (paint, mixed) = if stroke { (stroke_paint, mixed.1) } else { (fill, mixed.0) };
-    let resp = crate::widgets::chip_button(ui, size, chevron, |ui, chip| {
-        crate::widgets::proxy_chip(ui, chip, &paint, mixed, stroke.then_some(size * 0.25));
-    });
-    let resp = resp.on_hover_text(if stroke {
-        "Stroke: click for swatches, Shift-click for the color mixer"
+    let tip = if stroke {
+        tl!("Stroke: click for swatches, Shift-click for the color mixer")
     } else {
-        "Fill: click for swatches, Shift-click for the color mixer"
+        tl!("Fill: click for swatches, Shift-click for the color mixer")
+    };
+    let resp = crate::widgets::chip_button_named(ui, size, chevron, tip, |ui, chip| {
+        crate::widgets::proxy_chip(ui, chip, &paint, mixed, stroke.then_some(size * 0.25));
     });
     if resp.clicked() {
         app.run("paint.toggleActive", json!({ "fill": !stroke })).ok();
@@ -540,6 +545,8 @@ mod tests {
 mod tests_appearance;
 #[cfg(test)]
 mod tests_asset_export;
+#[cfg(test)]
+mod tests_blend;
 #[cfg(test)]
 mod tests_constrain;
 #[cfg(test)]

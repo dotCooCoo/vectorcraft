@@ -80,7 +80,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Reshape Segment",
             [],
             None,
-            "{id, subpath, segment, t, dx, dy} bend a segment so the point at t moves by (dx, dy)",
+            "{id, subpath, segment, t, dx, dy, perpendicular?: bool} bend a segment so the point at t moves by (dx, dy); with perpendicular (Shift), both handles stand at right angles to the line between its anchors at one length, and the point at t lies as far from that line as the moved point does",
             has_doc,
             reshape_segment
         ),
@@ -890,10 +890,12 @@ fn reshape_segment(s: &mut Session, p: &Value) -> Result<Value> {
     if !(dv.x.is_finite() && dv.y.is_finite()) {
         return Err(bad(C, "invalid delta"));
     }
+    let perpendicular = bool_or(p, "perpendicular", false);
     s.edit("Reshape", |d, _| {
         let path = path_mut(d, id)?;
         let sp = path.subpaths.get_mut(si).ok_or_else(|| EngineError::Other("no such subpath".into()))?;
-        if !sp.bend_segment(seg, t, dv) {
+        let bent = if perpendicular { sp.bend_segment_perpendicular(seg, t, dv) } else { sp.bend_segment(seg, t, dv) };
+        if !bent {
             return Err(EngineError::Other("no such segment".into()));
         }
         Ok(())

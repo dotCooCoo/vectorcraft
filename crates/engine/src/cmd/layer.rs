@@ -286,7 +286,7 @@ pub(crate) fn make_layer(d: &mut Document, name: Option<&str>) -> Node {
 }
 
 /// A layer colour: a preset index (0–26), `#rrggbb` or a preset's name (any case).
-fn layer_color_param(v: &Value) -> std::result::Result<LayerColor, String> {
+pub(super) fn layer_color_param(v: &Value) -> std::result::Result<LayerColor, String> {
     match v {
         Value::Number(n) => match n.as_u64() {
             Some(i) if (i as usize) < LAYER_COLORS.len() => Ok(LayerColor::Preset(i as u8)),
@@ -835,7 +835,7 @@ fn artboard_delete(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn artboard_set(s: &mut Session, p: &Value) -> Result<Value> {
-    let i = p.get("index").and_then(Value::as_u64).unwrap_or(0) as usize;
+    let i = super::panelcmds::artboard_index(&s.doc()?.doc, p, "artboard.setProps")?;
     let was = s.doc()?.doc.artboards.get(i).map(|a| a.rect).ok_or_else(|| EngineError::Other("no such artboard".into()))?;
     let now = rect_from(p, was);
     let lock = p.get("locked").and_then(Value::as_bool);
@@ -948,8 +948,8 @@ fn artboard_fit_art(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn artboard_fit_sel(s: &mut Session, p: &Value) -> Result<Value> {
-    let i = p.get("index").and_then(Value::as_u64).unwrap_or(0) as usize;
     let st = s.doc()?;
+    let i = if p.get("index").is_none() { 0 } else { super::panelcmds::artboard_index(&st.doc, p, "artboard.fitToSelection")? };
     let b = st.doc.bounds_of(&st.selection.objects, true).ok_or_else(|| EngineError::Other("no selection bounds".into()))?;
     s.execute("artboard.setProps", &json!({"index": i, "x": b.x0, "y": b.y0, "width": b.width(), "height": b.height()}))
 }

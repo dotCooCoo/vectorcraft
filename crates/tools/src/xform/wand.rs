@@ -41,7 +41,7 @@ impl Tool for MagicWandTool {
     }
 
     fn cursor(&self, _cx: &ToolContext, _p: Point, _m: Mods) -> Cursor {
-        Cursor::Crosshair
+        Cursor::MagicWand
     }
 }
 
@@ -146,7 +146,7 @@ impl Tool for LassoTool {
     }
 
     fn cursor(&self, _cx: &ToolContext, _p: Point, _m: Mods) -> Cursor {
-        Cursor::Crosshair
+        Cursor::Lasso
     }
 }
 

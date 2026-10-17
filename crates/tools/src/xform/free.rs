@@ -313,14 +313,17 @@ impl Tool for FreeTransformTool {
     fn cursor(&self, cx: &ToolContext, p: Point, m: Mods) -> Cursor {
         let Some(r) = selection_bounds(cx) else { return Cursor::Arrow };
         match self.drag.map(|d| d.op).or_else(|| self.classify(cx, r, p, m)) {
-            Some(Op::Rotate) => Cursor::rotate_about(r.center(), p),
+            Some(Op::Rotate) => Cursor::rotate_about_in_view(r.center(), p, cx.view_angle()),
             Some(Op::Move) => Cursor::Move,
-            Some(Op::Scale(h) | Op::Shear(h)) => match h {
+            Some(Op::Shear(Handle::Top | Handle::Bottom)) => Cursor::ShearH,
+            Some(Op::Shear(_)) => Cursor::ShearV,
+            Some(Op::Scale(h)) => match h {
                 Handle::Top | Handle::Bottom => Cursor::ResizeV,
                 Handle::Left | Handle::Right => Cursor::ResizeH,
                 Handle::TopLeft | Handle::BottomRight => Cursor::ResizeNwSe,
                 Handle::TopRight | Handle::BottomLeft => Cursor::ResizeNeSw,
-            },
+            }
+            .turned(cx.view_angle()),
             Some(Op::Corners(..)) => Cursor::Crosshair,
             None => Cursor::Arrow,
         }
@@ -381,6 +384,21 @@ mod tests {
         assert!(matches!(&a[1], Action::Preview(_, v) if v["matrix"][4] == 10.0 && v["matrix"][5] == 20.0));
     }
 
+    /// In a view turned 90° the handles' cursors turn with the view.
+    #[test]
+    fn handle_cursors_turn_with_the_view() {
+        let (d, id) = doc_with_rect();
+        let mut s = Selection::default();
+        s.add(id);
+        let p = paint();
+        let mut c = cx(&d, &s, &p);
+        c.screen = turned_view(90.0);
+        let t = FreeTransformTool::default();
+        assert_eq!(t.cursor(&c, Point::new(150.0, 100.0), Mods::default()), Cursor::ResizeH, "top-middle");
+        assert_eq!(t.cursor(&c, Point::new(200.0, 200.0), Mods::default()), Cursor::ResizeNeSw, "bottom-right");
+        assert_eq!(t.cursor(&c, Point::new(207.0, 93.0), Mods::default()), Cursor::RotateToward(3), "out from the top right");
+    }
+
     #[test]
     fn cmd_side_handle_shears() {
         let (d, id) = doc_with_rect();
@@ -399,6 +417,27 @@ mod tests {
         let m = Affine::new([c[0], c[1], c[2], c[3], c[4], c[5]]);
         assert!((m * Point::new(100.0, 200.0)).distance(Point::new(100.0, 200.0)) < 1e-9);
         assert!((m * Point::new(100.0, 100.0)).distance(Point::new(120.0, 100.0)) < 1e-9);
+    }
+
+    #[test]
+    fn cmd_over_a_side_shows_the_shear_cursor_along_it() {
+        let (d, id) = doc_with_rect();
+        let mut s = Selection::default();
+        s.add(id);
+        let p = paint();
+        let cx = cx(&d, &s, &p);
+        let mut t = FreeTransformTool::default();
+        let cmd = Mods { cmd: true, ..Default::default() };
+        let (top, left) = (Point::new(150.0, 100.0), Point::new(100.0, 150.0));
+        assert_eq!(t.cursor(&cx, top, cmd), Cursor::ShearH);
+        assert_eq!(t.cursor(&cx, left, cmd), Cursor::ShearV);
+        // Without Cmd the sides scale; corners never shear.
+        assert_eq!(t.cursor(&cx, top, Mods::default()), Cursor::ResizeV);
+        assert_eq!(t.cursor(&cx, Point::new(200.0, 200.0), cmd), Cursor::Crosshair);
+        // The cursor stays while the shear is dragged.
+        t.pointer(&cx, &ev(PointerKind::Down, 150.0, 100.0).with_mods(cmd));
+        t.pointer(&cx, &ev(PointerKind::Drag, 170.0, 100.0).with_mods(cmd));
+        assert_eq!(t.cursor(&cx, Point::new(170.0, 100.0), cmd), Cursor::ShearH);
     }
 
     #[test]

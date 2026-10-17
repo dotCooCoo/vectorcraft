@@ -274,10 +274,10 @@ fn body<K: LibraryKind>(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, lib: &K
         });
     });
     if let Some((name, folder, m)) = clicked {
-        // A plain click on an item adds and applies it; folders and modifier clicks select.
+        // A plain click on an item also adds and applies it; folders and modifier clicks only select.
         let only_select = folder || m.shift || m.command;
         let order: Vec<&str> = rows.iter().map(|r| r.name).collect();
-        let sel = if only_select { click_selection(ui, &key::<K>("anchor"), selected.clone(), &order, &name, m) } else { vec![name.clone()] };
+        let sel = click_selection(ui, &key::<K>("anchor"), selected, &order, &name, m);
         set_selection::<K>(ui.ctx(), id, sel);
         if !only_select {
             K::click(app, ui, id, &name);
@@ -483,6 +483,26 @@ mod tests {
         // The selection belongs to its library.
         app.run("window.swatchLibrary", json!({"library": "brights"})).unwrap();
         assert!(selection::<SwatchLibraries>(&ctx, "brights").is_empty());
+    }
+
+    #[test]
+    fn a_plain_click_sets_where_a_shift_click_range_starts() {
+        let mut app = app();
+        let ctx = context();
+        app.run("window.swatchLibrary", json!({"library": "pastels"})).unwrap();
+        let (_, lib) = SwatchLibraries::get(&app, "pastels").unwrap();
+        let order: Vec<String> = SwatchLibraries::rows(&lib, "").iter().map(|r| r.name.to_string()).collect();
+        click(&mut app, &ctx, &order[1], Modifiers::NONE, 0.0);
+        click(&mut app, &ctx, &order[4], Modifiers::SHIFT, 2.0);
+        assert_eq!(selection::<SwatchLibraries>(&ctx, "pastels"), order[1..=4], "the range starts at the plain click");
+        // A plain click after a Cmd/Ctrl-click moves the anchor from the Cmd/Ctrl-clicked item.
+        click(&mut app, &ctx, &order[8], Modifiers::COMMAND, 4.0);
+        click(&mut app, &ctx, &order[2], Modifiers::NONE, 6.0);
+        click(&mut app, &ctx, &order[3], Modifiers::SHIFT, 8.0);
+        assert_eq!(selection::<SwatchLibraries>(&ctx, "pastels"), order[2..=3]);
+        let d = &app.session.doc().unwrap().doc;
+        assert!(d.swatch(&order[2]).is_some(), "a plain click still adds the swatch");
+        assert!(d.swatch(&order[3]).is_none(), "a Shift-click only selects");
     }
 
     #[test]

@@ -114,6 +114,100 @@ fn cmyk_tiffs_keep_their_inks_and_other_tiffs_become_png() {
     assert_eq!(rgb.blob.mime, "image/png");
 }
 
+/// A 3 × 2 TIFF at 150 ppi of `channels` (`extra`: their ExtraSamples values), 8 or 16 `bits` a
+/// sample, chunky or `planar`.
+fn hand_tiff(photometric: u16, bits: u16, extra: &[u16], planar: bool, channels: &[Vec<u16>]) -> Vec<u8> {
+    let t = vectorcraft_testkit::tiff::Tiff { width: 3, height: 2, photometric, bits, extra, planar, ppi: Some(150), channels };
+    vectorcraft_testkit::tiff::tiff(&t)
+}
+
+/// What Place keeps of TIFF `bytes`: the ink amounts, when it keeps them, and the pixels any image
+/// reader decodes from the stored image, as RGBA.
+fn kept(what: &str, bytes: &[u8]) -> (Option<Vec<u8>>, Vec<u8>) {
+    let r = raster_image(bytes).unwrap_or_else(|e| panic!("{what}: {e}"));
+    assert_eq!((r.width, r.height, r.ppi), (3, 2, Some((150.0, 150.0))), "{what}");
+    assert_eq!(super::ppi::resolution(&r.blob.bytes), Some((150.0, 150.0)), "{what}: the stored image keeps the resolution");
+    let rgba = image::load_from_memory(&r.blob.bytes).unwrap_or_else(|e| panic!("{what}: {e}")).to_rgba8().into_raw();
+    (r.blob.cmyk().map(|i| i.data), rgba)
+}
+
+/// TIFFs that store one plane per channel (PlanarConfiguration 2) read as their chunky versions do:
+/// grayscale and RGB with extra channels, and CMYK with and without them (#1466).
+#[test]
+fn planar_tiffs_read_as_their_chunky_versions() {
+    let ch = |v: [u16; 6]| v.to_vec();
+    let (gray, alpha, spot) = (ch([0, 51, 102, 153, 204, 255]), ch([255, 128, 0, 255, 64, 255]), ch([9, 8, 7, 6, 5, 4]));
+    let (r, g, b) = (ch([255, 0, 0, 10, 20, 30]), ch([0, 255, 0, 40, 50, 60]), ch([0, 0, 255, 70, 80, 90]));
+    let (c, m, y, k) = (ch([255, 0, 0, 0, 12, 200]), ch([0, 255, 0, 0, 34, 100]), ch([0, 0, 255, 0, 56, 50]), ch([0, 0, 0, 255, 78, 0]));
+    // Pixel by pixel, the samples of `px`.
+    let interleave = |px: &[&Vec<u16>]| -> Vec<u8> { (0..6).flat_map(|i| px.iter().map(move |v| v[i] as u8)).collect() };
+    let opaque = ch([255; 6]);
+    let inks = interleave(&[&c, &m, &y, &k]);
+    // (photometric, ExtraSamples, channels, the RGBA pixels when the color is gray or RGB, the inks when it is CMYK)
+    type Case = (u16, Vec<u16>, Vec<Vec<u16>>, Option<Vec<u8>>, Option<Vec<u8>>);
+    let cases: Vec<Case> = vec![
+        (1, vec![2], vec![gray.clone(), alpha.clone()], Some(interleave(&[&gray, &gray, &gray, &alpha])), None),
+        (1, vec![2, 0], vec![gray.clone(), alpha.clone(), spot.clone()], Some(interleave(&[&gray, &gray, &gray, &alpha])), None),
+        (2, vec![0], vec![r.clone(), g.clone(), b.clone(), spot.clone()], Some(interleave(&[&r, &g, &b, &opaque])), None),
+        (2, vec![2, 0], vec![r.clone(), g.clone(), b.clone(), alpha.clone(), spot.clone()], Some(interleave(&[&r, &g, &b, &alpha])), None),
+        (5, vec![], vec![c.clone(), m.clone(), y.clone(), k.clone()], None, Some(inks.clone())),
+        (5, vec![0], vec![c.clone(), m.clone(), y.clone(), k.clone(), spot.clone()], None, Some(inks.clone())),
+        (5, vec![2], vec![c.clone(), m.clone(), y.clone(), k.clone(), alpha.clone()], None, None),
+    ];
+    for (photometric, extra, channels, want_rgba, want_inks) in cases {
+        for bits in [8, 16] {
+            let wide: Vec<Vec<u16>> = channels.iter().map(|ch| ch.iter().map(|v| if bits == 16 { v * 257 } else { *v }).collect()).collect();
+            let what = format!("photometric {photometric}, extra samples {extra:?}, {bits} bits");
+            let chunky = kept(&format!("{what}, chunky"), &hand_tiff(photometric, bits, &extra, false, &wide));
+            let planar = kept(&format!("{what}, planar"), &hand_tiff(photometric, bits, &extra, true, &wide));
+            assert_eq!(planar.0, chunky.0, "{what}: planar keeps the inks chunky keeps");
+            assert_eq!(planar.0, want_inks, "{what}: the inks");
+            // A 16-bit chunky CMYK file is stored as it is, and a planar one is written again with
+            // its 8-bit inks: their RGB pixels may be a level apart.
+            let close = planar.1.len() == chunky.1.len() && planar.1.iter().zip(&chunky.1).all(|(a, b)| a.abs_diff(*b) <= 1);
+            assert!(close, "{what}: planar reads as chunky: {:?} against {:?}", planar.1, chunky.1);
+            if let Some(want) = &want_rgba {
+                assert_eq!(&planar.1, want, "{what}: the pixels");
+            }
+        }
+    }
+}
+
+/// A planar TIFF whose header claims more strips than the decoder can count (here 2^31 + 1 rows
+/// a strip each, times 5 planes) is refused as too large to draw, without a panic.
+#[test]
+fn planar_tiffs_with_more_strips_than_can_be_counted_are_too_large() {
+    let plane = |v: u16| vec![v; 6];
+    let mut file = hand_tiff(5, 8, &[0], true, &[plane(200), plane(40), plane(10), plane(0), plane(90)]);
+    // ImageLength (the directory's second entry, its value at offset 30) and RowsPerStrip (the
+    // eighth, at offset 102).
+    file[30..34].copy_from_slice(&(1u32 << 31 | 1).to_le_bytes());
+    file[102..106].copy_from_slice(&1u32.to_le_bytes());
+    let e = raster_image(&file).err().expect("refused");
+    assert!(e.to_string().contains("an image of 3 × 2147483649 pixels is too large to draw"), "{e}");
+    assert!(too_large_note(&file).is_some());
+    assert_eq!(vectorcraft_doc::cmyk::oversized_tiff(&file), Some((3, 1 << 31 | 1)));
+}
+
+/// A planar CMYK TIFF opens and places with its ink amounts, stored as a TIFF the image decoder
+/// reads (#1466).
+#[test]
+fn planar_cmyk_tiffs_open_and_place_with_their_inks() {
+    let inks = [vec![255u16, 0, 12, 0, 40, 9], vec![0, 255, 34, 0, 50, 8], vec![0, 0, 56, 0, 60, 7], vec![0, 0, 78, 255, 70, 6]];
+    let file = hand_tiff(5, 8, &[], true, &inks);
+    let want: Vec<u8> = (0..6).flat_map(|i| inks.iter().map(move |v| v[i] as u8)).collect();
+    assert!(image::load_from_memory(&file).is_err(), "the image decoder reads planar CMYK now");
+    let mut s = Session::new();
+    open(&mut s, "planar.tif", &file);
+    let blob = &s.doc().unwrap().doc.images[&image_of(&s).key];
+    assert_eq!(blob.cmyk().map(|i| i.data), Some(want.clone()), "Open keeps the inks");
+    let mut s = session(100.0, 100.0, 1);
+    s.execute("file.place", &json!({"name": "planar.tif", "dataBase64": vectorcraft_format::base64_encode(&file)})).unwrap();
+    let blob = &s.doc().unwrap().doc.images[&image_of(&s).key];
+    assert_eq!(blob.cmyk().map(|i| i.data), Some(want), "Place keeps the inks");
+    assert!(image::load_from_memory(&blob.bytes).is_ok(), "the image decoder reads the stored image");
+}
+
 #[test]
 fn content_beats_a_wrong_extension() {
     let png = image_bytes(2, 2, image::ImageFormat::Png);
@@ -129,7 +223,8 @@ fn templates_open_untitled() {
     let mut s = session(100.0, 100.0, 1);
     let dir = tmp_dir("tpl");
     let path = dir.join("t.vectorcraft").to_string_lossy().to_string();
-    s.execute("file.saveAsTemplate", &json!({"path": path})).unwrap();
+    // A template under a native file name still opens untitled.
+    std::fs::write(&path, b64(&s.execute("file.saveAsTemplate", &json!({})).unwrap())).unwrap();
     let r = s.execute("document.open", &json!({"path": path})).unwrap();
     assert!(r["title"].as_str().unwrap().starts_with("Untitled-"), "{r}");
     assert_eq!(s.doc().unwrap().path, None);

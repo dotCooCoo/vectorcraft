@@ -123,6 +123,10 @@ pub struct RenderOptions {
     pub mask_view: Option<NodeId>,
     /// Screen view: highlight substituted fonts and glyphs as Document Setup asks.
     pub highlight_substitutions: bool,
+    /// Screen view: Preferences › Type › Highlight Alternate Glyphs. Pink behind glyphs OpenType
+    /// features substituted (ligatures, contextual forms), not Document Setup's missing-glyph
+    /// highlights.
+    pub highlight_alternate_glyphs: bool,
     /// Edge smoothing (raster export option).
     pub anti_alias: AntiAlias,
     /// Screen view: placed documents draw from cached bitmaps made in the background (see
@@ -227,6 +231,7 @@ impl Default for RenderOptions {
             guide: ([0x4a, 0xd8, 0xff], false),
             mask_view: None,
             highlight_substitutions: false,
+            highlight_alternate_glyphs: false,
             anti_alias: AntiAlias::Art,
             progressive_placed: false,
             trace_views: false,
@@ -1126,6 +1131,10 @@ impl Renderer {
         if !force && (!n.visible || f.opts.hidden.contains(&n.id)) {
             return;
         }
+        // A cancelled export stops drawing; whoever asked for the picture drops it (see `cancel`).
+        if vectorcraft_doc::cancel::is_cancelled() {
+            return;
+        }
         if force {
             // Bounds were already checked by draw_arc (or the caller wants it drawn regardless).
         } else if let Some(b) = fx::cull_bounds(f.symbols, n) {
@@ -1768,12 +1777,12 @@ impl Renderer {
             return;
         }
         let tb = t.xf.transform_rect_bbox(g.bounds);
-        // Overprinting characters multiply per draw, like overprinting fills and strokes
+        // Overprinting characters darken per draw, like overprinting fills and strokes
         // ([`proof`]); the object blend mode is Normal here or applied by an enclosing layer.
         let overprints = proof::overprints(f.opts);
         let overprint = |ctx: &mut RenderContext, on: bool| {
             if overprints {
-                ctx.set_blend_mode(if on { blend_mode(vectorcraft_color::BlendMode::Multiply) } else { BlendMode::default() });
+                ctx.set_blend_mode(if on { blend_mode(vectorcraft_color::BlendMode::Darken) } else { BlendMode::default() });
             }
         };
         // The object's own fills and strokes paint the whole outline: those below the Characters
@@ -1789,8 +1798,11 @@ impl Renderer {
         }
         if f.opts.highlight_substitutions {
             let setup = &f.doc.setup;
-            for (on, path) in [(setup.highlight_substituted_fonts, &g.substituted_fonts), (setup.highlight_substituted_glyphs, &g.substituted_glyphs)]
-            {
+            for (on, path) in [
+                (setup.highlight_substituted_fonts, &g.substituted_fonts),
+                (setup.highlight_substituted_glyphs, &g.substituted_glyphs),
+                (f.opts.highlight_alternate_glyphs, &g.alternate_glyphs),
+            ] {
                 if on && !path.elements().is_empty() {
                     ctx.set_transform(xf);
                     ctx.set_fill_rule(peniko::Fill::NonZero);
@@ -2218,6 +2230,9 @@ struct TextGeom {
     /// font lacks (drawn from a fallback font): Document Setup's substitution highlights.
     substituted_fonts: BezPath,
     substituted_glyphs: BezPath,
+    /// Boxes of glyphs OpenType features substituted (ligatures, contextual forms): Preferences ›
+    /// Highlight Alternate Glyphs.
+    alternate_glyphs: BezPath,
     /// Inline graphics placed by the layout.
     inlines: Vec<vectorcraft_text::InlineGlyph>,
 }
@@ -2243,10 +2258,16 @@ impl TextGeom {
     /// Approximate heap bytes, for the cache's budget.
     fn bytes(&self) -> usize {
         size_of::<Self>()
-            + [&self.all, &self.substituted_fonts, &self.substituted_glyphs].into_iter().map(lru::path_bytes).sum::<usize>()
+            + [&self.all, &self.substituted_fonts, &self.substituted_glyphs, &self.alternate_glyphs].into_iter().map(lru::path_bytes).sum::<usize>()
             + self.spans.len() * size_of::<(usize, usize, usize)>()
             + self.inlines.len() * size_of::<vectorcraft_text::InlineGlyph>()
     }
+}
+
+/// OpenType-substituted form: a ligature (several source characters → one glyph) or a glyph whose
+/// id is not the face's cmap mapping for its first character (contextual / stylistic alternate).
+pub(crate) fn is_opentype_alternate(nominal_gid: u32, shaped_gid: u32, cluster_chars: usize) -> bool {
+    shaped_gid != 0 && (cluster_chars > 1 || shaped_gid != nominal_gid)
 }
 
 fn text_geom(t: &TextObject) -> TextGeom {
@@ -2288,30 +2309,39 @@ fn text_geom_snapped(t: &TextObject, snap: Option<Affine>) -> TextGeom {
             None => (true, None),
         })
         .collect();
-    let (mut substituted_fonts, mut substituted_glyphs) = (BezPath::new(), BezPath::new());
+    let (mut substituted_fonts, mut substituted_glyphs, mut alternate_glyphs) = (BezPath::new(), BezPath::new(), BezPath::new());
+    let plain = t.plain_text();
     for g in &layout.glyphs {
         push(&mut all, g.run, &g.outline);
         let Some(&(missing, face)) = faces.get(g.run) else { continue };
-        let target = if missing {
-            &mut substituted_fonts
-        } else if face.is_some_and(|f| f != g.font_id) {
-            &mut substituted_glyphs
-        } else {
-            continue;
-        };
         let Some(line) = layout.lines.get(g.line) else { continue };
         let mut cell = Rect::new(g.origin.x, g.origin.y - line.ascent, g.origin.x + g.advance, g.origin.y + line.descent).to_path(0.1);
         cell.apply_affine(Affine::rotate_about(g.angle, g.origin));
-        target.extend(cell.iter());
+        if missing {
+            substituted_fonts.extend(cell.iter());
+            continue;
+        }
+        if face.is_some_and(|f| f != g.font_id) {
+            substituted_glyphs.extend(cell.iter());
+            continue;
+        }
+        // Same face: OpenType may have swapped the glyph (liga, calt, …).
+        let Some(cluster) = plain.get(g.byte..g.byte.saturating_add(g.len)) else { continue };
+        let cluster_chars = cluster.chars().count();
+        let Some(first) = cluster.chars().next() else { continue };
+        let nominal = db.face_by_id(g.font_id).map(|f| f.glyph_for(first)).unwrap_or(0);
+        if is_opentype_alternate(nominal, g.gid, cluster_chars) {
+            alternate_glyphs.extend(cell.iter());
+        }
     }
     // Underline and strikethrough bars, painted as their run's type is (#847).
     for (run, bar) in vectorcraft_text::decorations(&layout, db, t) {
         push(&mut all, run, &bar);
     }
-    TextGeom { all, spans, bounds: layout.bounds, substituted_fonts, substituted_glyphs, inlines: layout.inlines }
+    TextGeom { all, spans, bounds: layout.bounds, substituted_fonts, substituted_glyphs, alternate_glyphs, inlines: layout.inlines }
 }
 
-/// Document Setup's highlight behind substituted fonts and glyphs (screen only).
+/// Document Setup's and Preferences › Highlight Alternate Glyphs pink (screen only).
 const SUBSTITUTED: peniko::Color = peniko::Color::from_rgba8(255, 120, 190, 110);
 /// The pixel size of `region` rendered at `scale` pixels per point (at least 1×1).
 pub fn region_pixels(region: Rect, scale: f64) -> (u32, u32) {
@@ -2366,6 +2396,8 @@ fn now() -> u64 {
 mod tests;
 #[cfg(test)]
 mod tests_adjust;
+#[cfg(test)]
+mod tests_alternate;
 #[cfg(test)]
 mod tests_blend;
 #[cfg(test)]

@@ -1,5 +1,5 @@
 use super::*;
-use egui::{Event, Modifiers, PointerButton, Pos2, vec2};
+use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 
 fn app() -> VectorcraftApp {
@@ -613,4 +613,30 @@ fn the_window_menu_item_hides_a_shown_panel_and_shows_it_again() {
 
     app.run("window.panel", json!({"panel":"properties"})).unwrap();
     assert!(shown(&app), "without the menu's toggle the command only shows the panel");
+}
+
+/// A floating group lies on the canvas, not on the dock's card, so its tab strip and body paint
+/// their own opaque background (#2421).
+#[test]
+fn floating_group_paints_an_opaque_background() {
+    let mut app = app();
+    app.run("window.panel.float", json!({"panel":"properties","x":400,"y":200,"width":300,"height":420})).unwrap();
+    let h = harness(app, vec2(1280.0, 800.0));
+    // Paint order: the last big filled rectangle over a point decides what the user sees there
+    // (outlines, small widgets and fully transparent fills, which paint nothing, don't count).
+    fn topmost(shape: &egui::Shape, p: Pos2, found: &mut Option<egui::Color32>) {
+        match shape {
+            egui::Shape::Rect(r) if r.rect.contains(p) && r.rect.width() >= 200.0 && r.stroke.is_empty() && r.fill.a() > 0 => *found = Some(r.fill),
+            egui::Shape::Vec(v) => v.iter().for_each(|s| topmost(s, p, found)),
+            _ => {}
+        }
+    }
+    let opaque_at = |p: Pos2| {
+        let mut found = None;
+        h.output().shapes.iter().for_each(|s| topmost(&s.shape, p, &mut found));
+        found.is_some_and(|c| c.a() == 255)
+    };
+    // Tab strip to the right of the tabs, and the body's empty bottom-right corner.
+    assert!(opaque_at(pos2(690.0, 210.0)), "tab strip is transparent");
+    assert!(opaque_at(pos2(690.0, 610.0)), "body is transparent");
 }

@@ -2,6 +2,7 @@
 //! raster effect images they make (PDF export, Expand Appearance) and the Rasterize defaults.
 
 use serde_json::{Value, json};
+use vectorcraft_doc::rastersettings::MAX_ADD_AROUND;
 use vectorcraft_doc::{Background, Document, NodeId, NodeKind, RasterColorModel, RasterEffectsSettings};
 
 use super::*;
@@ -98,6 +99,60 @@ fn add_around_grows_the_effect_image() {
     assert_eq!((after.width() - before.width(), after.height() - before.height()), (72, 72));
 }
 
+/// The transforms of the images in `doc` flattened for output.
+fn image_transforms(doc: &Document) -> Vec<[f64; 6]> {
+    let mut xfs = vec![];
+    crate::flatten_raster_effects(doc).unwrap().walk(|n| {
+        if let NodeKind::Image(im) = &n.kind {
+            xfs.push(im.xf.as_coeffs());
+        }
+    });
+    xfs
+}
+
+#[test]
+fn a_file_with_add_around_out_of_range_opens_with_it_in_range() {
+    let mut s = session();
+    shadowed(&mut s);
+    let mut d = (*s.doc().unwrap().doc).clone();
+    d.raster_effects.add_around = 1e300;
+    let back = vectorcraft_format::load(&vectorcraft_format::save_file(&d)).unwrap();
+    assert_eq!(back.raster_effects.add_around, MAX_ADD_AROUND);
+    let xfs = image_transforms(&back);
+    assert!(!xfs.is_empty() && xfs.iter().flatten().all(|c| c.is_finite()), "{xfs:?}");
+    // 1,000 pt on every side at 72 ppi.
+    assert_eq!(effect_image(&back).width() - effect_image(&s.doc().unwrap().doc).width(), 2000);
+    d.raster_effects.add_around = -5.0;
+    assert_eq!(vectorcraft_format::load(&vectorcraft_format::save_file(&d)).unwrap().raster_effects.add_around, 0.0);
+}
+
+#[test]
+fn art_too_large_for_f64_gets_no_effect_image() {
+    let mut s = session();
+    let r = shadowed(&mut s);
+    // Settings out of range in a document made without opening a file.
+    let mut d = (*s.doc().unwrap().doc).clone();
+    d.raster_effects.add_around = 1e300;
+    assert_eq!(image_transforms(&d), Vec::<[f64; 6]>::new());
+    let mut d = (*s.doc().unwrap().doc).clone();
+    let NodeKind::Path { path, live, .. } = &mut d.node_mut(r).unwrap().kind else { panic!("a path") };
+    (*path, *live) = (vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(-1e300, -1e300, 1e300, 1e300)), None);
+    assert_eq!(image_transforms(&d), Vec::<[f64; 6]>::new());
+    // Expand Appearance of it by id, with nothing selected, puts no image into the document (the
+    // rectangle at its own size gets one).
+    let normal = (*s.doc().unwrap().doc).clone();
+    let mut expanded_images = |d: Document| {
+        let st = s.doc_mut().unwrap();
+        (st.doc, st.selection) = (std::sync::Arc::new(d), Default::default());
+        s.execute("effect.expandAppearance", &json!({"ids": [r.0]})).unwrap();
+        let mut images = 0;
+        s.doc().unwrap().doc.walk(|n| images += usize::from(matches!(n.kind, NodeKind::Image(_))));
+        images
+    };
+    assert_eq!(expanded_images(normal), 1);
+    assert_eq!(expanded_images(d), 0);
+}
+
 #[test]
 fn the_color_model_and_anti_alias_reach_the_pixels() {
     let mut s = session();
@@ -157,4 +212,49 @@ fn raster_settings_round_trip_and_old_files_load() {
     assert!(!String::from_utf8_lossy(&bytes).contains("raster_effects\""), "default settings aren't written");
     let back = vectorcraft_format::load(&bytes).unwrap();
     assert_eq!((back.raster_effects_ppi, back.raster_effects), (72.0, RasterEffectsSettings::default()));
+}
+
+/// Save the active document with the raster effects resolution `ppi` and open the file.
+fn reopen_with_ppi(s: &mut Session, ppi: f64) {
+    let mut d = (*s.doc().unwrap().doc).clone();
+    d.raster_effects_ppi = ppi;
+    let data = vectorcraft_format::base64_encode(&vectorcraft_format::save_file(&d));
+    s.execute("document.open", &json!({"name": "ppi.vectorcraft", "dataBase64": data})).unwrap();
+}
+
+#[test]
+fn a_file_with_the_resolution_out_of_range_opens_with_it_in_range() {
+    for (saved, opened, pixels) in [(0.0, 1.0, 1), (-5.0, 1.0, 1), (5000.0, 2400.0, 334), (f64::MAX, 2400.0, 334)] {
+        let mut s = session();
+        let r = id(&s.execute("shape.rectangle", &json!({"x": 50, "y": 50, "width": 10, "height": 10})).unwrap());
+        s.execute("paint.setStroke", &json!({"none": true, "ids": [r.0]})).unwrap();
+        reopen_with_ppi(&mut s, saved);
+        assert_eq!(s.doc().unwrap().doc.raster_effects_ppi, opened, "saved as {saved}");
+        assert_eq!(s.execute(C, &json!({})).unwrap()["resolution"], opened);
+        assert_eq!(s.execute("document.info", &json!({})).unwrap()["document"]["rasterEffectsPpi"], opened);
+        // Rasterize without a ppi param renders the 10 pt square at it.
+        s.execute("select.set", &json!({"ids": [r.0]})).unwrap();
+        let out = s.execute("object.rasterize", &json!({})).unwrap();
+        assert_eq!((out["width"].as_u64(), out["height"].as_u64()), (Some(pixels), Some(pixels)), "saved as {saved}");
+    }
+}
+
+#[test]
+fn a_gradient_exports_at_the_resolution_the_file_opens_with() {
+    for saved in [0.0, -5.0] {
+        let mut s = session();
+        let r = id(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 720, "height": 720})).unwrap());
+        s.execute("paint.setFill", &json!({"gradient": {"kind": "linear"}, "ids": [r.0]})).unwrap();
+        reopen_with_ppi(&mut s, saved);
+        // EMF writes the gradient as an image at the raster effects resolution: 720 pt at 1 ppi.
+        let region = vectorcraft_geom::Rect::new(0.0, 0.0, 720.0, 720.0);
+        let out = vectorcraft_metafile::export(&s.doc().unwrap().doc, region, vectorcraft_metafile::Kind::Emf).unwrap();
+        let mut sizes = vec![];
+        vectorcraft_metafile::import(&out.bytes).unwrap().document.walk(|n| {
+            if let NodeKind::Image(im) = &n.kind {
+                sizes.push((im.width, im.height));
+            }
+        });
+        assert_eq!(sizes, [(10, 10)], "saved as {saved}");
+    }
 }

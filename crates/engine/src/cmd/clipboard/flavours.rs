@@ -81,6 +81,7 @@ pub fn file_flavour(name: &str, head: &[u8], mimes: &[&str]) -> Option<&'static 
         // reads SVGZ data.
         "svgz" if unpacks_to_svg(head) => (SVG, SVG),
         "pdf" => (PDF, PDF),
+        "ps" => (EPS, EPS),
         "eps" => (EPS, EPS),
         "ai" | "ait" if head.starts_with(b"%PDF") => (PDF, PDF),
         "ai" | "ait" if vectorcraft_pdf::is_postscript(head) => (EPS, EPS),
@@ -418,7 +419,8 @@ fn import_emf(s: &mut Session, p: &Value) -> Result<Value> {
 fn import_eps(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "clipboard.importEps";
     let bytes = data_param(p, C)?;
-    if !vectorcraft_pdf::is_postscript(&bytes) {
+    // Programs whose header is only `%!` are read too, as they are when a `.ps` or `.eps` file opens.
+    if !bytes.starts_with(b"%!") && !vectorcraft_pdf::is_postscript(&bytes) {
         return Err(bad(C, "the data isn't an EPS or PostScript picture"));
     }
     import_picture(s, p, C, "Clipboard.eps", &bytes)

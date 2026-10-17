@@ -357,6 +357,7 @@
 	Change Case	Maiuscole/minuscole
 	Change Screen Mode (F)	Cambia modalità schermo (F)
 	Change to Global Rulers	Passa a righelli globali
+	Change to Artboard Rulers	Passa a righelli della tavola da disegno
 	Change to Right-to-Left Layout	Passa al layout da destra a sinistra
 	Changed since the last Refresh.	Modificato dall'ultimo aggiornamento.
 	Changes allowed:	Modifiche consentite:
@@ -507,6 +508,7 @@
 	Color Model:	Modello colore:
 	Color Models	Modelli colore
 	Color Picker	Selettore colore
+	Color wheel	Ruota dei colori
 	Color Picker…	Selettore colore…
 	Color Reduction:	Riduzione colori:
 	Color Settings	Impostazioni colore
@@ -553,6 +555,7 @@
 	Contextual Task Bar	Barra attività contestuale
 	Pin Bar Position	Fissa posizione barra
 	Reset Bar Position	Ripristina posizione barra
+	Resize	Ridimensiona
 	Contrast	Contrasto
 	Control	Controllo
 	Convert	Converti
@@ -1134,6 +1137,16 @@
 	Flatten Transparency…	Appiattisci trasparenza…
 	Flattener preset:	Preset di appiattimento:
 	Flattener presets	Preset di appiattimento
+file-filter	All readable files	Tutti i file leggibili
+file-filter	All placeable files	Tutti i file inseribili
+file-filter	Swatch libraries	Librerie campioni
+file-filter	Flattener presets	Preset di appiattimento
+file-filter	PDF presets	Preset PDF
+file-filter	Print presets	Preset di stampa
+file-filter	SVG Compressed	SVG compresso
+file-filter	PDF-compatible .ai	.ai compatibile con PDF
+file-filter	VectorCraft Template	Modello VectorCraft
+file-filter	Templates	Modelli
 	Flattener Preview	Anteprima appiattimento
 	Flip Across	Capovolgi trasversalmente
 	Flip Along	Capovolgi longitudinalmente
@@ -1183,6 +1196,14 @@
 	Gamut Warning	Avviso gamut
 	gap	spazio
 	Gap Options…	Opzioni spazi vuoti…
+	Gap Options	Opzioni spazi vuoti
+	Gap Detection	Rilevamento spazi vuoti
+	Paint Stops At:	La pittura si ferma a:
+	Small Gaps	Spazi vuoti piccoli
+	Medium Gaps	Spazi vuoti medi
+	Large Gaps	Spazi vuoti grandi
+	Gap Preview Color:	Colore anteprima spazi vuoti:
+	Close Gaps With Paths	Chiudi spazi vuoti con tracciati
 	Gaussian Blur…	Sfocatura gaussiana…
 	General	Generale
 	General › Placement › X	Generale › Posizionamento › X
@@ -1199,6 +1220,10 @@
 	glyph {id}	glifo {id}
 	Glyphs	Glifi
 	Go to Artboard	Vai alla tavola da disegno
+	First Artboard	Prima tavola da disegno
+	Previous Artboard	Tavola da disegno precedente
+	Next Artboard	Tavola da disegno successiva
+	Last Artboard	Ultima tavola da disegno
 	Go To Link	Vai al collegamento
 	GPL palettes keep solid colours only, as RGB.	Le palette GPL conservano solo i colori pieni, in RGB.
 	GPU Performance	Prestazioni GPU
@@ -1224,6 +1249,16 @@
 	Delete Design	Elimina design
 	Paste Design	Incolla design
 	Select Unused	Seleziona non utilizzati
+	Graph Column	Colonna del grafico
+	Column Type:	Tipo di colonna:
+	Vertically Scaled	Ridimensionato verticalmente
+	Uniformly Scaled	Ridimensionato uniformemente
+	Repeating	Ripetuto
+	Sliding	Scorrevole
+	Each Design Represents:	Ogni design rappresenta:
+	For Fractions:	Per le frazioni:
+	Chop Design	Taglia design
+	Scale Design	Ridimensiona design
 	Import Data…	Importa dati…
 	Transpose	Trasponi
 	Switch x/y	Scambia x/y
@@ -1318,6 +1353,90 @@
 	History	Cronologia
 	History Options…	Opzioni cronologia…
 	History States	Stati cronologia
+# History panel: the names of undo steps (`every_undo_label_is_translated`).
+	Apply Data Set	Applica set di dati
+	Area Type	Testo in area
+	Bloat	Gonfia
+	Cancel Pattern Editing	Annulla modifica motivo
+	Copy Appearance	Copia aspetto
+	Copy Guide	Copia guida
+	Copy in Perspective	Copia in prospettiva
+	Create Slice from Selection	Crea sezione dalla selezione
+	Create Slices from Guides	Crea sezioni da guide
+	Delete All Slices	Elimina tutte le sezioni
+	Delete Data Sets	Elimina set di dati
+	Delete Graphic Styles	Elimina stili grafici
+	Delete Guide	Elimina guida
+	Delete Guides	Elimina guide
+	Delete Slice	Elimina sezione
+	Delete Style	Elimina stile
+	Delete Variables	Elimina variabili
+	Delete View	Elimina vista
+	Done Editing Pattern	Termina modifica motivo
+	Duplicate Rows	Duplica righe
+	Edit Perspective Grid	Modifica griglia prospettica
+	Expand Blend	Espandi fusione
+	Expand Envelope	Espandi involucro
+	Expand Image Trace	Espandi ricalco immagine
+	Expand Live Paint	Espandi pittura dinamica
+	Grid Repeat	Ripetizione griglia
+	Image Trace (Make and Expand)	Ricalco immagine (crea ed espandi)
+	Live Shape	Forma dinamica
+	Make Blend	Crea fusione
+	Make Dynamic	Rendi dinamico
+	Make Intertwine	Crea intreccio
+	Make Live Paint	Crea pittura dinamica
+	Make Pattern	Crea motivo
+	Make Slice	Crea sezione
+	Make Text Wrap	Crea testo attorno
+	Merge Live Paint	Unisci pittura dinamica
+	Mesh Point Color	Colore punto trama
+	Mirror Repeat	Ripetizione speculare
+	Move Envelope Point	Sposta punto involucro
+	Move Plane and Copy Objects	Sposta piano e copia oggetti
+	Move Plane and Objects	Sposta piano e oggetti
+	Move Slice	Sposta sezione
+	Move Type on a Path	Sposta testo su tracciato
+	New Guide	Nuova guida
+	Pen	Penna
+	Place from Library	Inserisci da libreria
+	Pucker	Contrai
+	Radial Repeat	Ripetizione radiale
+	Rearrange Artboards	Ridisponi tavole da disegno
+	Release Blend	Rilascia fusione
+	Release Envelope	Rilascia involucro
+	Release Image Trace	Rilascia ricalco immagine
+	Release Intertwine	Rilascia intreccio
+	Release Live Paint	Rilascia pittura dinamica
+	Release Repeat	Rilascia ripetizione
+	Release Slice	Rilascia sezione
+	Release Text Wrap	Rilascia testo attorno
+	Release Threaded Text	Rilascia testo concatenato
+	Rename Design	Rinomina design
+	Rename Style	Rinomina stile
+	Rename View	Rinomina vista
+	Reorder Appearance	Riordina aspetto
+	Reorder Artboards	Riordina tavole da disegno
+	Reshape Spine	Rimodella dorsale
+	Resize Artboard	Ridimensiona tavola da disegno
+	Resize Slice	Ridimensiona sezione
+	Resize Type Area	Ridimensiona area di testo
+	Scale in Perspective	Scala in prospettiva
+	Scallop	Smerla
+	Shape Builder Delete	Generatore forme (elimina)
+	Sort Swatches	Ordina campioni
+	Symbol Screener	Trasparenza simboli
+	Symbol Scruncher	Addensamento simboli
+	Symbol Shifter	Spostamento simboli
+	Symbol Sizer	Ridimensionamento simboli
+	Symbol Spinner	Rotazione simboli
+	Symbol Stainer	Colorazione simboli
+	Symbol Styler	Stile simboli
+	Text Orientation	Orientamento testo
+	Thread Text	Concatena testo
+	Twirl	Vortice
+	Typing	Digitazione
+	Wrinkle	Grinza
 	Hollow	Vuoto
 	Home	Home
 	Horizon Height:	Altezza orizzonte:
@@ -1602,6 +1721,7 @@
 	Live Paint Selection Tool	Strumento Selezione pittura dinamica
 	Live Shape Properties	Proprietà forma dinamica
 	Load Color Profile…	Carica profilo colore…
+	Remove Color Profile…	Rimuovi profilo colore…
 	Load Image into Clipboard	Carica immagine negli appunti
 	Load Metafile into Clipboard	Carica metafile negli appunti
 	Load PDF into Clipboard	Carica PDF negli appunti
@@ -1836,6 +1956,7 @@
 	New Graphic Style	Nuovo stile grafico
 	New Graphic Style (Alt-click to name it)	Nuovo stile grafico (Alt+clic per assegnare un nome)
 	New Graphic Style…	Nuovo stile grafico…
+	New Artboard Options…	Opzioni nuova tavola da disegno…
 	New Layer Options…	Opzioni nuovo livello…
 	New Layer…	Nuovo livello…
 	New Opacity Masks Are Clipping	Le nuove maschere di opacità ritagliano
@@ -2120,6 +2241,8 @@
 	Percent:	Percentuale:
 	Perceptual Scales	Scale percettive
 	Performance	Prestazioni
+diagnostics	render	rendering
+diagnostics	ui	interfaccia
 	Performance & Storage	Prestazioni e archiviazione
 	Permissions	Autorizzazioni
 	Permissions password:	Password autorizzazioni:
@@ -2224,6 +2347,8 @@
 	Print Tiling Tool	Strumento Affiancamento di stampa
 	Printer	Stampante
 	Printer mark type:	Tipo di segni di stampa:
+	Roman	Romano
+mark-style	Japanese	Giapponese
 	Printer profile:	Profilo stampante:
 	Printer Setup…	Impostazione stampante…
 	Printer:	Stampante:
@@ -2491,6 +2616,8 @@
 	Revert to the saved version of “{name}”?	Ripristinare la versione salvata di “{name}”?
 	Replace “{name}”, the file this document was opened from?	Sostituire “{name}”, il file da cui è stato aperto questo documento?
 	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Aprendolo è rimasto fuori ciò che VectorCraft non sa ancora leggere ({what}), quindi sostituirlo lo perde per sempre. Salva con un altro nome per conservarlo.
+	“{name}” already exists. Replace it?	“{name}” esiste già. Sostituirlo?
+	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Il nome nel pannello di salvataggio era “{typed}”, poi VectorCraft ha aggiunto l'estensione del tipo di file. Sostituire il file ne sovrascrive il contenuto.
 	Revolve…	Rivoluzione…
 	RGB Color	Colore RGB
 	Right	Destra
@@ -2508,6 +2635,7 @@
 	Rotate 90° CW	Ruota di 90° in senso orario
 	Rotate Tool	Strumento Ruota
 	Rotate View Tool	Strumento Ruota vista
+	Trackpad Gesture to Rotate View	Ruota vista con un gesto sul trackpad
 	Rotate…	Ruota…
 	Rotation	Rotazione
 	Roughen…	Irruvidisci…
@@ -2562,11 +2690,13 @@
 	Save PDF Preset	Salva preset PDF
 	Save Perspective Grid Preset	Salva preset griglia prospettica
 	Save Preset	Salva preset
+	Preset {number}	Preset {number}
 	Save Preset…	Salva preset…
 	Save Print Preset	Salva preset di stampa
 	Save Recovery Data	Salva dati di recupero
 	Save Save for Web Preset	Salva preset di Salva per il web
 	Save selected colors as swatches	Salva i colori selezionati come campioni
+	Save Selection	Salva selezione
 	Save Selection…	Salva selezione…
 	Update Selection	Aggiorna selezione
 	Save Swatch Library	Salva libreria campioni
@@ -2987,6 +3117,16 @@
 	Superscript:	Apice:
 	SVG Filters	Filtri SVG
 	SVG Interactivity	Interattività SVG
+	Event:	Evento:
+	JavaScript:	JavaScript:
+	Add Event	Aggiungi evento
+	Remove Selected Entry	Rimuovi voce selezionata
+	Clear Events	Cancella eventi
+	Link JavaScript Files…	Collega file JavaScript…
+	JavaScript Files	File JavaScript
+	File or URL:	File o URL:
+	Add JavaScript File	Aggiungi file JavaScript
+	Remove JavaScript File	Rimuovi file JavaScript
 	SVG Options	Opzioni SVG
 	SVG Profile:	Profilo SVG:
 	Swap Fill and Stroke	Inverti riempimento e traccia
@@ -3138,6 +3278,7 @@
 	Top in Front	Superiore davanti
 	Top:	In alto:
 	Total Width:	Larghezza totale:
+	Touch Type	Ritocco testo
 	Touch Type Tool	Strumento Ritocco testo
 	Trace	Ricalca
 	Trace the image with the Default preset	Ricalca l'immagine con il preset Predefinito
@@ -3288,6 +3429,8 @@
 	Variables	Variabili
 	New Variable	Nuova variabile
 	Delete Variable	Elimina variabile
+	Lock Variables	Blocca variabili
+	Unlock Variables	Sblocca variabili
 	List Variables	Elenca variabili
 	Bind Variable	Collega variabile
 	Unbind Variable	Scollega variabile
@@ -3409,6 +3552,7 @@
 	{effect} is already applied	L'effetto {effect} è già applicato
 	{format} Options	Opzioni {format}
 	{kind} Gradient	Sfumatura {kind}
+gradient-kind	Radial	Radiale
 	{kind} Style Options…	Opzioni stile {kind}…
 	{kind}, {model}	{kind}, {model}
 	{name} (spot)	{name} (spot)
@@ -3524,6 +3668,10 @@ imageTrace	Outline	Contorno
 	Table	Tabella
 	Name (A–Z)	Nome (A–Z)
 	Merged PRs	PR unite
+	PRs	PR
+	@{login}: {prs}, {commits}, +{added} / −{deleted} lines (Δ {delta}), +{binary_added} / −{binary_deleted} binary assets, {first} – {last}	@{login}: {prs}, {commits}, +{added} / −{deleted} righe (Δ {delta}), +{binary_added} / −{binary_deleted} risorse binarie, {first} – {last}
+@plural	{n} PR|{n} PRs	{n} PR|{n} PR
+@plural	{n} commit|{n} commits	{n} commit|{n} commit
 	Commits	Commit
 	Lines added	Righe aggiunte
 	Lines deleted	Righe eliminate
@@ -3644,6 +3792,7 @@ axis	Both	Entrambi
 @msg	SVG parse error: {0}	Errore di analisi SVG: {0}
 @msg	Save for Web: the image is empty	Salva per il web: l'immagine è vuota
 @msg	Save writes {_1}, not {_2}: use document.export for other formats	Salva scrive {_1}, non {_2}: usa document.export per gli altri formati
+@msg	Save writes {_1}, not {_2}: use file.saveAsTemplate to write it	Salva scrive {_1}, non {_2}: usa file.saveAsTemplate per scriverlo
 @msg	Saved recovery data for {title}	Dati di recupero salvati per {title}
 @msg	Saved to User Defined: {_1}	Salvato in Definito dall'utente: {_1}
 @msg	Saved {path}	Salvato {path}
@@ -3673,6 +3822,7 @@ axis	Both	Entrambi
 @msg	`{id}` has no envelope dialog	`{id}` non ha una finestra di dialogo per l'involucro
 @msg	`{keep}` is not a side of this axis	`{keep}` non è un lato di questo asse
 @msg	`{key}` must be `auto` or a language code such as `en` or `zh-hant`	`{key}` deve essere `auto` o un codice lingua come `en` o `zh-hant`
+@msg	`{key}` must be a #rrggbb color	`{key}` deve essere un colore #rrggbb
 @msg	`{key}` must be a #rrggbb colour	`{key}` deve essere un colore #rrggbb
 @msg	`{key}` must be a number	`{key}` deve essere un numero
 @msg	`{key}` must be a string	`{key}` deve essere una stringa
@@ -3707,6 +3857,7 @@ axis	Both	Entrambi
 @msg	a freeform gradient keeps at least one point	una sfumatura a forma libera mantiene almeno un punto
 @msg	a gradient needs at least two stops	una sfumatura richiede almeno due cursori colore
 @msg	a graphic style named `{to}` already exists	esiste già uno stile grafico denominato `{to}`
+@msg	a key object sits on that point	su quel punto si trova un oggetto chiave
 @msg	a page is missing	manca una pagina
 @msg	a page out of range	una pagina fuori intervallo
 @msg	a page tree kid isn't a reference	un elemento figlio dell'albero delle pagine non è un riferimento
@@ -3714,6 +3865,7 @@ axis	Both	Entrambi
 @msg	a page's placement is not finite	la posizione di una pagina non è finita
 @msg	a preset named `{_1}` exists	esiste già un preset denominato `{_1}`
 @msg	a slice size must be a positive number of points	la dimensione di una sezione deve essere un numero positivo di punti
+@msg	a spine keeps at least two points	una dorsale mantiene almeno due punti
 @msg	a stream runs past the end	uno stream prosegue oltre la fine
 @msg	a stream's length is wrong	la lunghezza di uno stream è errata
 @msg	a stream's length isn't a number	la lunghezza di uno stream non è un numero
@@ -3775,11 +3927,13 @@ axis	Both	Entrambi
 @msg	give horizontal or vertical	specifica horizontal o vertical
 @msg	give the path `id` and the width point `index`	specifica l'`id` del tracciato e l'`index` del punto di larghezza
 @msg	guides are locked	le guide sono bloccate
+@msg	handle must be in or out	handle deve essere in o out
 @msg	image '{key}' has no pixels and was left out	l'immagine '{key}' non ha pixel ed è stata omessa
 @msg	image data `{_1}` is missing	mancano i dati immagine `{_1}`
 @msg	image would be too large; lower the resolution	l'immagine sarebbe troppo grande; riduci la risoluzione
 @msg	index must be a number or first, previous, next or last	index deve essere un numero oppure first, previous, next o last
 @msg	index must be a number or first, previous, next or last, not `{other}`	index deve essere un numero oppure first, previous, next o last, non `{other}`
+@msg	index must be ≥ 0	index non può essere negativo
 @msg	installing from a path is not available on the web; pass the module as `dataBase64`	l'installazione da un percorso non è disponibile sul web; passa il modulo come `dataBase64`
 @msg	internal error in `{cmd}`: {msg} (the document was left as it was before; please report this bug)	errore interno in `{cmd}`: {msg} (il documento è rimasto com'era; segnala questo bug)
 @msg	internal error: {msg} (please report this bug)	errore interno: {msg} (segnala questo bug)
@@ -3799,6 +3953,7 @@ axis	Both	Entrambi
 @msg	missing `name`	manca `name`
 @msg	missing `tool`	manca `tool`
 @msg	missing index	manca index
+@msg	missing number `{key}`	manca il numero `{key}`
 @msg	multiple windows land with M11.5	le finestre multiple arriveranno con M11.5
 @msg	name the file	assegna un nome al file
 @msg	no CSS to copy: select objects with CSS of their own	nessun CSS da copiare: seleziona oggetti con un CSS proprio
@@ -3880,6 +4035,8 @@ axis	Both	Entrambi
 @msg	no such recent font	font recente inesistente
 @msg	no such saved selection	selezione salvata inesistente
 @msg	no such segment	segmento inesistente
+@msg	no such spine point	punto della dorsale inesistente
+@msg	no such spine segment	segmento della dorsale inesistente
 @msg	no such subpath	sottotracciato inesistente
 @msg	no such user library	libreria utente inesistente
 @msg	no such view	vista inesistente
@@ -3895,6 +4052,7 @@ axis	Both	Entrambi
 @msg	not a DXF drawing	non è un disegno DXF
 @msg	not a VectorCraft file: {0}	non è un file VectorCraft: {0}
 @msg	not a VectorCraft shortcut set (missing `overrides`)	non è un set di scelte rapide VectorCraft (manca `overrides`)
+@msg	not a blend	non è una fusione
 @msg	not a graphic style library (format `{_1}`)	non è una libreria di stili grafici (formato `{_1}`)
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	non è un set di scelte rapide: il testo non inizia con un nome preceduto da una barra e una parentesi graffa aperta
 @msg	not a stored central record	non è un record centrale archiviato
@@ -3951,6 +4109,7 @@ axis	Both	Entrambi
 @msg	select (or target) objects whose appearance isn't basic	seleziona (o imposta come destinazione) oggetti con un aspetto non di base
 @msg	select a Live Paint group	seleziona un gruppo di pittura dinamica
 @msg	select a blend	seleziona una fusione
+@msg	select a blend or give `id`	seleziona una fusione o specifica il suo `id`
 @msg	select a clip group	seleziona un gruppo di ritaglio
 @msg	select a gradient mesh	seleziona una trama sfumatura
 @msg	select a linked image: an embedded one has no file	seleziona un'immagine collegata: un'immagine incorporata non ha un file
@@ -3984,6 +4143,7 @@ axis	Both	Entrambi
 @msg	stop {i} needs `offset`	il cursore colore {i} richiede `offset`
 @msg	stop {i} needs a valid `color`	il cursore colore {i} richiede un `color` valido
 @msg	stop {i}: `{k}` must be a number	cursore colore {i}: `{k}` deve essere un numero
+@msg	t, dx and dy must be finite	t, dx e dy devono essere finiti
 @msg	the EMF header is damaged	l'intestazione EMF è danneggiata
 @msg	the PDF has no pages	il PDF non ha pagine
 @msg	the PDF is no longer loaded	il PDF non è più caricato
@@ -3996,6 +4156,7 @@ axis	Both	Entrambi
 @msg	the art is too light for any dots	la grafica è troppo chiara per generare punti
 @msg	the artboard to fit must be a positive size up to {_1} pt	la tavola da disegno da adattare deve avere una dimensione positiva fino a {_1} pt
 @msg	the background worker stopped	il processo in background si è interrotto
+@msg	the blend has no spine	la fusione non ha una dorsale
 @msg	the compressed file unpacks to more than {_1} MB	il file compresso, una volta decompresso, supera {_1} MB
 @msg	the document has never been saved	il documento non è mai stato salvato
 @msg	the document has no artboard	il documento non ha una tavola da disegno
@@ -4036,6 +4197,7 @@ axis	Both	Entrambi
 @msg	the selected stroke's profile is already listed as {_1}	il profilo della traccia selezionata è già elencato come {_1}
 @msg	the selection has no URL (or they differ)	la selezione non ha un URL (oppure gli URL sono diversi)
 @msg	the selection isn't in perspective	la selezione non è in prospettiva
+@msg	the spine has no segments	la dorsale non ha segmenti
 @msg	the stroke has no weight	la traccia non ha spessore
 @msg	the thumbnail image is malformed	l'immagine miniatura non è formata correttamente
 @msg	the top object must be a path, compound path or text object to use as a clipping mask	l'oggetto superiore deve essere un tracciato, un tracciato composto o un oggetto di testo da usare come maschera di ritaglio
@@ -4071,9 +4233,11 @@ axis	Both	Entrambi
 @msg	unknown tool or command `{key}`	strumento o comando sconosciuto `{key}`
 @msg	unknown workspace (one of {_1})	area di lavoro sconosciuta (una delle seguenti: {_1})
 @msg	unsupported: {0}	non supportato: {0}
+@msg	variables are locked	le variabili sono bloccate
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	i file della versione {0} non possono essere compressi: solo la versione {COMPRESSED_SINCE} e successive aprono file compressi
 @msg	width and height are at least 1 pixel	larghezza e altezza sono di almeno 1 pixel
 @msg	workspace name can't be empty	il nome dell'area di lavoro non può essere vuoto
+@msg	x and y must be finite	x e y devono essere finiti
 @msg	{C}: no effect at index {from}	{C}: nessun effetto all'indice {from}
 @msg	{_1} failed: {e}	errore in {_1}: {e}
 @msg	{_1} files can be opened but not written (see document.formats)	i file {_1} possono essere aperti ma non scritti (vedi document.formats)
@@ -4356,6 +4520,7 @@ effect	Regular	Normale
 	Reset all	Ripristina tutto
 	Reset to default	Ripristina valore predefinito
 	Reset all Revolve settings to their defaults.	Ripristina tutte le impostazioni di rivoluzione ai valori predefiniti.
+	Step up or down	Aumenta o riduci di un passo
 	Drag values or labels. Double-click a value to type.	Trascina i valori o le etichette. Fai doppio clic su un valore per digitarlo.
 	Drag rings to rotate. Shift snaps to 15°.	Trascina gli anelli per ruotare. Shift usa incrementi di 15°.
 	Drag the light, or its rings. Shift snaps to 15°.	Trascina la luce o i suoi anelli. Shift usa incrementi di 15°.
@@ -4404,6 +4569,20 @@ lighting	Light	Luce
 	Reset Ruler Origin	Ripristina origine dei righelli
 	Artistic	Artistico
 	Film Grain…	Grana della pellicola…
+	Cutout…	Ritaglio…
+	Cutout	Ritaglio
+	Neon Glow…	Bagliore neon…
+	Neon Glow	Bagliore neon
+	Poster Edges…	Bordi poster…
+	Poster Edges	Bordi poster
+	Levels	Livelli
+	Edge Simplicity	Semplicità dei bordi
+	Edge Fidelity	Fedeltà dei bordi
+	Glow Size	Dimensione del bagliore
+	Glow Brightness	Luminosità del bagliore
+	Edge Thickness	Spessore dei bordi
+	Edge Intensity	Intensità dei bordi
+	Posterization	Posterizzazione
 	Highlight Area	Area luci
 @msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	il file compresso, una volta decompresso, supera ciò che VectorCraft legge ({_1} MB di documento, {_2} MB per immagine)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	il documento è troppo grande per essere salvato compresso ({0}): salvalo con Usa compressione disattivato
@@ -4577,3 +4756,10 @@ lighting	Light	Luce
 	Movie Clip	Clip filmato
 @msg	name is empty	il nome è vuoto
 @msg	no symbol named `{n}`	nessun simbolo denominato `{n}`
+	Enable Guides for 9-Slice Scaling	Abilita guide per il ridimensionamento 9-slice
+@msg	a mask has more than one art block	una maschera contiene più di un blocco grafico
+@msg	mask art ends outside a mask dictionary	la grafica della maschera termina fuori da un dizionario di maschera
+@msg	cancelled; nothing was changed	annullato; non è stato modificato nulla
+@msg	a linked image can't become a gradient mesh: embed it first	un’immagine collegata non può diventare una trama sfumata: incorporala prima
+@msg	the image has no usable size or position	l’immagine non ha dimensioni o posizione utilizzabili
+@msg	the image's pixels can't be read	impossibile leggere i pixel dell’immagine

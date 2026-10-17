@@ -313,11 +313,17 @@ fn edits_contents(n: &Node) -> bool {
 /// Is `p` inside the region `clip` clips to ([`Node::clip_shapes`])? Text counts by its frame:
 /// glyph outlines need the font engine, above this crate.
 fn clip_contains(clip: &Node, p: Point) -> bool {
+    clip_regions(clip).iter().any(|(bp, rule)| fill_contains(bp, *rule, p))
+}
+
+/// The regions `clip` clips to ([`Node::clip_shapes`]), text counted by its frame as in
+/// [`clip_contains`].
+fn clip_regions(clip: &Node) -> Vec<(vectorcraft_geom::BezPath, vectorcraft_geom::FillRule)> {
     let frame = |n: &Node| {
         let b = n.geometric_bounds()?;
         Some(Node::path(n.id, vectorcraft_geom::shapes::rectangle(b), Default::default()))
     };
-    clip.clip_shapes(Some(&frame)).iter().any(|(bp, rule)| fill_contains(bp, *rule, p))
+    clip.clip_shapes(Some(&frame))
 }
 
 /// Can a click at `p` hit `c`, the child `i` of `parent`, or something inside it? Not when it is
@@ -483,16 +489,40 @@ fn hit_any(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes) -> Option
     }
 }
 
+/// The path of compound path `n` under `p`, for the Group Selection tool: the one whose outline is
+/// within `tol`, else the innermost one whose area holds `p` (a hole inside an outer shape, an
+/// island inside a hole). `None` when `n` isn't a compound path or no part is under `p`.
+pub fn compound_part_at(n: &Node, p: Point, tol: f64) -> Option<NodeId> {
+    let NodeKind::Compound { children, rule } = &n.kind else { return None };
+    let parts: Vec<_> = children.iter().rev().filter_map(|c| c.path_data().map(|pd| (c.id, pd.to_bezpath(), pd.bounds()))).collect();
+    if let Some((id, ..)) = parts.iter().find(|(_, bp, _)| stroke_contains(bp, 0.0, tol, p)) {
+        return Some(*id);
+    }
+    // The innermost by the size of its box.
+    let size = |b: &Option<Rect>| b.map_or(f64::INFINITY, |b| b.area());
+    parts.iter().filter(|(_, bp, _)| fill_contains(bp, *rule, p)).min_by(|a, b| size(&a.2).total_cmp(&size(&b.2))).map(|(id, ..)| *id)
+}
+
 /// Objects (children of layers, or of `scope` in isolation mode) touched by a marquee rect, leaving
 /// out those on a locked artboard ([`crate::LockedArtboards::holds_id`]). Symbol instances are measured
-/// by their art ([`Node::geometric_bounds_with`]).
+/// by their art ([`Node::geometric_bounds_with`]). The art of a clip group or of a layer with a
+/// clipping mask counts only when the marquee meets the region its clipping path clips to, and then
+/// only within that region's bounds.
 pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> Vec<NodeId> {
     let mut out = Vec::new();
-    let tops: Vec<&std::sync::Arc<Node>> = match scope.and_then(|s| doc.node(s)) {
-        Some(s) => match s.children() {
-            Some(c) => c.iter().collect(),
+    // `tops` pairs each object with the part of `r` in which the marquee can touch it.
+    let tops: Vec<(&std::sync::Arc<Node>, Rect)> = match scope.and_then(|s| doc.node(s)) {
+        Some(s) => match (s.children(), marquee_in(s, r)) {
+            (Some(c), Some(r)) => c.iter().map(|c| (c, r)).collect(),
+            (Some(_), None) => vec![],
             // A single object isolated: only it.
-            None => doc.parent_of(s.id).and_then(|p| doc.node(p)).and_then(Node::children).into_iter().flatten().filter(|c| c.id == s.id).collect(),
+            (None, _) => doc
+                .parent_of(s.id)
+                .and_then(|p| doc.node(p))
+                .and_then(|p| Some((p.children()?, marquee_in(p, r)?)))
+                .into_iter()
+                .flat_map(|(c, r)| c.iter().filter(|c| c.id == s.id).map(move |c| (c, r)))
+                .collect(),
         },
         // The objects of the layers, looking through sublayers (hidden, locked and template ones
         // are left out).
@@ -500,18 +530,21 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
             .layers
             .iter()
             .filter(|l| l.visible && !l.locked && !l.is_template() && doc.pattern_edit.as_ref().is_none_or(|e| e.layer == l.id))
-            .flat_map(|l| layer_objects(l))
+            .flat_map(|l| layer_objects(l, r))
             .collect(),
     };
-    fn layer_objects(l: &Node) -> Vec<&std::sync::Arc<Node>> {
+    /// The objects of layer `l`, each with the part of `r` that the clipping masks of `l` and of
+    /// the sublayers it is in leave.
+    fn layer_objects(l: &Node, r: Rect) -> Vec<(&std::sync::Arc<Node>, Rect)> {
         let mut out = vec![];
+        let Some(r) = marquee_in(l, r) else { return out };
         for c in l.children().into_iter().flatten() {
             if c.is_layer() {
                 if c.visible && !c.locked && !c.is_template() {
-                    out.extend(layer_objects(c));
+                    out.extend(layer_objects(c, r));
                 }
             } else {
-                out.push(c);
+                out.push((c, r));
             }
         }
         out
@@ -519,9 +552,10 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
     fn touches(n: &Node, s: &SymbolBoxes, r: Rect) -> bool {
         match &n.kind {
             NodeKind::Path { path, .. } => vectorcraft_geom::hit::intersects_rect(path, r),
-            NodeKind::Layer { children, .. } | NodeKind::Group { children, .. } | NodeKind::Compound { children, .. } => {
-                children.iter().any(|c| c.visible && touches(c, s, r))
+            NodeKind::Layer { children, .. } | NodeKind::Group { children, .. } => {
+                marquee_in(n, r).is_some_and(|r| children.iter().any(|c| c.visible && touches(c, s, r)))
             }
+            NodeKind::Compound { children, .. } => children.iter().any(|c| c.visible && touches(c, s, r)),
             // A box with no width or no height (an instance of a symbol that draws a straight
             // line) is touched where the marquee crosses it.
             _ => n.geometric_bounds_with(s).is_some_and(|b| {
@@ -533,6 +567,7 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
     fn collect_leaves(n: &Node, s: &SymbolBoxes, r: Rect, out: &mut Vec<NodeId>) {
         match &n.kind {
             NodeKind::Layer { children, .. } | NodeKind::Group { children, .. } => {
+                let Some(r) = marquee_in(n, r) else { return };
                 for c in children {
                     if c.visible && !c.locked {
                         collect_leaves(c, s, r, out);
@@ -548,7 +583,7 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
     }
     let symbols = doc.symbol_boxes();
     let locks = doc.locked_artboards();
-    for t in tops {
+    for (t, r) in tops {
         if !t.visible || t.locked || locks.holds_id(t.id) {
             continue;
         }
@@ -559,6 +594,36 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
         }
     }
     out
+}
+
+/// The part of a marquee `r` in which it can touch the children of `parent`. For a clip group or a
+/// layer with a clipping mask, this is what [`marquee_in_clip`] returns for its clipping path (None
+/// when the marquee misses it); otherwise it is all of `r`.
+fn marquee_in(parent: &Node, r: Rect) -> Option<Rect> {
+    match parent.children().and_then(|c| c.first()) {
+        Some(clip) if parent.clips() => marquee_in_clip(clip, r),
+        _ => Some(r),
+    }
+}
+
+/// The part of a marquee `r` in which it can touch the art that `clip` clips (the clipping path of
+/// a clip group or of a layer with a clipping mask): `r` cut to the bounds of the regions `clip`
+/// clips to ([`clip_regions`]), or `None` when `r` meets none of those regions. Within those
+/// bounds, art outside a region that is not a rectangle still counts.
+fn marquee_in_clip(clip: &Node, r: Rect) -> Option<Rect> {
+    use vectorcraft_geom::kurbo::Shape;
+    let regions = clip_regions(clip);
+    // The edge of a region is its outline with each open subpath closed, as `fill_contains` fills it.
+    let meets = |(bp, rule): &(vectorcraft_geom::BezPath, vectorcraft_geom::FillRule)| {
+        let mut edge = vectorcraft_geom::PathData::from_bezpath(bp);
+        edge.subpaths.iter_mut().for_each(|sp| sp.closed = true);
+        fill_contains(bp, *rule, r.center()) || vectorcraft_geom::hit::intersects_rect(&edge, r)
+    };
+    if !regions.iter().any(meets) {
+        return None;
+    }
+    let bounds = regions.iter().map(|(bp, _)| bp.bounding_box()).reduce(|a, b| a.union(b))?;
+    Some(r.intersect(bounds))
 }
 
 #[cfg(test)]
@@ -632,6 +697,99 @@ mod tests {
         assert_eq!(marquee(&d, Rect::new(-5.0, -5.0, 5.0, 5.0), None, false), vec![g]);
         assert_eq!(marquee(&d, Rect::new(-5.0, -5.0, 5.0, 5.0), None, true), vec![a]);
         assert!(marquee(&d, Rect::new(100.0, 100.0, 105.0, 105.0), None, false).is_empty());
+    }
+
+    /// The art of a 200 pt wide rectangle clipped to its left half (0..100 × 0..100): the mask and
+    /// the art, in that order.
+    fn half_clipped(d: &mut Document) -> (Node, Node) {
+        let mask = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)), Appearance::default());
+        let art = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 200.0, 100.0)), Appearance::default_art());
+        (mask, art)
+    }
+
+    /// #2345: a marquee touches a clip group only where its art shows. Over the clipped-away
+    /// half alone it selects nothing, and around a rectangle drawn beside the group's mask it
+    /// takes that rectangle alone; reaching into the mask takes the group. The same holds for
+    /// Group Selection's leaves and in isolation mode.
+    #[test]
+    fn a_marquee_leaves_a_clip_group_by_its_clipped_away_art() {
+        let mut d = Document::new(300.0, 200.0);
+        let l = d.layers[0].id;
+        let (mask, art) = half_clipped(&mut d);
+        let (g, art_id, beside) = (d.alloc_id(), art.id, d.alloc_id());
+        let mut clip = Node::group(g, vec![Arc::new(mask), Arc::new(art)]);
+        clip.set_clips(true);
+        d.insert(Some(l), 0, clip).unwrap();
+        d.insert(Some(l), 1, Node::path(beside, shapes::rectangle(Rect::new(150.0, 80.0, 190.0, 130.0)), Appearance::default_art())).unwrap();
+        // This marquee crosses only the hidden art's top and right edges.
+        let hidden = Rect::new(150.0, -10.0, 210.0, 50.0);
+        assert!(marquee(&d, hidden, None, false).is_empty());
+        assert!(marquee(&d, hidden, None, true).is_empty());
+        assert!(marquee(&d, hidden, Some(g), false).is_empty());
+        assert!(marquee(&d, hidden, Some(art_id), false).is_empty());
+        // This marquee surrounds the rectangle beside and crosses the hidden art's bottom edge.
+        assert_eq!(marquee(&d, Rect::new(140.0, 70.0, 195.0, 140.0), None, false), vec![beside]);
+        // This marquee crosses the shown half's top edge and goes on into the hidden half.
+        let shown = Rect::new(50.0, -10.0, 160.0, 10.0);
+        assert_eq!(marquee(&d, shown, None, false), vec![g]);
+        assert!(marquee(&d, shown, None, true).contains(&art_id));
+        assert_eq!(marquee(&d, shown, Some(g), false).len(), 2, "the mask and the art");
+    }
+
+    /// #2345: in the corner of a diamond mask's box, outside the diamond, a marquee over the
+    /// clipped art's corner leaves the clip group. An open mask clips to its area closed by a
+    /// straight line, and a marquee across that line takes the art it reaches inside.
+    #[test]
+    fn a_marquee_must_meet_the_clipping_path_itself() {
+        // A clip group of a mask through `pts` (closed or open) over the art `art`.
+        let clipped = |pts: &[(f64, f64)], closed: bool, art: Rect| {
+            let mut d = Document::new(200.0, 200.0);
+            let l = d.layers[0].id;
+            let mut mask = vectorcraft_geom::BezPath::new();
+            mask.move_to(pts[0]);
+            for &p in &pts[1..] {
+                mask.line_to(p);
+            }
+            if closed {
+                mask.close_path();
+            }
+            let mask = Node::path(d.alloc_id(), vectorcraft_geom::PathData::from_bezpath(&mask), Appearance::default());
+            let art = Node::path(d.alloc_id(), shapes::rectangle(art), Appearance::default_art());
+            let g = d.alloc_id();
+            let mut clip = Node::group(g, vec![Arc::new(mask), Arc::new(art)]);
+            clip.set_clips(true);
+            d.insert(Some(l), 0, clip).unwrap();
+            (d, g)
+        };
+        let (d, g) = clipped(&[(50.0, 0.0), (100.0, 50.0), (50.0, 100.0), (0.0, 50.0)], true, Rect::new(0.0, 0.0, 100.0, 100.0));
+        assert!(marquee(&d, Rect::new(-10.0, -10.0, 10.0, 10.0), None, false).is_empty());
+        assert_eq!(marquee(&d, Rect::new(-10.0, 40.0, 10.0, 60.0), None, false), vec![g], "over the diamond's left point");
+        // The mask is the triangle above the line from (0, 0) to (100, 100), and the art lies inside it.
+        let (d, g) = clipped(&[(0.0, 0.0), (100.0, 0.0), (100.0, 100.0)], false, Rect::new(55.0, 40.0, 70.0, 50.0));
+        assert_eq!(marquee(&d, Rect::new(40.0, 45.0, 60.0, 70.0), None, false), vec![g]);
+    }
+
+    /// #2345: the objects of a layer or sublayer with a clipping mask are touched only where the
+    /// mask shows them, as in a clip group.
+    #[test]
+    fn a_marquee_leaves_art_a_layer_clips_away() {
+        for sublayer in [false, true] {
+            let mut d = Document::new(300.0, 200.0);
+            let l = d.layers[0].id;
+            let beside = d.alloc_id();
+            d.insert(Some(l), 0, Node::path(beside, shapes::rectangle(Rect::new(150.0, 80.0, 190.0, 130.0)), Appearance::default_art())).unwrap();
+            let masked = d.alloc_id();
+            let mut layer = Node::layer(masked, "Masked", crate::LayerColor::Preset(2));
+            layer.set_clips(true);
+            d.insert(sublayer.then_some(l), 9, layer).unwrap();
+            let (mask, art) = half_clipped(&mut d);
+            let (mask_id, art_id) = (mask.id, art.id);
+            d.insert(Some(masked), 0, mask).unwrap();
+            d.insert(Some(masked), 1, art).unwrap();
+            assert!(marquee(&d, Rect::new(150.0, -10.0, 210.0, 50.0), None, false).is_empty(), "sublayer: {sublayer}");
+            assert_eq!(marquee(&d, Rect::new(140.0, 70.0, 195.0, 140.0), None, false), vec![beside], "sublayer: {sublayer}");
+            assert_eq!(marquee(&d, Rect::new(50.0, -10.0, 160.0, 10.0), None, false), vec![mask_id, art_id], "sublayer: {sublayer}");
+        }
     }
 
     /// Art in a sublayer is an object of its own: a click or a marquee takes it, not the

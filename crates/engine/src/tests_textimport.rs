@@ -1,4 +1,4 @@
-//! File → Place of a text file: Text Import Options, and the text set as area type.
+//! File → Place of a text file (Text Import Options) or an RTF file: the text set as area type.
 
 use serde_json::{Value, json};
 use vectorcraft_doc::{NodeKind, TextKind};
@@ -51,6 +51,22 @@ fn crlf_with_returns_removed_places_one_paragraph_per_block_as_area_type() {
     assert!(close(frame, Rect::new(10.0, 20.0, 110.0, 70.0)), "{frame:?}");
 }
 
+/// Placed at a point on an artboard's right or bottom edge, the frame takes that artboard's size less
+/// a 36 pt margin on each side; on the edge two artboards share, away from its ends, it takes the
+/// size of the artboard to the right of it.
+#[test]
+fn type_placed_on_an_artboard_edge_takes_that_artboards_frame() {
+    let mut s = session();
+    let mut wide = s.doc().unwrap().doc.artboards[0].clone();
+    wide.rect = Rect::new(400.0, 0.0, 600.0, 200.0);
+    std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc).artboards.push(wide);
+    for at in [[600.0, 100.0], [500.0, 200.0], [400.0, 100.0]] {
+        let r = place_text(&mut s, b"Edge", json!({ "at": at }));
+        let frame = placed(&s, &r).1;
+        assert!(close(frame, Rect::from_center_size((at[0], at[1]), (128.0, 128.0))), "{at:?}: {frame:?}");
+    }
+}
+
 #[test]
 fn text_files_report_and_queue_with_their_options() {
     let mut s = session();
@@ -75,11 +91,83 @@ fn text_files_report_and_queue_with_their_options() {
     assert!(close(frame, Rect::new(50.0, 60.0, 130.0, 100.0)), "{frame:?}");
 }
 
+/// An RTF file with a font table, a color table, a bold run, an italic run, a superscript and a
+/// centered, indented second paragraph.
+const LETTER_RTF: &str = concat!(
+    r"{\rtf1\ansi\deff0{\fonttbl{\f0\froman Times New Roman;}{\f1\fswiss Arial;}}",
+    r"{\colortbl;\red255\green0\blue0;}{\*\generator Some Writer;}{\info{\title Notes}}",
+    "\r\n",
+    r"\pard\plain\fs24 Plain and {\b bold} words{\super 2}.\par",
+    "\r\n",
+    r"\pard\qc\li720\sa240\f1\fs36\cf1 Centered {\i caf\'e9}\par",
+    "\r\n}"
+);
+
+#[test]
+fn rtf_places_as_area_type_with_its_character_and_paragraph_formatting() {
+    let mut s = session();
+    s.execute("document.setup", &json!({"superscript": {"size": 50, "position": 40}})).unwrap();
+    let r = s.execute("file.place", &json!({"name": "letter.rtf", "dataBase64": vectorcraft_format::base64_encode(LETTER_RTF.as_bytes())})).unwrap();
+    assert_eq!((r["format"].as_str(), r["name"].as_str()), (Some("rtf"), Some("letter.rtf")));
+    let (body, frame) = placed(&s, &r);
+    assert_eq!(body, "Plain and bold words2.\nCentered café");
+    assert!(close(frame, Rect::new(36.0, 36.0, 364.0, 264.0)), "the artboard less a 36 pt margin: {frame:?}");
+    let n = s.doc().unwrap().doc.node(NodeId(r["ids"][0].as_u64().unwrap())).unwrap().clone();
+    let NodeKind::Text(t) = &n.kind else { panic!("not type") };
+    let runs: Vec<_> = t.runs.iter().map(|r| (r.text.as_str(), r.style.font_family.as_str(), r.style.font_style.as_str(), r.style.size)).collect();
+    assert_eq!(
+        runs,
+        [
+            ("Plain and ", "Times New Roman", "Regular", 12.0),
+            ("bold", "Times New Roman", "Bold", 12.0),
+            (" words", "Times New Roman", "Regular", 12.0),
+            ("2", "Times New Roman", "Regular", 12.0),
+            (".\n", "Times New Roman", "Regular", 12.0),
+            ("Centered ", "Arial", "Regular", 18.0),
+            ("café", "Arial", "Italic", 18.0),
+        ]
+    );
+    let superscript = vectorcraft_doc::ScriptMetrics { size: 50.0, position: 40.0 };
+    assert_eq!(t.runs[3].style.position, vectorcraft_doc::CharPosition::Superscript(superscript), "in Document Setup's proportions");
+    let red = vectorcraft_color::Paint::solid(vectorcraft_color::Color::rgb8(255, 0, 0));
+    assert_eq!((t.runs[0].style.fill == red, t.runs[5].style.fill == red, t.runs[6].style.fill == red), (false, true, true));
+    let paras = t.paragraph_styles();
+    let summary: Vec<_> = paras.iter().map(|p| (p.justify, p.left_indent, p.space_after)).collect();
+    assert_eq!(summary, [(vectorcraft_doc::Justify::Left, 0.0, 0.0), (vectorcraft_doc::Justify::Center, 36.0, 12.0)]);
+    let st = s.doc().unwrap();
+    assert_eq!((st.history.undo.len(), st.selection.objects.len()), (2, 1), "Document Setup and Place, each one undo step");
+    // Info and the place cursor report it as RTF.
+    let file = json!({"name": "letter.rtf", "dataBase64": vectorcraft_format::base64_encode(LETTER_RTF.as_bytes())});
+    let info = s.execute("file.place.info", &file).unwrap();
+    assert_eq!((info["format"].as_str(), info["width"].as_f64()), (Some("rtf"), Some(468.0)));
+    let q = s.execute("file.place.queue", &json!({"files": [file]})).unwrap();
+    assert_eq!((q["count"].as_u64(), q["files"][0]["format"].as_str()), (Some(1), Some("rtf")));
+}
+
+#[test]
+fn malformed_rtf_fails_cleanly() {
+    let mut s = session();
+    let place = |s: &mut Session, name: &str, bytes: &[u8]| {
+        s.execute("file.place", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(bytes)}))
+    };
+    assert!(place(&mut s, "a.rtf", b"Plain words, not RTF").is_err(), "an .rtf file that isn't RTF");
+    assert!(place(&mut s, "a.rtf", br"{\rtf1{\fonttbl{\f0 Arial;}}\par\par }").is_err(), "no text to place");
+    assert!(place(&mut s, "a.rtf", br"{\rtf1 {\pict\bin999999 ").is_err(), "binary data past the end of the file");
+    // Text, a stray brace and a cut-off escape after the closing brace are ignored.
+    let r = place(&mut s, "a.rtf", br"{\rtf1 Cut {\b off}} after}\'9").unwrap();
+    assert_eq!(placed(&s, &r).0, "Cut off");
+    // A .txt file is plain text even when it holds RTF.
+    let r = place(&mut s, "a.txt", br"{\rtf1 x}").unwrap();
+    assert_eq!((r["format"].as_str(), placed(&s, &r).0.as_str()), (Some("txt"), r"{\rtf1 x}"));
+    assert_eq!(s.doc().unwrap().history.undo.len(), 2, "failed places leave no undo step");
+}
+
 #[test]
 fn place_reads_what_open_reads_and_text_files() {
-    use cmd::fileio::{OPEN_EXTS, PLACE_EXTS, TEXT_EXTS};
-    assert_eq!(PLACE_EXTS, [OPEN_EXTS, TEXT_EXTS].concat());
+    use cmd::fileio::{OPEN_EXTS, PLACE_EXTS, RTF_EXTS, TEXT_EXTS};
+    assert_eq!(PLACE_EXTS, [OPEN_EXTS, TEXT_EXTS, RTF_EXTS].concat());
     let filters: Vec<_> = cmd::fileio::place_filters().collect();
-    assert_eq!((filters.first(), filters.last()), (Some(&("All placeable files", PLACE_EXTS)), Some(&("Text", TEXT_EXTS))));
-    assert!(!cmd::fileio::open_filters().any(|(_, exts)| exts.contains(&"txt")), "Open doesn't read text files");
+    assert_eq!((filters.first(), filters.last()), (Some(&("All placeable files", PLACE_EXTS)), Some(&("RTF", RTF_EXTS))));
+    assert_eq!(filters.get(filters.len() - 2), Some(&("Text", TEXT_EXTS)));
+    assert!(!cmd::fileio::open_filters().any(|(_, exts)| exts.contains(&"txt") || exts.contains(&"rtf")), "Open doesn't read text or RTF files");
 }
