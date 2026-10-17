@@ -1152,6 +1152,7 @@ lighting	Light	Cahaya
 	Reshape Tool	Alat pembentuk ulang
 	Rotate Tool	Alat putar
 	Rotate View Tool	Alat putar tampilan
+	Trackpad Gesture to Rotate View	Putar tampilan dengan gestur trackpad
 	Rotate View	Putar tampilan
 	Rounded Rectangle Tool	Alat persegi panjang bulat
 	Scale Tool	Alat skala
@@ -5035,3 +5036,118 @@ swatch	Bright Violet	Violet cerah
 	Movie Clip	Klip film
 @msg	name is empty	nama kosong
 @msg	no symbol named `{n}`	tidak ada simbol bernama `{n}`
+	Remove Color Profile…	Hapus profil warna…
+	Color wheel	Roda warna
+	First Artboard	Artboard pertama
+	Last Artboard	Artboard terakhir
+	Next Artboard	Artboard berikutnya
+	Previous Artboard	Artboard sebelumnya
+	Step up or down	Naikkan atau turunkan bertahap
+	Add Event	Tambahkan peristiwa
+	Add JavaScript File	Tambahkan file JavaScript
+	Chop Design	Potong desain
+	Clear Events	Hapus peristiwa
+	Close Gaps With Paths	Tutup celah dengan jalur
+	Column Type:	Jenis kolom:
+	Each Design Represents:	Setiap desain mewakili:
+	Event:	Peristiwa:
+	File or URL:	File atau URL:
+	For Fractions:	Untuk pecahan:
+	Gap Detection	Deteksi celah
+	Gap Options	Opsi celah
+	Gap Preview Color:	Warna pratinjau celah:
+	Graph Column	Kolom grafik
+	JavaScript Files	File JavaScript
+	JavaScript:	JavaScript:
+	Link JavaScript Files…	Tautkan file JavaScript…
+	New Artboard Options…	Opsi artboard baru…
+	Paint Stops At:	Cat berhenti di:
+	Remove JavaScript File	Hapus file JavaScript
+	Remove Selected Entry	Hapus entri terpilih
+	Repeating	Berulang
+	Resize	Ubah ukuran
+	Scale Design	Skalakan desain
+	Sliding	Bergeser
+	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Nama di dialog simpan adalah “{typed}”, lalu VectorCraft menambahkan ekstensi jenis file. Mengganti file akan menimpa kontennya.
+	Uniformly Scaled	Diskalakan seragam
+	Vertically Scaled	Diskalakan vertikal
+	“{name}” already exists. Replace it?	“{name}” sudah ada. Ganti?
+	Enable Guides for 9-Slice Scaling	Aktifkan panduan untuk penskalaan 9-iris
+	Lock Variables	Kunci variabel
+	Unlock Variables	Buka kunci variabel
+	Change to Artboard Rulers	Ubah ke penggaris artboard
+	Cutout…	Potongan…
+	Neon Glow…	Pendar neon…
+	Poster Edges…	Tepi poster…
+	Cutout	Potongan
+	Neon Glow	Pendar neon
+	Poster Edges	Tepi poster
+	Apply Data Set	Terapkan set data
+	Cancel Pattern Editing	Batalkan pengeditan pola
+	Copy Appearance	Salin tampilan
+	Copy Guide	Salin panduan
+	Copy in Perspective	Salin dalam perspektif
+	Create Slice from Selection	Buat slice dari pilihan
+	Create Slices from Guides	Buat slice dari panduan
+	Delete All Slices	Hapus semua slice
+	Delete Data Sets	Hapus set data
+	Delete Graphic Styles	Hapus gaya grafis
+	Delete Guide	Hapus panduan
+	Delete Guides	Hapus semua panduan
+	Delete Slice	Hapus slice
+	Delete Style	Hapus gaya
+	Delete Variables	Hapus variabel
+	Delete View	Hapus tampilan
+	Done Editing Pattern	Selesai mengedit pola
+	Duplicate Rows	Duplikatkan baris
+	Edit Perspective Grid	Edit kisi perspektif
+	Expand Blend	Perluas blend
+	Expand Envelope	Perluas amplop
+	Expand Image Trace	Perluas Image Trace
+	Expand Live Paint	Perluas Live Paint
+	Live Shape	Bentuk langsung
+	Make Blend	Buat blend
+	Make Dynamic	Jadikan dinamis
+	Make Intertwine	Buat jalinan
+	Make Live Paint	Buat Live Paint
+	Make Pattern	Buat pola
+	Make Slice	Buat slice
+	Merge Live Paint	Gabungkan Live Paint
+	Mesh Point Color	Warna titik mesh
+	Move Envelope Point	Pindahkan titik amplop
+	Move Plane and Copy Objects	Pindahkan bidang dan salin objek
+	Move Plane and Objects	Pindahkan bidang dan objek
+	Move Slice	Pindahkan slice
+	Move Type on a Path	Pindahkan teks pada jalur
+	New Guide	Panduan baru
+	Place from Library	Tempatkan dari pustaka
+	Rearrange Artboards	Atur ulang artboard
+	Release Blend	Lepaskan blend
+	Release Envelope	Lepaskan amplop
+	Release Intertwine	Lepaskan jalinan
+	Release Live Paint	Lepaskan Live Paint
+	Release Repeat	Lepaskan perulangan
+	Release Slice	Lepaskan slice
+	Release Threaded Text	Lepaskan teks beruntun
+	Rename Design	Ganti nama desain
+	Rename Style	Ganti nama gaya
+	Rename View	Ganti nama tampilan
+	Reorder Appearance	Susun ulang tampilan
+	Reorder Artboards	Susun ulang artboard
+	Reshape Spine	Bentuk ulang spine
+	Resize Artboard	Ubah ukuran artboard
+	Resize Slice	Ubah ukuran slice
+	Resize Type Area	Ubah ukuran area teks
+	Scale in Perspective	Skalakan dalam perspektif
+	Shape Builder Delete	Hapus dengan Pembangun bentuk
+	Sort Swatches	Urutkan sampel warna
+	Symbol Screener	Penyaring simbol
+	Symbol Scruncher	Perapat simbol
+	Symbol Shifter	Penggeser simbol
+	Symbol Sizer	Pengubah ukuran simbol
+	Symbol Spinner	Pemutar simbol
+	Symbol Stainer	Pewarna simbol
+	Symbol Styler	Penerap gaya simbol
+	Text Orientation	Orientasi teks
+	Thread Text	Untai teks
+	Typing	Mengetik

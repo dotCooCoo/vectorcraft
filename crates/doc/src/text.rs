@@ -1067,6 +1067,12 @@ pub struct TextObject {
     /// Wrap objects above this area type, resolved by the engine after each edit (text space).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub wrap: Vec<WrapShape>,
+    /// Type › Optical Margin Alignment: in every paragraph, Latin punctuation and the slanted
+    /// sides of letters such as A and W at a line's start or end hang outside the margin there
+    /// (point and area type of left-to-right paragraphs; see the layout's `optical_hangs`). Off
+    /// for new type and for documents from before it, and saved only when on.
+    #[serde(default, rename = "opticalMarginAlignment", skip_serializing_if = "crate::skip::is_default")]
+    pub optical_margin: bool,
     /// Cached layout bounds in text space, filled in by the layout engine (not serialized).
     #[serde(skip)]
     pub cached_bounds: Option<Rect>,
@@ -1132,6 +1138,7 @@ impl TextObject {
             path_align: PathAlign::default(),
             path_spacing: 0.0,
             wrap: Vec::new(),
+            optical_margin: false,
             cached_bounds: None,
             cached_baselines: Vec::new(),
         }

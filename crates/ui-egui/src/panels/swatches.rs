@@ -160,11 +160,18 @@ fn swatch_params(e: &Entry) -> Option<Value> {
     })
 }
 
-/// Apply a clicked swatch to the active proxy (Alt: the inactive one).
+/// Apply a clicked swatch to the active proxy (Alt: the inactive one). An Alt-click on a color
+/// swatch with a gradient stop selected recolors the stop as dropping the swatch on it does,
+/// and with a freeform gradient point selected it recolors the point.
 fn apply(app: &mut VectorcraftApp, ui: &Ui, e: &Entry) {
-    if let Some(params) = swatch_params(e) {
-        super::apply_click(app, ui, params);
+    let Some(params) = swatch_params(e) else { return };
+    if super::alt_held(ui)
+        && let Some(c) = drag_of(e, vec![]).color()
+        && super::gradient::recolor_selected(app, c, &params)
+    {
+        return;
     }
+    super::apply_click(app, ui, params);
 }
 
 /// A pattern swatch drawn as a rendered tile (cached by the definition's identity and size).
@@ -1376,6 +1383,67 @@ mod tests {
         assert_eq!(app.session.paint.fill.color().map(|c| c.to_hex()), Some("#ed1c24".into()), "modifier clicks only select");
         click_tile(&mut app, &ctx, "Grays", Modifiers::NONE, 8.0);
         assert_eq!(selected(&ctx), ["Grays"], "a plain click on a group selects it alone");
+    }
+
+    /// The hex colors of the stops of the selection's gradient fill, and its stroke's color.
+    fn stops_and_stroke(app: &VectorcraftApp) -> (Vec<String>, String) {
+        let (fill, stroke) = crate::panels::current_paints(app);
+        let Paint::Gradient(g) = fill else { panic!("the fill is still a gradient: {fill:?}") };
+        (g.gradient.stops.iter().map(|s| s.color.to_hex()).collect(), stroke.color().map(|c| c.to_hex()).unwrap_or_default())
+    }
+
+    #[test]
+    fn alt_click_recolors_the_selected_gradient_stop() {
+        let mut app = app();
+        let ctx = context();
+        app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50})).unwrap();
+        app.run("paint.setStroke", json!({"color": "#000000"})).unwrap();
+        let stops = json!([{"offset": 0, "color": "#ffffff"}, {"offset": 1, "color": "#000000"}]);
+        app.run("paint.setFill", json!({"gradient": {"stops": stops}})).unwrap();
+        app.run("gradient.selectStop", json!({"index": 1})).unwrap();
+        let undo = app.session.doc().unwrap().history.undo.len();
+        click_tile(&mut app, &ctx, "Red", Modifiers::ALT, 0.0);
+        assert_eq!(stops_and_stroke(&app), (vec!["#ffffff".into(), "#ed1c24".into()], "#000000".into()), "the stop, not the stroke");
+        assert_eq!(app.session.doc().unwrap().history.undo.len(), undo + 1, "one undo step");
+        assert_eq!(app.session.selected_stop(), Some(1), "the stop stays selected");
+        assert!(app.session.fill_active, "the Fill proxy stays in front");
+        // With no stop selected, Alt-click paints the inactive proxy.
+        app.run("gradient.selectStop", json!({"index": null})).unwrap();
+        click_tile(&mut app, &ctx, "Orange", Modifiers::ALT, 2.0);
+        let orange = app.session.doc().unwrap().doc.swatch("Orange").and_then(|w| w.paint.color()).unwrap().to_hex();
+        assert_eq!(stops_and_stroke(&app), (vec!["#ffffff".into(), "#ed1c24".into()], orange));
+    }
+
+    #[test]
+    fn alt_click_links_the_selected_stop_to_a_global_swatch() {
+        let mut app = app();
+        let ctx = context();
+        app.run("swatch.edit", json!({"name": "Red", "global": true})).unwrap();
+        app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50})).unwrap();
+        let stops = json!([{"offset": 0, "color": "#ffffff"}, {"offset": 1, "color": "#000000"}]);
+        app.run("paint.setFill", json!({"gradient": {"stops": stops}})).unwrap();
+        app.run("gradient.selectStop", json!({"index": 0})).unwrap();
+        click_tile(&mut app, &ctx, "Red", Modifiers::ALT, 0.0);
+        let Paint::Gradient(g) = crate::panels::current_paints(&app).0 else { panic!("a gradient fill") };
+        assert_eq!(g.gradient.stops[0].swatch.as_deref(), Some("Red"), "linked as a drop on the ramp links it");
+        app.run("swatch.edit", json!({"name": "Red", "color": "#00ff00"})).unwrap();
+        assert_eq!(stops_and_stroke(&app).0, ["#00ff00", "#000000"], "editing the swatch recolors the stop");
+    }
+
+    #[test]
+    fn alt_click_recolors_the_selected_freeform_point() {
+        let mut app = app();
+        let ctx = context();
+        app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50})).unwrap();
+        app.run("paint.setStroke", json!({"color": "#000000", "focus": false})).unwrap();
+        app.run("paint.editGradient", json!({"kind": "freeform"})).unwrap();
+        app.run("paint.freeform.selectPoint", json!({"index": 1})).unwrap();
+        click_tile(&mut app, &ctx, "Red", Modifiers::ALT, 0.0);
+        let (fill, stroke) = crate::panels::current_paints(&app);
+        let Paint::Gradient(g) = fill else { panic!("still a gradient: {fill:?}") };
+        assert_eq!(g.freeform.expect("placed points").points[1].color.to_hex(), "#ed1c24");
+        assert_eq!(stroke.color().map(|c| c.to_hex()).as_deref(), Some("#000000"), "the stroke keeps its color");
+        assert_eq!(app.session.selected_freeform_point(), Some(1), "the point stays selected");
     }
 
     #[test]

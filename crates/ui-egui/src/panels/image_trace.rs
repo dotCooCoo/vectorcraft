@@ -174,11 +174,10 @@ pub(crate) const TRACE_BUTTON_W: f32 = 104.0;
 /// The Image Trace button for a selected image (Control bar, Properties): a click traces it with
 /// the Default preset, its arrow lists the presets to trace it with.
 pub(crate) fn trace_button(app: &mut VectorcraftApp, ui: &mut Ui, width: f32) {
-    let (main, arrow) = widgets::split_button(ui, tl!("Image Trace"), width);
+    let (main, arrow) = widgets::split_button_named(ui, tl!("Image Trace"), tl!("Tracing Presets"), width);
     if main.on_hover_text(tl!("Trace the image with the Default preset")).clicked() {
         trace_with(app, "Default");
     }
-    let arrow = arrow.on_hover_text(tl!("Tracing Presets"));
     if let Some(p) = egui::Popup::menu(&arrow).show(|ui| preset_list(app, ui, "")).and_then(|r| r.inner) {
         trace_with(app, &p);
     }

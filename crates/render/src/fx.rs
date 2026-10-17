@@ -68,11 +68,13 @@ pub(crate) fn has_fx(n: &Node) -> bool {
 
 /// Does `n` carry visible object-level effects that only apply through its art (type, images,
 /// symbol instances, live objects; Crop Marks and colour adjustments on anything), is it type with
-/// a geometry effect on a fill or stroke of its own ([`effects::has_item_geometry`]), or is it a
+/// a geometry effect on a fill or stroke of its own ([`effects::has_item_geometry`]), is it a path
+/// whose Transform effect copies it with a gradient ([`effects::has_gradient_copies`]), or is it a
 /// group or layer with an appearance of its own (see [`Renderer::draw_object_fx`])?
 pub(crate) fn has_object_fx(n: &Node) -> bool {
     (effects::needs_outline(n) && (visible(&n.appearance.effects) || n.projection().is_some()))
         || effects::has_item_geometry(n)
+        || effects::has_gradient_copies(n)
         || effects::has_container_appearance(n)
         || effects::has_crop_marks(n)
         || effects::has_adjustment(n)
@@ -382,6 +384,10 @@ pub(crate) struct PixelEntry {
     /// rasters made before their objects moved: only a frame rendered while interacting draws
     /// it.
     moved: bool,
+    /// How many images in the content failed to decode while the raster was made
+    /// ([`crate::paint::decode_failures`]): each frame that draws the raster counts them
+    /// again ([`crate::paint::add_decode_failures`]).
+    failed: u64,
     pub(crate) stamp: u64,
 }
 
@@ -877,7 +883,7 @@ impl Renderer {
         off.flush();
         let mut pm = vello_cpu::Pixmap::new(w, h);
         off.render(&mut pm, &mut self.resources);
-        if !self.shadows.get(&old).is_some_and(|e| silhouette(&pm, colored) == e.made.pixels) {
+        if self.shadows.get(&old).is_none_or(|e| silhouette(&pm, colored) != e.made.pixels) {
             return;
         }
         if let Some(mut e) = self.shadows.remove(&old) {
@@ -1241,6 +1247,7 @@ impl Renderer {
             self.stats.moved += usize::from(e.moved);
             let p = f.view * e.anchor;
             let (image, at, k) = (e.image.clone(), ((p.x + e.rel.0).round(), (p.y + e.rel.1).round()), e.k);
+            crate::paint::add_decode_failures(e.failed);
             draw_scaled(ctx, image, at, k);
             return;
         }
@@ -1250,8 +1257,9 @@ impl Renderer {
         let px = f.px / k;
         let frame = Frame { mt: false, view, visible: to_doc.transform_rect_bbox(Rect::new(0.0, 0.0, w, h)), px, ..*f };
         let mut off = f.offscreen_context(wu, hu);
-        let before = self.stats.moved;
+        let (before, decoded) = (self.stats.moved, crate::paint::decode_failures());
         self.inside_layer(|r| paint(r, &mut off, &frame));
+        let failed = crate::paint::decode_failures() - decoded;
         // Content drawn over moved rasters makes a moved raster.
         let moved = self.stats.moved > before;
         off.flush();
@@ -1282,13 +1290,16 @@ impl Renderer {
             }
         }
         let image = std::sync::Arc::new(pm);
-        if let Some(((key, made), inputs)) = key.zip(made).zip(inputs) {
+        // A cancelled export drew part of the content: that raster isn't kept for later frames.
+        if !vectorcraft_doc::cancel::is_cancelled()
+            && let Some(((key, made), inputs)) = key.zip(made).zip(inputs)
+        {
             let anchor = content.reach.origin();
             let p = f.view * anchor;
             let rel = (x0 - p.x, y0 - p.y);
             let owner = content.owner.cloned().or_else(|| self.fx_owner.clone().filter(|o| std::ptr::eq(&**o, content.node)));
             let node = Drawn::of(content.node, owner.as_ref());
-            self.pixel_fx.insert(key, PixelEntry { node, linear, anchor, rel, k, image: image.clone(), made, inputs, moved, stamp });
+            self.pixel_fx.insert(key, PixelEntry { node, linear, anchor, rel, k, image: image.clone(), made, inputs, moved, failed, stamp });
             self.trim_fx_rasters(FX_RASTER_BUDGET);
         }
         draw_scaled(ctx, image, (x0, y0), k);
@@ -2003,6 +2014,29 @@ mod tests {
         // A fresh renderer draws the panned view the same.
         let c = Renderer::new().render(&d, 100, 100, Affine::translate((10.0, 3.0)), &opts);
         assert_eq!(b.pixels, c.pixels);
+    }
+
+    /// A blurred image that can't be decoded: every frame that draws it counts the failure
+    /// ([`crate::paint::decode_failures`]), from a new raster or from the raster kept.
+    #[test]
+    fn cached_effect_rasters_count_the_images_they_could_not_decode() {
+        use vectorcraft_doc::{ImageBlob, ImageObject, NodeKind};
+        let mut d = Document::new(100.0, 100.0);
+        // A PNG signature with nothing after it.
+        d.images.insert("cut".into(), ImageBlob::new("image/png", b"\x89PNG\r\n\x1a\n".to_vec()));
+        let im =
+            ImageObject { key: "cut".into(), width: 40, height: 40, xf: Affine::translate((30.0, 30.0)), link: None, placement: Default::default() };
+        let mut n = Node::new(d.alloc_id(), NodeKind::Image(Box::new(im)));
+        n.appearance.effects = vec![Effect { id: "blur.gaussian".into(), params: json!({"radius": 4.0}), visible: true }];
+        d.insert(Some(d.layers[0].id), 0, n).unwrap();
+        let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+        let mut r = Renderer::new();
+        for frame in 0..3 {
+            let before = crate::paint::decode_failures();
+            r.render(&d, 100, 100, Affine::IDENTITY, &opts);
+            assert!(crate::paint::decode_failures() > before, "frame {frame}");
+        }
+        assert_eq!(r.pixel_fx.len(), 1, "the later frames draw from the raster kept");
     }
 
     /// While interacting, an object that only moved draws its drop shadow and filtered content

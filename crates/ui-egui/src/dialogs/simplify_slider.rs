@@ -124,7 +124,7 @@ fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
                         action = Some(Action::Auto);
                     }
                     let rail = t.input_border;
-                    form::slider_rail(ui, &mut d, "level", 0.0..=100.0, &|_| rail);
+                    form::slider_rail_named(ui, &mut d, "level", tl!("Simplify"), 0.0..=100.0, &|_| rail);
                     if widgets::icon_button(ui, "ellipsis", tl!("More Options"), false, 28.0).clicked() {
                         action = Some(Action::MoreOptions);
                     }

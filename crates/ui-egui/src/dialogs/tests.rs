@@ -174,9 +174,33 @@ fn effect_preview_is_kept_as_one_undo_step() {
     assert_eq!(app.session.doc().unwrap().doc, before);
 }
 
+/// Drop Shadow's Color typed as text the effect can't draw: OK returns the error and keeps the
+/// dialog open, with Preview on or off, and the document stays as it was.
+#[test]
+fn effect_dialog_refuses_a_color_it_cannot_draw() {
+    for preview in [true, false] {
+        let mut app = app();
+        app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
+        app.run("select.all", json!({})).unwrap();
+        let before = app.session.doc().unwrap().doc.clone();
+        app.run("effect.dialog", json!({"effect": "stylize.dropShadow"})).unwrap();
+        let d = app.ui.dialog.as_mut().unwrap();
+        d.fields.insert("preview".into(), json!(preview));
+        d.fields.insert("color".into(), json!("not-a-color"));
+        frame(&mut app, Default::default());
+        let e = confirm(&mut app).unwrap_err();
+        assert!(e.contains("`color` must be a #rrggbb color"), "preview {preview}: {e}");
+        assert!(app.ui.dialog.is_some() && app.last_effect.is_none(), "preview {preview}");
+        assert_eq!(app.session.doc().unwrap().doc, before, "preview {preview}");
+    }
+}
+
 #[test]
 fn raster_filter_dialogs_preview_and_apply() {
     for (effect, key, value) in [
+        ("artistic.cutout", "levels", "6"),
+        ("artistic.neonGlow", "color", "#ff00ff"),
+        ("artistic.posterEdges", "edgeThickness", "5"),
         ("blur.radial", "method", "zoom"),
         ("blur.smart", "quality", "high"),
         ("blur.smart", "blurMode", "overlayEdge"),
@@ -337,6 +361,7 @@ fn dialogs_do_not_stretch_to_the_screen() {
         ("ui.swatchOptions", json!({"name": "White"})),
         ("ui.colorPicker", json!({})),
         ("ui.graphicStyleOptions", json!({})),
+        ("ui.newArtboard", json!({})),
         ("ui.brushOptions", json!({"name": "3 pt. Round"})),
         ("ui.brushOptions", json!({"name": "Bristle Round"})),
         ("ui.colorGuideOptions", json!({})),
@@ -613,6 +638,68 @@ fn a_dialog_opens_with_its_first_field_focused_so_typing_and_enter_apply() {
     assert!(app.ui.dialog.is_none());
     let node = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().clone();
     assert_eq!(node.appearance.effects.last().map(|e| e.params["scaleH"].clone()), Some(json!(50.0)));
+}
+
+/// In a dialog, Shift+Enter in a field applies its value and confirms the dialog, as Enter does:
+/// the Move dialog moves the art, and the New Document dialog creates a document as wide as typed.
+/// Panel fields keep the focus on Shift+Enter (`tests_numfields`).
+#[test]
+fn shift_enter_in_a_dialog_field_applies_it_and_confirms_the_dialog() {
+    let mut app = app();
+    let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 40, "height": 20})).unwrap()["id"].as_u64().unwrap();
+    let ctx = egui::Context::default();
+    theme::install_fonts(&ctx);
+    theme::apply(&ctx, Default::default());
+    let screen_rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1280.0, 900.0)));
+    let mut time = 0.0;
+    // Whole app frames: the panels, then the dialog.
+    let mut frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        time += 0.1;
+        let mut out = ctx.run_ui(egui::RawInput { events, time: Some(time), screen_rect, ..Default::default() }, |ui| {
+            app.logic(ui.ctx());
+            app.ui(ui);
+        });
+        out.textures_delta.clear();
+        out
+    };
+    let shift_enter =
+        || egui::Event::Key { key: egui::Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: egui::Modifiers::SHIFT };
+    let bounds = |app: &VectorcraftApp| app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
+    // Move…: type 15 over its first field and press Shift+Enter.
+    let before = bounds(&app);
+    crate::menus::invoke(&mut app, "object.move", json!({}));
+    frame(&mut app, vec![]);
+    frame(&mut app, vec![]);
+    frame(&mut app, vec![egui::Event::Text("15".into())]);
+    frame(&mut app, vec![shift_enter()]);
+    assert!(app.ui.dialog.is_none(), "Shift+Enter confirms the Move dialog");
+    let after = bounds(&app);
+    assert!((after.x0 - before.x0 - 15.0).abs() < 1e-6 && (after.y0 - before.y0).abs() < 1e-6, "{before:?} → {after:?}");
+    // New Document (the recent 200 × 200 pt size): click into Width, type 300 and press Shift+Enter.
+    app.run("file.newDialog", json!({})).unwrap();
+    frame(&mut app, vec![]);
+    let out = frame(&mut app, vec![]);
+    fn walk(s: &egui::Shape, out: &mut Vec<(String, egui::Pos2)>) {
+        match s {
+            egui::Shape::Vec(v) => v.iter().for_each(|s| walk(s, out)),
+            egui::Shape::Text(t) => out.push((t.galley.text().to_string(), t.visual_bounding_rect().center())),
+            _ => {}
+        }
+    }
+    let mut texts = vec![];
+    out.shapes.iter().for_each(|c| walk(&c.shape, &mut texts));
+    // The Width field comes right after its caption.
+    let width = texts.iter().position(|(t, _)| t == "Width").and_then(|i| texts.get(i + 1));
+    assert_eq!(width.map(|(t, _)| t.as_str()), Some("200 pt"), "{texts:?}");
+    let at = width.map(|(_, p)| *p).unwrap();
+    let press = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
+    frame(&mut app, vec![egui::Event::PointerMoved(at), press(true)]);
+    frame(&mut app, vec![press(false)]);
+    frame(&mut app, vec![]);
+    frame(&mut app, vec![egui::Event::Text("300".into())]);
+    frame(&mut app, vec![shift_enter()]);
+    assert!(app.ui.dialog.is_none(), "Shift+Enter creates the document");
+    assert_eq!(app.session.active().unwrap().doc.artboards[0].rect.width(), 300.0);
 }
 
 /// #1367: a dialog opened by a click (its menu item) is drawn in the frame of that click, where egui

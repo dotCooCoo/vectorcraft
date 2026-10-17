@@ -85,7 +85,8 @@ By default VectorCraft's own crates log at `info` and everything else at `warn`.
 |---|---|
 | `VECTORCRAFT_CONTROL_PORT` | Same as `--control <port>`, which overrides it; a value that isn't a port from 1 to 65535 stops the app |
 | `VECTORCRAFT_IN_WINDOW_MENUS` | Any value but empty or `0`: same as `--in-window-menus` (see [macOS: the menu bar](#macos-the-menu-bar)) |
-| `VECTORCRAFT_NO_PREFS` | No preferences read or written, no default Data Recovery folder and no log file (agents' test runs) |
+| `VECTORCRAFT_NO_PREFS` | No preferences read or written, no default Data Recovery folder and no log file, and no saved PDF presets or loaded ICC profiles kept (agents' test runs; also for `vectorcraft-cli`) |
+| `VECTORCRAFT_CONFIG_DIR` | The folder for the preferences and the folders next to them (`PDF Presets`, `Color Profiles`, …), for the app and `vectorcraft-cli` (see `docs/control-protocol.md`) |
 | `WGPU_POWER_PREF` | Graphics adapter: `low`, `high` or `none` (see [Desktop graphics processor](#desktop-graphics-processor)) |
 | `WGPU_ADAPTER_NAME` | Graphics adapter by (part of) its name, any case (see [Desktop graphics processor](#desktop-graphics-processor)) |
 | `WGPU_BACKEND` | Graphics backends: `vulkan`, `dx12`, `metal`, `gl` |
@@ -232,7 +233,7 @@ other `sv-*` locale resolve to it), Czech (`cs`, every menu label) and Brazilian
   control channel, MCP and tests read them) and are translated only where the status bar draws them
   (`i18n::msg`). `@msg` catalog rows hold a whole message or a template such as
   `Couldn't open {name}: {e}`; `{_1}`, `{_2}` … stand for the format string's `{}`, and the values in the
-  placeholders are translated in turn (the reason after `: {e}` is often a message too). Czech, German, Spanish, French, Hungarian, Italian, Japanese, Korean, Polish, Brazilian Portuguese, Russian, Swedish, Ukrainian, Vietnamese and Finnish cover every
+  placeholders are translated in turn (the reason after `: {e}` is often a message too). Czech, German, Greek, Spanish, French, Hungarian, Italian, Japanese, Korean, Polish, Brazilian Portuguese, Russian, Simplified Chinese, Swedish, Ukrainian, Vietnamese and Finnish cover every
   message literal the test scan finds (`complete_languages_translate_every_message`, languages listed in
   `COMPLETE_MESSAGES`): a new `Err("…")`, `Other(…)`, `#[error(…)]` or `status(…)` message needs a row in each of those catalogs (`VECTORCRAFT_I18N_DUMP_MESSAGES=messages.txt cargo test -p vectorcraft-ui-egui
   complete_languages_translate_every_message` lists them all). Other languages show messages in English

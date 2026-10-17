@@ -140,6 +140,42 @@ fn brush_options_rename_duplicate_and_delete_update_strokes() {
     assert!(s.execute("brush.delete", &json!({"name": "5 pt. Round"})).is_err());
 }
 
+/// The Brushes panel's multi-selection: `names` deletes or duplicates several brushes in one undo
+/// step, and an unknown name changes nothing.
+#[test]
+fn brushes_delete_and_duplicate_by_names() {
+    let mut s = session();
+    let a = rect(&mut s, 10.0, 10.0, 50.0, 50.0);
+    s.execute("brush.apply", &json!({"name": "3 pt. Round"})).unwrap();
+    let b = rect(&mut s, 100.0, 10.0, 50.0, 50.0);
+    s.execute("brush.apply", &json!({"name": "6 pt. Flat"})).unwrap();
+    let names = |s: &mut Session| -> Vec<String> {
+        let list = s.execute("brush.list", &json!({})).unwrap();
+        list["brushes"].as_array().unwrap().iter().map(|b| b["name"].as_str().unwrap().to_string()).collect()
+    };
+    let before = names(&mut s);
+    let undo = s.doc().unwrap().history.undo.len();
+    // Copies of both, after the last brush.
+    let d = s.execute("brush.duplicate", &json!({"names": ["3 pt. Round", "6 pt. Flat"]})).unwrap();
+    assert_eq!(d["names"], json!(["3 pt. Round copy", "6 pt. Flat copy"]));
+    assert_eq!(names(&mut s)[before.len()..], ["3 pt. Round copy", "6 pt. Flat copy"]);
+    assert_eq!(s.doc().unwrap().history.undo.len(), undo + 1);
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(names(&mut s), before);
+    // A name that isn't a brush: an error, and nothing is deleted.
+    assert!(s.execute("brush.delete", &json!({"names": ["3 pt. Round", "Nope"]})).is_err());
+    assert!(s.execute("brush.duplicate", &json!({"names": ["3 pt. Round", "Nope"]})).is_err());
+    assert_eq!((names(&mut s), brush_of(&s, a).as_deref()), (before.clone(), Some("3 pt. Round")));
+    assert_eq!(s.doc().unwrap().history.undo.len(), undo);
+    // Both go in one step; the strokes that used them become plain strokes.
+    s.execute("brush.delete", &json!({"names": ["3 pt. Round", "6 pt. Flat"]})).unwrap();
+    assert_eq!((brush_of(&s, a), brush_of(&s, b)), (None, None));
+    assert!(!names(&mut s).iter().any(|n| n == "3 pt. Round" || n == "6 pt. Flat"));
+    assert_eq!(s.doc().unwrap().history.undo.len(), undo + 1);
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!((names(&mut s), brush_of(&s, b).as_deref()), (before, Some("6 pt. Flat")));
+}
+
 #[test]
 fn expand_brush_replaces_path_with_art_group() {
     let mut s = session();
@@ -665,4 +701,27 @@ fn symbol_registration_places_the_chosen_point_on_xy() {
     let p = NodeId(s.execute("symbol.place", &json!({"name": "Corner", "x": 300, "y": 200})).unwrap()["id"].as_u64().unwrap());
     assert!(close(bounds(&s, p), Rect::new(300.0, 200.0, 380.0, 240.0), 1e-9), "{:?}", bounds(&s, p));
     assert!(s.execute("symbol.new", &json!({"registration": 9})).is_err());
+}
+
+/// Symbol Options › 9-slice guides: off by default, stored per symbol, follow rename/duplicate, validated.
+#[test]
+fn symbol_nine_slice_guides_round_trip() {
+    let mut s = session();
+    let (_, name, _) = make_symbol(&mut s);
+    assert!(s.execute("symbol.list", &json!({})).unwrap()["symbols"][0]["nineSlice"].is_null());
+    assert!(s.doc().unwrap().doc.unknown.get(vectorcraft_doc::SYMBOL_NINE_SLICE).is_none());
+    assert!(s.execute("symbol.options", &json!({"name": name, "nineSliceGuides": [0.6, 0.2, 0.6, 0.2]})).is_err());
+    assert!(s.execute("symbol.options", &json!({"name": name, "nineSlice": "yes"})).is_err());
+    let r = s.execute("symbol.options", &json!({"name": name, "nineSlice": true})).unwrap();
+    assert_eq!(r["nineSlice"].as_array().unwrap().len(), 4);
+    s.execute("symbol.options", &json!({"name": name, "nineSliceGuides": [0.25, 0.1, 0.25, 0.1]})).unwrap();
+    let copy = s.execute("symbol.duplicate", &json!({"name": name})).unwrap();
+    assert_eq!(copy["nineSlice"], json!([0.25, 0.1, 0.25, 0.1]));
+    s.execute("symbol.options", &json!({"name": name, "newName": "Panel"})).unwrap();
+    let g = s.doc().unwrap().doc.symbol_nine_slice("Panel").unwrap();
+    assert_eq!((g.left, g.top), (0.25, 0.1));
+    assert!(s.doc().unwrap().doc.symbol_nine_slice(&name).is_none());
+    s.execute("symbol.options", &json!({"name": "Panel", "nineSlice": false})).unwrap();
+    s.execute("symbol.delete", &json!({"name": "Box copy"})).unwrap();
+    assert!(s.doc().unwrap().doc.unknown.get(vectorcraft_doc::SYMBOL_NINE_SLICE).is_none());
 }

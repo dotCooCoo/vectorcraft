@@ -20,6 +20,16 @@
 	Delete Design	Poista malli
 	Paste Design	Liitä malli
 	Select Unused	Valitse käyttämättömät
+	Graph Column	Kaavion pylväs
+	Column Type:	Pylvään tyyppi:
+	Vertically Scaled	Skaalattu pystysuunnassa
+	Uniformly Scaled	Skaalattu tasaisesti
+	Repeating	Toistuva
+	Sliding	Liukuva
+	Each Design Represents:	Kukin malli vastaa:
+	For Fractions:	Murto-osille:
+	Chop Design	Leikkaa malli
+	Scale Design	Skaalaa malli
 	Glowing Edges…	Hehkuvat reunat…
 	About VectorCraft	Tietoja VectorCraftista
 	Align to Path	Tasaa polkuun
@@ -252,6 +262,14 @@
 	Live Paint	Elävä maalaus
 	Merge	Yhdistä
 	Gap Options…	Aukkojen asetukset…
+	Gap Options	Aukkojen asetukset
+	Gap Detection	Aukkojen tunnistus
+	Paint Stops At:	Maalaus pysähtyy:
+	Small Gaps	Pienet aukot
+	Medium Gaps	Keskikokoiset aukot
+	Large Gaps	Suuret aukot
+	Gap Preview Color:	Aukkojen esikatseluväri:
+	Close Gaps With Paths	Sulje aukot poluilla
 	Image Trace	Kuvan jäljitys
 	Image Trace (Make and Expand)	Kuvan jäljitys (luo ja laajenna)
 	Release Image Trace	Vapauta kuvan jäljitys
@@ -499,6 +517,7 @@
 	Show Rulers	Näytä viivaimet
 	Hide Rulers	Piilota viivaimet
 	Change to Global Rulers	Vaihda yleisiin viivaimiin
+	Change to Artboard Rulers	Vaihda piirtoalustan viivaimiin
 	Show Video Rulers	Näytä videoviivaimet
 	Hide Bounding Box	Piilota rajausruutu
 	Show Bounding Box	Näytä rajausruutu
@@ -569,6 +588,7 @@
 	Contextual Task Bar	Kontekstuaalinen tehtäväpalkki
 	Pin Bar Position	Kiinnitä palkin sijainti
 	Reset Bar Position	Palauta palkin sijainti
+	Resize	Muuta kokoa
 	Tools	Työkalut
 	Toolbars	Työkalurivit
 	Advanced	Lisäasetukset
@@ -602,6 +622,16 @@
 	Separations Preview	Erottelujen esikatselu
 	Stroke	Viiva
 	SVG Interactivity	SVG-vuorovaikutteisuus
+	Event:	Tapahtuma:
+	JavaScript:	JavaScript:
+	Add Event	Lisää tapahtuma
+	Remove Selected Entry	Poista valittu merkintä
+	Clear Events	Tyhjennä tapahtumat
+	Link JavaScript Files…	Linkitä JavaScript-tiedostoja…
+	JavaScript Files	JavaScript-tiedostot
+	File or URL:	Tiedosto tai URL:
+	Add JavaScript File	Lisää JavaScript-tiedosto
+	Remove JavaScript File	Poista JavaScript-tiedosto
 	Swatches	Värimallit
 	Symbols	Symbolit
 	Transparency	Läpinäkyvyys
@@ -614,6 +644,8 @@
 	New Variable…	Uusi muuttuja…
 	Unbind Variable	Pura muuttujan sidonta
 	Delete Variable	Poista muuttuja
+	Lock Variables	Lukitse muuttujat
+	Unlock Variables	Avaa muuttujien lukitus
 	New Data Set…	Uusi tietojoukko…
 	Edit Data Set…	Muokkaa tietojoukkoa…
 	Delete Data Set	Poista tietojoukko
@@ -789,6 +821,7 @@
 	Reset all	Palauta kaikki
 	Reset to default	Palauta oletus
 	Reset all Revolve settings to their defaults.	Palauta kaikki pyöräytysasetukset oletusarvoihin.
+	Step up or down	Askel ylös tai alas
 	Drag values or labels. Double-click a value to type.	Vedä arvoja tai nimiöitä. Kirjoita arvo kaksoisnapsauttamalla.
 	Drag rings to rotate. Shift snaps to 15°.	Kierrä vetämällä renkaita. Vaihto kohdistaa 15°:n välein.
 	Drag the light, or its rings. Shift snaps to 15°.	Vedä valoa tai sen renkaita. Vaihto kohdistaa 15°:n välein.
@@ -834,6 +867,10 @@ lighting	Light	Valo
 	Export Keyboard Shortcuts…	Vie pikanäppäimet…
 	File Info Dialog	Tiedoston tiedot -valintaikkuna
 	Go to Artboard	Siirry piirtoalustaan
+	First Artboard	Ensimmäinen piirtoalusta
+	Previous Artboard	Edellinen piirtoalusta
+	Next Artboard	Seuraava piirtoalusta
+	Last Artboard	Viimeinen piirtoalusta
 	Graphic Style Options…	Grafiikkatyylin asetukset…
 	Symbol Options	Symbolin asetukset
 	Symbol Options…	Symbolin asetukset…
@@ -852,6 +889,7 @@ lighting	Light	Valo
 	Menu Dialog	Valikkovalintaikkuna
 	Merge Graphic Styles…	Yhdistä grafiikkatyylit…
 	New Color Group…	Uusi väriryhmä…
+	New Artboard Options…	Uuden piirtoalustan asetukset…
 	New Layer Options…	Uuden tason asetukset…
 	New Swatch…	Uusi värimalli…
 	No saved views (View → New View…)	Ei tallennettuja näkymiä (Näytä → Uusi näkymä…)
@@ -1167,6 +1205,7 @@ lighting	Light	Valo
 	Reshape Tool	Uudelleenmuotoilutyökalu
 	Rotate Tool	Kiertotyökalu
 	Rotate View Tool	Näkymän kiertotyökalu
+	Trackpad Gesture to Rotate View	Kierrä näkymää ohjauslevyn eleellä
 	Rotate View	Kierrä näkymää
 	Rounded Rectangle Tool	Pyöristetyn suorakulmion työkalu
 	Scale Tool	Skaalaustyökalu
@@ -1447,6 +1486,76 @@ lighting	Light	Valo
 	{percent}% opacity	{percent}% peittävyys
 	History Options…	Historian asetukset…
 	Open a document to see its history.	Avaa asiakirja, niin näet sen historian.
+# History panel: the names of undo steps (`every_undo_label_is_translated`).
+	Apply Data Set	Käytä tietojoukkoa
+	Cancel Pattern Editing	Peruuta kuvion muokkaus
+	Copy Appearance	Kopioi ulkoasu
+	Copy Guide	Kopioi apuviiva
+	Copy in Perspective	Kopioi perspektiivissä
+	Create Slice from Selection	Luo siivu valinnasta
+	Create Slices from Guides	Luo siivut apuviivoista
+	Delete All Slices	Poista kaikki siivut
+	Delete Data Sets	Poista tietojoukot
+	Delete Graphic Styles	Poista grafiikkatyylit
+	Delete Guide	Poista apuviiva
+	Delete Guides	Poista apuviivat
+	Delete Slice	Poista siivu
+	Delete Style	Poista tyyli
+	Delete Variables	Poista muuttujat
+	Delete View	Poista näkymä
+	Done Editing Pattern	Lopeta kuvion muokkaus
+	Duplicate Rows	Monista rivit
+	Edit Perspective Grid	Muokkaa perspektiiviruudukkoa
+	Expand Blend	Laajenna sulautus
+	Expand Envelope	Laajenna kuori
+	Expand Image Trace	Laajenna kuvan jäljitys
+	Expand Live Paint	Laajenna elävä maalaus
+	Live Shape	Elävä muoto
+	Make Blend	Luo sulautus
+	Make Dynamic	Tee dynaamiseksi
+	Make Intertwine	Luo lomitus
+	Make Live Paint	Luo elävä maalaus
+	Make Pattern	Luo kuvio
+	Make Slice	Luo siivu
+	Merge Live Paint	Yhdistä elävä maalaus
+	Mesh Point Color	Verkkopisteen väri
+	Move Envelope Point	Siirrä kuoren pistettä
+	Move Plane and Copy Objects	Siirrä tasoa ja kopioi objektit
+	Move Plane and Objects	Siirrä tasoa ja objekteja
+	Move Slice	Siirrä siivua
+	Move Type on a Path	Siirrä polun tekstiä
+	New Guide	Uusi apuviiva
+	Place from Library	Sijoita kirjastosta
+	Rearrange Artboards	Järjestä piirtoalustat uudelleen
+	Release Blend	Vapauta sulautus
+	Release Envelope	Vapauta kuori
+	Release Intertwine	Vapauta lomitus
+	Release Live Paint	Vapauta elävä maalaus
+	Release Repeat	Vapauta toisto
+	Release Slice	Vapauta siivu
+	Release Threaded Text	Vapauta ketjutettu teksti
+	Rename Design	Nimeä malli uudelleen
+	Rename Style	Nimeä tyyli uudelleen
+	Rename View	Nimeä näkymä uudelleen
+	Reorder Appearance	Järjestä ulkoasu uudelleen
+	Reorder Artboards	Muuta piirtoalustojen järjestystä
+	Reshape Spine	Muotoile selkäranka uudelleen
+	Resize Artboard	Muuta piirtoalustan kokoa
+	Resize Slice	Muuta siivun kokoa
+	Resize Type Area	Muuta tekstialueen kokoa
+	Scale in Perspective	Skaalaa perspektiivissä
+	Shape Builder Delete	Muodonmuodostin (poisto)
+	Sort Swatches	Lajittele värimallit
+	Symbol Screener	Symbolien läpinäkyvyys
+	Symbol Scruncher	Symbolien tiivistys
+	Symbol Shifter	Symbolien siirto
+	Symbol Sizer	Symbolien koonmuutos
+	Symbol Spinner	Symbolien kierto
+	Symbol Stainer	Symbolien värjäys
+	Symbol Styler	Symbolien tyylittely
+	Text Orientation	Tekstin suunta
+	Thread Text	Ketjuta teksti
+	Typing	Kirjoitus
 	Abutting	Vierekkäinen
 	Black and White	Mustavalkoinen
 	Corners	Kulmat
@@ -1898,6 +2007,7 @@ lighting	Light	Valo
 	Variation	Vaihtelu
 	Color Models	Värijärjestelmät
 	Color Picker	Värinvalitsin
+	Color wheel	Väriympyrä
 	Color Swatches	Värimallit
 	Only Web Colors	Vain verkkovärit
 	Original: click to restore	Alkuperäinen: palauta napsauttamalla
@@ -2641,10 +2751,10 @@ lighting	Light	Valo
 	All in One Folder	Kaikki yhteen kansioon
 	By Size or Row	Koon tai rivin mukaan
 	By Format	Muodon mukaan
-	By Artboard or Item	Piirtoalueen tai kohteen mukaan
+	By Artboard or Item	Piirtoalustan tai kohteen mukaan
 	By Item, Then Format	Kohteen, sitten muodon mukaan
 	Document Name	Asiakirjan nimi
-	Artboard or Item Name	Piirtoalueen tai kohteen nimi
+	Artboard or Item Name	Piirtoalustan tai kohteen nimi
 	Number (####)	Numero (####)
 	Date (YYYYMMDD)	Päivämäärä (VVVVKKPP)
 	Date (YYYY-MM-DD)	Päivämäärä (VVVV-KK-PP)
@@ -2816,6 +2926,7 @@ theme	Appearance	Ulkoasu
 	Convert Document Color Mode	Muunna asiakirjan väritila
 	Gamut Warning	Väriavaruusvaroitus
 	Load Color Profile…	Lataa väriprofiili…
+	Remove Color Profile…	Poista väriprofiili…
 	Plates	Erottelut
 	Spot Color	Spottiväri
 	Add to Swatches	Lisää värimalleihin
@@ -3584,6 +3695,8 @@ effect	Regular	Normaali
 	Revert to the saved version of “{name}”?	Palautetaanko tiedoston ”{name}” tallennettu versio?
 	Replace “{name}”, the file this document was opened from?	Korvataanko ”{name}”, tiedosto, josta tämä asiakirja avattiin?
 	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Avattaessa jätettiin pois se, mitä VectorCraft ei vielä osaa lukea ({what}), joten korvaaminen hävittää sen pysyvästi. Säilytä se tallentamalla toisella nimellä.
+	“{name}” already exists. Replace it?	”{name}” on jo olemassa. Korvataanko se?
+	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Tallennusikkunan nimi oli ”{typed}”, ja VectorCraft lisäsi tiedostotyypin tunnisteen. Tiedoston korvaaminen kirjoittaa sen sisällön yli.
 	Saved {path}	Tallennettu {path}
 	Saved {path} with {} note(s): {first}	Tallennettu {path}, huomautuksia {}: {first}
 	Saving	Tallennetaan
@@ -3870,6 +3983,7 @@ imageTrace	Outline	Ääriviiva
 @msg	SVG parse error: {0}	SVG-jäsennysvirhe: {0}
 @msg	Save for Web: the image is empty	Tallenna verkkoon: kuva on tyhjä
 @msg	Save writes {_1}, not {_2}: use document.export for other formats	Tallenna kirjoittaa muotoa {_1}, ei {_2}: käytä muille muodoille komentoa document.export
+@msg	Save writes {_1}, not {_2}: use file.saveAsTemplate to write it	Tallenna kirjoittaa muotoa {_1}, ei {_2}: kirjoita se komennolla file.saveAsTemplate
 @msg	Saved recovery data for {title}	Tallennettiin palautustiedot: {title}
 @msg	Saved to User Defined: {_1}	Tallennettiin kohteeseen Käyttäjän määrittämä: {_1}
 @msg	Saved {path}	Tallennettiin {path}
@@ -3898,6 +4012,7 @@ imageTrace	Outline	Ääriviiva
 @msg	`{id}` has no envelope dialog	`{id}`: ei vääristyskuoren valintaikkunaa
 @msg	`{keep}` is not a side of this axis	`{keep}` ei ole tämän akselin puoli
 @msg	`{key}` must be `auto` or a language code such as `en` or `zh-hant`	`{key}` on oltava `auto` tai kielikoodi, kuten `en` tai `zh-hant`
+@msg	`{key}` must be a #rrggbb color	`{key}` on oltava #rrggbb-väri
 @msg	`{key}` must be a #rrggbb colour	`{key}` on oltava #rrggbb-väri
 @msg	`{key}` must be a number	`{key}` on oltava luku
 @msg	`{key}` must be a string	`{key}` on oltava merkkijono
@@ -3931,6 +4046,7 @@ imageTrace	Outline	Ääriviiva
 @msg	a freeform gradient keeps at least one point	vapaamuotoisessa liukuvärissä on oltava vähintään yksi piste
 @msg	a gradient needs at least two stops	liukuvärissä on oltava vähintään kaksi väripistettä
 @msg	a graphic style named `{to}` already exists	grafiikkatyyli nimeltä `{to}` on jo olemassa
+@msg	a key object sits on that point	pisteessä on avainobjekti
 @msg	a page is missing	sivu puuttuu
 @msg	a page out of range	sivu alueen ulkopuolella
 @msg	a page tree kid isn't a reference	sivupuun lapsi ei ole viittaus
@@ -3938,6 +4054,7 @@ imageTrace	Outline	Ääriviiva
 @msg	a page's placement is not finite	sivun sijainti ei ole äärellinen
 @msg	a preset named `{_1}` exists	esiasetus nimeltä `{_1}` on olemassa
 @msg	a slice size must be a positive number of points	viipaleen koon on oltava positiivinen määrä pisteitä
+@msg	a spine keeps at least two points	selkärangassa on oltava vähintään kaksi pistettä
 @msg	a stream runs past the end	virta jatkuu loppumerkin yli
 @msg	a stream's length is wrong	virran pituus on väärä
 @msg	a stream's length isn't a number	virran pituus ei ole luku
@@ -3996,11 +4113,13 @@ imageTrace	Outline	Ääriviiva
 @msg	give horizontal or vertical	anna vaaka tai pysty
 @msg	give the path `id` and the width point `index`	anna polun `id` ja leveyspisteen `index`
 @msg	guides are locked	apuviivat on lukittu
+@msg	handle must be in or out	handle-arvon on oltava in tai out
 @msg	image '{key}' has no pixels and was left out	kuvassa '{key}' ei ole pikseleitä, joten se jätettiin pois
 @msg	image data `{_1}` is missing	kuvan data `{_1}` puuttuu
 @msg	image would be too large; lower the resolution	kuvasta tulisi liian suuri; pienennä tarkkuutta
 @msg	index must be a number or first, previous, next or last	indeksin on oltava luku tai first, previous, next tai last
 @msg	index must be a number or first, previous, next or last, not `{other}`	indeksin on oltava luku tai first, previous, next tai last, ei `{other}`
+@msg	index must be ≥ 0	indeksi ei voi olla negatiivinen
 @msg	installing from a path is not available on the web; pass the module as `dataBase64`	polusta asentaminen ei ole käytettävissä verkossa; välitä moduuli muodossa `dataBase64`
 @msg	internal error in `{cmd}`: {msg} (the document was left as it was before; please report this bug)	sisäinen virhe kohteessa `{cmd}`: {msg} (asiakirja jätettiin ennalleen; ilmoita tästä virheestä)
 @msg	internal error: {msg} (please report this bug)	sisäinen virhe: {msg} (ilmoita tästä virheestä)
@@ -4020,6 +4139,7 @@ imageTrace	Outline	Ääriviiva
 @msg	missing `name`	`name` puuttuu
 @msg	missing `tool`	`tool` puuttuu
 @msg	missing index	indeksi puuttuu
+@msg	missing number `{key}`	luku `{key}` puuttuu
 @msg	multiple windows land with M11.5	useat ikkunat tulevat versiossa M11.5
 @msg	name the file	anna tiedostolle nimi
 @msg	no CSS to copy: select objects with CSS of their own	ei kopioitavaa CSS:ää: valitse objekteja, joilla on oma CSS
@@ -4100,6 +4220,8 @@ imageTrace	Outline	Ääriviiva
 @msg	no such recent font	viimeisintä fonttia ei ole
 @msg	no such saved selection	tallennettua valintaa ei ole
 @msg	no such segment	segmenttiä ei ole
+@msg	no such spine point	selkärangan pistettä ei ole
+@msg	no such spine segment	selkärangan segmenttiä ei ole
 @msg	no such subpath	alipolkua ei ole
 @msg	no such user library	käyttäjäkirjastoa ei ole
 @msg	no such view	näkymää ei ole
@@ -4115,6 +4237,7 @@ imageTrace	Outline	Ääriviiva
 @msg	not a DXF drawing	ei DXF-piirustus
 @msg	not a VectorCraft file: {0}	ei VectorCraft-tiedosto: {0}
 @msg	not a VectorCraft shortcut set (missing `overrides`)	ei VectorCraftin pikanäppäinjoukko (`overrides` puuttuu)
+@msg	not a blend	ei sulautus
 @msg	not a graphic style library (format `{_1}`)	ei grafiikkatyylikirjasto (muoto `{_1}`)
 @msg	not a stored central record	ei tallennettu keskushakemistotietue
 @msg	not a valid plug-in module: {0}	ei kelvollinen laajennusmoduuli: {0}
@@ -4170,6 +4293,7 @@ imageTrace	Outline	Ääriviiva
 @msg	select (or target) objects whose appearance isn't basic	valitse (tai kohdista) objektit, joiden ulkoasu ei ole perusulkoasu
 @msg	select a Live Paint group	valitse elävän maalauksen ryhmä
 @msg	select a blend	valitse sulautus
+@msg	select a blend or give `id`	valitse sulautus tai anna sen `id`
 @msg	select a clip group	valitse leikkausryhmä
 @msg	select a gradient mesh	valitse liukuväriverkko
 @msg	select a linked image: an embedded one has no file	valitse linkitetty kuva: upotetulla kuvalla ei ole tiedostoa
@@ -4202,6 +4326,7 @@ imageTrace	Outline	Ääriviiva
 @msg	stop {i} needs `offset`	väripiste {i} tarvitsee arvon `offset`
 @msg	stop {i} needs a valid `color`	väripiste {i} tarvitsee kelvollisen arvon `color`
 @msg	stop {i}: `{k}` must be a number	väripiste {i}: `{k}` on oltava luku
+@msg	t, dx and dy must be finite	t:n, dx:n ja dy:n on oltava äärellisiä
 @msg	the EMF header is damaged	tiedoston EMF-otsake on vaurioitunut
 @msg	the PDF has no pages	tässä PDF-tiedostossa ei ole sivuja
 @msg	the PDF is no longer loaded	tämä PDF-tiedosto ei ole enää ladattuna
@@ -4214,6 +4339,7 @@ imageTrace	Outline	Ääriviiva
 @msg	the art is too light for any dots	kuvitus on liian vaalea pisteille
 @msg	the artboard to fit must be a positive size up to {_1} pt	sovitettavan piirtoalustan koon on oltava positiivinen, enintään {_1} pt
 @msg	the background worker stopped	taustatyöprosessi pysähtyi
+@msg	the blend has no spine	sulautuksella ei ole selkärankaa
 @msg	the compressed file unpacks to more than {_1} MB	pakattu tiedosto purkautuu yli {_1} megatavuksi
 @msg	the document has never been saved	asiakirjaa ei ole koskaan tallennettu
 @msg	the document has no artboard	asiakirjassa ei ole piirtoalustaa
@@ -4254,6 +4380,7 @@ imageTrace	Outline	Ääriviiva
 @msg	the selected stroke's profile is already listed as {_1}	valitun viivan profiili on jo luettelossa nimellä {_1}
 @msg	the selection has no URL (or they differ)	valinnalla ei ole URL-osoitetta (tai ne eroavat)
 @msg	the selection isn't in perspective	valinta ei ole perspektiivissä
+@msg	the spine has no segments	selkärangassa ei ole segmenttejä
 @msg	the stroke has no weight	viivalla ei ole paksuutta
 @msg	the thumbnail image is malformed	pikkukuva on virheellinen
 @msg	the top object must be a path, compound path or text object to use as a clipping mask	ylimmän objektin on oltava polku, yhdistelmäpolku tai tekstiobjekti, jotta sitä voi käyttää leikkausmaskina
@@ -4289,9 +4416,11 @@ imageTrace	Outline	Ääriviiva
 @msg	unknown tool or command `{key}`	tuntematon työkalu tai komento `{key}`
 @msg	unknown workspace (one of {_1})	tuntematon työtila (jokin seuraavista: {_1})
 @msg	unsupported: {0}	ei tuettu: {0}
+@msg	variables are locked	muuttujat on lukittu
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	version {0} tiedostoja ei voi pakata: pakattuja tiedostoja voi avata vain versiosta {COMPRESSED_SINCE} alkaen
 @msg	width and height are at least 1 pixel	leveys ja korkeus ovat vähintään 1 pikseli
 @msg	workspace name can't be empty	työtilan nimi ei voi olla tyhjä
+@msg	x and y must be finite	x:n ja y:n on oltava äärellisiä
 @msg	{C}: no effect at index {from}	{C}: ei tehostetta indeksissä {from}
 @msg	{_1} failed: {e}	{_1} epäonnistui: {e}
 @msg	{_1} files can be opened but not written (see document.formats)	{_1}-tiedostoja voi avata mutta ei kirjoittaa (ks. document.formats)
@@ -4720,6 +4849,20 @@ imageTrace	Outline	Ääriviiva
 	DWG (use DXF)	DWG (käytä DXF:ää)
 	Artistic	Taiteelliset
 	Film Grain…	Filmin rakeisuus…
+	Cutout…	Leikkaus…
+	Cutout	Leikkaus
+	Neon Glow…	Neonhehku…
+	Neon Glow	Neonhehku
+	Poster Edges…	Julisteen reunat…
+	Poster Edges	Julisteen reunat
+	Levels	Tasot
+	Edge Simplicity	Reunojen yksinkertaisuus
+	Edge Fidelity	Reunojen tarkkuus
+	Glow Size	Hehkun koko
+	Glow Brightness	Hehkun kirkkaus
+	Edge Thickness	Reunojen paksuus
+	Edge Intensity	Reunojen voimakkuus
+	Posterization	Posterointi
 	Highlight Area	Korostusalue
 file-filter	All readable files	Kaikki luettavat tiedostot
 file-filter	All placeable files	Kaikki sijoitettavat tiedostot
@@ -4958,7 +5101,7 @@ mark-style	Japanese	Japanilainen
 	Pattern Type	Kuviotyyppi
 	Dot	Piste
 # User Interface › Color Scheme
-	Color Scheme	Värimalli
+	Color Scheme	Väriteema
 	Modern	Moderni
 
 # Symbol Options › Export Type
@@ -4966,3 +5109,10 @@ mark-style	Japanese	Japanilainen
 	Movie Clip	Elokuvaleike
 @msg	name is empty	nimi on tyhjä
 @msg	no symbol named `{n}`	symbolia nimeltä `{n}` ei ole
+	Enable Guides for 9-Slice Scaling	Ota käyttöön 9-slice-skaalauksen apuviivat
+@msg	a mask has more than one art block	maskissa on useampi kuin yksi grafiikkalohko
+@msg	mask art ends outside a mask dictionary	maskin grafiikka päättyy maskin sanakirjan ulkopuolelle
+@msg	cancelled; nothing was changed	peruutettu; mitään ei muutettu
+@msg	a linked image can't become a gradient mesh: embed it first	linkitetystä kuvasta ei voi tehdä liukuväriverkkoa: upota se ensin
+@msg	the image has no usable size or position	kuvalla ei ole käyttökelpoista kokoa tai sijaintia
+@msg	the image's pixels can't be read	kuvan pikseleitä ei voi lukea
