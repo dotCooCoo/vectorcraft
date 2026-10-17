@@ -87,7 +87,7 @@ impl Tool for PrintTilingTool {
     }
 
     fn cursor(&self, _cx: &ToolContext, _p: Point, _m: Mods) -> Cursor {
-        Cursor::Crosshair
+        Cursor::PrintTiling
     }
 
     fn deactivate(&mut self, _cx: &ToolContext) -> Vec<Action> {

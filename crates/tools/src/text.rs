@@ -814,7 +814,7 @@ impl Tool for TypeTool {
         if self.mode != Mode::Type && Self::path_at(cx, p, self.mode == Mode::Area).is_some() {
             return Cursor::Crosshair;
         }
-        Cursor::Text
+        if self.vertical { Cursor::TypeVertical } else { Cursor::Text }
     }
 }
 

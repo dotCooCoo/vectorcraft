@@ -1072,6 +1072,21 @@ fn show_font_names_in_english_does_not_change_font_list_for_agents() {
     assert!(families.iter().any(|f| f.as_str() == Some("Source Sans 3")), "{families:?}");
 }
 
+/// Preferences › Type › Highlight Alternate Glyphs (#394): off by default so the canvas stays
+/// clear until an agent (or the Preferences dialog) turns it on. Headless MCP has no canvas.
+#[test]
+fn highlight_alternate_glyphs_pref_round_trips_for_agents() {
+    let mut s = server();
+    let r = call(&mut s, 1, "run_command", json!({"command": "prefs.get", "params": {"key": "highlightAlternateGlyphs"}}));
+    assert_eq!(r["isError"], false, "{r}");
+    assert_eq!(serde_json::from_str::<Value>(&text_of(&r)).unwrap(), json!(false));
+    let r = call(&mut s, 2, "run_command", json!({"command": "prefs.set", "params": {"key": "highlightAlternateGlyphs", "value": true}}));
+    assert_eq!(r["isError"], false, "{r}");
+    let r = call(&mut s, 3, "run_command", json!({"command": "prefs.get", "params": {"key": "highlightAlternateGlyphs"}}));
+    assert_eq!(r["isError"], false, "{r}");
+    assert_eq!(serde_json::from_str::<Value>(&text_of(&r)).unwrap(), json!(true));
+}
+
 /// Type preferences reach agents (#394): type the Type tool places starts with placeholder text,
 /// selected; Alt+→ tracks it by Tracking and Cmd+Shift+. steps its size by Size/Leading.
 #[test]

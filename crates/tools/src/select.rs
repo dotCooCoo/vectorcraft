@@ -82,6 +82,8 @@ pub struct SelectionTool {
     /// What a bounding-box handle being dragged snaps to.
     targets: Option<Targets>,
     moving: Option<MoveSnap>,
+    /// The move snapped to a point or a guide at its last step: the arrow turns hollow.
+    snapped: bool,
     guide: GuideEdit,
     /// Smart Guides: the centre or anchor under the pointer, and its label ([`Self::hover_point`]).
     hover: Option<(Point, &'static str)>,
@@ -425,9 +427,12 @@ impl Tool for SelectionTool {
                     self.moving = Some(MoveSnap::new(cx));
                 }
                 let mut d = move_delta(start, p, m.shift);
+                let unsnapped = d;
                 if let Some(snap) = &self.moving {
                     (d, self.guides) = snap.snap(cx, start, d, m.alt);
                 }
+                // Shift has already constrained `d`: any change is a snap.
+                self.snapped = (d - unsnapped).hypot() > 1e-9;
                 self.state = State::Moving { start, began: true, deselect: None, key: None };
                 self.measure = cx.measurement_labels.then(|| (p, cx.offset_label(d.x, d.y)));
                 out.push(Action::Preview("object.transform".into(), json!({ "matrix": matrix_json(Affine::translate(d)), "copy": m.alt })));
@@ -553,7 +558,10 @@ impl Tool for SelectionTool {
         match self.state {
             State::Rotating { center, .. } => return Cursor::rotate_about(center, p),
             State::Scaling { handle, bx, .. } => return handle_cursor(handle, bx.angle),
-            State::Moving { began: true, .. } => return Cursor::Arrow,
+            // Alt-dragging leaves a copy behind; otherwise the filled arrow, hollow while the move
+            // snaps to a point or a guide.
+            State::Moving { began: true, .. } if m.alt => return Cursor::SelectionCopy,
+            State::Moving { began: true, .. } => return if self.snapped { Cursor::ArrowHollow } else { Cursor::Arrow },
             State::Corner(_) => return Cursor::CornerRadius,
             State::Pie(_) => return Cursor::ArrowHollow,
             State::Bracket(_) => return Cursor::PathBracket,
@@ -866,6 +874,33 @@ mod tests {
         assert_eq!(dx(&t.pointer(&c, &ev(PointerKind::Drag, 253.0, 150.0).with_mods(alt))), 100.0);
         // Without Alt nothing stays behind there.
         assert_eq!(dx(&t.pointer(&c, &ev(PointerKind::Drag, 253.0, 150.0))), 103.0);
+    }
+
+    /// A move shows the filled arrow, hollow while it snaps (here B's left side onto A's right
+    /// one); Alt, which leaves a copy behind, the double arrowhead.
+    #[test]
+    fn a_move_shows_the_filled_arrow_hollow_on_a_snap_and_alt_the_copy_cursor() {
+        use vectorcraft_doc::{Appearance, Node};
+        let (mut d, _) = doc_with_rect();
+        d.artboards[0].rect = Rect::new(0.0, 0.0, 1000.0, 1000.0);
+        let l = d.layers[0].id;
+        let b = d.alloc_id();
+        let sq = vectorcraft_geom::shapes::rectangle(Rect::new(300.0, 300.0, 400.0, 400.0));
+        d.insert(Some(l), 1, Node::path(b, sq, Appearance::default_art())).unwrap();
+        let mut s = Selection::default();
+        s.add(b);
+        let p = paint();
+        let c = cx(&d, &s, &p);
+        let none = Mods::default();
+        let mut t = SelectionTool::default();
+        t.pointer(&c, &ev(PointerKind::Down, 350.0, 350.0));
+        t.pointer(&c, &ev(PointerKind::Drag, 377.0, 371.0));
+        assert_eq!(t.cursor(&c, Point::new(377.0, 371.0), none), Cursor::Arrow);
+        t.pointer(&c, &ev(PointerKind::Drag, 253.0, 371.0));
+        assert_eq!(t.cursor(&c, Point::new(253.0, 371.0), none), Cursor::ArrowHollow, "lined up with A");
+        let alt = Mods { alt: true, ..none };
+        t.pointer(&c, &ev(PointerKind::Drag, 377.0, 371.0).with_mods(alt));
+        assert_eq!(t.cursor(&c, Point::new(377.0, 371.0), alt), Cursor::SelectionCopy);
     }
 
     /// #740: with Snap to Grid on, a moved object lands on the grid (every 9 pt by default) by

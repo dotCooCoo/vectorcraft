@@ -377,6 +377,11 @@ fn open_loaded(s: &mut Session, loaded: Loaded, links: Resolved, path: Option<St
         doc.template = false;
         doc.title = s.next_untitled();
     }
+    // A .ai (or .ait) another app wrote carries no open Layers rows we read: all of them start
+    // closed, its top-level layers as its groups (#1475). Ours carry their own.
+    if matches!(format.id, "ai" | "ait") && !restored && doc.layers_open.is_none() {
+        doc.layers_open = Some(vec![]);
+    }
     // Save writes the file back only in a format it writes, only a whole PDF (see
     // [`LoadOptions::is_partial`]), and a .ai file only when it carried the native document (Save
     // writes .ai that way).
