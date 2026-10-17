@@ -1991,9 +1991,11 @@ their own Anti-aliasing option),
 `scrubNumericFields` (on: a horizontal drag on a numeric field's label steps the field, one undo step per drag; the
 control channel's `ui.drag` scrubs), `showHomeScreen` (on by default: the Home screen while no document is open;
 off, an empty window, and the Home button or `app.home` still shows the screen), `autoCollapseIconPanels` (off by
-default: on, a click away from a panel popped out of the icon column puts it away) and `displayPrintSize` (off by
+default: on, a click away from a panel popped out of the icon column puts it away), `displayPrintSize` (off by
 default: View › Actual Size / `view.actualSize` is one document point per screen point; on, one document inch fills
-96 screen points, an inch at the system's reference density whatever the display scaling). `blackOnScreen`
+96 screen points, an inch at the system's reference density whatever the display scaling). `highlightAlternateGlyphs` (off by default: on, the canvas paints a pink cell behind glyphs OpenType features
+substituted — ligatures, contextual forms — on screen; Document Setup's Highlight Substituted Fonts / Glyphs stay
+separate). `blackOnScreen`
 (Appearance of Black › On Screen, `accurate` by default) sets how the canvas shows pure CMYK black, black ink alone
 at 100%: `accurate` shows it through the CMYK profile, a dark grey, and `rich` shows it as RGB black. Rich blacks,
 black tints and images show the same either way, and exports are unchanged. `blackOutput` (Appearance of Black ›
@@ -2103,11 +2105,15 @@ Pen's second anchor at (150, 431), in line with the square's centre.
 - `hyphenationExceptions` (empty by default): Preferences › Hyphenation › Exceptions. A comma-separated list of words,
   matched without regard to case: a word with no hyphens is never hyphenated (`typography`), and a word with hyphens
   breaks only where they are (`hap-pen`). `prefs.set` pushes the list into the hyphenator and reflows open documents.
+- `highlightAlternateGlyphs` (off by default): Preferences › Type › Highlight Alternate Glyphs. On, the canvas paints
+  pink behind OpenType substitutions (ligatures, contextual forms). Document Setup's Highlight Substituted Fonts /
+  Glyphs stay separate. Agents set it with `prefs.set`; the desktop canvas reads it on the next paint.
 
 ```json
 {"name":"run_command","arguments":{"command":"prefs.set","params":{"values":{"typeSizeIncrement":4,"trackingIncrement":50}}}}
 {"name":"run_command","arguments":{"command":"prefs.set","params":{"key":"fontNamesInEnglish","value":false}}}
 {"name":"run_command","arguments":{"command":"prefs.set","params":{"key":"hyphenationExceptions","value":"typography, hap-pen"}}}
+{"name":"run_command","arguments":{"command":"prefs.set","params":{"key":"highlightAlternateGlyphs","value":true}}}
 {"name":"run_command","arguments":{"command":"type.step","params":{"attribute":"tracking","by":-2}}}
 ```
 

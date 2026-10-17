@@ -374,3 +374,43 @@ fn bled_file_opens_on_its_artboard(name: &str, key: &str) {
     open(&mut s, name, &file, json!({})).unwrap();
     assert_eq!(names(&s.doc().unwrap().doc.layers), ["Art"], "{name}: the editing data's layers are read");
 }
+
+/// The rows that open in the Layers panel (layers, sublayers and groups), and which of them are
+/// open.
+fn open_rows(s: &Session) -> (Vec<String>, Vec<String>) {
+    let st = s.doc().unwrap();
+    let (mut rows, mut open) = (vec![], vec![]);
+    st.doc.walk(|n| {
+        if n.children().is_some() {
+            rows.push(n.name.clone().unwrap_or_default());
+            if st.layers_open.contains(n.id) {
+                open.push(n.name.clone().unwrap_or_default());
+            }
+        }
+    });
+    (rows, open)
+}
+
+/// #1475: a `.ai` another app wrote keeps no open rows VectorCraft reads, so it opens with every
+/// row closed, its top-level layers as its groups; a `.ai` VectorCraft wrote, and other formats,
+/// open as before (with their top-level layers open unless the file says otherwise).
+#[test]
+fn an_illustrator_ai_file_opens_with_its_layers_closed() {
+    let mut s = Session::new();
+    for file in [ai::ai(&compressed(&ai::sample_data()), ai::page_pdf()), ai::eps(&ai::sample_data(), ai::page_ps())] {
+        let r = open(&mut s, "art.ai", &file, json!({})).unwrap();
+        assert_eq!((&r["format"], &r["restored"]), (&json!("ai"), &json!(false)), "{r}");
+        let (rows, open) = open_rows(&s);
+        assert!(rows.contains(&"Art".into()) && rows.contains(&"Pair".into()) && rows.contains(&"Sub".into()), "{rows:?}");
+        assert_eq!(open, Vec::<String>::new(), "{r}");
+    }
+    // The same art as an EPS: its top-level layers open.
+    open(&mut s, "art.eps", &ai::eps(&ai::sample_data(), ai::page_ps()), json!({})).unwrap();
+    assert_eq!(open_rows(&s).1, ["Art", "Hidden"]);
+    // Saved as .ai by VectorCraft, it opens with the rows it was saved with.
+    let saved = s.execute("document.save", &json!({"format": "ai"})).unwrap();
+    let bytes = vectorcraft_format::base64_decode(saved["dataBase64"].as_str().unwrap()).unwrap();
+    let r = open(&mut s, "again.ai", &bytes, json!({})).unwrap();
+    assert_eq!(r["restored"], json!(true), "{r}");
+    assert_eq!(open_rows(&s).1, ["Art", "Hidden"]);
+}
