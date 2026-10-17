@@ -625,6 +625,17 @@ pub(crate) fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> bool {
     display
         .floating
         .retain(|group| !app.ui.floating_panels.iter().any(|native| decorated(native) && native.panels.iter().any(|id| group.panels.contains(id))));
+    // Floating groups lie on the canvas, not on the dock's card: reserve a fill under each one
+    // before the dock draws it, sized once it is placed, so the canvas doesn't show through (#2421).
+    let fills: Vec<_> = display
+        .floating
+        .iter()
+        .filter_map(|group| group.panels.first())
+        .map(|first| {
+            let layer = egui::LayerId::new(egui::Order::Middle, area.with(("floating", first)));
+            (layer, ui.ctx().layer_painter(layer).add(egui::Shape::Noop))
+        })
+        .collect();
     let mut draw = |ui: &mut egui::Ui| {
         if layout.root.is_some() && crate::dock::collapse_header(ui, collapsed) {
             let _ = app.run("window.collapseDock", json!({"collapsed":!collapsed}));
@@ -644,7 +655,8 @@ pub(crate) fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> bool {
         }
         let mut style = craft_ui::docking::DockStyle::from_ui(ui);
         style.tab_height = 33.0;
-        // The dock is a card (`theme::card`): its panes and tab strip lie on the card's colour.
+        // The dock is a card (`theme::card`): its panes and tab strip lie on the card's colour
+        // (square fills would cover its rounded corners). Floating groups get the fills below.
         style.background = egui::Color32::TRANSPARENT;
         style.tab_background = egui::Color32::TRANSPARENT;
         style.active_background = t.button;
@@ -659,7 +671,7 @@ pub(crate) fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> bool {
         style.resize_label = tl!("Resize panels").to_string();
         style.resize_window_label = tl!("Resize panel window").to_string();
         let mut content = PanelContent { app, commands: Vec::new() };
-        let output = craft_ui::docking::DockArea::new(egui::Id::new("vectorcraft-panel-docking")).show_customized(
+        let output = craft_ui::docking::DockArea::new(area).show_customized(
             ui,
             &display,
             &style,
@@ -752,6 +764,11 @@ pub(crate) fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> bool {
             && let Some(rect) = ui.ctx().memory(|memory| memory.area_rect(area.with(("floating", first))))
         {
             ui.ctx().data_mut(|data| data.insert_temp(crate::floating::group_rect_id(first), rect));
+        }
+    }
+    for (layer, fill) in fills {
+        if let Some(rect) = ui.ctx().memory(|memory| memory.area_rect(layer.id)) {
+            ui.ctx().layer_painter(layer).set(fill, egui::Shape::rect_filled(rect, 0.0, t.panel));
         }
     }
     icon_rail(app, ui);

@@ -27,6 +27,7 @@ mod clipboard;
 #[cfg(feature = "wgpu")]
 mod compositor_gpu;
 mod control_server;
+mod cursor_theme;
 #[cfg(feature = "wgpu")]
 mod gpu;
 mod logging;
@@ -34,6 +35,8 @@ mod logging;
 mod mac_fonts;
 #[cfg(target_os = "macos")]
 mod mac_menu;
+#[cfg(target_os = "macos")]
+mod mac_save_format;
 #[cfg(target_os = "macos")]
 mod mac_screen_color;
 #[cfg(target_os = "macos")]
@@ -473,7 +476,7 @@ fn start_pick(request: PickRequest, parent: &Parent, ui: &egui::Context) -> Opti
         })
         .ok()?;
     make_folder(&request);
-    // rfd builds the panel and begins the sheet here, on the main thread (as it must).
+    // The panel is built and the sheet is begun below, on the main thread (as it must).
     let dialog = dialog_for(rfd::AsyncFileDialog::new().parent(window), &request);
     let path = |f: &rfd::FileHandle| f.path().to_string_lossy().to_string();
     let answer: SheetAnswer = match request {
@@ -485,12 +488,18 @@ fn start_pick(request: PickRequest, parent: &Parent, ui: &egui::Context) -> Opti
             let picked = dialog.pick_files();
             Box::pin(async move { picked.await.unwrap_or_default().iter().map(path).collect() })
         }
-        PickRequest::Save(_) => {
-            // Nothing is added to the sheet once rfd has begun it: an accessory view set then made
-            // recent macOS versions dismiss the sheet at once, so nothing could be saved (#1800).
-            let picked = dialog.save_file();
-            Box::pin(async move { picked.await.iter().map(path).collect() })
-        }
+        // A save panel with two or more named file types is built by `mac_save_format`, which sets
+        // up its Format menu before the sheet begins (#866); rfd shows the others.
+        PickRequest::Save(pick) => match mac_save_format::begin(window, &pick) {
+            // The dialog thread blocks here until the sheet answers.
+            Some(picked) => Box::pin(async move { picked.recv().unwrap_or_default() }),
+            None => {
+                // Nothing is added to the sheet once rfd has begun it: an accessory view set then
+                // made recent macOS versions dismiss the sheet at once (#1800).
+                let picked = dialog.save_file();
+                Box::pin(async move { picked.await.iter().map(path).collect() })
+            }
+        },
         PickRequest::Folder => {
             let picked = dialog.pick_folder();
             Box::pin(async move { picked.await.iter().map(path).collect() })
@@ -517,8 +526,10 @@ fn services(parent: Parent, ui: egui::Context) -> Services {
         start_pick: cfg!(unix).then(|| Box::new(move |request: PickRequest| start_pick(request, &p5, &ui)) as vectorcraft_ui_egui::picks::StartPick),
         dialogs_are_sheets: cfg!(target_os = "macos"),
         wayland,
+        no_cursor_theme: wayland && cursor_theme::theme_missing(),
         read: Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string()))),
         write: Some(Box::new(write_file)),
+        exists: Some(Box::new(|p: &str| std::path::Path::new(p).exists())),
         // Background Save and Export write from a worker thread.
         write_shared: Some(std::sync::Arc::new(write_file)),
         // Native saves stream into the file as they are encoded.
@@ -646,6 +657,9 @@ Without a window (converting, scripting, the MCP server), use vectorcraft-cli:
 ";
 
 fn main() -> std::process::ExitCode {
+    // Before any thread starts: the pointer must find a cursor theme on Wayland (#2450).
+    #[cfg(target_os = "linux")]
+    cursor_theme::apply();
     // Validate roots before logging, font scans, preferences or the window: a missing value
     // must not clear an environment root and start the control channel without confinement.
     let mut control = automation_args::ControlArg::default();
@@ -841,8 +855,14 @@ fn main() -> std::process::ExitCode {
             "VectorCraft",
             options,
             Box::new(move |cc| {
-                let mut app = VectorcraftApp::new(Session::new(), services(cc.winit_window().cloned(), cc.egui_ctx.clone()));
+                let mut session = Session::new();
+                // The profiles loaded before come back before the preferences name any of them.
+                prefs_dir::attach_profile_store(&mut session);
+                let mut app = VectorcraftApp::new(session, services(cc.winit_window().cloned(), cc.egui_ctx.clone()));
                 load_prefs(&mut app, saved);
+                // The saved PDF presets live in their own folder (also read by vectorcraft-cli),
+                // which takes over from the copy the preferences file used to hold.
+                prefs_dir::attach_pdf_preset_store(&mut app.session);
                 // Fit the window to its monitor, or put it back where it was (still hidden).
                 if let Some(w) = cc.winit_window() {
                     app.ui.window = Some(window::restore(w, saved_window));
@@ -1023,9 +1043,9 @@ mod tests {
             .collect()
     }
 
-    /// Finder offers the app for every file File › Open reads (#295, #354) but Photoshop documents
-    /// (`UNASSOCIATED_EXTS`), takes over no other app's files, and hands them to the app rather than
-    /// to AppKit's document machinery.
+    /// Finder offers the app for every file File › Open reads (#295, #354) but those with an
+    /// extension in `UNASSOCIATED_EXTS`, takes over no other app's files, and hands them to the app
+    /// rather than to AppKit's document machinery.
     #[test]
     fn the_macos_bundle_opens_every_readable_format() {
         let plist = include_str!("../../../packaging/macos/Info.plist.in");

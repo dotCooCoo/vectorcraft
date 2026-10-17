@@ -510,6 +510,31 @@ fn zigzag_spaces_ridges_evenly_along_a_straight_line() {
     }
 }
 
+/// #2343: Smooth points make a continuous wave, not a zigzag with rounded tips. Every peak and
+/// valley is a smooth point whose handles run parallel to the line, and the curve between them
+/// follows a cosine, even where the ridges are much taller than they are apart.
+#[test]
+fn zigzag_smooth_is_a_wave() {
+    use vectorcraft_geom::kurbo::ParamCurve;
+    let line = PathData::single(SubPath::polyline(&[Point::new(0.0, 0.0), Point::new(100.0, 0.0)], false));
+    for size in [3.0, 30.0] {
+        let out = run("distort.zigZag", json!({"ridges": 9, "points": "smooth", "size": size}), &line);
+        let sp = &out.subpaths[0];
+        assert_eq!(sp.anchors.len(), 11);
+        for a in &sp.anchors {
+            assert!(close(a.h_in.y, a.p.y, 1e-9) && close(a.h_out.y, a.p.y, 1e-9), "size {size}: handles not level at {a:?}");
+        }
+        for i in 0..sp.segment_count() {
+            let c = sp.segment(i);
+            for k in 0..=20 {
+                let q = c.eval(k as f64 / 20.0);
+                let want = -size * (std::f64::consts::PI * q.x / 10.0).cos();
+                assert!((q.y - want).abs() < 0.03 * size, "size {size}: {q:?} off the wave ({want})");
+            }
+        }
+    }
+}
+
 /// #1554 on curves: a circle's ridges sit at equal angles, at the radius plus and minus the size in
 /// turn all the way round.
 #[test]

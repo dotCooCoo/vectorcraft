@@ -370,6 +370,79 @@ fn make_dynamic_errors_name_the_command() {
     assert!(e.contains("`variable.makeTextDynamic`") && e.contains("is not type"), "{e}");
 }
 
+/// Lock Variables refuses defining, deleting and renaming variables, Make … Dynamic included,
+/// while binding, unbinding and the dataset commands still run.
+#[test]
+fn locked_variables_refuse_new_deleted_and_renamed_variables() {
+    let mut s = session();
+    let t = text(&mut s, "Alice");
+    let r = rect(&mut s);
+    s.execute("variable.define", &json!({"name": "Name", "kind": "text"})).unwrap();
+    s.execute("variable.define", &json!({"name": "Show", "kind": "visibility"})).unwrap();
+    assert_eq!(s.execute("variable.list", &json!({})).unwrap()["locked"], false);
+    assert_eq!(s.execute("variable.lock", &json!({})).unwrap()["locked"], true, "without `locked` it toggles");
+    assert_eq!(s.execute("variable.list", &json!({})).unwrap()["locked"], true);
+
+    s.execute("select.set", &json!({"ids": [t.0]})).unwrap();
+    for (cmd, p) in [
+        ("variable.define", json!({"name": "Other", "kind": "text"})),
+        ("variable.delete", json!({"names": ["Name"]})),
+        ("variable.rename", json!({"name": "Name", "newName": "Renamed"})),
+        ("variable.makeTextDynamic", json!({})),
+        ("variable.makeVisibilityDynamic", json!({})),
+    ] {
+        let e = s.execute(cmd, &p).unwrap_err();
+        assert!(matches!(&e, EngineError::Disabled(_, why) if why == "variables are locked"), "{cmd}: {e}");
+    }
+    let names = |s: &mut Session| {
+        s.execute("variable.list", &json!({})).unwrap()["variables"].as_array().unwrap().iter().map(|v| v["name"].clone()).collect::<Vec<_>>()
+    };
+    assert_eq!(names(&mut s), [json!("Name"), json!("Show")], "the variables are as they were");
+
+    // Binding and unbinding still work, and so do the datasets.
+    s.execute("variable.bind", &json!({"variable": "Name", "ids": [t.0]})).unwrap();
+    s.execute("variable.bind", &json!({"variable": "Show", "ids": [r.0]})).unwrap();
+    s.execute("variable.unbind", &json!({"ids": [r.0], "variable": "Show"})).unwrap();
+    s.execute("dataset.capture", &json!({})).unwrap();
+    s.execute("dataset.new", &json!({"name": "Bob", "values": {"Name": "Bob"}})).unwrap();
+    s.execute("dataset.import", &json!({"csv": "name,Name\nCarol,Carol\n"})).unwrap();
+    s.execute("dataset.select", &json!({"name": "Carol"})).unwrap();
+    assert_eq!(plain(&s, t), "Carol");
+
+    // Unlocking lets a variable be defined again; `locked` sets the state rather than toggling.
+    assert_eq!(s.execute("variable.lock", &json!({"locked": false})).unwrap()["locked"], false);
+    assert_eq!(s.execute("variable.lock", &json!({"locked": false})).unwrap()["locked"], false);
+    s.execute("variable.define", &json!({"name": "Other", "kind": "text"})).unwrap();
+}
+
+/// Locking is an undo step only when it changes the state, and the lock is saved with the
+/// document: a file saved locked opens locked, and a file without the key opens unlocked.
+#[test]
+fn the_variables_lock_is_an_undo_step_and_is_saved() {
+    let mut s = session();
+    let steps = |s: &Session| s.doc().unwrap().history.undo.len();
+    let before = steps(&s);
+    s.execute("variable.lock", &json!({"locked": true})).unwrap();
+    assert_eq!(steps(&s), before + 1);
+    s.execute("variable.lock", &json!({"locked": true})).unwrap();
+    assert_eq!(steps(&s), before + 1, "locking locked variables is not a step");
+    assert!(s.doc().unwrap().is_dirty());
+
+    let saved = vectorcraft_format::save(&s.doc().unwrap().doc, false);
+    assert!(vectorcraft_format::load(&saved).unwrap().variables.locked, "a document saved locked opens locked");
+    let mut v: Value = serde_json::from_slice(&saved).unwrap();
+    assert_eq!(v["document"]["variables"]["locked"], true);
+    v["document"]["variables"].as_object_mut().unwrap().remove("locked");
+    assert!(!vectorcraft_format::load(&serde_json::to_vec(&v).unwrap()).unwrap().variables.locked, "a file without the key opens unlocked");
+
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert!(!s.doc().unwrap().doc.variables.locked, "undo unlocks");
+    let v: Value = serde_json::from_slice(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    assert!(v["document"].get("variables").is_none_or(|v| v.get("locked").is_none()), "unlocked variables write no key: {v}");
+    s.execute("edit.redo", &json!({})).unwrap();
+    assert!(s.doc().unwrap().doc.variables.locked, "redo locks again");
+}
+
 /// Capture Data Set records what the art holds now, which is how rows are made — the art is
 /// edited and captured, rather than the values typed.
 #[test]
@@ -688,6 +761,70 @@ fn a_hidden_object_comes_back_and_is_captured_hidden() {
     s.execute("variable.bind", &json!({"variable": "More", "ids": [r.0]})).unwrap();
 }
 
+/// A row selected while a layer is hidden rewrites the type on it and applies its other values,
+/// and leaves the layer hidden: showing the layer shows that row's text. A layer that is locked
+/// as well as hidden is still left alone.
+#[test]
+fn a_row_rewrites_type_on_a_hidden_layer_but_not_on_a_locked_one() {
+    let mut s = session();
+    let layer = NodeId(s.execute("layer.new", &json!({})).unwrap()["id"].as_u64().unwrap());
+    let t = text(&mut s, "Alice");
+    let r = rect(&mut s);
+    s.execute("variable.define", &json!({"name": "Name", "kind": "text"})).unwrap();
+    s.execute("variable.define", &json!({"name": "Show", "kind": "visibility"})).unwrap();
+    s.execute("variable.bind", &json!({"variable": "Name", "ids": [t.0]})).unwrap();
+    s.execute("variable.bind", &json!({"variable": "Show", "ids": [r.0]})).unwrap();
+    s.execute("dataset.new", &json!({"name": "A", "values": {"Name": "Alice", "Show": true}})).unwrap();
+    s.execute("dataset.new", &json!({"name": "B", "values": {"Name": "Bob", "Show": false}})).unwrap();
+    s.execute("dataset.select", &json!({"name": "A"})).unwrap();
+
+    s.execute("layer.setProps", &json!({"id": layer.0, "visible": false})).unwrap();
+    let v = s.execute("dataset.select", &json!({"name": "B"})).unwrap();
+    assert_eq!((v["applied"].as_u64(), v["skipped"].as_u64()), (Some(2), Some(0)), "{v}");
+    let doc = &s.doc().unwrap().doc;
+    assert_eq!(plain(&s, t), "Bob", "the type on the hidden layer holds the row's text");
+    assert!(!doc.node(r).unwrap().visible, "the row's visibility value applies on the hidden layer");
+    assert!(!doc.node(layer).unwrap().visible, "the row leaves the layer hidden");
+    let sets = s.execute("dataset.list", &json!({})).unwrap();
+    let matching: Vec<&Value> = sets["datasets"].as_array().unwrap().iter().filter(|d| d["matches"] == json!(true)).map(|d| &d["name"]).collect();
+    assert_eq!(matching, [&json!("B")], "only the row the hidden art holds matches: {sets}");
+    s.execute("layer.setProps", &json!({"id": layer.0, "visible": true})).unwrap();
+    assert_eq!(plain(&s, t), "Bob", "showing the layer shows the row's text");
+
+    // Locked and hidden: the row skips both objects and the type keeps its text.
+    s.execute("layer.setProps", &json!({"id": layer.0, "visible": false, "locked": true})).unwrap();
+    let v = s.execute("dataset.select", &json!({"name": "A"})).unwrap();
+    assert_eq!((v["applied"].as_u64(), v["skipped"].as_u64()), (Some(0), Some(2)), "{v}");
+    assert_eq!(plain(&s, t), "Bob", "the type on the locked layer keeps its text");
+    assert!(!s.doc().unwrap().doc.node(r).unwrap().visible);
+}
+
+/// Type inside a hidden group is rewritten too, and List and Capture Data Set read it.
+#[test]
+fn a_row_rewrites_type_in_a_hidden_group_and_capture_reads_it() {
+    let mut s = session();
+    let t = text(&mut s, "Alice");
+    let other = rect(&mut s);
+    let g = group(&mut s, &[t, other]);
+    s.execute("variable.define", &json!({"name": "Name", "kind": "text"})).unwrap();
+    s.execute("variable.bind", &json!({"variable": "Name", "ids": [t.0]})).unwrap();
+    s.execute("dataset.new", &json!({"name": "A", "values": {"Name": "Alice"}})).unwrap();
+    s.execute("dataset.new", &json!({"name": "B", "values": {"Name": "Bob"}})).unwrap();
+    s.execute("object.setProps", &json!({"ids": [g.0], "visible": false})).unwrap();
+
+    let v = s.execute("dataset.select", &json!({"name": "B"})).unwrap();
+    assert_eq!((v["applied"].as_u64(), v["skipped"].as_u64()), (Some(1), Some(0)), "{v}");
+    assert_eq!(plain(&s, t), "Bob");
+    assert!(!s.doc().unwrap().doc.node(g).unwrap().visible, "the group stays hidden");
+
+    let sets = s.execute("dataset.list", &json!({})).unwrap();
+    let matches: Vec<&Value> = sets["datasets"].as_array().unwrap().iter().map(|d| &d["matches"]).collect();
+    assert_eq!(matches, [&json!(false), &json!(true)], "the art holds B's text, not A's: {sets}");
+    let v = s.execute("dataset.capture", &json!({"name": "C"})).unwrap();
+    let sets = s.execute("dataset.list", &json!({})).unwrap();
+    assert_eq!(sets["datasets"][2]["values"], json!({"Name": {"text": "Bob"}}), "{v}: {sets}");
+}
+
 /// A row that hides selected objects deselects them, the key object included. Undo shows them
 /// and selects them again with the key object.
 #[test]
@@ -948,6 +1085,70 @@ fn datasets_csv_keeps_spaces_in_quoted_cells() {
     assert_eq!(value("C"), text_value(" quoted "));
 }
 
+/// A header row with a tab and no comma outside quotes makes tabs the separator; a quoted cell
+/// may then hold tabs and commas. A header row with a comma outside quotes keeps commas, even
+/// when a cell holds a tab. A tab-separated header with an unclosed quote fails with the reason.
+#[test]
+fn datasets_csv_reads_tab_separated_files() {
+    let mut s = session();
+    s.execute("variable.define", &json!({"name": "Title", "kind": "text"})).unwrap();
+    s.execute("variable.define", &json!({"name": "Show", "kind": "visibility"})).unwrap();
+    s.execute("variable.define", &json!({"name": "Last, First", "kind": "text"})).unwrap();
+    let tsv = "name\tTitle\tShow\r\nA\tTwo words\ttrue\r\nB\t\"a, b\tc\"\tfalse\r\n";
+    let imp = s.execute("dataset.import", &json!({"csv": tsv})).unwrap();
+    assert_eq!(imp["names"], json!(["A", "B"]));
+    s.execute("dataset.import", &json!({"csv": "name,Title\nC,one\ttwo"})).unwrap();
+    s.execute("dataset.import", &json!({"csv": "name\t\"Last, First\"\nD\tSmith, Jo"})).unwrap();
+    let value = |name: &str, var: &str| s.doc().unwrap().doc.variables.dataset(name).and_then(|d| d.values.get(var)).cloned();
+    let text_value = |v: &str| Some(vectorcraft_doc::DataValue::Text(v.into()));
+    assert_eq!(value("A", "Title"), text_value("Two words"));
+    assert_eq!(value("A", "Show"), Some(vectorcraft_doc::DataValue::Visible(true)));
+    assert_eq!(value("B", "Title"), text_value("a, b\tc"));
+    assert_eq!(value("B", "Show"), Some(vectorcraft_doc::DataValue::Visible(false)));
+    assert_eq!(value("C", "Title"), text_value("one\ttwo"));
+    assert_eq!(value("D", "Last, First"), text_value("Smith, Jo"));
+    let unclosed = s.execute("dataset.import", &json!({"csv": "name\tTitle\t\"Show\nA\tx\ttrue"})).unwrap_err().to_string();
+    assert!(unclosed.contains("unclosed quote"), "{unclosed}");
+}
+
+/// Without a `name` column every header cell is a variable, and the rows take the first free
+/// names Data Set 1, 2 and so on. A first header cell `name`, in any case, still holds the names.
+#[test]
+fn datasets_csv_without_a_name_column_numbers_the_rows() {
+    let mut s = session();
+    s.execute("variable.define", &json!({"name": "Title", "kind": "text"})).unwrap();
+    s.execute("dataset.new", &json!({"name": "Data Set 2", "values": {"Title": "kept"}})).unwrap();
+    let imp = s.execute("dataset.import", &json!({"csv": "Title\nx\ny\n"})).unwrap();
+    assert_eq!((imp["imported"].as_u64(), imp["updated"].as_u64()), (Some(2), Some(0)));
+    assert_eq!(imp["names"], json!(["Data Set 1", "Data Set 3"]));
+    let value = |s: &Session, name: &str| s.doc().unwrap().doc.variables.dataset(name).and_then(|d| d.values.get("Title")).cloned();
+    let text_value = |v: &str| Some(vectorcraft_doc::DataValue::Text(v.into()));
+    assert_eq!(value(&s, "Data Set 1"), text_value("x"));
+    assert_eq!(value(&s, "Data Set 2"), text_value("kept"));
+    assert_eq!(value(&s, "Data Set 3"), text_value("y"));
+    let named = s.execute("dataset.import", &json!({"csv": "NAME,Title\nData Set 1,z"})).unwrap();
+    assert_eq!((named["imported"].as_u64(), named["updated"].as_u64()), (Some(0), Some(1)));
+    assert_eq!(value(&s, "Data Set 1"), text_value("z"));
+}
+
+/// An error about a row's values or name gives the file line the row starts on, counting blank
+/// lines and line breaks inside quoted cells.
+#[test]
+fn datasets_csv_row_errors_name_the_file_line() {
+    let mut s = session();
+    s.execute("variable.define", &json!({"name": "Title", "kind": "text"})).unwrap();
+    s.execute("variable.define", &json!({"name": "Show", "kind": "visibility"})).unwrap();
+    let error = |s: &mut Session, csv: &str| s.execute("dataset.import", &json!({"csv": csv})).unwrap_err().to_string();
+    let blank_line = error(&mut s, "name,Show\n\nX,maybe");
+    assert!(blank_line.contains("line 3:"), "{blank_line}");
+    let line_break = error(&mut s, "name,Title,Show\nA,\"one\ntwo\",true\nB,x,maybe");
+    assert!(line_break.contains("line 4:"), "{line_break}");
+    let twice = error(&mut s, "name,Title\nA,x\n\nA,y");
+    assert!(twice.contains("line 4:"), "{twice}");
+    let long = error(&mut s, &format!("name,Title\n\n{},x", "n".repeat(256)));
+    assert!(long.contains("line 3:") && long.contains("longer than 255"), "{long}");
+}
+
 /// Import / export datasets as CSV: header `name` then variables; round-trip keeps values.
 #[test]
 fn datasets_csv_round_trips_and_rejects_bad_input() {
@@ -989,7 +1190,7 @@ fn datasets_csv_round_trips_and_rejects_bad_input() {
     assert_eq!((again["imported"].as_u64(), again["updated"].as_u64()), (Some(0), Some(2)));
     assert!(s.execute("dataset.import", &json!({"csv": "name,Ghost\nX,y"})).is_err());
     assert!(s.execute("dataset.import", &json!({"csv": "name,Show\nX,maybe"})).is_err());
-    assert!(s.execute("dataset.import", &json!({"csv": "Title,Name\nX,y"})).is_err(), "first column must be name");
+    assert!(s.execute("dataset.import", &json!({"csv": "Title,Name\nX,y"})).is_err(), "no variable named Title");
 
     let out = dir.file("sets.csv");
     s.execute("dataset.export", &json!({"path": out})).unwrap();

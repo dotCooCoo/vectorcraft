@@ -81,7 +81,12 @@ pub(crate) fn font_descriptor(st: &CharStyle) -> (u16, bool) {
 /// (600 for Semibold, 300 for Light), `bold` for 700 and left out for 400.
 pub(crate) fn font_props(st: &CharStyle, len: &dyn Fn(f64) -> String) -> Props {
     let mut p = Props::new();
-    let fam = if st.font_family.contains(|c: char| c.is_whitespace() || c == ',') { format!("'{}'", st.font_family) } else { st.font_family.clone() };
+    // A quoted family escapes `\` and `'`, which would otherwise end the string early.
+    let fam = if st.font_family.contains(|c: char| c.is_whitespace() || matches!(c, ',' | '\'' | '\\')) {
+        format!("'{}'", st.font_family.replace('\\', "\\\\").replace('\'', "\\'"))
+    } else {
+        st.font_family.clone()
+    };
     p.push(("font-family", fam));
     p.push(("font-size", len(st.size * st.v_scale / 100.0)));
     let (weight, italic) = font_descriptor(st);
@@ -194,7 +199,7 @@ impl CssUnits {
 pub struct CssOptions {
     pub units: CssUnits,
     /// `position: absolute` with `left` and `top` from the top-left corner of the object's
-    /// artboard (the one its centre is on, else the first).
+    /// artboard (the one its centre is on, its edges included, else the first).
     pub position: bool,
     /// `width` and `height`.
     pub dimensions: bool,
@@ -376,7 +381,7 @@ impl Rules<'_> {
         let Some(b) = b else { return p };
         if self.opts.position {
             let c = b.center();
-            let ab = self.doc.artboards.iter().find(|a| a.rect.contains(c)).or_else(|| self.doc.artboards.first());
+            let ab = self.doc.artboard_holding(c, false).and_then(|i| self.doc.artboards.get(i)).or_else(|| self.doc.artboards.first());
             let origin = ab.map_or(Point::ZERO, |a| Point::new(a.rect.x0, a.rect.y0));
             p.push(("position", "absolute".into()));
             p.push(("left", self.len(b.x0 - origin.x)));
@@ -622,9 +627,9 @@ fn corners(path: &PathData, live: Option<&LiveShape>) -> Option<Corners> {
         Some(LiveShape::Rectangle { w, h, radii, kinds, xf })
             if upright(xf) && radii.iter().zip(kinds).all(|(r, k)| *r <= 0.0 || *k == CornerKind::Round) =>
         {
-            // The radii as drawn, none past half the shorter side (CSS draws one further when its
-            // neighbours leave room).
-            let radii = radii.map(|r| shapes::fitted_corner_radius(*w, *h, r));
+            // The radii as drawn: no two neighbours' cuts add up to more than their side, so CSS
+            // draws them as they are.
+            let radii = shapes::fitted_corner_radii(*w, *h, *radii);
             if radii.iter().all(|r| *r <= 0.0) {
                 Some(Corners::Square)
             } else if radii.iter().all(|r| (r - radii[0]).abs() < 1e-9) {

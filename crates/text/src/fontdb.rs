@@ -521,11 +521,8 @@ fn pick_native_label(english: &str, pairs: &[(Option<String>, String)]) -> Optio
 
 /// The family's native-language name from the font (typographic, else legacy), when it has one.
 fn native_family_name(font: &skrifa::FontRef<'_>, english: &str) -> Option<String> {
-    let pairs = {
-        let t = localized(font, StringId::TYPOGRAPHIC_FAMILY_NAME);
-        if t.is_empty() { localized(font, StringId::FAMILY_NAME) } else { t }
-    };
-    pick_native_label(english, &pairs)
+    pick_native_label(english, &localized(font, StringId::TYPOGRAPHIC_FAMILY_NAME))
+        .or_else(|| pick_native_label(english, &localized(font, StringId::FAMILY_NAME)))
 }
 
 /// Every localized string of `id`.
