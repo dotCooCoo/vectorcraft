@@ -3940,6 +3940,7 @@ imageTrace	Outline	轮廓
 @msg	no blend options	没有混合选项
 @msg	bad color {v}	颜色 {v} 无效
 @msg	the Color Picker is not open	拾色器未打开
+@msg	the Simplify slider is not open	简化滑块未打开
 @msg	the screen color sampler is already open	屏幕取色器已打开
 @msg	this system has no screen color sampler	此系统没有屏幕取色器
 @msg	Corners edits the corners of a path	转角用于编辑路径的转角
