@@ -213,6 +213,28 @@ fn setup_survives_save_and_load() {
     assert_eq!(back.setup.grid_colors_name(), "Custom");
 }
 
+/// A file whose bleed, superscript, subscript or small caps size lies outside the range
+/// `document.setup` takes opens with it at the nearer end of that range, and the setup it reports
+/// can be fed back.
+#[test]
+fn a_file_with_setup_values_out_of_range_opens_with_them_in_range() {
+    let mut s = session();
+    let mut d = (*s.doc().unwrap().doc).clone();
+    d.setup.bleed = [-5.0, 100.0, f64::MAX, 9.0];
+    d.setup.superscript = ScriptMetrics { size: 0.0, position: f64::MAX };
+    d.setup.subscript = ScriptMetrics { size: f64::MAX, position: -1000.0 };
+    d.setup.small_caps_size = -5.0;
+    let data = vectorcraft_format::base64_encode(&vectorcraft_format::save_file(&d));
+    s.execute("document.open", &json!({"name": "setup.vectorcraft", "dataBase64": data})).unwrap();
+    let st = setup(&s);
+    assert_eq!(st.bleed, [0.0, 72.0, 72.0, 9.0]);
+    assert_eq!(st.superscript, ScriptMetrics { size: 1.0, position: 500.0 });
+    assert_eq!(st.subscript, ScriptMetrics { size: 500.0, position: -500.0 });
+    assert_eq!(st.small_caps_size, 1.0);
+    let q = s.execute("document.setup", &json!({})).unwrap();
+    assert_eq!(s.execute("document.setup", &q).unwrap(), q);
+}
+
 #[test]
 fn svg_text_export_follows_the_export_text_setting() {
     let mut s = session();

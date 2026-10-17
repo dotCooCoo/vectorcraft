@@ -332,6 +332,7 @@
 	Change Case	Αλλαγή πεζών/κεφαλαίων
 	Change Screen Mode (F)	Αλλαγή λειτουργίας οθόνης (F)
 	Change to Global Rulers	Χρήση καθολικών χαράκων
+	Change to Artboard Rulers	Χρήση χαράκων πίνακα σχεδίασης
 	Change to Right-to-Left Layout	Μετάβαση σε διάταξη από δεξιά προς τα αριστερά
 	Changed since the last Refresh.	Τροποποιήθηκε μετά την τελευταία ανανέωση.
 	Changes allowed:	Επιτρεπόμενες αλλαγές:
@@ -467,6 +468,7 @@
 	Color Model:	Μοντέλο χρώματος:
 	Color Models	Μοντέλα χρώματος
 	Color Picker	Επιλογέας χρώματος
+	Color wheel	Χρωματικός τροχός
 	Color Picker…	Επιλογέας χρώματος…
 	Color Reduction:	Μείωση χρωμάτων:
 	Color Settings	Ρυθμίσεις χρωμάτων
@@ -512,6 +514,7 @@
 	Contextual Task Bar	Γραμμή εργασιών βάσει περιβάλλοντος
 	Pin Bar Position	Σταθεροποίηση θέσης γραμμής
 	Reset Bar Position	Επαναφορά θέσης γραμμής
+	Resize	Αλλαγή μεγέθους
 	Contrast	Αντίθεση
 	Control	Έλεγχος
 	Convert	Μετατροπή
@@ -1124,6 +1127,14 @@
 	Gamut Warning	Προειδοποίηση χρωματικής γκάμας
 	gap	διάκενο
 	Gap Options…	Επιλογές διακένου…
+	Gap Options	Επιλογές διακένου
+	Gap Detection	Εντοπισμός διακένων
+	Paint Stops At:	Η βαφή σταματά σε:
+	Small Gaps	Μικρά διάκενα
+	Medium Gaps	Μεσαία διάκενα
+	Large Gaps	Μεγάλα διάκενα
+	Gap Preview Color:	Χρώμα προεπισκόπησης διακένων:
+	Close Gaps With Paths	Κλείσιμο διακένων με διαδρομές
 	Gaussian Blur…	Θόλωση Γκάους…
 	General	Γενικά
 	General › Placement › X	Γενικά › Τοποθέτηση › X
@@ -1138,6 +1149,10 @@
 	glyph {id}	γλύφος {id}
 	Glyphs	Γλύφοι
 	Go to Artboard	Μετάβαση στον πίνακα σχεδίασης
+	First Artboard	Πρώτος πίνακας σχεδίασης
+	Previous Artboard	Προηγούμενος πίνακας σχεδίασης
+	Next Artboard	Επόμενος πίνακας σχεδίασης
+	Last Artboard	Τελευταίος πίνακας σχεδίασης
 	Go To Link	Μετάβαση στη σύνδεση
 	GPL palettes keep solid colours only, as RGB.	Οι παλέτες GPL διατηρούν μόνο συμπαγή χρώματα σε RGB.
 	GPU Performance	Απόδοση GPU
@@ -1163,6 +1178,16 @@
 	Delete Design	Διαγραφή σχεδίου
 	Paste Design	Επικόλληση σχεδίου
 	Select Unused	Επιλογή μη χρησιμοποιημένων
+	Graph Column	Στήλη γραφήματος
+	Column Type:	Τύπος στήλης:
+	Vertically Scaled	Κλιμακωμένο κατακόρυφα
+	Uniformly Scaled	Κλιμακωμένο ομοιόμορφα
+	Repeating	Επαναλαμβανόμενο
+	Sliding	Ολισθαίνον
+	Each Design Represents:	Κάθε σχέδιο αντιστοιχεί σε:
+	For Fractions:	Για κλάσματα:
+	Chop Design	Περικοπή σχεδίου
+	Scale Design	Κλιμάκωση σχεδίου
 	Import Data…	Εισαγωγή δεδομένων…
 	Transpose	Αντιμετάθεση
 	Switch x/y	Εναλλαγή x/y
@@ -1256,6 +1281,76 @@
 	History	Ιστορικό
 	History Options…	Επιλογές ιστορικού…
 	History States	Καταστάσεις ιστορικού
+# History panel: the names of undo steps (`every_undo_label_is_translated`).
+	Apply Data Set	Εφαρμογή συνόλου δεδομένων
+	Cancel Pattern Editing	Ακύρωση επεξεργασίας μοτίβου
+	Copy Appearance	Αντιγραφή εμφάνισης
+	Copy Guide	Αντιγραφή οδηγού
+	Copy in Perspective	Αντιγραφή σε προοπτική
+	Create Slice from Selection	Δημιουργία τομής από επιλογή
+	Create Slices from Guides	Δημιουργία τομών από οδηγούς
+	Delete All Slices	Διαγραφή όλων των τομών
+	Delete Data Sets	Διαγραφή συνόλων δεδομένων
+	Delete Graphic Styles	Διαγραφή στυλ γραφικών
+	Delete Guide	Διαγραφή οδηγού
+	Delete Guides	Διαγραφή οδηγών
+	Delete Slice	Διαγραφή τομής
+	Delete Style	Διαγραφή στυλ
+	Delete Variables	Διαγραφή μεταβλητών
+	Delete View	Διαγραφή προβολής
+	Done Editing Pattern	Ολοκλήρωση επεξεργασίας μοτίβου
+	Duplicate Rows	Δημιουργία αντιγράφου γραμμών
+	Edit Perspective Grid	Επεξεργασία πλέγματος προοπτικής
+	Expand Blend	Επέκταση ανάμειξης
+	Expand Envelope	Επέκταση περιβλήματος
+	Expand Image Trace	Επέκταση ανίχνευσης περιγραμμάτων εικόνας
+	Expand Live Paint	Επέκταση δυναμικής βαφής
+	Live Shape	Δυναμικό σχήμα
+	Make Blend	Δημιουργία ανάμειξης
+	Make Dynamic	Μετατροπή σε δυναμικό
+	Make Intertwine	Δημιουργία διαπλοκής
+	Make Live Paint	Δημιουργία δυναμικής βαφής
+	Make Pattern	Δημιουργία μοτίβου
+	Make Slice	Δημιουργία τομής
+	Merge Live Paint	Συγχώνευση δυναμικής βαφής
+	Mesh Point Color	Χρώμα σημείου πλέγματος
+	Move Envelope Point	Μετακίνηση σημείου περιβλήματος
+	Move Plane and Copy Objects	Μετακίνηση επιπέδου προοπτικής και αντιγραφή αντικειμένων
+	Move Plane and Objects	Μετακίνηση επιπέδου προοπτικής και αντικειμένων
+	Move Slice	Μετακίνηση τομής
+	Move Type on a Path	Μετακίνηση κειμένου σε διαδρομή
+	New Guide	Νέος οδηγός
+	Place from Library	Τοποθέτηση από βιβλιοθήκη
+	Rearrange Artboards	Αναδιάταξη πινάκων σχεδίασης
+	Release Blend	Αποδέσμευση ανάμειξης
+	Release Envelope	Αποδέσμευση περιβλήματος
+	Release Intertwine	Αποδέσμευση διαπλοκής
+	Release Live Paint	Αποδέσμευση δυναμικής βαφής
+	Release Repeat	Αποδέσμευση επανάληψης
+	Release Slice	Αποδέσμευση τομής
+	Release Threaded Text	Αποδέσμευση συνδεδεμένου κειμένου
+	Rename Design	Μετονομασία σχεδίου
+	Rename Style	Μετονομασία στυλ
+	Rename View	Μετονομασία προβολής
+	Reorder Appearance	Αναδιάταξη εμφάνισης
+	Reorder Artboards	Αλλαγή σειράς πινάκων σχεδίασης
+	Reshape Spine	Αναδιαμόρφωση κεντρικής καμπύλης
+	Resize Artboard	Αλλαγή μεγέθους πίνακα σχεδίασης
+	Resize Slice	Αλλαγή μεγέθους τομής
+	Resize Type Area	Αλλαγή μεγέθους περιοχής κειμένου
+	Scale in Perspective	Κλιμάκωση σε προοπτική
+	Shape Builder Delete	Δημιουργία σχημάτων (διαγραφή)
+	Sort Swatches	Ταξινόμηση δειγμάτων χρωμάτων
+	Symbol Screener	Αραίωση συμβόλων
+	Symbol Scruncher	Σύμπτυξη συμβόλων
+	Symbol Shifter	Μετατόπιση συμβόλων
+	Symbol Sizer	Αλλαγή μεγέθους συμβόλων
+	Symbol Spinner	Περιστροφή συμβόλων
+	Symbol Stainer	Χρωματισμός συμβόλων
+	Symbol Styler	Μορφοποίηση συμβόλων
+	Text Orientation	Προσανατολισμός κειμένου
+	Thread Text	Σύνδεση κειμένου
+	Typing	Πληκτρολόγηση
 	Hollow	Κοίλο
 	Home	Αρχική οθόνη
 	Horizon Height:	Ύψος ορίζοντα:
@@ -1645,6 +1740,7 @@
 	Roman Hanging Punctuation	Κρεμαστή στίξη όρθιας γραφής
 	Rotate	Περιστροφή
 	Rotate View Tool	Εργαλείο περιστροφής προβολής (Rotate View Tool)
+	Trackpad Gesture to Rotate View	Περιστροφή προβολής με χειρονομία στην επιφάνεια αφής
 	Rotate…	Περιστροφή…
 	Rotation	Περιστροφή
 	Rows:	Γραμμές:
@@ -1954,6 +2050,7 @@ axis	Both	Και τα δύο
 @msg	SVG parse error: {0}	Σφάλμα ανάλυσης SVG: {0}
 @msg	Save for Web: the image is empty	Αποθήκευση για ιστό: η εικόνα είναι κενή
 @msg	Save writes {_1}, not {_2}: use document.export for other formats	Η αποθήκευση γράφει {_1}, όχι {_2}: χρησιμοποιήστε το document.export για άλλες μορφές
+@msg	Save writes {_1}, not {_2}: use file.saveAsTemplate to write it	Η αποθήκευση γράφει {_1}, όχι {_2}: χρησιμοποιήστε το file.saveAsTemplate για να το γράψετε
 @msg	Saved recovery data for {title}	Αποθηκεύτηκαν δεδομένα ανάκτησης για το {title}
 @msg	Saved to User Defined: {_1}	Αποθηκεύτηκε στις προσαρμοσμένες ρυθμίσεις: {_1}
 @msg	Saved {path}	Αποθηκεύτηκε το {path}
@@ -1983,6 +2080,7 @@ axis	Both	Και τα δύο
 @msg	`{id}` has no envelope dialog	Το `{id}` δεν έχει παράθυρο διαλόγου περιβλήματος
 @msg	`{keep}` is not a side of this axis	Το `{keep}` δεν είναι πλευρά αυτού του άξονα
 @msg	`{key}` must be `auto` or a language code such as `en` or `zh-hant`	Το `{key}` πρέπει να είναι `auto` ή κωδικός γλώσσας όπως `en` ή `zh-hant`
+@msg	`{key}` must be a #rrggbb color	Το `{key}` πρέπει να είναι χρώμα #rrggbb
 @msg	`{key}` must be a #rrggbb colour	Το `{key}` πρέπει να είναι χρώμα #rrggbb
 @msg	`{key}` must be a number	Το `{key}` πρέπει να είναι αριθμός
 @msg	`{key}` must be a string	Το `{key}` πρέπει να είναι συμβολοσειρά
@@ -2120,6 +2218,20 @@ lighting	Light	Φως
 	Left Diagonal	Αριστερή διαγώνιος
 	Artistic	Καλλιτεχνικό
 	Film Grain…	Κόκκος φιλμ…
+	Cutout…	Αποκοπή…
+	Cutout	Αποκοπή
+	Neon Glow…	Λάμψη νέον…
+	Neon Glow	Λάμψη νέον
+	Poster Edges…	Άκρες αφίσας…
+	Poster Edges	Άκρες αφίσας
+	Levels	Επίπεδα
+	Edge Simplicity	Απλότητα άκρων
+	Edge Fidelity	Πιστότητα άκρων
+	Glow Size	Μέγεθος λάμψης
+	Glow Brightness	Φωτεινότητα λάμψης
+	Edge Thickness	Πάχος άκρων
+	Edge Intensity	Ένταση άκρων
+	Posterization	Αφισοποίηση
 	Highlight Area	Περιοχή φωτεινών τόνων
 	Skew:	Λοξότητα:
 	Inside	Εσωτερικά
@@ -2319,6 +2431,7 @@ theme	Appearance	Εμφάνιση
 	Live Paint Selection Tool	Επιλογή δυναμικής βαφής (Live Paint Selection Tool)
 	Live Shape Properties	Ιδιότητες δυναμικού σχήματος
 	Load Color Profile…	Φόρτωση προφίλ χρώματος…
+	Remove Color Profile…	Αφαίρεση προφίλ χρώματος…
 	Load Image into Clipboard	Φόρτωση εικόνας στο πρόχειρο
 	Load Metafile into Clipboard	Φόρτωση μετααρχείου στο πρόχειρο
 	Load PDF into Clipboard	Φόρτωση PDF στο πρόχειρο
@@ -2501,6 +2614,7 @@ theme	Appearance	Εμφάνιση
 	New Graphic Style	Νέο στυλ γραφικών
 	New Graphic Style (Alt-click to name it)	Νέο στυλ γραφικών (Alt-κλικ για ονομασία)
 	New Graphic Style…	Νέο στυλ γραφικών…
+	New Artboard Options…	Επιλογές νέου πίνακα σχεδίασης…
 	New Layer Options…	Επιλογές νέου επιπέδου…
 	New Opacity Masks Are Clipping	Οι νέες μάσκες αδιαφάνειας εφαρμόζουν αποκοπή
 	New Opacity Masks Are Inverted	Οι νέες μάσκες αδιαφάνειας είναι ανεστραμμένες
@@ -2973,6 +3087,8 @@ theme	Appearance	Εμφάνιση
 	Revert to the saved version of “{name}”?	Επαναφορά στην αποθηκευμένη έκδοση του «{name}»;
 	Replace “{name}”, the file this document was opened from?	Να αντικατασταθεί το «{name}», το αρχικό αρχείο του εγγράφου;
 	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Κατά το άνοιγμα παραλείφθηκαν στοιχεία που το VectorCraft δεν μπορεί ακόμη να διαβάσει ({what}). Αν αντικαταστήσετε το αρχείο, θα χαθούν οριστικά. Αποθηκεύστε με άλλο όνομα για να τα διατηρήσετε.
+	“{name}” already exists. Replace it?	Το «{name}» υπάρχει ήδη. Να αντικατασταθεί;
+	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Το όνομα στο παράθυρο αποθήκευσης ήταν «{typed}» και το VectorCraft πρόσθεσε την επέκταση του τύπου αρχείου. Αν αντικαταστήσετε το αρχείο, τα περιεχόμενά του θα χαθούν.
 	Revolve…	Περιστροφή γύρω από άξονα…
 	Right Grid:	Δεξί πλέγμα:
 	Right in Front	Δεξιά εμπρός
@@ -3302,6 +3418,16 @@ theme	Appearance	Εμφάνιση
 	Superscript (on the roadmap)	Εκθέτης (προγραμματισμένη λειτουργία)
 	SVG Filters	Φίλτρα SVG
 	SVG Interactivity	Διαδραστικότητα SVG
+	Event:	Συμβάν:
+	JavaScript:	JavaScript:
+	Add Event	Προσθήκη συμβάντος
+	Remove Selected Entry	Αφαίρεση επιλεγμένης καταχώρισης
+	Clear Events	Αφαίρεση όλων των συμβάντων
+	Link JavaScript Files…	Σύνδεση αρχείων JavaScript…
+	JavaScript Files	Αρχεία JavaScript
+	File or URL:	Αρχείο ή διεύθυνση URL:
+	Add JavaScript File	Προσθήκη αρχείου JavaScript
+	Remove JavaScript File	Αφαίρεση αρχείου JavaScript
 	SVG Options	Επιλογές SVG
 	SVG Profile:	Προφίλ SVG:
 	Swap Fill and Stroke	Εναλλαγή γεμίσματος και περιγράμματος
@@ -3524,6 +3650,8 @@ theme	Appearance	Εμφάνιση
 	Variable Width Profile	Προφίλ μεταβλητού πλάτους
 	New Variable	Νέα μεταβλητή
 	Delete Variable	Διαγραφή μεταβλητής
+	Lock Variables	Κλείδωμα μεταβλητών
+	Unlock Variables	Ξεκλείδωμα μεταβλητών
 	List Variables	Λίστα μεταβλητών
 	Bind Variable	Σύνδεση μεταβλητής
 	Unbind Variable	Αποσύνδεση μεταβλητής
@@ -3670,6 +3798,7 @@ theme	Appearance	Εμφάνιση
 @msg	a freeform gradient keeps at least one point	το ντεγκραντέ ελεύθερης μορφής χρειάζεται τουλάχιστον ένα σημείο
 @msg	a gradient needs at least two stops	το ντεγκραντέ χρειάζεται τουλάχιστον δύο σημεία χρώματος
 @msg	a graphic style named `{to}` already exists	υπάρχει ήδη στυλ γραφικών με όνομα `{to}`
+@msg	a key object sits on that point	σε αυτό το σημείο βρίσκεται βασικό αντικείμενο
 @msg	a page is missing	λείπει μια σελίδα
 @msg	a page out of range	η σελίδα βρίσκεται εκτός εύρους
 @msg	a page tree kid isn't a reference	το θυγατρικό στοιχείο του δέντρου σελίδων δεν είναι αναφορά
@@ -3677,6 +3806,7 @@ theme	Appearance	Εμφάνιση
 @msg	a page's placement is not finite	η τοποθέτηση της σελίδας δεν έχει πεπερασμένες τιμές
 @msg	a preset named `{_1}` exists	υπάρχει ήδη προεπιλογή με όνομα `{_1}`
 @msg	a slice size must be a positive number of points	το μέγεθος τομής πρέπει να είναι θετικός αριθμός στιγμών
+@msg	a spine keeps at least two points	απαιτούνται τουλάχιστον δύο σημεία κεντρικής καμπύλης
 @msg	a stream runs past the end	η ροή υπερβαίνει το τέλος
 @msg	a stream's length is wrong	το μήκος ροής είναι λανθασμένο
 @msg	a stream's length isn't a number	το μήκος ροής δεν είναι αριθμός
@@ -3735,11 +3865,13 @@ theme	Appearance	Εμφάνιση
 @msg	give horizontal or vertical	δώστε οριζόντια ή κατακόρυφη κατεύθυνση
 @msg	give the path `id` and the width point `index`	δώστε το `id` διαδρομής και το `index` σημείου πλάτους
 @msg	guides are locked	οι οδηγοί είναι κλειδωμένοι
+@msg	handle must be in or out	το handle πρέπει να είναι in ή out
 @msg	image '{key}' has no pixels and was left out	η εικόνα '{key}' δεν περιέχει εικονοστοιχεία και παραλείφθηκε
 @msg	image data `{_1}` is missing	λείπουν τα δεδομένα εικόνας `{_1}`
 @msg	image would be too large; lower the resolution	η εικόνα θα ήταν υπερβολικά μεγάλη· μειώστε την ανάλυση
 @msg	index must be a number or first, previous, next or last	ο δείκτης πρέπει να είναι αριθμός ή first, previous, next ή last
 @msg	index must be a number or first, previous, next or last, not `{other}`	ο δείκτης πρέπει να είναι αριθμός ή first, previous, next ή last, όχι `{other}`
+@msg	index must be ≥ 0	ο δείκτης δεν μπορεί να είναι αρνητικός
 @msg	installing from a path is not available on the web; pass the module as `dataBase64`	η εγκατάσταση από διαδρομή δεν υποστηρίζεται στο web· περάστε το πρόσθετο ως `dataBase64`
 @msg	internal error in `{cmd}`: {msg} (the document was left as it was before; please report this bug)	εσωτερικό σφάλμα στην εντολή `{cmd}`: {msg} (το έγγραφο έμεινε αμετάβλητο· αναφέρετε το σφάλμα)
 @msg	internal error: {msg} (please report this bug)	εσωτερικό σφάλμα: {msg} (αναφέρετε το σφάλμα)
@@ -3759,6 +3891,7 @@ theme	Appearance	Εμφάνιση
 @msg	missing `name`	λείπει το `name`
 @msg	missing `tool`	λείπει το `tool`
 @msg	missing index	λείπει ο δείκτης
+@msg	missing number `{key}`	λείπει ο αριθμός `{key}`
 @msg	multiple windows land with M11.5	τα πολλαπλά παράθυρα θα προστεθούν στην έκδοση M11.5
 @msg	name the file	δώστε όνομα στο αρχείο
 @msg	no CSS to copy: select objects with CSS of their own	δεν υπάρχει CSS για αντιγραφή: επιλέξτε αντικείμενα με δικό τους CSS
@@ -3839,6 +3972,8 @@ theme	Appearance	Εμφάνιση
 @msg	no such recent font	δεν υπάρχει τέτοια πρόσφατη γραμματοσειρά
 @msg	no such saved selection	δεν υπάρχει τέτοια αποθηκευμένη επιλογή
 @msg	no such segment	δεν υπάρχει τέτοιο τμήμα
+@msg	no such spine point	δεν υπάρχει τέτοιο σημείο κεντρικής καμπύλης
+@msg	no such spine segment	δεν υπάρχει τέτοιο τμήμα κεντρικής καμπύλης
 @msg	no such subpath	δεν υπάρχει τέτοια υποδιαδρομή
 @msg	no such user library	δεν υπάρχει τέτοια βιβλιοθήκη χρήστη
 @msg	no such view	δεν υπάρχει τέτοια προβολή
@@ -3854,6 +3989,7 @@ theme	Appearance	Εμφάνιση
 @msg	not a DXF drawing	δεν είναι σχέδιο DXF
 @msg	not a VectorCraft file: {0}	δεν είναι αρχείο VectorCraft: {0}
 @msg	not a VectorCraft shortcut set (missing `overrides`)	δεν είναι σύνολο συντομεύσεων VectorCraft (λείπει το `overrides`)
+@msg	not a blend	δεν είναι ανάμειξη
 @msg	not a graphic style library (format `{_1}`)	δεν είναι βιβλιοθήκη στυλ γραφικών (μορφή `{_1}`)
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	δεν είναι σύνολο συντομεύσεων: το κείμενο δεν αρχίζει με όνομα μετά από κάθετο και ανοιχτή αγκύλη
 @msg	not a stored central record	δεν είναι αποθηκευμένη κεντρική εγγραφή
@@ -3910,6 +4046,7 @@ theme	Appearance	Εμφάνιση
 @msg	select (or target) objects whose appearance isn't basic	επιλέξτε (ή στοχεύστε) αντικείμενα των οποίων η εμφάνιση δεν είναι βασική
 @msg	select a Live Paint group	επιλέξτε ομάδα δυναμικής βαφής
 @msg	select a blend	επιλέξτε ανάμειξη
+@msg	select a blend or give `id`	επιλέξτε ανάμειξη ή δώστε το `id`
 @msg	select a clip group	επιλέξτε ομάδα αποκοπής
 @msg	select a gradient mesh	επιλέξτε πλέγμα ντεγκραντέ
 @msg	select a linked image: an embedded one has no file	επιλέξτε συνδεδεμένη εικόνα: η ενσωματωμένη δεν έχει αρχείο
@@ -3942,6 +4079,7 @@ theme	Appearance	Εμφάνιση
 @msg	stop {i} needs `offset`	το σημείο χρώματος {i} χρειάζεται `offset`
 @msg	stop {i} needs a valid `color`	το σημείο χρώματος {i} χρειάζεται έγκυρο `color`
 @msg	stop {i}: `{k}` must be a number	σημείο χρώματος {i}: το `{k}` πρέπει να είναι αριθμός
+@msg	t, dx and dy must be finite	τα t, dx και dy πρέπει να είναι πεπερασμένα
 @msg	the EMF header is damaged	η κεφαλίδα EMF είναι κατεστραμμένη
 @msg	the PDF has no pages	το PDF δεν περιέχει σελίδες
 @msg	the PDF is no longer loaded	το PDF δεν είναι πλέον φορτωμένο
@@ -3954,6 +4092,7 @@ theme	Appearance	Εμφάνιση
 @msg	the art is too light for any dots	το σχέδιο είναι πολύ ανοιχτόχρωμο για δημιουργία κουκκίδων
 @msg	the artboard to fit must be a positive size up to {_1} pt	ο πίνακας σχεδίασης προς προσαρμογή πρέπει να έχει θετικό μέγεθος έως {_1} pt
 @msg	the background worker stopped	η διεργασία παρασκηνίου σταμάτησε
+@msg	the blend has no spine	η ανάμειξη στερείται κεντρικής καμπύλης
 @msg	the compressed file unpacks to more than {_1} MB	το αποσυμπιεσμένο αρχείο υπερβαίνει τα {_1} MB
 @msg	the document has never been saved	το έγγραφο δεν έχει αποθηκευτεί ποτέ
 @msg	the document has no artboard	το έγγραφο δεν έχει πίνακα σχεδίασης
@@ -3994,6 +4133,7 @@ theme	Appearance	Εμφάνιση
 @msg	the selected stroke's profile is already listed as {_1}	το προφίλ του επιλεγμένου περιγράμματος υπάρχει ήδη ως {_1}
 @msg	the selection has no URL (or they differ)	η επιλογή δεν έχει URL (ή τα URL διαφέρουν)
 @msg	the selection isn't in perspective	η επιλογή δεν βρίσκεται σε προοπτική
+@msg	the spine has no segments	δεν υπάρχουν τμήματα κεντρικής καμπύλης
 @msg	the stroke has no weight	το περίγραμμα δεν έχει πάχος
 @msg	the thumbnail image is malformed	η εικόνα μικρογραφίας δεν έχει έγκυρη μορφή
 @msg	the top object must be a path, compound path or text object to use as a clipping mask	το ανώτερο αντικείμενο πρέπει να είναι διαδρομή, σύνθετη διαδρομή ή αντικείμενο κειμένου για χρήση ως μάσκα αποκοπής
@@ -4029,9 +4169,11 @@ theme	Appearance	Εμφάνιση
 @msg	unknown tool or command `{key}`	άγνωστο εργαλείο ή εντολή `{key}`
 @msg	unknown workspace (one of {_1})	άγνωστος χώρος εργασίας (ένας από τους {_1})
 @msg	unsupported: {0}	δεν υποστηρίζεται: {0}
+@msg	variables are locked	οι μεταβλητές είναι κλειδωμένες
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	τα αρχεία έκδοσης {0} δεν μπορούν να συμπιεστούν: μόνο η έκδοση {COMPRESSED_SINCE} και νεότερες ανοίγουν συμπιεσμένα αρχεία
 @msg	width and height are at least 1 pixel	το πλάτος και το ύψος πρέπει να είναι τουλάχιστον 1 εικονοστοιχείο
 @msg	workspace name can't be empty	το όνομα χώρου εργασίας δεν μπορεί να είναι κενό
+@msg	x and y must be finite	τα x και y πρέπει να είναι πεπερασμένα
 @msg	{C}: no effect at index {from}	{C}: δεν υπάρχει εφέ στον δείκτη {from}
 @msg	{_1} failed: {e}	η ενέργεια {_1} απέτυχε: {e}
 @msg	{_1} files can be opened but not written (see document.formats)	τα αρχεία {_1} μπορούν να ανοιχτούν αλλά όχι να αποθηκευτούν (δείτε document.formats)
@@ -4235,6 +4377,7 @@ theme	Appearance	Εμφάνιση
 	Reset all	Επαναφορά όλων
 	Reset to default	Επαναφορά στην προεπιλογή
 	Reset all Revolve settings to their defaults.	Επαναφορά όλων των ρυθμίσεων περιστροφής γύρω από άξονα στις προεπιλογές.
+	Step up or down	Ένα βήμα πάνω ή κάτω
 	Drag values or labels. Double-click a value to type.	Σύρετε τιμές ή ετικέτες. Κάντε διπλό κλικ σε μια τιμή για πληκτρολόγηση.
 	Drag rings to rotate. Shift snaps to 15°.	Σύρετε τους δακτυλίους για περιστροφή. Με Shift γίνεται προσκόλληση ανά 15°.
 	Drag the light, or its rings. Shift snaps to 15°.	Σύρετε την πηγή φωτός ή τους δακτυλίους της. Με Shift γίνεται προσκόλληση ανά 15°.
@@ -4952,3 +5095,10 @@ effect	Points	Σημεία
 	Movie Clip	Κλιπ ταινίας
 @msg	name is empty	το όνομα είναι κενό
 @msg	no symbol named `{n}`	κανένα σύμβολο με όνομα `{n}`
+	Enable Guides for 9-Slice Scaling	Ενεργοποίηση οδηγών για κλιμάκωση 9-slice
+@msg	a mask has more than one art block	η μάσκα έχει περισσότερα από ένα μπλοκ γραφικών
+@msg	mask art ends outside a mask dictionary	τα γραφικά της μάσκας τελειώνουν έξω από το λεξικό της μάσκας
+@msg	cancelled; nothing was changed	ακυρώθηκε· δεν άλλαξε τίποτα
+@msg	a linked image can't become a gradient mesh: embed it first	μια συνδεδεμένη εικόνα δεν μπορεί να γίνει πλέγμα διαβάθμισης: ενσωματώστε την πρώτα
+@msg	the image has no usable size or position	η εικόνα δεν έχει χρησιμοποιήσιμο μέγεθος ή θέση
+@msg	the image's pixels can't be read	τα εικονοστοιχεία της εικόνας δεν μπορούν να διαβαστούν

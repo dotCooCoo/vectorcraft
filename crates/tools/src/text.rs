@@ -305,24 +305,57 @@ impl TypeTool {
     }
 
     fn overflow_marker(t: &TextObject, lay: &TextLayout, cx: &ToolContext, o: &mut Vec<Overlay>) {
-        if !lay.overflow {
-            return;
+        if lay.overflow {
+            overflow_port(t, cx, o);
         }
-        // The out port: bottom-right of the frame (end of the path for type on a path).
-        let port = match &t.kind {
-            TextKind::Area { frame } => frame.bounds().map(|b| t.xf * Point::new(b.x1, b.y1)),
-            TextKind::OnPath { path, .. } => path.to_bezpath().segments().last().map(|s| t.xf * vectorcraft_geom::ParamCurve::end(&s)),
-            TextKind::Point => None,
-        };
-        let Some(c) = port else { return };
-        let h = cx.tol(4.5);
-        let r = Rect::new(c.x - h, c.y - h, c.x + h, c.y + h);
-        let red = [230, 30, 30];
-        o.push(Overlay::Path { path: r.to_path(0.1), color: red, width: 1.0, dashed: false });
-        let (k, m) = (cx.tol(2.5), r.center());
-        o.push(Overlay::Line { a: Point::new(m.x - k, m.y), b: Point::new(m.x + k, m.y), color: red, dashed: false });
-        o.push(Overlay::Line { a: Point::new(m.x, m.y - k), b: Point::new(m.x, m.y + k), color: red, dashed: false });
     }
+}
+
+/// The red "+" out port of `t` (area type and type on a path whose text doesn't fit): at the
+/// bottom right of the frame, at the end of the path for type on a path.
+fn overflow_port(t: &TextObject, cx: &ToolContext, o: &mut Vec<Overlay>) {
+    let port = match &t.kind {
+        TextKind::Area { frame } => frame.bounds().map(|b| t.xf * Point::new(b.x1, b.y1)),
+        TextKind::OnPath { path, .. } => path.to_bezpath().segments().last().map(|s| t.xf * vectorcraft_geom::ParamCurve::end(&s)),
+        TextKind::Point => None,
+    };
+    let Some(c) = port else { return };
+    let h = cx.tol(4.5);
+    let r = Rect::new(c.x - h, c.y - h, c.x + h, c.y + h);
+    let red = [230, 30, 30];
+    o.push(Overlay::Path { path: r.to_path(0.1), color: red, width: 1.0, dashed: false });
+    let (k, m) = (cx.tol(2.5), r.center());
+    o.push(Overlay::Line { a: Point::new(m.x - k, m.y), b: Point::new(m.x + k, m.y), color: red, dashed: false });
+    o.push(Overlay::Line { a: Point::new(m.x, m.y - k), b: Point::new(m.x, m.y + k), color: red, dashed: false });
+}
+
+/// Which selected text overflows, for [`overflow_markers`]: each text object's layout verdict kept
+/// with the object and the fonts it was made from, as overlays run every frame.
+#[derive(Default)]
+pub struct OverflowMarks {
+    seen: std::collections::HashMap<NodeId, ((u64, TextObject), bool)>,
+}
+
+/// The overflow markers of the selected area type and type on a path, for every tool but the Type
+/// tools (they draw their own): an out port with a red "+" tells that text is hidden by the size of
+/// its frame, whatever tool is active.
+pub fn overflow_markers(marks: &mut OverflowMarks, cx: &ToolContext) -> Vec<Overlay> {
+    let fonts = FontDb::global().generation();
+    let mut o = Vec::new();
+    let mut kept = std::collections::HashMap::new();
+    for id in &cx.selection.objects {
+        let Some(t) = TypeTool::text(cx, *id).filter(|t| !matches!(t.kind, TextKind::Point)) else { continue };
+        let over = match marks.seen.remove(id) {
+            Some(((g, was), over)) if g == fonts && &was == t => over,
+            _ => vectorcraft_text::layout(FontDb::global(), t).overflow,
+        };
+        if over {
+            overflow_port(t, cx, &mut o);
+        }
+        kept.insert(*id, ((fonts, t.clone()), over));
+    }
+    marks.seen = kept;
+    o
 }
 
 /// Byte range in `s` of the characters `r` (IME ranges count characters; carets count bytes).

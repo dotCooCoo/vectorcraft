@@ -1272,10 +1272,16 @@ mod tests {
         assert_eq!(t.cursor(&cx, Point::new(150.0, 262.0), alt), Cursor::ReshapeSegment, "kept during the reshape");
         assert_eq!(a[0], Action::Begin("Reshape".into()));
         assert!(
-            matches!(&a[1], Action::Preview(c, v) if c == "path.reshapeSegment" && v["id"] == id.0 && v["segment"] == 0 && v["dy"] == -40.0),
+            matches!(&a[1], Action::Preview(c, v) if c == "path.reshapeSegment" && v["id"] == id.0 && v["segment"] == 0 && v["dy"] == -40.0 && v["perpendicular"] == false),
             "{a:?}"
         );
         assert_eq!(t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 150.0, 262.0)), vec![Action::Commit]);
+        // Shift held too keeps the handles at right angles to the line between the anchors.
+        let alt_shift = Mods { shift: true, ..alt };
+        t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 150.0, 302.0).with_mods(alt));
+        let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 160.0, 262.0).with_mods(alt_shift));
+        assert!(matches!(&a[1], Action::Preview(c, v) if c == "path.reshapeSegment" && v["perpendicular"] == true), "{a:?}");
+        assert_eq!(t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 160.0, 262.0)), vec![Action::Commit]);
         let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 250.0, 400.0).with_mods(alt));
         assert!(matches!(&a[..], [Action::Begin(_), Action::Preview(c, _)] if c == "path.appendAnchor"), "{a:?}");
     }

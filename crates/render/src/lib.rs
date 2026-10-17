@@ -1131,6 +1131,10 @@ impl Renderer {
         if !force && (!n.visible || f.opts.hidden.contains(&n.id)) {
             return;
         }
+        // A cancelled export stops drawing; whoever asked for the picture drops it (see `cancel`).
+        if vectorcraft_doc::cancel::is_cancelled() {
+            return;
+        }
         if force {
             // Bounds were already checked by draw_arc (or the caller wants it drawn regardless).
         } else if let Some(b) = fx::cull_bounds(f.symbols, n) {
@@ -1773,12 +1777,12 @@ impl Renderer {
             return;
         }
         let tb = t.xf.transform_rect_bbox(g.bounds);
-        // Overprinting characters multiply per draw, like overprinting fills and strokes
+        // Overprinting characters darken per draw, like overprinting fills and strokes
         // ([`proof`]); the object blend mode is Normal here or applied by an enclosing layer.
         let overprints = proof::overprints(f.opts);
         let overprint = |ctx: &mut RenderContext, on: bool| {
             if overprints {
-                ctx.set_blend_mode(if on { blend_mode(vectorcraft_color::BlendMode::Multiply) } else { BlendMode::default() });
+                ctx.set_blend_mode(if on { blend_mode(vectorcraft_color::BlendMode::Darken) } else { BlendMode::default() });
             }
         };
         // The object's own fills and strokes paint the whole outline: those below the Characters

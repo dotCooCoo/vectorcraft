@@ -6,7 +6,8 @@
 //! double-click opens the Corners dialog), drag a live ellipse's pie widgets to set its pie angles
 //! (double-click makes it whole again: [`crate::pie`]), double-click a group or an object to enter isolation
 //! mode (Double Click To Isolate), Cmd/Ctrl-click to select the object behind (Command Click to Select Objects Behind),
-//! click or drag a ruler guide ([`crate::rulerguide`]), drag the brackets of type on a path
+//! click or drag a ruler guide ([`crate::rulerguide`]), Cmd/Ctrl+Shift-double-click a ruler guide or
+//! a guide path to release it ([`release_guide_at`]), drag the brackets of type on a path
 //! ([`crate::pathtype`]), double-click the type widget to convert point type to area type and back
 //! ([`crate::typewidget`]), click a Shaper Group's mode widget to switch between Face Selection and
 //! Construction mode ([`crate::shaperwidget`]).
@@ -315,6 +316,9 @@ impl Tool for SelectionTool {
                 if shaperwidget::over_widget(cx, p) {
                     return vec![];
                 }
+                if let Some(a) = release_guide_at(cx, p, m) {
+                    return vec![a];
+                }
                 if crate::rulerguide::guide_at(cx, p).is_some() {
                     return vec![];
                 }
@@ -556,8 +560,8 @@ impl Tool for SelectionTool {
 
     fn cursor(&self, cx: &ToolContext, p: Point, m: Mods) -> Cursor {
         match self.state {
-            State::Rotating { center, .. } => return Cursor::rotate_about(center, p),
-            State::Scaling { handle, bx, .. } => return handle_cursor(handle, bx.angle),
+            State::Rotating { center, .. } => return Cursor::rotate_about_in_view(center, p, cx.view_angle()),
+            State::Scaling { handle, bx, .. } => return handle_cursor(handle, bx.angle - cx.view_angle()),
             // Alt-dragging leaves a copy behind; otherwise the filled arrow, hollow while the move
             // snaps to a point or a guide.
             State::Moving { began: true, .. } if m.alt => return Cursor::SelectionCopy,
@@ -586,8 +590,8 @@ impl Tool for SelectionTool {
             && let Some(bx) = selection_box(cx)
         {
             match box_hit(cx, &bx, p) {
-                Some(BoxHit::Handle(h)) => return handle_cursor(h, bx.angle),
-                Some(BoxHit::Rotate) => return Cursor::rotate_about(bx.center(), p),
+                Some(BoxHit::Handle(h)) => return handle_cursor(h, bx.angle - cx.view_angle()),
+                Some(BoxHit::Rotate) => return Cursor::rotate_about_in_view(bx.center(), p, cx.view_angle()),
                 None => {}
             }
         }
@@ -643,8 +647,25 @@ pub fn isolates(kind: &vectorcraft_doc::NodeKind) -> bool {
     matches!(kind, K::Group { .. } | K::Compound { .. } | K::Path { .. } | K::Image(_) | K::Mesh(_) | K::PlacedDocument(_))
 }
 
+/// A Cmd/Ctrl+Shift double-click at `p` with a selection tool releases the guide there: the ruler
+/// guide under the pointer (`view.guides.release {index}`), else the guide path hit there
+/// (`view.guides.release {ids}`). It returns None without both keys, while guides are hidden or
+/// locked, or when no guide is at `p`.
+pub(crate) fn release_guide_at(cx: &ToolContext, p: Point, m: Mods) -> Option<Action> {
+    if !(m.cmd && m.shift && cx.guides) {
+        return None;
+    }
+    if let Some(i) = crate::rulerguide::guide_at(cx, p) {
+        return Some(Action::Exec("view.guides.release".into(), json!({ "index": i })));
+    }
+    let leaf = hit_test(cx.doc, p, cx.hit_options())?.leaf;
+    let guide = cx.doc.node(leaf).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Path { guide: true, .. }));
+    guide.then(|| Action::Exec("view.guides.release".into(), json!({ "ids": [leaf.0] })))
+}
+
 /// The resize cursor for handle `h` of a box turned by `angle` (counter-clockwise degrees): the
-/// handle that sits where `h` appears on screen, in 45° steps.
+/// handle that sits where `h` appears on screen, in 45° steps. In a turned view, `angle` is the
+/// box's own angle less [`ToolContext::view_angle`].
 fn handle_cursor(h: Handle, angle: f64) -> Cursor {
     let steps = if angle.is_finite() { (angle / 45.0).round() as i64 } else { 0 };
     let h = Handle::ALL.get((h as i64 - steps).rem_euclid(8) as usize).copied().unwrap_or(h);
@@ -787,6 +808,34 @@ mod tests {
         assert!(t.pointer(&cx, &ev(PointerKind::DoubleClick, 160.0, 150.0)).is_empty());
     }
 
+    /// A Cmd/Ctrl+Shift double-click releases the ruler guide or the guide path under the pointer;
+    /// without both keys, or while guides are hidden or locked, nothing is released.
+    #[test]
+    fn a_cmd_shift_double_click_releases_the_guide_under_the_pointer() {
+        let (mut d, id) = doc_with_rect();
+        d.guides.push(vectorcraft_doc::Guide::new(false, 300.0));
+        let Some(vectorcraft_doc::NodeKind::Path { guide, .. }) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("the rectangle is a path") };
+        *guide = true;
+        let s = Selection::default();
+        let p = paint();
+        let both = Mods { cmd: true, shift: true, ..Mods::default() };
+        let dbl = |c: &ToolContext, x: f64, y: f64, m: Mods| SelectionTool::default().pointer(c, &ev(PointerKind::DoubleClick, x, y).with_mods(m));
+        let releases = |a: &[Action]| a.iter().any(|a| matches!(a, Action::Exec(c, _) if c == "view.guides.release"));
+        let c = cx(&d, &s, &p);
+        assert_eq!(dbl(&c, 350.0, 301.0, both), vec![Action::Exec("view.guides.release".into(), json!({"index": 0}))]);
+        assert_eq!(dbl(&c, 200.0, 150.0, both), vec![Action::Exec("view.guides.release".into(), json!({"ids": [id.0]}))]);
+        assert!(dbl(&c, 350.0, 301.0, Mods::default()).is_empty(), "a plain double-click on a ruler guide");
+        for m in [Mods { cmd: true, ..Mods::default() }, Mods { shift: true, ..Mods::default() }, Mods::default()] {
+            assert!(!releases(&dbl(&c, 200.0, 150.0, m)), "{m:?}");
+        }
+        let locked = ToolContext { guides: false, ..cx(&d, &s, &p) };
+        assert!(!releases(&dbl(&locked, 350.0, 301.0, both)));
+        assert!(!releases(&dbl(&locked, 200.0, 150.0, both)));
+        // A double-click on art that is not a guide does not release it.
+        let (plain, _) = doc_with_rect();
+        assert!(!releases(&dbl(&cx(&plain, &s, &p), 200.0, 150.0, both)));
+    }
+
     /// Just outside each corner of the box the rotate cursor bows toward that corner, its arc
     /// opening toward the box: at the top right it opens to the bottom left.
     #[test]
@@ -803,6 +852,67 @@ mod tests {
         }
         assert_eq!(Cursor::rotate_about(Point::new(1.0, 1.0), Point::new(1.0, 1.0)), Cursor::Rotate, "on the centre");
         assert_eq!(Cursor::rotate_about(Point::ORIGIN, Point::new(0.0, -5.0)), Cursor::RotateToward(0), "straight up");
+    }
+
+    #[test]
+    fn turned_cursors_step_with_the_view() {
+        assert_eq!(Cursor::ResizeH.turned(90.0), Cursor::ResizeV);
+        assert_eq!(Cursor::ResizeNeSw.turned(45.0), Cursor::ResizeH);
+        assert_eq!(Cursor::ResizeH.turned(45.0), Cursor::ResizeNwSe);
+        assert_eq!(Cursor::ResizeNwSe.turned(-135.0), Cursor::ResizeV);
+        assert_eq!(Cursor::RotateToward(0).turned(90.0), Cursor::RotateToward(2));
+        assert_eq!(Cursor::RotateToward(1).turned(-45.0), Cursor::RotateToward(0));
+        assert_eq!(Cursor::RotateToward(7).turned(180.0), Cursor::RotateToward(3));
+        assert_eq!(Cursor::ResizeV.turned(20.0), Cursor::ResizeV, "under 22.5° it stays");
+        assert_eq!(Cursor::Pen.turned(90.0), Cursor::Pen);
+        assert_eq!(Cursor::Rotate.turned(90.0), Cursor::Rotate);
+        assert_eq!(Cursor::ResizeH.turned(f64::NAN), Cursor::ResizeH);
+        // `rotate_about_in_view` turns the pointer's direction by the view before it rounds: a
+        // pointer 15° clockwise from straight up, in a view turned 15°, shows 30° from straight up
+        // on screen, which rounds to the top right. `turned` rounds the 15° view to 0°.
+        let (sn, cs) = 15f64.to_radians().sin_cos();
+        let q = Point::new(sn, -cs);
+        assert_eq!(Cursor::rotate_about_in_view(Point::ORIGIN, q, 15.0), Cursor::RotateToward(1));
+        assert_eq!(Cursor::rotate_about(Point::ORIGIN, q).turned(15.0), Cursor::RotateToward(0));
+        assert_eq!(Cursor::rotate_about_in_view(Point::ORIGIN, q, 0.0), Cursor::rotate_about(Point::ORIGIN, q));
+        assert_eq!(Cursor::rotate_about_in_view(Point::ORIGIN, Point::new(0.0, -5.0), 90.0), Cursor::RotateToward(2));
+        assert_eq!(Cursor::rotate_about_in_view(Point::ORIGIN, Point::new(0.0, -5.0), f64::NAN), Cursor::RotateToward(0));
+        assert_eq!(Cursor::rotate_about_in_view(Point::ORIGIN, Point::ORIGIN, 90.0), Cursor::Rotate, "on the center");
+    }
+
+    /// In a rotated view the resize and rotate cursors turn with the view.
+    #[test]
+    fn box_cursors_turn_with_the_view() {
+        let (mut d, id) = doc_with_rect();
+        let mut s = Selection::default();
+        s.add(id);
+        let p = paint();
+        d.guides.push(vectorcraft_doc::Guide::new(false, 300.0));
+        let mut c = cx(&d, &s, &p);
+        c.screen = turned_view(90.0);
+        assert!((c.view_angle() - 90.0).abs() < 1e-9);
+        let t = SelectionTool::default();
+        // The box runs from (100, 100) to (200, 200). Its right side shows at the bottom, and its
+        // top shows on the right.
+        assert_eq!(t.cursor(&c, Point::new(200.0, 150.0), Mods::default()), Cursor::ResizeV, "right-middle");
+        assert_eq!(t.cursor(&c, Point::new(150.0, 100.0), Mods::default()), Cursor::ResizeH, "top-middle");
+        assert_eq!(t.cursor(&c, Point::new(207.0, 93.0), Mods::default()), Cursor::RotateToward(3), "out from the top right");
+        // While a rotate drags, the cursor turns with the view too: straight up the page shows to
+        // the right.
+        let mut r = SelectionTool::default();
+        assert_eq!(r.pointer(&c, &ev(PointerKind::Down, 207.0, 93.0)), vec![Action::Begin("Rotate".into())]);
+        assert_eq!(r.cursor(&c, Point::new(150.0, 80.0), Mods::default()), Cursor::RotateToward(2), "rotating");
+        // A horizontal ruler guide shows upright and moves left and right on screen.
+        assert_eq!(t.cursor(&c, Point::new(400.0, 300.0), Mods::default()), Cursor::ResizeH, "guide");
+        // A box turned 20° in a view turned 25° shows 5° off level: the right handle shows the
+        // left-right arrow.
+        let (center, a) = (Point::new(150.0, 150.0), 20f64.to_radians());
+        let turn = Affine::translate(center.to_vec2()) * Affine::rotate(-a) * Affine::translate(-center.to_vec2());
+        d.node_mut(id).unwrap().transform(turn, false);
+        let mut c = cx(&d, &s, &p);
+        c.screen = turned_view(25.0);
+        let right = Point::new(150.0 + 50.0 * a.cos(), 150.0 - 50.0 * a.sin());
+        assert_eq!(t.cursor(&c, right, Mods::default()), Cursor::ResizeH, "20° box, 25° view");
     }
 
     #[test]

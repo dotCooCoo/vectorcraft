@@ -5,7 +5,8 @@
 //! Anchor Point: click a smooth anchor → corner; drag an anchor → pull out smooth handles; click a
 //! handle end → retract that handle only (#2267); drag a handle → move it independently (Shift: at
 //! 45° steps round its anchor); drag a segment → reshape the curve, a selected blend's spine's too,
-//! straight or curved (#1111).
+//! straight or curved (#1111; Shift: its handles at right angles to the line between its anchors,
+//! at one length).
 //! Scissors: click a path to split it there.
 
 use serde_json::json;
@@ -156,11 +157,11 @@ impl Tool for AnchorTool {
                     }
                     State::Reshape { id, seg, t, start, spine: true, .. } => Action::Preview(
                         "object.blend.spine.reshapeSegment".into(),
-                        json!({"id": id.0, "segment": seg, "t": t, "dx": p.x - start.x, "dy": p.y - start.y}),
+                        json!({"id": id.0, "segment": seg, "t": t, "dx": p.x - start.x, "dy": p.y - start.y, "perpendicular": ev.mods.shift}),
                     ),
                     State::Reshape { id, si, seg, t, start, .. } => Action::Preview(
                         "path.reshapeSegment".into(),
-                        json!({"id": id.0, "subpath": si, "segment": seg, "t": t, "dx": p.x - start.x, "dy": p.y - start.y}),
+                        json!({"id": id.0, "subpath": si, "segment": seg, "t": t, "dx": p.x - start.x, "dy": p.y - start.y, "perpendicular": ev.mods.shift}),
                     ),
                 };
                 out.push(preview);
@@ -316,6 +317,26 @@ mod tests {
         t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 150.0, 200.0));
         let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 150.0, 230.0));
         assert!(matches!(&a[1], Action::Preview(c, v) if c == "path.reshapeSegment" && v["dy"] == 30.0));
+    }
+
+    /// Shift held while a segment is dragged keeps its handles at right angles to the line between
+    /// its anchors (`perpendicular`).
+    #[test]
+    fn shift_reshapes_a_segment_perpendicular() {
+        let (d, id) = doc_with_rect();
+        let s = Selection::default();
+        let p = paint();
+        let cx = cx(&d, &s, &p);
+        let shift = Mods { shift: true, ..Mods::default() };
+        for (mods, perpendicular) in [(Mods::default(), false), (shift, true)] {
+            let mut t = AnchorTool::new("anchorPoint");
+            t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 150.0, 200.0));
+            let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 160.0, 230.0).with_mods(mods));
+            assert!(
+                matches!(&a[1], Action::Preview(c, v) if c == "path.reshapeSegment" && v["id"] == id.0 && v["perpendicular"] == perpendicular),
+                "{a:?}"
+            );
+        }
     }
 
     /// #494: the Anchor Point tool picks within Selection & Anchor Display → Tolerance, and drags

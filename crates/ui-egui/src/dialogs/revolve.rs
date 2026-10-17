@@ -371,10 +371,14 @@ fn number(ui: &mut egui::Ui, d: &mut Dialog, key: &str, name: &str, range: (f64,
         };
         let rail_min = from(range.0);
         let rail = rail_width(ui) + VALUE_W;
-        let slider =
-            widgets::color_slider(ui, ("revolve-slider", key), ((value - rail_min) / (rail_max - rail_min)).clamp(0.0, 1.0) as f32, rail, &|_| {
-                t.input_border
-            });
+        let slider = widgets::color_slider_named(
+            ui,
+            ("revolve-slider", key),
+            name,
+            ((value - rail_min) / (rail_max - rail_min)).clamp(0.0, 1.0) as f32,
+            rail,
+            &|_| t.input_border,
+        );
         if let (Some(n), _) = slider {
             next = Some(rail_min + f64::from(n) * (rail_max - rail_min));
         }

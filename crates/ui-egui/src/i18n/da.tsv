@@ -1153,6 +1153,7 @@ lighting	Light	Lys
 	Reshape Tool	Omformningsværktøj
 	Rotate Tool	Roteringsværktøj
 	Rotate View Tool	Visningsroteringsværktøj
+	Trackpad Gesture to Rotate View	Rotér visning med bevægelse på pegefeltet
 	Rotate View	Rotér visning
 	Rounded Rectangle Tool	Afrundet rektangelværktøj
 	Scale Tool	Skaleringsværktøj
@@ -5034,3 +5035,118 @@ swatch	Bright Violet	Kraftig violet
 	Movie Clip	Filmklip
 @msg	name is empty	navnet er tomt
 @msg	no symbol named `{n}`	intet symbol med navnet `{n}`
+	Remove Color Profile…	Fjern farveprofil…
+	Color wheel	Farvehjul
+	First Artboard	Første kunstplade
+	Last Artboard	Sidste kunstplade
+	Next Artboard	Næste kunstplade
+	Previous Artboard	Forrige kunstplade
+	Step up or down	Trinvis op eller ned
+	Add Event	Tilføj hændelse
+	Add JavaScript File	Tilføj JavaScript-fil
+	Chop Design	Beskær design
+	Clear Events	Ryd hændelser
+	Close Gaps With Paths	Luk huller med stier
+	Column Type:	Søjletype:
+	Each Design Represents:	Hvert design repræsenterer:
+	Event:	Hændelse:
+	File or URL:	Fil eller URL:
+	For Fractions:	For brøkdele:
+	Gap Detection	Registrering af huller
+	Gap Options	Indstillinger for huller
+	Gap Preview Color:	Eksempelfarve for huller:
+	Graph Column	Diagramsøjle
+	JavaScript Files	JavaScript-filer
+	JavaScript:	JavaScript:
+	Link JavaScript Files…	Sammenkæd JavaScript-filer…
+	New Artboard Options…	Indstillinger for ny kunstplade…
+	Paint Stops At:	Maling stopper ved:
+	Remove JavaScript File	Fjern JavaScript-fil
+	Remove Selected Entry	Fjern markeret post
+	Repeating	Gentaget
+	Resize	Tilpas størrelse
+	Scale Design	Skalér design
+	Sliding	Glidende
+	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Navnet i gemmedialogen var »{typed}«, og VectorCraft tilføjede filtypens filtypenavn. Hvis du erstatter filen, overskrives dens indhold.
+	Uniformly Scaled	Ensartet skaleret
+	Vertically Scaled	Lodret skaleret
+	“{name}” already exists. Replace it?	»{name}« findes allerede. Erstat den?
+	Enable Guides for 9-Slice Scaling	Aktivér hjælpelinjer til 9-udsnitsskalering
+	Lock Variables	Lås variabler
+	Unlock Variables	Lås variabler op
+	Change to Artboard Rulers	Skift til kunstpladelinealer
+	Cutout…	Udklip…
+	Neon Glow…	Neonglød…
+	Poster Edges…	Plakatkanter…
+	Cutout	Udklip
+	Neon Glow	Neonglød
+	Poster Edges	Plakatkanter
+	Apply Data Set	Anvend datasæt
+	Cancel Pattern Editing	Annullér redigering af mønster
+	Copy Appearance	Kopiér udseende
+	Copy Guide	Kopiér hjælpelinje
+	Copy in Perspective	Kopiér i perspektiv
+	Create Slice from Selection	Opret udsnit fra markering
+	Create Slices from Guides	Opret udsnit fra hjælpelinjer
+	Delete All Slices	Slet alle udsnit
+	Delete Data Sets	Slet datasæt
+	Delete Graphic Styles	Slet grafiske stile
+	Delete Guide	Slet hjælpelinje
+	Delete Guides	Slet hjælpelinjer
+	Delete Slice	Slet udsnit
+	Delete Style	Slet typografi
+	Delete Variables	Slet variabler
+	Delete View	Slet visning
+	Done Editing Pattern	Redigering af mønster udført
+	Duplicate Rows	Duplikér rækker
+	Edit Perspective Grid	Redigér perspektivgitter
+	Expand Blend	Udvid blanding
+	Expand Envelope	Udvid konvolut
+	Expand Image Trace	Udvid billedsporing
+	Expand Live Paint	Udvid live-maling
+	Live Shape	Live-figur
+	Make Blend	Opret blanding
+	Make Dynamic	Gør dynamisk
+	Make Intertwine	Opret sammenfletning
+	Make Live Paint	Opret live-maling
+	Make Pattern	Opret mønster
+	Make Slice	Opret udsnit
+	Merge Live Paint	Flet live-maling
+	Mesh Point Color	Farve på maskepunkt
+	Move Envelope Point	Flyt konvolutpunkt
+	Move Plane and Copy Objects	Flyt plan og kopiér objekter
+	Move Plane and Objects	Flyt plan og objekter
+	Move Slice	Flyt udsnit
+	Move Type on a Path	Flyt tekst på kurve
+	New Guide	Ny hjælpelinje
+	Place from Library	Placér fra bibliotek
+	Rearrange Artboards	Omarrangér tegneflader
+	Release Blend	Frigør blanding
+	Release Envelope	Frigør konvolut
+	Release Intertwine	Frigør sammenfletning
+	Release Live Paint	Frigør live-maling
+	Release Repeat	Frigør gentagelse
+	Release Slice	Frigør udsnit
+	Release Threaded Text	Frigør sammenkædet tekst
+	Rename Design	Omdøb design
+	Rename Style	Omdøb typografi
+	Rename View	Omdøb visning
+	Reorder Appearance	Omarrangér udseende
+	Reorder Artboards	Omarrangér tegneflader
+	Reshape Spine	Omform rygrad
+	Resize Artboard	Tilpas størrelse på tegneflade
+	Resize Slice	Tilpas størrelse på udsnit
+	Resize Type Area	Tilpas størrelse på tekstområde
+	Scale in Perspective	Skalér i perspektiv
+	Shape Builder Delete	Sletning med Formbygger
+	Sort Swatches	Sortér farveprøver
+	Symbol Screener	Symbolgennemsigtighed
+	Symbol Scruncher	Symbolsamling
+	Symbol Shifter	Symbolflytning
+	Symbol Sizer	Symbolstørrelse
+	Symbol Spinner	Symbolrotering
+	Symbol Stainer	Symbolfarvning
+	Symbol Styler	Symboltypografi
+	Text Orientation	Tekstretning
+	Thread Text	Sammenkæd tekst
+	Typing	Indtastning

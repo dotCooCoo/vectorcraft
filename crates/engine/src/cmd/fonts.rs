@@ -136,6 +136,19 @@ pub(super) fn printed_type(d: &Document, layers: &[Arc<Node>], areas: &[Rect]) -
     (walk.fonts, walk.overflow)
 }
 
+/// The warning of an export that draws `layers` of `d` over `areas` (document space; `None`: the
+/// whole of them) about the area type and type on a path that it draws and whose text doesn't fit,
+/// found as [`printed_type`] finds them for Print: visible objects of the document that aren't on
+/// a template layer.
+pub(super) fn export_overflow_warning(d: &Document, layers: &[Arc<Node>], areas: Option<&[Rect]>) -> Option<String> {
+    let mut walk = Printed { d, own: true, fonts: BTreeSet::new(), overflow: BTreeSet::new(), symbols: BTreeSet::new(), patterns: BTreeSet::new() };
+    for l in layers {
+        walk.node(l, areas);
+    }
+    let overflow: Vec<NodeId> = walk.overflow.into_iter().collect();
+    super::typecmd::export_overflow_warning(&overflow)
+}
+
 /// The walk of [`printed_type`].
 struct Printed<'a> {
     d: &'a Document,
@@ -462,16 +475,14 @@ pub(crate) fn rescan(s: &mut Session, _: &Value) -> Result<Value> {
             }
         });
         if !texts.is_empty() {
-            let saved = !d.is_dirty();
-            let doc = std::sync::Arc::make_mut(&mut d.doc);
-            for id in texts {
-                if let Some(NodeKind::Text(t)) = doc.node_mut(id).map(|n| &mut n.kind) {
-                    refresh_bounds(t);
+            d.change_unsaved(|doc| {
+                let doc = std::sync::Arc::make_mut(doc);
+                for id in texts {
+                    if let Some(NodeKind::Text(t)) = doc.node_mut(id).map(|n| &mut n.kind) {
+                        refresh_bounds(t);
+                    }
                 }
-            }
-            if saved {
-                d.mark_saved();
-            }
+            });
         }
         d.revision += 1;
     }

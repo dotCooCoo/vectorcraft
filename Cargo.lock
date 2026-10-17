@@ -4686,7 +4686,9 @@ dependencies = [
 name = "vectorcraft-eps"
 version = "0.12.0"
 dependencies = [
+ "fax",
  "flate2",
+ "hayro-ccitt",
  "image",
  "kurbo 0.13.1",
  "ruzstd",

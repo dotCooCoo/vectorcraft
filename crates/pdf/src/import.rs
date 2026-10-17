@@ -147,6 +147,32 @@ pub const OFF_ARTBOARD_NOTE: &str =
 /// Warning: art reaching past the page box was clipped to it.
 pub const PAST_PAGE_NOTE: &str = "art reaching past the page was clipped to it, as PDF viewers show it";
 
+/// Warning: glyphs were kept as outlines rather than read as type.
+pub const OUTLINED_TEXT_NOTE: &str = "text was converted to outlines";
+/// Warning: glyphs that differ from the installed font of their name were kept as outlines.
+pub const UNMATCHED_GLYPHS_NOTE: &str = "text whose glyphs differ from the installed font of the same name was kept as outlines";
+/// The end of the warning that glyphs whose characters the file doesn't name were kept as
+/// outlines, after "text in" and the font's name.
+pub const UNNAMED_CHARACTERS_NOTE: &str = "whose characters the file doesn't name (U+FFFD) was kept as outlines";
+
+/// Is `note` one of the warnings that glyphs were kept as outlines ([`OUTLINED_TEXT_NOTE`],
+/// [`UNMATCHED_GLYPHS_NOTE`], [`UNNAMED_CHARACTERS_NOTE`])?
+pub fn is_outlines_note(note: &str) -> bool {
+    note == OUTLINED_TEXT_NOTE || note == UNMATCHED_GLYPHS_NOTE || note.starts_with("text in ") && note.ends_with(UNNAMED_CHARACTERS_NOTE)
+}
+
+/// Is `n` glyphs kept as outlines (a path the import names `<Text Outlines>`)?
+pub fn is_glyph_outlines(n: &Node) -> bool {
+    matches!(n.kind, NodeKind::Path { .. }) && n.name.as_deref() == Some(TEXT_OUTLINES)
+}
+
+/// Does `doc` hold glyphs kept as outlines ([`is_glyph_outlines`])?
+pub fn holds_outlines(doc: &Document) -> bool {
+    let mut any = false;
+    doc.walk(|n| any |= is_glyph_outlines(n));
+    any
+}
+
 /// Import a PDF, returning the document plus warnings about content that was approximated or skipped.
 pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportReport, PdfError> {
     // The interpreter draws forms, patterns, glyphs and masks inside one another by recursion, in
@@ -1655,7 +1681,7 @@ impl<'p> Builder<'p> {
             None => {
                 if o.as_unicode().is_some_and(|u| replacement(&u)) {
                     let name = self.font_name(key, o).family;
-                    self.warn(&format!("text in {name} whose characters the file doesn't name (U+FFFD) was kept as outlines"));
+                    self.warn(&format!("text in {name} {UNNAMED_CHARACTERS_NOTE}"));
                 }
                 return false;
             }
@@ -1689,7 +1715,7 @@ impl<'p> Builder<'p> {
                 }
             };
             let Some(f) = decided else {
-                self.warn("text whose glyphs differ from the installed font of the same name was kept as outlines");
+                self.warn(UNMATCHED_GLYPHS_NOTE);
                 return false;
             };
             info = FontInfo { family: f.family.clone(), style: f.style.clone(), face: Some(f) };
@@ -1957,7 +1983,7 @@ impl<'a> Device<'a> for Builder<'_> {
                 if let Some(r) = &mut self.glyphs {
                     r.path.extend(bp.iter());
                 }
-                self.warn("text was converted to outlines");
+                self.warn(OUTLINED_TEXT_NOTE);
             }
             Glyph::Type3(t3) => {
                 if self.nested >= MAX_NESTED {
