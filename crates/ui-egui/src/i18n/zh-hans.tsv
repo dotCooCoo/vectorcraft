@@ -2319,7 +2319,7 @@
 	Replace	替换
 	Replace Font	替换字体
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	将其替换为其他文件，或忽略：其图像继续显示随文档保存的预览。
-	Replace Spine	替换路径
+	Replace Spine	替换脊线
 	Replace Symbol	替换符号
 	Replace With Font	替换为字体
 	Replaces the saved preset of that name.	替换同名已存预设。
@@ -2365,7 +2365,7 @@
 	Reverse Path Direction	反转路径方向
 	Reverse Path Direction Off	关闭反转路径方向
 	Reverse Path Direction On	开启反转路径方向
-	Reverse Spine	反转路径
+	Reverse Spine	反转脊线
 	Revert	恢复
 	Revert to the saved version of “{name}”?	要恢复为“{name}”已存储的版本吗？
 	Replace “{name}”, the file this document was opened from?	要替换“{name}”（打开此文档的源文件）吗？
