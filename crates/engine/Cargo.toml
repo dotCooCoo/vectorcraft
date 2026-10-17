@@ -46,6 +46,8 @@ vectorcraft-affinity = { workspace = true, features = ["synth"] }
 crc32fast = { workspace = true }
 vectorcraft-testkit = { workspace = true }
 proptest = { workspace = true }
+# A variable font built in code (no font file is committed).
+vectorcraft-text = { workspace = true, features = ["test-fonts"] }
 wat = { workspace = true }
 # Zstandard streams for the Illustrator editing data fuzz tests.
 ruzstd = { workspace = true }

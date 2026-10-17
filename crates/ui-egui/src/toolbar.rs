@@ -161,6 +161,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, cols: usize, floating: Option<egu
         );
     }
     crate::floating::drag_tools(app, ui.ctx(), &hresp.union(gresp.clone()), bounds, floating);
+    hresp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tl!("Toggle single/double column")));
     if hresp.on_hover_text(tl!("Toggle single/double column")).clicked()
         // It only fails on bad params, which this never sends; show it all the same.
         && let Err(e) = app.run("window.toolbarColumns", json!({ "double": cols == 1 }))
@@ -168,6 +169,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, cols: usize, floating: Option<egu
         app.ui.status = e;
     }
     let grip_tip = if floating.is_some() { tl!("Drag to the window's left edge to dock") } else { tl!("Drag to float the toolbar") };
+    gresp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), grip_tip));
     gresp.on_hover_cursor(egui::CursorIcon::Grab).on_hover_text(grip_tip);
     // The tools and the controls under them scroll in a window too short for them.
     widgets::strip_scroll(ui, "toolbar", |ui| {
@@ -260,6 +262,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, cols: usize, floating: Option<egu
                     } else if resp.clicked() {
                         app.select_tool(shown.id);
                     }
+                    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, ui.is_enabled(), is_active, tip(shown)));
                     resp.on_hover_text(tip(shown));
                 }
             });
@@ -373,8 +376,8 @@ pub fn open_options(app: &mut VectorcraftApp, tool: &str) -> Result<serde_json::
 }
 
 /// The active tool's options in the Control bar: Mirror & Cut's axis and the side it keeps, Puppet
-/// Warp's mesh and pins, the Artboard tool's Move and Scale Artwork with Artboard (set through
-/// `tool.setOption`).
+/// Warp's mesh and pins (set through `tool.setOption`). The Artboard tool's options are drawn by
+/// [`crate::panels::artboards::control_bar`].
 pub fn control_bar_options(app: &mut VectorcraftApp, ui: &mut Ui) {
     if app.session.tool_id() == "dimension" {
         return crate::dialogs::dimension::controls(app, ui);
@@ -390,11 +393,6 @@ pub fn control_bar_options(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
     if app.session.tool_id() == vectorcraft_tools::cropimage::ID {
         return crop_options(app, ui);
-    }
-    if app.session.tool_id() == "artboard" {
-        crate::panels::artboards::art_options(app, ui);
-        ui.separator();
-        return;
     }
     if app.session.tool_id() != "mirrorCut" {
         return;
@@ -474,6 +472,7 @@ fn bottom_controls(app: &mut VectorcraftApp, ui: &mut Ui, t: &Tokens, cols: usiz
                     "paint.lastGradient" => widgets::gradient_chip(ui, r, &app.session.last_gradient),
                     _ => widgets::paint_chip(ui, r, &Paint::None),
                 }
+                resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tl!(tip)));
                 if resp.on_hover_text(tl!(tip)).clicked() {
                     clicked = Some(cmd);
                 }
@@ -600,6 +599,7 @@ fn flyout_body(ui: &mut Ui, t: &Tokens, active: &str, tools: &[String], floating
             let x = egui::Rect::from_min_size(bar.min, vec2(BAR, CLOSE));
             let xr = ui.interact(x, egui::Id::new(("tool-flyout-close", key)), Sense::click());
             icons::paint(ui, "x", x.shrink2(vec2(1.0, 3.0)), if xr.hovered() { t.text_strong } else { t.text });
+            xr.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tl!("Put back in the toolbar")));
             out.close = xr.on_hover_text(tl!("Put back in the toolbar")).clicked();
             egui::Rect::from_min_max(bar.min + vec2(0.0, CLOSE), bar.max)
         } else {
@@ -611,11 +611,12 @@ fn flyout_body(ui: &mut Ui, t: &Tokens, active: &str, tools: &[String], floating
             let x = grip.center().x - 2.0 + k as f32 * 2.0;
             ui.painter().line_segment([pos2(x, grip.center().y - half), pos2(x, grip.center().y + half)], Stroke::new(0.6, t.text_disabled));
         }
+        let tip = if floating { tl!("Drag to move") } else { tl!("Drag to float as a toolbar") };
+        resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tip));
         let resp = if resp.dragged() {
             ui.ctx().set_cursor_icon(egui::CursorIcon::Grabbing);
             resp
         } else {
-            let tip = if floating { tl!("Drag to move") } else { tl!("Drag to float as a toolbar") };
             resp.on_hover_cursor(egui::CursorIcon::Grab).on_hover_text(tip)
         };
         out.bar = Some(resp);
@@ -647,6 +648,7 @@ fn tool_rows(ui: &mut Ui, t: &Tokens, active: &str, tools: &[String]) -> Option<
         if let Some(sc) = shortcut {
             ui.painter().galley(pos2(r.right() - ROW_END - sc.size().x, r.center().y - sc.size().y / 2.0), sc, color);
         }
+        resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, ui.is_enabled(), is_active, tip(tool)));
         if resp.clicked() {
             chosen = Some(tool.id);
         }
@@ -700,6 +702,7 @@ fn tool_strip(ui: &mut Ui, t: &Tokens, active: &str, tools: &[String]) -> Option
         }
         let ir = egui::Rect::from_center_size(r.center(), vec2(18.0, 18.0));
         icons::paint(ui, icons::tool_icon(tool.icon), ir, if active == tool.id { t.text_strong } else { t.icon });
+        resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, ui.is_enabled(), active == tool.id, tip(tool)));
         if resp.on_hover_text(tip(tool)).clicked() {
             chosen = Some(tool.id);
         }
@@ -840,10 +843,12 @@ fn puppet_warp_options(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use egui::accesskit::{Role, Toggled};
     use egui::{Event, PointerButton, Pos2};
     use vectorcraft_engine::Session;
 
     use super::*;
+    use crate::widgets::accessibility_tests::{role_and_state, tree};
 
     /// One headless frame of the toolbar; returns the tool buttons' rects, top to bottom.
     fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, events: Vec<Event>) -> Vec<egui::Rect> {
@@ -926,6 +931,22 @@ pub(crate) mod tests {
             let row_right = tools.iter().filter(|r| r.top() == first.top()).map(|r| r.right()).fold(first.right(), f32::max);
             assert_eq!(row_right - hdr.center().x, hdr.center().x - first.left(), "double {double}, floating {floating:?}: {first:?} in {hdr:?}");
             assert!(first.left() >= hdr.left() && row_right <= hdr.right(), "double {double}, floating {floating:?}: {first:?} in {hdr:?}");
+        }
+    }
+
+    /// Screen readers name each tool button by its tool tip and say which tool is active, and name
+    /// the title bar's column toggle and grip and the paint buttons under the tools.
+    #[test]
+    fn screen_readers_name_the_tool_buttons_and_the_active_tool() {
+        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
+        app.select_tool("pen");
+        let tree = tree(|ui| show(&mut app, ui));
+        let name = |id| tool_info(id).map(tip).unwrap_or_default();
+        assert_eq!(role_and_state(&tree, &name("pen")), (Role::Button, Some(Toggled::True)));
+        assert_eq!(role_and_state(&tree, &name("selection")), (Role::Button, Some(Toggled::False)));
+        for label in ["Toggle single/double column", "Drag to float the toolbar", "Color (,)", "Gradient (.)", "None (/)"] {
+            assert_eq!(role_and_state(&tree, label), (Role::Button, None), "{label}");
         }
     }
 
@@ -1563,5 +1584,32 @@ pub(crate) mod tests {
         assert!(!hovered_texts(&mut app, &ctx, 20.0, star).contains(&tip), "off: no tool tip");
         app.session.prefs.show_tool_tips = true;
         assert!(hovered_texts(&mut app, &ctx, 30.0, star).contains(&tip), "on again");
+    }
+
+    /// Screen readers name a flyout's rows and a floating strip's buttons by their tools' tool tips,
+    /// with the active tool's pressed, and name the strip's close box and both tear-off bars.
+    #[test]
+    fn screen_readers_name_a_flyouts_rows_and_a_floating_strips_buttons() {
+        let name = |id| tool_info(id).map(tip).unwrap_or_default();
+        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
+        let group: Vec<String> = ["rectangle", "roundedRectangle", "ellipse"].map(String::from).to_vec();
+        let flyout = tree(|ui| {
+            app.ui.flyout = Some(0);
+            ui.data_mut(|d| d.insert_temp(egui::Id::new("flyout-tools"), group.clone()));
+            show(&mut app, ui);
+        });
+        assert_eq!(role_and_state(&flyout, &name("roundedRectangle")), (Role::Button, Some(Toggled::False)));
+        assert_eq!(role_and_state(&flyout, &name("ellipse")), (Role::Button, Some(Toggled::False)));
+        assert_eq!(role_and_state(&flyout, "Drag to float as a toolbar"), (Role::Button, None));
+        app.ui.flyout = None;
+        app.select_tool("star");
+        let tools: Vec<String> = ["polygon", "star"].map(String::from).to_vec();
+        app.ui.floating_flyouts.push(crate::state::FloatingFlyout { tools, pos: [150.0, 600.0] });
+        let strip = tree(|ui| show(&mut app, ui));
+        assert_eq!(role_and_state(&strip, &name("polygon")), (Role::Button, Some(Toggled::False)));
+        assert_eq!(role_and_state(&strip, &name("star")), (Role::Button, Some(Toggled::True)));
+        assert_eq!(role_and_state(&strip, "Put back in the toolbar"), (Role::Button, None));
+        assert_eq!(role_and_state(&strip, "Drag to move"), (Role::Button, None));
     }
 }

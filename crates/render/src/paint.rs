@@ -74,7 +74,7 @@ pub fn decode_failures() -> u64 {
 fn decode(bytes: &[u8]) -> Option<image::DynamicImage> {
     let img = decode_within_allowance(bytes).ok();
     if img.is_none() {
-        DECODE_FAILURES.with(|n| n.set(n.get() + 1));
+        add_decode_failures(1);
     }
     img
 }
@@ -123,6 +123,13 @@ pub fn decode_pixmap_fit(bytes: &[u8], w: u16, h: u16) -> Option<vello_cpu::Pixm
         img
     };
     pixmap_of(img.to_rgba8())
+}
+
+/// Count `n` images that couldn't be decoded on this thread ([`decode_failures`]). [`decode`]
+/// counts each failure, and a raster kept in a cache counts the failures it was drawn with again
+/// each time it is drawn.
+pub(crate) fn add_decode_failures(n: u64) {
+    DECODE_FAILURES.with(|c| c.set(c.get() + n));
 }
 
 /// An RGBA image as a premultiplied pixmap.

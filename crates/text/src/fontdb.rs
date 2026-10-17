@@ -42,6 +42,41 @@ pub type Variation = ([u8; 4], f32);
 const MAX_AXES: usize = 64;
 const MAX_INSTANCES: usize = 512;
 
+/// One axis of a variable font's design space, as its `fvar` table lists it: the tag (`wght`), its
+/// name in the font's name table (`Weight`; the tag when it has none) and its range and default,
+/// in the axis's own units.
+#[derive(Clone, Debug, PartialEq)]
+pub struct VariationAxis {
+    pub tag: [u8; 4],
+    pub name: String,
+    pub min: f32,
+    pub default: f32,
+    pub max: f32,
+    /// The font asks for the axis not to be shown to users (the `fvar` hidden flag).
+    pub hidden: bool,
+}
+
+/// Faces of variable fonts instanced at axis settings their named instances don't have
+/// ([`FontDb::instance`]). Each setting of a face keeps its id for the life of the process, so a
+/// laid-out glyph's face can be found again ([`FontDb::face_by_id`]) after the built face was
+/// dropped to bound the memory the cache holds.
+#[derive(Default)]
+struct Instances {
+    /// The id of each face and setting.
+    ids: HashMap<InstanceKey, u32>,
+    /// What each id is: the face it was instanced from and its axis settings.
+    recipes: HashMap<u32, (u32, Vec<Variation>)>,
+    /// The instanced faces built, by id; dropped all at once when [`MAX_LIVE_INSTANCES`] are held.
+    live: HashMap<u32, Arc<FontFace>>,
+}
+
+/// A face instanced at axis settings: the id of the face, and the settings by tag, as bits.
+type InstanceKey = (u32, Vec<([u8; 4], u32)>);
+
+/// How many instanced faces [`Instances::live`] holds at most.
+pub(crate) const MAX_LIVE_INSTANCES: usize = 256;
+
+#[derive(Clone)]
 enum FontBytes {
     Static(&'static [u8]),
     Owned(Arc<Vec<u8>>),
@@ -143,6 +178,27 @@ impl FontFace {
     /// The face's file holds the whole variable font: exporters that embed it pass these on.
     pub fn variations(&self) -> &[Variation] {
         &self.variations
+    }
+    /// The variation axes of the face's font (its `fvar` table, at most 64); none for a static
+    /// face.
+    pub fn axes(&self) -> Vec<VariationAxis> {
+        let Some(f) = self.skrifa() else { return vec![] };
+        f.axes()
+            .iter()
+            .take(MAX_AXES)
+            .map(|a| {
+                let tag = a.tag().to_be_bytes();
+                let fallback = || String::from_utf8_lossy(&tag).trim().to_string();
+                let name = name(&f, &[a.name_id()]).unwrap_or_else(fallback);
+                VariationAxis { tag, name, min: a.min_value(), default: a.default_value(), max: a.max_value(), hidden: a.is_hidden() }
+            })
+            .collect()
+    }
+    /// The face's setting of axis `tag`: its named instance's ([`Self::variations`]), else the
+    /// axis default. `None` when the font has no such axis.
+    pub fn axis_value(&self, tag: [u8; 4]) -> Option<f32> {
+        let axis = self.axes().into_iter().find(|a| a.tag == tag)?;
+        Some(self.variations.iter().find(|(t, _)| *t == tag).map_or(axis.default, |(_, v)| *v))
     }
     /// Unique id of this face within the process.
     pub fn id(&self) -> u32 {
@@ -382,6 +438,8 @@ pub struct FontDb {
     /// What the last scan read, to tell when fonts were installed or removed since.
     #[cfg(not(target_arch = "wasm32"))]
     stamp: Mutex<Option<ScanStamp>>,
+    /// Faces instanced at the axis settings of type's Variable Font sliders ([`FontDb::instance`]).
+    instances: Mutex<Instances>,
 }
 
 /// Where a database's system font scan looks: folders (read with their subfolders) and font files.
@@ -1378,6 +1436,25 @@ pub(crate) fn fonts_outside(registered: impl IntoIterator<Item = String>, font_d
     files
 }
 
+/// `face` at the axis settings `variations` (user units), as face `id`: its names, kind, italic
+/// and file, and its weight the `wght` setting when there is one.
+fn instanced(face: &FontFace, variations: Vec<Variation>, id: u32) -> Option<FontFace> {
+    let weight = variations.iter().find(|(t, _)| t == b"wght").map_or(face.weight, |(_, v)| *v);
+    let spec = FaceStyle {
+        family: face.family.clone(),
+        native_family: face.native_family.clone(),
+        style: face.style.clone(),
+        keys: face.keys.clone(),
+        variations,
+        weight: Some(weight),
+        italic: face.italic,
+        traits: face.traits,
+    };
+    let mut f = make_face(face.bytes.clone(), face.index, spec, face.path.clone())?;
+    f.id = id;
+    Some(f)
+}
+
 fn make_face(bytes: FontBytes, index: u32, spec: FaceStyle, path: Option<std::path::PathBuf>) -> Option<FontFace> {
     let data: &[u8] = match &bytes {
         FontBytes::Static(b) => b,
@@ -1525,6 +1602,7 @@ impl FontDb {
             sys: Mutex::new(SysFallback { enabled: true, ..Default::default() }),
             #[cfg(not(target_arch = "wasm32"))]
             stamp: Mutex::new(None),
+            instances: Mutex::new(Instances::default()),
         }
     }
 
@@ -2015,9 +2093,86 @@ impl FontDb {
         self.read_catalog().get(&family.to_ascii_lowercase()).is_some_and(|c| c.faces.iter().any(|cf| norm(&cf.style) == ns))
     }
 
-    /// The loaded face with [`FontFace::id`] `id` (the face a laid-out glyph came from).
+    /// The loaded face with [`FontFace::id`] `id` (the face a laid-out glyph came from), an
+    /// instanced face ([`Self::instance`]) included.
     pub fn face_by_id(&self, id: u32) -> Option<Arc<FontFace>> {
-        self.read_faces().iter().find(|f| f.id == id).cloned()
+        let loaded = self.read_faces().iter().find(|f| f.id == id).cloned();
+        loaded.or_else(|| self.instance_by_id(id))
+    }
+
+    /// The face of character style `st`: [`Self::face_version`] of its font, instanced at its
+    /// Variable Font settings ([`Self::instance`]).
+    pub fn style_face(&self, st: &vectorcraft_doc::CharStyle) -> Option<Arc<FontFace>> {
+        let face = self.face_version(&st.font_family, &st.font_style, st.font_version.as_deref())?;
+        Some(self.instance(&face, &st.font_axes))
+    }
+
+    /// `face` with the axis settings `axes` (by tag, in the axes' own units) in place of its own,
+    /// each clamped to its axis's range: its outlines, metrics and advances taken there, and its
+    /// file embedded instanced there. Tags the font has no axis for are left out. `face` itself
+    /// when that changes no setting, and for a static face.
+    pub fn instance(&self, face: &Arc<FontFace>, axes: &std::collections::BTreeMap<String, f64>) -> Arc<FontFace> {
+        if axes.is_empty() {
+            return face.clone();
+        }
+        let font_axes = face.axes();
+        let mut variations = face.variations.clone();
+        for (tag, value) in axes {
+            let Some(axis) = font_axes.iter().find(|a| a.tag.as_slice() == tag.as_bytes()) else { continue };
+            if !value.is_finite() {
+                continue;
+            }
+            let v = (*value as f32).clamp(axis.min.min(axis.max), axis.max.max(axis.min));
+            match variations.iter_mut().find(|(t, _)| *t == axis.tag) {
+                Some(setting) => setting.1 = v,
+                None => variations.push((axis.tag, v)),
+            }
+        }
+        // Every axis at the setting it has in `face`: nothing to instance.
+        let at = |vs: &[Variation], a: &VariationAxis| vs.iter().find(|(t, _)| *t == a.tag).map_or(a.default, |(_, v)| *v);
+        if font_axes.iter().all(|a| at(&variations, a) == at(&face.variations, a)) {
+            return face.clone();
+        }
+        variations.sort_by_key(|(t, _)| *t);
+        let key = (face.id, variations.iter().map(|(t, v)| (*t, v.to_bits())).collect::<Vec<_>>());
+        let mut inst = self.instances.lock().unwrap_or_else(|e| e.into_inner());
+        let id = match inst.ids.get(&key) {
+            Some(id) => *id,
+            None => {
+                let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
+                inst.ids.insert(key, id);
+                inst.recipes.insert(id, (face.id, variations.clone()));
+                id
+            }
+        };
+        if let Some(f) = inst.live.get(&id) {
+            return f.clone();
+        }
+        let Some(built) = instanced(face, variations, id) else { return face.clone() };
+        let built = Arc::new(built);
+        if inst.live.len() >= MAX_LIVE_INSTANCES {
+            inst.live.clear();
+        }
+        inst.live.insert(id, built.clone());
+        built
+    }
+
+    /// The instanced face with id `id` ([`Self::instance`]), built again when it was dropped.
+    fn instance_by_id(&self, id: u32) -> Option<Arc<FontFace>> {
+        let (base, variations) = {
+            let inst = self.instances.lock().unwrap_or_else(|e| e.into_inner());
+            if let Some(f) = inst.live.get(&id) {
+                return Some(f.clone());
+            }
+            inst.recipes.get(&id).cloned()?
+        };
+        let base = self.read_faces().iter().find(|f| f.id == base).cloned()?;
+        let built = Arc::new(instanced(&base, variations, id)?);
+        let mut inst = self.instances.lock().unwrap_or_else(|e| e.into_inner());
+        if inst.live.len() >= MAX_LIVE_INSTANCES {
+            inst.live.clear();
+        }
+        Some(inst.live.entry(id).or_insert(built).clone())
     }
 
     /// The available family `name` names, ignoring case and anything but letters and digits, as

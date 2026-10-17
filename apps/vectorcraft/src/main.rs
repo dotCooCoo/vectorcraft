@@ -529,6 +529,7 @@ fn services(parent: Parent, ui: egui::Context) -> Services {
         no_cursor_theme: wayland && cursor_theme::theme_missing(),
         read: Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string()))),
         write: Some(Box::new(write_file)),
+        exists: Some(Box::new(|p: &str| std::path::Path::new(p).exists())),
         // Background Save and Export write from a worker thread.
         write_shared: Some(std::sync::Arc::new(write_file)),
         // Native saves stream into the file as they are encoded.
@@ -854,8 +855,15 @@ fn main() -> std::process::ExitCode {
             "VectorCraft",
             options,
             Box::new(move |cc| {
-                let mut app = VectorcraftApp::new(Session::new(), services(cc.winit_window().cloned(), cc.egui_ctx.clone()));
+                let mut session = Session::new();
+                // The profiles loaded before come back before the preferences name any of them.
+                prefs_dir::attach_profile_store(&mut session);
+                prefs_dir::attach_plugin_store(&mut session);
+                let mut app = VectorcraftApp::new(session, services(cc.winit_window().cloned(), cc.egui_ctx.clone()));
                 load_prefs(&mut app, saved);
+                // The saved PDF presets live in their own folder (also read by vectorcraft-cli),
+                // which takes over from the copy the preferences file used to hold.
+                prefs_dir::attach_pdf_preset_store(&mut app.session);
                 // Fit the window to its monitor, or put it back where it was (still hidden).
                 if let Some(w) = cc.winit_window() {
                     app.ui.window = Some(window::restore(w, saved_window));
@@ -867,6 +875,8 @@ fn main() -> std::process::ExitCode {
                 app.session.swatch_libraries.set_user_dir(swatches);
                 let styles = prefs_path().and_then(|p| Some(p.parent()?.join("Graphic Styles").to_string_lossy().to_string()));
                 app.session.style_libraries.set_user_dir(styles);
+                // With the User Defined libraries listed, the persistent library panels reopen.
+                vectorcraft_ui_egui::panels::library_panel::restore(&mut app);
                 // So do the Libraries panel's libraries; runs without preferences (agents' test
                 // runs) keep theirs for the session only, never touching the user's.
                 if prefs_enabled() {
@@ -1036,9 +1046,9 @@ mod tests {
             .collect()
     }
 
-    /// Finder offers the app for every file File › Open reads (#295, #354) but Photoshop documents
-    /// (`UNASSOCIATED_EXTS`), takes over no other app's files, and hands them to the app rather than
-    /// to AppKit's document machinery.
+    /// Finder offers the app for every file File › Open reads (#295, #354) but those with an
+    /// extension in `UNASSOCIATED_EXTS`, takes over no other app's files, and hands them to the app
+    /// rather than to AppKit's document machinery.
     #[test]
     fn the_macos_bundle_opens_every_readable_format() {
         let plist = include_str!("../../../packaging/macos/Info.plist.in");

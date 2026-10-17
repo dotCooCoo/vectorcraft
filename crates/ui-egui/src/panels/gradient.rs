@@ -82,6 +82,23 @@ pub(crate) fn dropped_link(app: &VectorcraftApp, params: &Value) -> Option<(Stri
     Some((base, tint))
 }
 
+/// Recolor the selected stop of the gradient behind the active proxy with `c`, as dropping the
+/// paint of `params` on the stop does (fully opaque, linked by [`dropped_link`]), or the selected
+/// point of a freeform gradient; the stop or point stays selected. Returns false, and changes
+/// nothing, when the active paint is not a gradient or no stop or point is selected.
+pub(crate) fn recolor_selected(app: &mut VectorcraftApp, c: Color, params: &Value) -> bool {
+    let Paint::Gradient(g) = active_paint(app) else { return false };
+    if g.gradient.kind == GradientKind::Freeform {
+        let Some(i) = app.session.selected_freeform_point().filter(|i| *i < shown_points(&g).points.len()) else { return false };
+        edit_point(app, "paint.freeform.setPoint", json!({ "index": i, "color": super::color_json(&c) }));
+        return true;
+    }
+    let Some(i) = app.session.selected_stop().filter(|i| *i < g.gradient.stops.len()) else { return false };
+    let (v, i) = drop_color(&g.gradient, Some(i), 0.0, c, dropped_link(app, params));
+    set_stops(app, &v, Some(i), Live::Released);
+    true
+}
+
 /// The stops after dragging stop `i` of `origin` to `offset`: moved, or with `copy` (Alt) a copy
 /// left there, or the colours swapped with stop `over` when the copy is dropped on it. Returns
 /// the stops and the stop to select.

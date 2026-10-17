@@ -126,6 +126,15 @@ shown_when = ["The Selection tool over the type widget of selected type (a doubl
 hotspot = "The arrow's tip."
 look = "Arrow with a type badge (a letter T)."
 
+[[cursor]]
+id = "LoadedText"
+group = "Selection"
+shown_when = [
+    "The Selection tool after a click on the red out port of selected area type whose text overflows: the pointer carries that text until a click threads it into a closed path, a click on empty canvas makes a new frame of the same shape there, or a drag draws the new frame. Escape or another tool drops it.",
+]
+hotspot = "Where the new frame's top-left corner goes (the click), or the path clicked."
+look = "A small block of text lines: the overflow text the pointer carries. Until it is drawn it borrows the I-beam (Text)."
+
 # ── Pen family ────────────────────────────────────────────────────────────────────────────────────
 
 [[cursor]]

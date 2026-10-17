@@ -286,7 +286,7 @@ pub(crate) fn make_layer(d: &mut Document, name: Option<&str>) -> Node {
 }
 
 /// A layer colour: a preset index (0–26), `#rrggbb` or a preset's name (any case).
-fn layer_color_param(v: &Value) -> std::result::Result<LayerColor, String> {
+pub(super) fn layer_color_param(v: &Value) -> std::result::Result<LayerColor, String> {
     match v {
         Value::Number(n) => match n.as_u64() {
             Some(i) if (i as usize) < LAYER_COLORS.len() => Ok(LayerColor::Preset(i as u8)),

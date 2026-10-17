@@ -89,7 +89,8 @@ fn path_kind(d: &mut Document, path: PathData, rule: FillRule) -> NodeKind {
 
 /// `n` with its geometry effects evaluated (`None` = unchanged).
 fn bake_node(d: &mut Document, n: &Node) -> Option<Node> {
-    if !needs_bake(n) {
+    // A cancelled export leaves the rest of the document as it is: the caller drops the result.
+    if !needs_bake(n) || vectorcraft_doc::cancel::is_cancelled() {
         return None;
     }
     // Colour adjustments: the object recoloured (inside it too), then baked as it is.
@@ -512,7 +513,8 @@ pub fn expand_art(d: &mut Document, n: &mut Node, stroke_art: StrokeArt) {
 /// Envelope Options → Distort Appearance: path or compound path `n` as plain filled art that an
 /// envelope bends as a whole: its geometry effects applied, every visible fill a copy of the path
 /// painted by that fill and every visible stroke without a brush its filled outline in the
-/// stroke's paint, opacity and blend mode (a brushed stroke stays a stroke), in paint order, as
+/// stroke's paint, opacity, blend mode and raster effects (a gradient along or across the stroke:
+/// its gradient meshes clipped to the outline; a brushed stroke stays a stroke), in paint order, as
 /// the members of a group keeping `n`'s id, transparency, opacity mask and raster effects. `None`
 /// when it has neither a stroke to outline nor a geometry effect, so bending first changes nothing.
 pub fn bake_appearance(n: &Node) -> Option<Node> {
@@ -542,8 +544,28 @@ pub fn bake_appearance(n: &Node) -> Option<Node> {
         clear_item_effects(&mut it);
         pieces.push(match &it {
             AppearanceItem::Stroke(st) if st.brush.is_none() => {
-                let fill = FillLayer { opacity: st.opacity, blend: st.blend, ..FillLayer::new(st.paint.clone()) };
-                piece(crate::stroke::outline_region(&ig, rule, st), FillRule::NonZero, AppearanceItem::Fill(fill))
+                let outline = crate::stroke::outline_region(&ig, rule, st);
+                match st.path_gradient() {
+                    // A gradient along or across the stroke: its gradient meshes clipped to the outline.
+                    Some(g) => {
+                        let mut clip = Node::path(n.id, outline, Appearance::default());
+                        if let NodeKind::Path { clipping, .. } = &mut clip.kind {
+                            *clipping = true;
+                        }
+                        let meshes = crate::stroke::gradient_meshes(&ig.to_bezpath(), rule, st, &g.gradient);
+                        let meshes = meshes.into_iter().map(|m| Node::new(n.id, NodeKind::Mesh(m)));
+                        let children = std::iter::once(clip).chain(meshes).map(Arc::new).collect();
+                        let mut group = Node::new(n.id, NodeKind::Group { children, clip: true });
+                        (group.opacity, group.blend) = (st.opacity, st.blend);
+                        group.appearance.effects = st.effects.clone();
+                        Arc::new(group)
+                    }
+                    None => {
+                        let effects = st.effects.clone();
+                        let fill = FillLayer { opacity: st.opacity, blend: st.blend, effects, ..FillLayer::new(st.paint.clone()) };
+                        piece(outline, FillRule::NonZero, AppearanceItem::Fill(fill))
+                    }
+                }
             }
             _ => piece(ig, rule, it),
         });
@@ -633,6 +655,36 @@ mod tests {
         assert!((ch[0].geometric_bounds().unwrap().width() - 100.0).abs() < 1e-6);
         assert!((ch[1].geometric_bounds().unwrap().width() - 110.0).abs() < 0.5);
         assert!(ch[0].id != ch[1].id && ch[0].id != NodeId(50));
+    }
+
+    #[test]
+    fn a_baked_stroke_keeps_its_raster_effects() {
+        let mut n = Node::path(NodeId(50), shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)), Appearance::default_art());
+        if let AppearanceItem::Stroke(s) = &mut n.appearance.items[1] {
+            s.effects.push(fx("path.offsetPath", json!({"offset": 5.0})));
+            s.effects.push(fx("stylize.dropShadow", json!({})));
+        }
+        let m = bake_appearance(&n).unwrap();
+        let ch = m.children().unwrap();
+        let Some(AppearanceItem::Fill(f)) = ch[1].appearance.items.first() else { panic!("the outline is filled") };
+        assert_eq!(f.effects.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), ["stylize.dropShadow"]);
+    }
+
+    #[test]
+    fn a_baked_stroke_with_a_gradient_along_it_becomes_meshes_clipped_to_its_outline() {
+        let mut n = Node::path(NodeId(50), shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)), Appearance::default_art());
+        if let AppearanceItem::Stroke(s) = &mut n.appearance.items[1] {
+            s.width = 10.0;
+            s.paint = Paint::Gradient(Box::new(vectorcraft_color::GradientPaint::new(Default::default())));
+            s.gradient_mode = vectorcraft_doc::StrokeGradientMode::Along;
+            s.opacity = 0.5;
+        }
+        let m = bake_appearance(&n).unwrap();
+        let ch = m.children().unwrap();
+        let NodeKind::Group { children, clip: true } = &ch[1].kind else { panic!("a clip group: {:?}", ch[1].kind) };
+        assert!(matches!(children[0].kind, NodeKind::Path { clipping: true, .. }));
+        assert!(children.len() > 1 && children[1..].iter().all(|c| matches!(c.kind, NodeKind::Mesh(_))), "gradient meshes");
+        assert_eq!(ch[1].opacity, 0.5);
     }
 
     /// Black 24 pt "Type" with its baseline at (20, 60).

@@ -822,6 +822,91 @@ fn burasagari_leaves_latin_commas_and_full_stops_inside_the_line() {
     }
 }
 
+/// Optical Margin Alignment hangs the glyphs at a line's ends outside its margins: wholly for a
+/// quotation mark, hyphen, full stop or comma, by half for an em dash, by a tenth of the advance
+/// for an A, at the left of a left-aligned line, at the right of a right-aligned line, and at
+/// both ends of centered and justified lines. A full stop and the closing quotation mark after it
+/// hang together. Off, the lines are placed as before.
+#[test]
+fn optical_margin_alignment_hangs_punctuation_and_letter_edges_outside_the_margins() {
+    let frame = Rect::new(0.0, 0.0, 300.0, 400.0);
+    let lay = |text: &str, justify: Justify, on: bool| {
+        let mut t = area(text, style(20.0), frame, justify);
+        t.optical_margin = on;
+        layout(db(), &t).glyphs
+    };
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-6;
+    let end = |g: &PositionedGlyph| g.origin.x + g.advance;
+    // Left aligned: the opening quotation mark hangs wholly, so the H starts at the edge.
+    let (on, off) = (lay("“Hello” there", Justify::Left, true), lay("“Hello” there", Justify::Left, false));
+    assert!(near(off[0].origin.x, 0.0) && near(on[1].origin.x, 0.0), "{} {}", off[0].origin.x, on[1].origin.x);
+    assert!(near(on[0].origin.x, -on[0].advance) && on[0].advance > 1.0);
+    // An em dash hangs by half its advance.
+    let dash = lay("—ab", Justify::Left, true);
+    assert!(near(dash[0].origin.x, -0.5 * dash[0].advance) && dash[0].advance > 1.0, "{}", dash[0].origin.x);
+    // An A hangs by a tenth of its advance; a letter of no class doesn't hang.
+    let a = lay("AVA", Justify::Left, true);
+    assert!(near(a[0].origin.x, -0.1 * a[0].advance), "{}", a[0].origin.x);
+    let v = lay("van", Justify::Left, true);
+    assert!(near(v[0].origin.x, -0.1 * v[0].advance), "{}", v[0].origin.x);
+    assert!(near(lay("Hello", Justify::Left, true)[0].origin.x, 0.0));
+    assert!(near(lay("and", Justify::Left, true)[0].origin.x, 0.0));
+    // A line of one glyph doesn't hang.
+    assert!(near(lay(".", Justify::Left, true)[0].origin.x, 0.0));
+    // Right aligned: the full stop hangs wholly at the right; with a closing quotation mark after
+    // it, both do.
+    let (on, off) = (lay("Hello there.", Justify::Right, true), lay("Hello there.", Justify::Right, false));
+    let n = on.len();
+    assert!(near(end(&off[n - 1]), 300.0) && near(on[n - 1].origin.x, 300.0), "{} {}", end(&off[n - 1]), on[n - 1].origin.x);
+    let on = lay("Say “hi.”", Justify::Right, true);
+    let n = on.len();
+    assert!(near(on[n - 2].origin.x, 300.0) && near(end(&on[n - 3]), 300.0), "{}", on[n - 2].origin.x);
+    // At a line's start, a single quotation mark followed by a double one hangs with it.
+    assert!(near(lay("‘“Hi", Justify::Left, true)[2].origin.x, 0.0));
+    // A right-aligned line doesn't hang at its left, nor a left-aligned one at its right.
+    assert!(near(lay("“Hello", Justify::Right, true).last().map_or(0.0, end), 300.0));
+    assert!(near(lay("Hello.", Justify::Left, true)[0].origin.x, 0.0));
+    // Centered: the letters between the hanging hyphens are centered in the frame.
+    let on = lay("-ab-", Justify::Center, true);
+    assert!(near((on[1].origin.x + end(&on[2])) * 0.5, 150.0), "{on:?}");
+    let off = lay("-ab-", Justify::Center, false);
+    assert!(near((off[0].origin.x + end(&off[3])) * 0.5, 150.0));
+    // Justified: both hyphens hang and the words fill the frame between them.
+    let on = lay("-ab cd-", Justify::JustifyAll, true);
+    let n = on.len();
+    assert!(near(on[1].origin.x, 0.0) && near(on[n - 1].origin.x, 300.0), "{} {}", on[1].origin.x, on[n - 1].origin.x);
+    let off = lay("-ab cd-", Justify::JustifyAll, false);
+    assert!(near(off[0].origin.x, 0.0) && near(end(&off[n - 1]), 300.0));
+    // A line without spaces is justified between its letters, not next to the hanging marks.
+    for text in ["“Hi”", "“Hi.”", "“漢字”"] {
+        let on = lay(text, Justify::JustifyAll, true);
+        let n = on.len();
+        // The glyphs that hang at the right: the closing mark, and the full stop before it.
+        let right = if text.contains('.') { 2 } else { 1 };
+        assert!(near(on[1].origin.x, 0.0) && near(end(&on[n - 1 - right]), 300.0), "{text}: {on:?}");
+    }
+    // Letters that hang by part of their width keep their gaps: the line still fills the frame.
+    let a = lay("AVA", Justify::JustifyAll, true);
+    assert!(near(end(&a[2]), 300.0 + 0.1 * a[2].advance), "{}", end(&a[2]));
+    // Point type hangs at its anchor.
+    let mut t = point("“Hi", style(20.0));
+    t.optical_margin = true;
+    let l = layout(db(), &t);
+    assert!(near(l.glyphs[1].origin.x, 0.0) && l.glyphs[0].origin.x < -1.0, "{:?}", l.glyphs[0].origin);
+    // Vertical type: the letter after the quotation mark takes the mark's place at the column's top.
+    let vertical = |on: bool| {
+        let mut t = area("“Hello", style(20.0), frame, Justify::Left);
+        (t.vertical, t.optical_margin) = (true, on);
+        layout(db(), &t).glyphs
+    };
+    let (on, off) = (vertical(true), vertical(false));
+    assert!((on[1].origin - off[0].origin).hypot() < 1e-6, "{:?} {:?}", on[1].origin, off[0].origin);
+    // Right-to-left paragraphs are placed as before: a full stop ending one, set at the left of a
+    // left-aligned line, doesn't hang.
+    let rtl = |on: bool| lay("שלום, עולם.", Justify::Left, on).iter().map(|g| g.origin).collect::<Vec<_>>();
+    assert_eq!(rtl(true), rtl(false));
+}
+
 /// With craft-fonts and no installed fonts (the web), Thai is set in Noto Sans Thai, not as empty
 /// boxes. Skipped when built without craft-fonts or with a checkout that has no Thai font.
 #[test]

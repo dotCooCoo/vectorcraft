@@ -17,6 +17,12 @@
 //!   filters, Gaussian Blur and Feather, see [`effects::pixel`]), then drawn back
 //!   ([`Renderer::pixel_content`]). The result is cached per object while it and the zoom don't
 //!   change.
+//! - Rasterize: the content drawn again on the image's own grid, as Object › Rasterize draws it
+//!   ([`Renderer::rasterize_image`]), then into the content's raster
+//!   ([`effects::Rasterize::compose`]; an image too large for that is made from the content's
+//!   raster, [`effects::Rasterize::apply`]), clipped to its outline with Create Clipping Mask. The
+//!   effects before it in the stack, and the shadows and glows after it, are drawn around it by
+//!   splitting the stack there ([`Renderer::raster_fx`]).
 //!
 //! While [`crate::RenderOptions::interacting`], an object whose content only moved draws its
 //! cached shadows, glows and filtered content at its new place instead of running the effects
@@ -110,6 +116,41 @@ struct Content<'a> {
     /// Its silhouette: Feather and Inner Glow clip to it (without one, Feather only blurs and
     /// Inner Glow is skipped).
     outline: Option<(&'a BezPath, FillRule)>,
+    /// What Rasterize makes its image over: the object's [`drawn_bounds`] as far as the effects
+    /// before it spread them (`None`: `reach`).
+    bounds: Option<Rect>,
+    /// Where the image of the Rasterize first in these effects is kept for the effects after a
+    /// split ([`Renderer::raster_fx`]), which draw this content more than once.
+    kept: Option<&'a Kept>,
+}
+
+/// The image of the last Rasterize before a split in an effect stack ([`Renderer::raster_fx`]). It
+/// is made the first time the effects after the split draw the content and drawn from here the
+/// other times, so the content before the split is drawn once.
+struct Kept {
+    /// Where the effects after the split take the content from: the visible area grown by how
+    /// far they paint.
+    window: Rect,
+    /// The view and pixel size of the split's frame, when the image is over
+    /// [`Renderer::rasterize_image`]'s limits: the content is then drawn in that frame.
+    frame: Option<(Affine, f64)>,
+    image: std::cell::RefCell<Option<KeptImage>>,
+}
+
+#[derive(Clone)]
+enum KeptImage {
+    /// The image on its own grid, as [`Renderer::rasterize_image`] makes it.
+    Grid(std::rc::Rc<(Vec<u8>, usize, usize)>),
+    /// An image over [`Renderer::rasterize_image`]'s limits: the content's raster with the
+    /// Rasterize applied, as the first draw made it, and the transform from its pixels to
+    /// document space.
+    Raster(Arc<vello_cpu::Pixmap>, Affine),
+}
+
+/// The [`Content::bounds`] of `n` under raster effects `rfx`: its [`drawn_bounds`] when `rfx`
+/// holds a Rasterize.
+fn rasterize_bounds(symbols: &SymbolBoxes, n: &Node, rfx: &[RasterFx]) -> Option<Rect> {
+    rfx.iter().any(|fx| matches!(fx, RasterFx::Rasterize(_))).then(|| drawn_bounds(symbols, n)).flatten()
 }
 
 /// `f` with the content moved by (`dx`, `dy`) document units (a shadow's offset).
@@ -157,7 +198,7 @@ fn item_effects(item: &AppearanceItem) -> &[Effect] {
 pub(crate) fn visual_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
     if let Some(art) = effects::revolve_art(n).or_else(|| effects::solid_art(n)) {
         return cull_bounds(symbols, &art).map(|b| {
-            let o = effects::outset(&n.appearance.effects, b);
+            let o = outset(symbols, &n.appearance.effects, b);
             b.inflate(o, o)
         });
     }
@@ -178,9 +219,171 @@ pub(crate) fn visual_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
     let s = n.appearance.outset();
     r.map(|r| {
         let r = r.inflate(s, s);
-        let o = effects::outset(&n.appearance.effects, r);
+        // The fills' and strokes' own raster effects, then the object's.
+        let r = n.appearance.items.iter().filter(|i| paints(i)).map(|i| spread(symbols, item_effects(i), r)).fold(r, |acc, b| acc.union(b));
+        let o = outset(symbols, &n.appearance.effects, r);
         r.inflate(o, o)
     })
+}
+
+/// Does `item` paint (as [`Renderer::paint_items`] draws it)?
+fn paints(item: &AppearanceItem) -> bool {
+    item.visible() && !item.paint().is_none()
+}
+
+/// The bounds of what `n` draws, its own and its members' geometry effects applied and the raster
+/// effects of its members and of its fills and strokes included (each fill's and stroke's
+/// spreading what it paints, [`item_bounds`]), with strokes measured as
+/// [`Node::visual_bounds_with`] measures them, without the reach of `n`'s own raster effects
+/// (symbol instances measured by their art from `symbols`): what Rasterize makes its image over.
+pub(crate) fn drawn_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
+    let b = art_bounds(symbols, n)?;
+    let items = n.appearance.items.iter().filter(|i| paints(i) && !effects::raster_effects(item_effects(i)).is_empty());
+    Some(items.map(|i| spread(symbols, item_effects(i), item_bounds(n, i).unwrap_or(b))).fold(b, |acc, r| acc.union(r)))
+}
+
+/// The bounds of what `item`, a fill or stroke of the path or compound path `n`, paints: the path
+/// with `n`'s and `item`'s geometry effects, and for a stroke its width. `None` for other objects,
+/// 3D art, a brushed stroke and an item that draws no path.
+fn item_bounds(n: &Node, item: &AppearanceItem) -> Option<Rect> {
+    let stroke = matches!(item, AppearanceItem::Stroke(_));
+    if !has_fx(n) || effects::has_revolve(n) || effects::has_solid(n) || (stroke && vectorcraft_brush::has_brush(n)) {
+        return None;
+    }
+    let g = effected_path(n, &node_bezpath(n)?);
+    let fx = item_effects(item);
+    if effects::has_geometry(fx) {
+        let ig = apply(fx, &g, &GeomContext::of(n).item(item));
+        let o = if let AppearanceItem::Stroke(s) = item { s.reach() } else { 0.0 };
+        return (!ig.elements().is_empty()).then(|| ig.bounding_box().inflate(o, o));
+    }
+    let one = vectorcraft_doc::Appearance { items: vec![item.clone()], ..Default::default() };
+    (!g.elements().is_empty()).then(|| one.stroked_bounds(g.bounding_box(), || g.clone()))
+}
+
+/// `b` grown by how far raster effects `fx` paint past it, each spreading what the ones before it
+/// paint (Rasterize at the document's raster effects resolution where it takes it).
+fn spread(symbols: &SymbolBoxes, fx: &[Effect], b: Rect) -> Rect {
+    let ppi = doc_raster_ppi(symbols.document());
+    effects::raster_effects(fx).iter().fold(b, |r, e| e.at_document_ppi(ppi).spread(r, 72.0 / ppi))
+}
+
+/// [`drawn_bounds`] before the raster effects of `n`'s fills and strokes: its art, and the art of
+/// its brushed strokes (a symbol's brushed art as far as [`crate::brush_fx::pad`] reaches).
+fn art_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
+    let b = shape_bounds(symbols, n);
+    let brushed = vectorcraft_brush::has_brush(n)
+        .then(|| vectorcraft_brush::expand(symbols.document(), n))
+        .flatten()
+        .and_then(|art| art.visual_bounds_with(symbols));
+    let b = vectorcraft_geom::union_opt(b, brushed)?;
+    let pad = if matches!(n.kind, NodeKind::SymbolInstance { .. }) { crate::brush_fx::pad(symbols, n) } else { 0.0 };
+    Some(b.inflate(pad, pad))
+}
+
+/// [`art_bounds`] without brush art.
+fn shape_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
+    // The visible members of `g` (a Shaper group's first member is its source art, which paints
+    // nothing).
+    let union = |g: &Node| {
+        let members = g.children()?.get(usize::from(g.extras().shaper.is_some())..).unwrap_or_default();
+        members.iter().filter(|c| c.visible).fold(None, |acc, c| vectorcraft_geom::union_opt(acc, painted_reach(symbols, c)))
+    };
+    match &n.kind {
+        _ if effects::has_container_appearance(n) => {
+            let art = effects::evaluate_container(n);
+            let art = art.as_ref().unwrap_or(n);
+            if art.clips() { art.visual_bounds_with(symbols) } else { union(art) }
+        }
+        NodeKind::Layer { clip: false, .. } | NodeKind::Group { clip: false, .. } => union(n),
+        _ if has_fx(n) => {
+            // A 3D effect's art.
+            if let Some(art) = effects::revolve_art(n).or_else(|| effects::solid_art(n)) {
+                return drawn_bounds(symbols, &art);
+            }
+            let g = effected_path(n, &node_bezpath(n)?);
+            // The path as the fills and strokes without geometry effects of their own paint it
+            // (as every fill and stroke would when none paints).
+            let mut plain = n.appearance.clone();
+            plain.items.retain(|i| !(paints(i) && effects::has_geometry(item_effects(i))));
+            let on_path = !n.appearance.items.iter().any(paints) || plain.items.iter().any(paints);
+            let mut r = (on_path && !g.elements().is_empty()).then(|| plain.stroked_bounds(g.bounding_box(), || g.clone()));
+            let ctx = GeomContext::of(n);
+            for item in n.appearance.items.iter().filter(|i| paints(i) && effects::has_geometry(item_effects(i))) {
+                let ig = apply(item_effects(item), &g, &ctx.item(item));
+                let o = if let AppearanceItem::Stroke(s) = item { s.reach() } else { 0.0 };
+                r = vectorcraft_geom::union_opt(r, (!ig.elements().is_empty()).then(|| ig.bounding_box().inflate(o, o)));
+            }
+            r
+        }
+        // As [`cull_bounds_in`] measures them, without the object's own raster effects: the
+        // reshaped art (type's outlines measured one by one with the effects of its own fills and
+        // strokes), grown by how far the effects in a symbol's art and a live object's content
+        // paint past it.
+        _ if has_object_fx(n) => {
+            let symbol = match &n.kind {
+                NodeKind::SymbolInstance { symbol, .. } => symbols.document().symbols.iter().find(|s| s.name == *symbol).map(|s| s.art.clone()),
+                _ => None,
+            };
+            let reshaped = effects::reshape(n, symbol.as_deref());
+            let b = match &reshaped {
+                Some(r) if matches!(n.kind, NodeKind::Text(_)) => {
+                    r.children().into_iter().flatten().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, painted_reach(symbols, c)))
+                }
+                Some(r) => r.visual_bounds_with(symbols),
+                None => None,
+            }
+            .or_else(|| n.visual_bounds_with(symbols))?;
+            let a = match &reshaped {
+                Some(r) => reshaped_art_effects_reach(symbols, n, r),
+                None => art_effects_reach(symbols, n),
+            };
+            let a = a.max(live_content_reach(symbols, n));
+            Some(b.inflate(a, a))
+        }
+        _ => {
+            let b = n.visual_bounds_with(symbols)?;
+            let a = art_effects_reach(symbols, n).max(live_content_reach(symbols, n));
+            Some(b.inflate(a, a))
+        }
+    }
+}
+
+/// [`drawn_bounds`] of `n` grown by how far its own raster effects paint past them. With Crop
+/// Marks, the [`drawn_bounds`] of its art: the marks and the object, which paints its own raster
+/// effects inside the art.
+pub(crate) fn painted_reach(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
+    if let Some(art) = effects::crop_marks_art(n) {
+        return drawn_bounds(symbols, &art);
+    }
+    drawn_bounds(symbols, n).map(|b| spread(symbols, &n.appearance.effects, b))
+}
+
+/// The outline the renderer clips `n`'s Feather, Inner Glow and Rasterize with Create Clipping
+/// Mask to: a path's or compound path's geometry with its object-level geometry effects applied,
+/// the outline of the art [`Renderer::fx_art`] makes for an object with object effects, and with
+/// Crop Marks the object's own. For other objects it is [`effects::clip_outline`].
+pub(crate) fn drawn_outline(doc: &Document, n: &Node) -> Option<(BezPath, FillRule)> {
+    if let Some(art) = effects::crop_marks_art(n) {
+        return drawn_outline(doc, art.children()?.first()?);
+    }
+    if has_object_fx(n) {
+        let art = Renderer::new().fx_art(doc, &Arc::new(n.clone()), false);
+        return effects::clip_outline(&art);
+    }
+    match &n.kind {
+        NodeKind::Path { rule, .. } | NodeKind::Compound { rule, .. } if effects::has_geometry(&n.appearance.effects) => {
+            Some((effected_path(n, &node_bezpath(n)?), *rule))
+        }
+        _ => effects::clip_outline(n),
+    }
+}
+
+/// How far raster effects `fx` paint beyond `b`, each spreading what the ones before it paint
+/// ([`spread`]).
+fn outset(symbols: &SymbolBoxes, fx: &[Effect], b: Rect) -> f64 {
+    let s = spread(symbols, fx, b);
+    [b.x0 - s.x0, b.y0 - s.y0, s.x1 - b.x1, s.y1 - b.y1].into_iter().fold(0.0, f64::max)
 }
 
 /// Bounds used for culling: like `Node::visual_bounds_with`, but aware of live effects anywhere in
@@ -209,7 +412,7 @@ fn cull_bounds_in(symbols: &SymbolBoxes, n: &Node, after_reshape: bool) -> Optio
             } else {
                 art.children()?.iter().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, inner(c)))
             }?;
-            let o = effects::outset(&n.appearance.effects, b);
+            let o = outset(symbols, &n.appearance.effects, b);
             Some(b.inflate(o, o))
         }
         NodeKind::Layer { children, clip: false, .. } | NodeKind::Group { children, clip: false } => {
@@ -239,7 +442,7 @@ fn cull_bounds_in(symbols: &SymbolBoxes, n: &Node, after_reshape: bool) -> Optio
             };
             let a = a.max(live_content_reach(symbols, n));
             let b = b.inflate(a, a);
-            let o = effects::outset(&n.appearance.effects, b);
+            let o = outset(symbols, &n.appearance.effects, b);
             Some(b.inflate(o, o))
         }
         NodeKind::SymbolInstance { .. } => {
@@ -351,10 +554,43 @@ fn pcolor(ink: Ink, c: &vectorcraft_doc::color::Color) -> peniko::Color {
 /// cropped to the view when its effects only look nearby, else rendered at a lower resolution.
 const PIXEL_BUDGET: f64 = 8.4e6;
 
+/// Most Rasterize effects of one stack that [`Renderer::raster_fx`] draws (the last ones): each
+/// draws the content again inside the one after it.
+const MAX_RASTERIZE: usize = 16;
+
+/// The columns and rows of the image Rasterize `r` makes over `rect` (whole pixels of the image,
+/// `line` points wide at the document's raster effects resolution). `None` when the image would
+/// hold more than [`PIXEL_BUDGET`] pixels or be wider or taller than [`crate::MAX_RASTER_SIDE`].
+fn image_size(r: &effects::Rasterize, rect: Rect, line: f64) -> Option<(u16, u16)> {
+    let cell = r.cell(line);
+    let (cols, rows) = ((rect.width() / cell).round(), (rect.height() / cell).round());
+    let side = f64::from(crate::MAX_RASTER_SIDE);
+    (cols >= 1.0 && rows >= 1.0 && cols <= side && rows <= side && cols * rows <= PIXEL_BUDGET).then_some((cols as u16, rows as u16))
+}
+
+#[cfg(test)]
+thread_local! {
+    /// How many times a Rasterize has drawn the content before it on this thread.
+    pub(crate) static RASTERIZED: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// Document Raster Effects Settings › Resolution of `doc`, in ppi (1 to 2400; 72 when it isn't a
+/// number).
+fn doc_raster_ppi(doc: &Document) -> f64 {
+    Some(doc.raster_effects_ppi).filter(|v| v.is_finite()).unwrap_or(72.0).clamp(1.0, 2400.0)
+}
+
 /// The effects [`Renderer::pixel_content`] runs on the content's pixels (those changing the
 /// content itself), in stack order.
 fn content_changing(fx: &&RasterFx) -> bool {
-    matches!(fx, RasterFx::Feather { .. } | RasterFx::GaussianBlur { .. } | RasterFx::Pixel(_))
+    matches!(fx, RasterFx::Feather { .. } | RasterFx::GaussianBlur { .. } | RasterFx::Pixel(_) | RasterFx::Rasterize(_))
+}
+
+/// Is the content drawn with hard edges for `chain` into a raster of pixels `px` wide (document
+/// units): does it go first through a Rasterize with anti-aliasing off whose pixels are no
+/// smaller? (Smaller ones show as the share of each raster pixel they cover, as smooth edges do.)
+fn hard_edged(chain: &[&RasterFx], px: f64) -> bool {
+    matches!(chain.first(), Some(RasterFx::Rasterize(r)) if !r.anti_alias && r.cell(72.0) >= px)
 }
 
 /// How far (document units) from a pixel the content deciding it after `fx` lies; `None` when
@@ -363,6 +599,7 @@ fn looks_around(fx: &RasterFx) -> Option<f64> {
     match fx {
         RasterFx::Feather { radius } | RasterFx::GaussianBlur { radius } => Some(1.5 * radius),
         RasterFx::Pixel(p) => p.reach(),
+        RasterFx::Rasterize(r) => Some(r.reach()),
         _ => Some(0.0),
     }
 }
@@ -384,6 +621,10 @@ pub(crate) struct PixelEntry {
     /// rasters made before their objects moved: only a frame rendered while interacting draws
     /// it.
     moved: bool,
+    /// How many images in the content failed to decode while the raster was made
+    /// ([`crate::paint::decode_failures`]): each frame that draws the raster counts them
+    /// again ([`crate::paint::add_decode_failures`]).
+    failed: u64,
     pub(crate) stamp: u64,
 }
 
@@ -432,6 +673,23 @@ fn draw_scaled(ctx: &mut RenderContext, image: std::sync::Arc<vello_cpu::Pixmap>
     let sampler = peniko::ImageSampler { quality, ..Default::default() };
     // The raster maps 1:1 onto the rect: a paint transform left by an earlier fill (a pattern,
     // radial or freeform gradient) would resample it (#1536).
+    ctx.reset_paint_transform();
+    ctx.set_paint(vello_cpu::Image { image: vello_cpu::ImageSource::Pixmap(image), sampler });
+    ctx.fill_rect(&Rect::new(0.0, 0.0, w, h));
+    ctx.set_transform(Affine::IDENTITY);
+}
+
+/// Draw `image` with its pixels placed by `xf` (pixels to device pixels). On whole pixels at full
+/// size it is drawn as [`draw_scaled`] draws it.
+fn draw_placed(ctx: &mut RenderContext, image: std::sync::Arc<vello_cpu::Pixmap>, xf: Affine) {
+    let [a, b, c, d, e, f] = xf.as_coeffs();
+    let near = |v: f64, to: f64| (v - to).abs() < 1e-6;
+    if near(a, 1.0) && near(b, 0.0) && near(c, 0.0) && near(d, 1.0) && near(e, e.round()) && near(f, f.round()) {
+        return draw_scaled(ctx, image, (e.round(), f.round()), 1.0);
+    }
+    let (w, h) = (image.width() as f64, image.height() as f64);
+    ctx.set_transform(xf);
+    let sampler = peniko::ImageSampler { quality: peniko::ImageQuality::Medium, ..Default::default() };
     ctx.reset_paint_transform();
     ctx.set_paint(vello_cpu::Image { image: vello_cpu::ImageSource::Pixmap(image), sampler });
     ctx.fill_rect(&Rect::new(0.0, 0.0, w, h));
@@ -879,7 +1137,7 @@ impl Renderer {
         off.flush();
         let mut pm = vello_cpu::Pixmap::new(w, h);
         off.render(&mut pm, &mut self.resources);
-        if !self.shadows.get(&old).is_some_and(|e| silhouette(&pm, colored) == e.made.pixels) {
+        if self.shadows.get(&old).is_none_or(|e| silhouette(&pm, colored) != e.made.pixels) {
             return;
         }
         if let Some(mut e) = self.shadows.remove(&old) {
@@ -935,7 +1193,10 @@ impl Renderer {
         // Document-space reach of the painted geometry (strokes, arrowheads…).
         let outset = n.appearance.outset();
         let reach = g.bounding_box().inflate(outset, outset);
-        let content = Content { node: n, owner: None, cache: Some(0), reach, outline: Some((g, rule)) };
+        let bounds = rasterize_bounds(f.symbols, n, &rfx);
+        // Under Rasterize the content reaches as far as its fills' and strokes' raster effects paint.
+        let reach = bounds.map_or(reach, |b| reach.union(b));
+        let content = Content { node: n, owner: None, cache: Some(0), reach, outline: Some((g, rule)), bounds, kept: None };
         let mut items = items;
         self.raster_fx(ctx, f, &content, &rfx, &mut |r, c, fr| r.paint_items(c, fr, n, g, rule, &gctx, items.as_deref_mut()));
         ctx.set_transform(Affine::IDENTITY);
@@ -969,12 +1230,16 @@ impl Renderer {
         let rfx = if effects::has_crop_marks(a) { vec![] } else { effects::raster_effects(&a.appearance.effects) };
         match cull_bounds(f.symbols, &art) {
             Some(reach) if !f.opts.outline && !rfx.is_empty() => {
-                // Feather and Inner Glow clip to the art's outline.
-                let clipped = rfx.iter().any(|x| matches!(x, RasterFx::Feather { .. } | RasterFx::InnerGlow { .. }));
+                // Feather, Inner Glow and Rasterize with Create Clipping Mask clip to the art's outline.
+                let clipped = rfx.iter().any(|x| {
+                    matches!(x, RasterFx::Feather { .. } | RasterFx::InnerGlow { .. }) || matches!(x, RasterFx::Rasterize(r) if r.clipping_mask)
+                });
                 let region = if clipped { self.clip_of(&art) } else { None };
                 // A symbol's art can change while the instance doesn't: no cached shadows.
                 let cache = (cache && !matches!(a.kind, NodeKind::SymbolInstance { .. })).then_some(0);
-                let content = Content { node: a, owner: Some(a), cache, reach, outline: region.as_deref().map(|r| (&r.0, r.1)) };
+                let bounds = rasterize_bounds(f.symbols, a, &rfx);
+                let reach = bounds.map_or(reach, |b| reach.union(b));
+                let content = Content { node: a, owner: Some(a), cache, reach, outline: region.as_deref().map(|r| (&r.0, r.1)), bounds, kept: None };
                 self.raster_fx(ctx, f, &content, &rfx, &mut |r, c, fr| r.draw_fx_art(c, fr, a, &art));
                 ctx.set_transform(Affine::IDENTITY);
             }
@@ -1089,6 +1354,102 @@ impl Renderer {
         rfx: &[RasterFx],
         paint: &mut dyn FnMut(&mut Self, &mut RenderContext, &Frame),
     ) {
+        // Only the last MAX_RASTERIZE Rasterize effects are drawn.
+        let count = rfx.iter().filter(|fx| matches!(fx, RasterFx::Rasterize(_))).count();
+        let capped: Vec<RasterFx>;
+        let rfx = if count > MAX_RASTERIZE {
+            let mut left_out = count - MAX_RASTERIZE;
+            capped = rfx
+                .iter()
+                .filter(|fx| {
+                    let out = left_out > 0 && matches!(fx, RasterFx::Rasterize(_));
+                    left_out -= usize::from(out);
+                    !out
+                })
+                .cloned()
+                .collect();
+            &capped[..]
+        } else {
+            rfx
+        };
+        // Rasterize at the document's raster effects resolution takes it here.
+        let resolved: Vec<RasterFx>;
+        let rfx = if rfx.iter().any(|fx| matches!(fx, RasterFx::Rasterize(r) if r.ppi.is_none())) {
+            let ppi = doc_raster_ppi(f.doc);
+            resolved = rfx.iter().map(|fx| fx.at_document_ppi(ppi)).collect();
+            &resolved[..]
+        } else {
+            rfx
+        };
+        // Rasterize makes an image of everything the effects before it paint, shadows and glows
+        // included, and the shadows and glows after it paint around that image. When some come
+        // after the last Rasterize, the stack splits after it, else when any effect comes before
+        // it, the stack splits before it; the effects after the split paint around the content
+        // drawn with those before it. Rasterize then comes first in its part.
+        if let Some(at) = rfx.iter().rposition(|fx| matches!(fx, RasterFx::Rasterize(_))) {
+            let paints_around = |fx: &[RasterFx]| fx.iter().any(|fx| !content_changing(&fx));
+            let (_, rest) = rfx.split_at(at + 1);
+            let split = if paints_around(rest) { Some(at + 1) } else { (at > 0).then_some(at) };
+            if let Some(split) = split {
+                let (before, after) = rfx.split_at(split);
+                let line = 72.0 / doc_raster_ppi(f.doc);
+                let (mut reach, mut spread) = (content.reach, content.bounds);
+                // After a Rasterize on white without a clipping mask, the silhouette is its image,
+                // and it stays the silhouette through the effects after it (as in `pixel_content`).
+                let mut image = None;
+                // Whether the image of a Rasterize before the split is over `rasterize_image`'s
+                // limits. Such an image is kept only as far as the view needs it, so the effects
+                // after the split are not cached.
+                let (mut over, mut last_over) = (false, false);
+                for fx in before {
+                    if let RasterFx::Rasterize(r) = fx {
+                        last_over = image_size(r, r.image(spread.unwrap_or(reach), line), line).is_none();
+                        over |= last_over;
+                    }
+                    let o = fx.outset(reach);
+                    reach = reach.inflate(o, o);
+                    spread = spread.map(|b| fx.spread(b, line));
+                    if let RasterFx::Rasterize(r) = fx
+                        && r.white
+                        && !r.clipping_mask
+                    {
+                        image = Some(spread.unwrap_or(reach).to_path(0.1));
+                    }
+                }
+                // When the split comes after the Rasterize, the shadows and glows after it and the
+                // content each draw the content before the split. The first draw makes the image,
+                // and the others draw the one it keeps.
+                let window = after.iter().fold(f.visible, |w, fx| {
+                    let o = fx.outset(w);
+                    w.inflate(o, o)
+                });
+                let frame = last_over.then_some((f.view, f.px));
+                let kept = (split > at).then(|| Kept { window, frame, image: std::cell::RefCell::new(None) });
+                let inner = Content {
+                    node: content.node,
+                    owner: content.owner,
+                    cache: None,
+                    reach: content.reach,
+                    outline: content.outline,
+                    bounds: content.bounds,
+                    kept: kept.as_ref(),
+                };
+                let outline = image.as_ref().map(|g| (g, FillRule::NonZero)).or(content.outline);
+                // When the split comes before the Rasterize, the part from it on draws the content
+                // once, and its image is the one kept for a split above.
+                let outer = Content {
+                    node: content.node,
+                    owner: content.owner,
+                    cache: content.cache.filter(|_| !over),
+                    reach,
+                    outline,
+                    bounds: spread,
+                    kept: content.kept.filter(|_| split == at),
+                };
+                self.raster_fx(ctx, f, &outer, after, &mut |r, c, fr| r.raster_fx(c, fr, &inner, before, paint));
+                return;
+            }
+        }
         let reach = content.reach;
         // The `Arc` drawn: the caller's, or the node `draw_arc` is drawing.
         let owner = content.owner.cloned().or_else(|| self.fx_owner.clone().filter(|o| std::ptr::eq(&**o, content.node)));
@@ -1130,7 +1491,7 @@ impl Renderer {
         // works on a coarser grid tied to the canvas, so the blurred art shifted by up to a pixel
         // and looked blocky as the view moved by parts of a pixel (#755).
         let blurs = rfx.iter().any(|fx| matches!(fx, RasterFx::Feather { radius } | RasterFx::GaussianBlur { radius } if *radius > 0.0));
-        if blurs || rfx.iter().any(|fx| matches!(fx, RasterFx::Pixel(_))) {
+        if blurs || rfx.iter().any(|fx| matches!(fx, RasterFx::Pixel(_) | RasterFx::Rasterize(_))) {
             self.pixel_content(ctx, f, content, rfx, paint);
         } else {
             paint(self, ctx, f);
@@ -1172,11 +1533,15 @@ impl Renderer {
         }
     }
 
-    /// Paint `content` through the content-changing effects of `rfx` (Gaussian Blur, Feather and the
-    /// Photoshop-style filters) in stack order on its pixels: rendered offscreen over all it can
-    /// reach, filtered on the CPU and drawn back. The raster holds at most [`PIXEL_BUDGET`] pixels:
-    /// larger content is cropped to the view when every effect only looks nearby, else rendered
-    /// at a lower resolution. A whole raster at full resolution is cached while the object, the
+    /// Paint `content` through the content-changing effects of `rfx` (Gaussian Blur, Feather, the
+    /// Photoshop-style filters and Rasterize) in stack order on its pixels: rendered offscreen over
+    /// all it can reach, filtered on the CPU and drawn back. A Rasterize first in the chain draws the
+    /// content on its image's own grid instead ([`Self::rasterize_image`]) when that image is within
+    /// the limits below; content with a [`Kept`] image draws that image after its first draw. The
+    /// raster holds at most [`PIXEL_BUDGET`] pixels and [`crate::MAX_RASTER_SIDE`] a side: content
+    /// over the budget is cropped to the view (content with a [`Kept`] image to its window) when
+    /// every effect only looks nearby, and content still over either limit is rendered at a lower
+    /// resolution. A whole raster at full resolution is cached while the object, the
     /// zoom and what the content reads ([`Inputs`]) stay the same (panning only moves it), and
     /// while interacting after the content only moved ([`Self::move_pixel_content`]).
     fn pixel_content(
@@ -1188,26 +1553,42 @@ impl Renderer {
         paint: &mut dyn FnMut(&mut Self, &mut RenderContext, &Frame),
     ) {
         let chain: Vec<&RasterFx> = rfx.iter().filter(content_changing).collect();
+        // When the first draw of this content kept its raster, that raster is drawn.
+        if let Some(KeptImage::Raster(image, place)) = content.kept.and_then(|k| k.image.borrow().clone()) {
+            draw_placed(ctx, image, f.view * place);
+            return;
+        }
+        // Content kept with an image over the limits is drawn in the split's frame, over where the
+        // effects after the split take it from, then placed in this one.
+        let call = f.view;
+        let split_frame;
+        let (f, screen) = match content.kept.and_then(|k| k.frame.map(|frame| (k.window, frame))) {
+            Some((window, (view, px))) => {
+                split_frame = Frame { view, px, ..*f };
+                (&split_frame, view.transform_rect_bbox(window))
+            }
+            None => (f, Rect::new(0.0, 0.0, ctx.width() as f64, ctx.height() as f64)),
+        };
         // Where the result can paint: each effect spreads what the ones before it painted.
         let reach = chain.iter().fold(content.reach, |r, fx| {
             let o = fx.outset(r);
             r.inflate(o, o)
         });
         let full = f.view.transform_rect_bbox(reach).inflate(2.0, 2.0);
-        let (sw, sh) = (ctx.width() as f64, ctx.height() as f64);
-        if !(full.area().is_finite() && full.x1 > 0.0 && full.y1 > 0.0 && full.x0 < sw && full.y0 < sh) {
+        if !(full.area().is_finite() && full.x1 > screen.x0 && full.y1 > screen.y0 && full.x0 < screen.x1 && full.y0 < screen.y1) {
             return;
         }
         let fits = full.area() <= PIXEL_BUDGET;
         // Device pixels from a pixel to the content deciding it (`None`: anywhere).
         let margin = chain.iter().try_fold(2.0, |m, fx| looks_around(fx).map(|d| m + d / f.px));
         let region = match margin {
-            Some(m) if !fits => full.intersect(Rect::new(0.0, 0.0, sw, sh).inflate(m, m)),
+            Some(m) if !fits => full.intersect(screen.inflate(m, m)),
             _ => full,
         };
         let (x0, y0) = (region.x0.floor(), region.y0.floor());
         let (rw, rh) = ((region.x1 - x0).max(1.0), (region.y1 - y0).max(1.0));
-        let side = u16::MAX as f64;
+        // (vello_cpu panics drawing near `u16::MAX` pixels a side.)
+        let side = f64::from(crate::MAX_RASTER_SIDE);
         let k = (PIXEL_BUDGET / (rw * rh)).sqrt().min(side / rw).min(side / rh).min(1.0);
         let (w, h) = ((rw * k).ceil().clamp(1.0, side), (rh * k).ceil().clamp(1.0, side));
         // The cached raster, when the whole content was rendered at full size at this zoom.
@@ -1221,12 +1602,12 @@ impl Renderer {
             Ink::Display | Ink::RichBlack => effects::pixel::Channels::Rgb,
         };
         // De-Interlace's field lines: the rows of the document's raster grid (1 to 2400 ppi).
-        let ppi = Some(f.doc.raster_effects_ppi).filter(|v| v.is_finite()).unwrap_or(72.0).clamp(1.0, 2400.0);
+        let ppi = doc_raster_ppi(f.doc);
         // What the content reads (as the raster kept for it found it, else found now), with the
-        // channels the effects run on and, under De-Interlace, the resolution.
+        // channels the effects run on and, under De-Interlace or Rasterize, the resolution.
         let inputs = key.map(|key| {
             let reads = self.pixel_fx.get(&key).filter(|e| e.node.is(content.node)).map_or_else(|| Reads::of(content.node), |e| e.inputs.reads);
-            let interlaced = chain.iter().any(|fx| matches!(fx, RasterFx::Pixel(PixelFx::DeInterlace { .. })));
+            let interlaced = chain.iter().any(|fx| matches!(fx, RasterFx::Pixel(PixelFx::DeInterlace { .. }) | RasterFx::Rasterize(_)));
             self.raster_inputs(f, content.node, reads).with((std::mem::discriminant(&channels), interlaced.then_some(ppi.to_bits())))
         });
         let interacting = f.opts.interacting;
@@ -1243,6 +1624,7 @@ impl Renderer {
             self.stats.moved += usize::from(e.moved);
             let p = f.view * e.anchor;
             let (image, at, k) = (e.image.clone(), ((p.x + e.rel.0).round(), (p.y + e.rel.1).round()), e.k);
+            crate::paint::add_decode_failures(e.failed);
             draw_scaled(ctx, image, at, k);
             return;
         }
@@ -1251,14 +1633,45 @@ impl Renderer {
         let to_doc = view.inverse();
         let px = f.px / k;
         let frame = Frame { mt: false, view, visible: to_doc.transform_rect_bbox(Rect::new(0.0, 0.0, w, h)), px, ..*f };
-        let mut off = f.offscreen_context(wu, hu);
-        let before = self.stats.moved;
-        self.inside_layer(|r| paint(r, &mut off, &frame));
+        let line = 72.0 / ppi;
+        let (before, decoded) = (self.stats.moved, crate::paint::decode_failures());
+        // A Rasterize first in the chain draws the content on its image's own grid instead, unless
+        // that image is too large: the content is drawn once.
+        let mut rasterized = match chain.first() {
+            Some(RasterFx::Rasterize(r)) => {
+                let rect = r.image(content.bounds.unwrap_or(content.reach), line);
+                let kept = content.kept.and_then(|k| match &*k.image.borrow() {
+                    Some(KeptImage::Grid(image)) => Some(image.clone()),
+                    _ => None,
+                });
+                let image = kept.or_else(|| {
+                    let image = self.rasterize_image(f, r, rect, paint).map(std::rc::Rc::new);
+                    if let (Some(k), Some(image)) = (content.kept, &image) {
+                        *k.image.borrow_mut() = Some(KeptImage::Grid(image.clone()));
+                    }
+                    image
+                });
+                image.map(|image| (image, rect))
+            }
+            _ => None,
+        };
+        let mut pm = vello_cpu::Pixmap::new(wu, hu);
+        if rasterized.is_none() {
+            #[cfg(test)]
+            if matches!(chain.first(), Some(RasterFx::Rasterize(_))) {
+                RASTERIZED.with(|n| n.set(n.get() + 1));
+            }
+            let mut off = f.offscreen_context(wu, hu);
+            if hard_edged(&chain, px) {
+                off.set_aliasing_threshold(crate::AntiAlias::None.threshold());
+            }
+            self.inside_layer(|r| paint(r, &mut off, &frame));
+            off.flush();
+            off.render(&mut pm, &mut self.resources);
+        }
+        let failed = crate::paint::decode_failures() - decoded;
         // Content drawn over moved rasters makes a moved raster.
         let moved = self.stats.moved > before;
-        off.flush();
-        let mut pm = vello_cpu::Pixmap::new(wu, hu);
-        off.render(&mut pm, &mut self.resources);
         // What the raster is made from, for its object once it moves (`move_pixel_content`).
         let made = key.map(|_| Made {
             pixels: pm.data_as_u8_slice().to_vec(),
@@ -1268,32 +1681,66 @@ impl Renderer {
             outline: feather_outline(&chain, content, content.reach.origin()),
         });
         let (center, extent) = (content.reach.center(), 0.5 * content.reach.width().hypot(content.reach.height()));
-        let space = effects::PixelSpace { to_doc, px, center, channels, line: 72.0 / ppi, extent };
+        let space = effects::PixelSpace { to_doc, px, center, channels, line, extent };
         let (wz, hz) = (wu as usize, hu as usize);
-        for fx in chain {
+        // What the content covers after the effects run so far: Rasterize makes its image over it.
+        let mut bounds = content.bounds.unwrap_or(content.reach);
+        // The silhouette Feather and Create Clipping Mask clip to: the content's, or after a Rasterize
+        // on white without a clipping mask, its image.
+        let mut image_outline: Option<BezPath> = None;
+        for (i, fx) in chain.into_iter().enumerate() {
+            let before = bounds;
+            bounds = fx.spread(before, space.line);
+            let outline = image_outline.as_ref().map(|g| (g, FillRule::NonZero)).or(content.outline);
             match fx {
                 RasterFx::GaussianBlur { radius } => effects::pixel::gaussian_rgba(pm.data_as_u8_slice_mut(), wz, hz, radius / 2.0 / px),
                 RasterFx::Feather { radius } => {
                     effects::pixel::gaussian_rgba(pm.data_as_u8_slice_mut(), wz, hz, radius / 2.0 / px);
-                    if let Some((g, rule)) = content.outline {
+                    if let Some((g, rule)) = outline {
                         self.clip_pixels(&mut pm, &frame, g, rule);
                     }
                 }
                 RasterFx::Pixel(p) => p.apply(pm.data_as_u8_slice_mut(), wz, hz, &space),
+                RasterFx::Rasterize(r) => {
+                    match rasterized.take().filter(|_| i == 0) {
+                        Some((image, rect)) => {
+                            let (pixels, cols, rows) = &*image;
+                            r.compose(pm.data_as_u8_slice_mut(), wz, hz, &space, pixels, *cols, *rows, rect)
+                        }
+                        None => r.apply(pm.data_as_u8_slice_mut(), wz, hz, &space, before),
+                    }
+                    if let Some((g, rule)) = outline.filter(|_| r.clipping_mask) {
+                        self.clip_pixels(&mut pm, &frame, g, rule);
+                    }
+                    if r.white && !r.clipping_mask {
+                        image_outline = Some(bounds.to_path(0.1));
+                    }
+                }
                 _ => {}
             }
         }
         let image = std::sync::Arc::new(pm);
-        if let Some(((key, made), inputs)) = key.zip(made).zip(inputs) {
+        // A cancelled export drew part of the content: that raster isn't kept for later frames.
+        if !vectorcraft_doc::cancel::is_cancelled()
+            && let Some(((key, made), inputs)) = key.zip(made).zip(inputs)
+        {
             let anchor = content.reach.origin();
             let p = f.view * anchor;
             let rel = (x0 - p.x, y0 - p.y);
             let owner = content.owner.cloned().or_else(|| self.fx_owner.clone().filter(|o| std::ptr::eq(&**o, content.node)));
             let node = Drawn::of(content.node, owner.as_ref());
-            self.pixel_fx.insert(key, PixelEntry { node, linear, anchor, rel, k, image: image.clone(), made, inputs, moved, stamp });
+            self.pixel_fx.insert(key, PixelEntry { node, linear, anchor, rel, k, image: image.clone(), made, inputs, moved, failed, stamp });
             self.trim_fx_rasters(FX_RASTER_BUDGET);
         }
-        draw_scaled(ctx, image, (x0, y0), k);
+        // An image over the limits was drawn at a frame's resolution: its raster is kept.
+        match content.kept.filter(|kept| kept.image.borrow().is_none()) {
+            Some(kept) => {
+                let place = f.view.inverse() * Affine::translate((x0, y0)) * Affine::scale(1.0 / k);
+                *kept.image.borrow_mut() = Some(KeptImage::Raster(image.clone(), place));
+                if f.view == call { draw_scaled(ctx, image, (x0, y0), k) } else { draw_placed(ctx, image, call * place) }
+            }
+            None => draw_scaled(ctx, image, (x0, y0), k),
+        }
     }
 
     /// While interacting, give `content` (cache key `key`) the filtered raster an earlier frame
@@ -1303,7 +1750,7 @@ impl Renderer {
     /// (and the same Feather outline against its anchor), and whose pixels are the pixels of
     /// `content` drawn into a raster placed as that one was against its anchor. The raster is kept
     /// as `content`'s, marked moved, and is drawn at the nearest whole pixel. Content under
-    /// De-Interlace takes none.
+    /// De-Interlace, or under a Rasterize first in the chain, takes none.
     #[allow(clippy::too_many_arguments)]
     fn move_pixel_content(
         &mut self,
@@ -1315,7 +1762,8 @@ impl Renderer {
         inputs: &Inputs,
         paint: &mut dyn FnMut(&mut Self, &mut RenderContext, &Frame),
     ) {
-        if chain.iter().any(|fx| matches!(fx, RasterFx::Pixel(PixelFx::DeInterlace { .. }))) {
+        if chain.iter().any(|fx| matches!(fx, RasterFx::Pixel(PixelFx::DeInterlace { .. }))) || matches!(chain.first(), Some(RasterFx::Rasterize(_)))
+        {
             return;
         }
         let (linear, stamp, anchor) = (linear_key(f.view), self.stamp, content.reach.origin());
@@ -1339,6 +1787,9 @@ impl Renderer {
         let visible = view.inverse().transform_rect_bbox(Rect::new(0.0, 0.0, f64::from(w), f64::from(h)));
         let frame = Frame { mt: false, view, visible, ..*f };
         let mut off = f.offscreen_context(w, h);
+        if hard_edged(chain, f.px) {
+            off.set_aliasing_threshold(crate::AntiAlias::None.threshold());
+        }
         self.inside_layer(|r| paint(r, &mut off, &frame));
         off.flush();
         let mut pm = vello_cpu::Pixmap::new(w, h);
@@ -1354,17 +1805,19 @@ impl Renderer {
     }
 
     /// The inputs a raster of `n`'s content, which reads `reads`, is drawn with in frame `f`: the
-    /// color settings, the edge smoothing, the knockout `n` inherits and, while `n` holds the
-    /// isolated group, isolation mode; the pattern definitions, symbols and brush library it
-    /// reads; for images and placed documents their pixels and files, the layer's Dim Images and
-    /// the options they are drawn with; for type the fonts, whether overprinting shows
-    /// ([`crate::proof::overprints`]) and Document Setup's substitution highlights; and the
-    /// plug-ins installed, when an object in it has a plug-in effect, and when it shows symbol or
-    /// pattern art and an object in the document's symbol or pattern art has one.
+    /// color settings, the edge smoothing, the document's raster effects resolution (which a
+    /// Rasterize or De-Interlace anywhere in the content follows), the knockout `n` inherits and,
+    /// while `n` holds the isolated group, isolation mode; the pattern definitions, symbols and
+    /// brush library it reads; for images and placed documents their pixels and files, the
+    /// layer's Dim Images and the options they are drawn with; for type the fonts, whether
+    /// overprinting shows ([`crate::proof::overprints`]) and Document Setup's substitution
+    /// highlights; and the plug-ins installed, when an object in it has a plug-in effect, and
+    /// when it shows symbol or pattern art and an object in the document's symbol or pattern art
+    /// has one.
     pub(crate) fn raster_inputs(&mut self, f: &Frame, n: &Node, reads: Reads) -> Inputs {
         let doc = self.doc_inputs(f.doc);
         let mut h = DefaultHasher::new();
-        (doc.cms, f.opts.anti_alias.threshold(), self.knockout).hash(&mut h);
+        (doc.cms, f.opts.anti_alias.threshold(), self.knockout, f.doc.raster_effects_ppi.to_bits()).hash(&mut h);
         if let Some((isolated, path)) = self.isolation_path(f)
             && n.id != isolated
             && path.contains(&n.id)
@@ -1455,6 +1908,42 @@ impl Renderer {
             }
             total -= bytes;
         }
+    }
+
+    /// The image Effect › Rasterize `r` makes of the content `paint` draws over `rect` (whole
+    /// pixels of the image): drawn on the image's own grid as Object › Rasterize draws it (with
+    /// hard edges when `r` doesn't anti-alias), then given `r`'s background and color model. `None`
+    /// when it would hold more than [`PIXEL_BUDGET`] pixels or be wider or taller than
+    /// [`crate::MAX_RASTER_SIDE`]. → (pixels, columns, rows)
+    fn rasterize_image(
+        &mut self,
+        f: &Frame,
+        r: &effects::Rasterize,
+        rect: Rect,
+        paint: &mut dyn FnMut(&mut Self, &mut RenderContext, &Frame),
+    ) -> Option<(Vec<u8>, usize, usize)> {
+        let line = 72.0 / doc_raster_ppi(f.doc);
+        let (w, h) = image_size(r, rect, line)?;
+        #[cfg(test)]
+        RASTERIZED.with(|n| n.set(n.get() + 1));
+        let cell = r.cell(line);
+        let view = Affine::scale(1.0 / cell) * Affine::translate(-rect.origin().to_vec2());
+        // The effect's own anti-aliasing, whatever the view or the export draws with.
+        let anti_alias = match (r.anti_alias, r.hinted) {
+            (false, _) => crate::AntiAlias::None,
+            (true, true) => crate::AntiAlias::Type,
+            (true, false) => crate::AntiAlias::Art,
+        };
+        let opts = crate::RenderOptions { anti_alias, ..f.opts.clone() };
+        let frame = Frame { mt: false, view, visible: rect, px: cell, opts: &opts, ..*f };
+        let mut off = frame.offscreen_context(w, h);
+        self.inside_layer(|s| paint(s, &mut off, &frame));
+        off.flush();
+        let mut pm = vello_cpu::Pixmap::new(w, h);
+        off.render(&mut pm, &mut self.resources);
+        let mut pixels = pm.data_as_u8_slice().to_vec();
+        r.finish(&mut pixels);
+        Some((pixels, usize::from(w), usize::from(h)))
     }
 
     /// Keep `pm`'s pixels only inside `g` filled by `rule` as `frame` draws it (Feather's clip).
@@ -1555,8 +2044,17 @@ impl Renderer {
             let outset = n.appearance.outset();
             let orule = if item.is_fill() { rule } else { FillRule::NonZero };
             // Each item's shadows get their own cache slots.
-            let content =
-                Content { node: n, owner: None, cache: Some((j + 1) << 8), reach: ib.inflate(outset, outset), outline: Some((&outline, orule)) };
+            // Rasterize makes its image over the item's silhouette.
+            let bounds = rfx.iter().any(|fx| matches!(fx, RasterFx::Rasterize(_))).then(|| outline.bounding_box());
+            let content = Content {
+                node: n,
+                owner: None,
+                cache: Some((j + 1) << 8),
+                reach: ib.inflate(outset, outset),
+                outline: Some((&outline, orule)),
+                bounds,
+                kept: None,
+            };
             self.raster_fx(ctx, f, &content, &rfx, &mut |r, c, fr| r.paint_item(c, fr, n, item, ig, rule, ib));
             ctx.set_transform(Affine::IDENTITY);
         }
@@ -2005,6 +2503,29 @@ mod tests {
         // A fresh renderer draws the panned view the same.
         let c = Renderer::new().render(&d, 100, 100, Affine::translate((10.0, 3.0)), &opts);
         assert_eq!(b.pixels, c.pixels);
+    }
+
+    /// A blurred image that can't be decoded: every frame that draws it counts the failure
+    /// ([`crate::paint::decode_failures`]), from a new raster or from the raster kept.
+    #[test]
+    fn cached_effect_rasters_count_the_images_they_could_not_decode() {
+        use vectorcraft_doc::{ImageBlob, ImageObject, NodeKind};
+        let mut d = Document::new(100.0, 100.0);
+        // A PNG signature with nothing after it.
+        d.images.insert("cut".into(), ImageBlob::new("image/png", b"\x89PNG\r\n\x1a\n".to_vec()));
+        let im =
+            ImageObject { key: "cut".into(), width: 40, height: 40, xf: Affine::translate((30.0, 30.0)), link: None, placement: Default::default() };
+        let mut n = Node::new(d.alloc_id(), NodeKind::Image(Box::new(im)));
+        n.appearance.effects = vec![Effect { id: "blur.gaussian".into(), params: json!({"radius": 4.0}), visible: true }];
+        d.insert(Some(d.layers[0].id), 0, n).unwrap();
+        let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+        let mut r = Renderer::new();
+        for frame in 0..3 {
+            let before = crate::paint::decode_failures();
+            r.render(&d, 100, 100, Affine::IDENTITY, &opts);
+            assert!(crate::paint::decode_failures() > before, "frame {frame}");
+        }
+        assert_eq!(r.pixel_fx.len(), 1, "the later frames draw from the raster kept");
     }
 
     /// While interacting, an object that only moved draws its drop shadow and filtered content

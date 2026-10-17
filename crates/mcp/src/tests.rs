@@ -240,6 +240,13 @@ fn headless_end_to_end() {
     assert_eq!(skel["artboards"], doc["artboards"]);
     assert_eq!(call(&mut s, 42, "inspect_document", json!({"depth": -1}))["isError"], true);
 
+    // Scoping reaches the command: one node by id equals its part of the full tree;
+    // an unknown id is a tool error.
+    let r = call(&mut s, 43, "doc_inspect", json!({"ids": [id]}));
+    let one: Value = serde_json::from_str(&text_of(&r)).unwrap();
+    assert_eq!(one["nodes"], json!([rect]), "{one}");
+    assert_eq!(call(&mut s, 44, "doc_inspect", json!({"ids": [999_999]}))["isError"], true);
+
     // Screenshot returns image content (base64 PNG) and text.
     let shot_path = tmp("shot.png");
     let r = call(&mut s, 5, "screenshot", json!({"path": shot_path.to_str().unwrap()}));

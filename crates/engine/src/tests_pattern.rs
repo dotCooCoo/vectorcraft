@@ -336,6 +336,35 @@ fn pdf_export_expands_pattern_fills() {
     assert!(rep.bytes.len() > 500);
 }
 
+#[test]
+fn every_raster_export_says_when_a_pattern_holds_an_image_that_could_not_be_decoded() {
+    // A PNG whose header reads (so it places at its size) but whose pixel data is cut short, made
+    // into a pattern and then cleared from the page: only the pattern's tile draws it.
+    let mut s = session();
+    let mut png = Vec::new();
+    image::RgbaImage::from_pixel(20, 20, image::Rgba([200, 30, 30, 255]))
+        .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+        .unwrap();
+    let idat = png.windows(4).position(|w| w == b"IDAT").unwrap();
+    png.truncate(idat + 8);
+    let placed = s.execute("file.place", &json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&png)})).unwrap();
+    let placed = NodeId(placed["ids"][0].as_u64().unwrap());
+    sel(&mut s, &[placed]);
+    s.execute("object.pattern.make", &json!({"name": "Cut", "width": 20, "height": 20})).unwrap();
+    s.execute("object.pattern.done", &json!({})).unwrap();
+    sel(&mut s, &[placed]);
+    s.execute("edit.clear", &json!({})).unwrap();
+    assert!(doc(&s).node(placed).is_none());
+    let big = rect(&mut s, 100.0, 100.0, 50.0, 50.0);
+    s.execute("paint.setFill", &json!({"ids": [big.0], "swatch": "Cut"})).unwrap();
+    // The first export draws the pattern's tile, and the later ones draw it from the tile kept.
+    for n in 0..3 {
+        let r = s.execute("document.export", &json!({"format": "png", "background": "transparent"})).unwrap();
+        let warnings = r["warnings"].as_array().cloned().unwrap_or_default();
+        assert!(warnings.iter().any(|w| w.as_str().is_some_and(|w| w.contains("couldn't be decoded"))), "export {n}: {r}");
+    }
+}
+
 // ---------- repeat ----------
 
 #[test]

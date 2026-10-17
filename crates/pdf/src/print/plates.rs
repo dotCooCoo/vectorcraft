@@ -42,16 +42,17 @@ pub fn print_inks(doc: &Document, set: &PrintSettings) -> (Vec<PrintInk>, Vec<St
     (list, warnings)
 }
 
-/// The colour settings separations convert with: the active ones, with the printer profile as
-/// their CMYK profile when it is a CMYK one.
-fn separation_cms(set: &PrintSettings) -> Arc<Cms> {
-    let active = cms::active();
+/// The colour settings separations of `doc` convert with: the document's colour spaces
+/// ([`crate::output::document_cms`]), with the printer profile as their CMYK profile when it is a
+/// CMYK one.
+fn separation_cms(doc: &Document, set: &PrintSettings) -> Arc<Cms> {
+    let (own, _) = crate::output::document_cms(doc);
     match cms::profile(set.color.profile.trim()) {
-        Some(p) if p.kind == ProfileKind::Cmyk && cms::canonical_name(&active.settings().cmyk) != p.name => {
-            let settings = cms::ColorSettings { cmyk: p.name, ..active.settings().clone() };
-            Cms::new(&settings).map_or(active, Arc::new)
+        Some(p) if p.kind == ProfileKind::Cmyk && cms::canonical_name(&own.settings().cmyk) != p.name => {
+            let settings = cms::ColorSettings { cmyk: p.name, ..own.settings().clone() };
+            Cms::new(&settings).map_or(own, Arc::new)
         }
-        _ => active,
+        _ => own,
     }
 }
 
@@ -64,7 +65,7 @@ pub(crate) struct Separator<'a> {
 
 impl<'a> Separator<'a> {
     pub fn new(doc: &'a Document, set: &'a PrintSettings) -> Self {
-        Self { doc, cms: separation_cms(set), set }
+        Self { doc, cms: separation_cms(doc, set), set }
     }
 
     /// How much of ink `plate` colour `c` (with swatch link `link`) prints, 0..1.

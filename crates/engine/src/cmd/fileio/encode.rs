@@ -385,7 +385,7 @@ pub fn encode(doc: &Document, format: &str, p: &Value) -> Result<Vec<u8>> {
 
 /// Like [`encode`], also returning the encoder's warnings (PDF and SVG: options not applied yet,
 /// features approximated or left out; every format that draws type: fonts written in the fallback
-/// font).
+/// font; PDF, EPS, SVG, EMF, WMF and the raster formats: type that doesn't fit its frame).
 pub fn encode_with_warnings(doc: &Document, format: &str, p: &Value) -> Result<(Vec<u8>, Vec<String>)> {
     let f = super::writable(C, Some(format), None)?;
     encode_all(doc, f.id, p)?.single(f)
@@ -413,10 +413,14 @@ fn encode_all_of(doc: &Document, format: &str, p: &Value) -> Result<Encoded> {
     let f = super::writable(C, Some(format), None)?;
     let failed = vectorcraft_render::decode_failures();
     let mut enc = encode_files(doc, f, p)?;
+    // Baking, flattening and drawing stop early when cancelled and leave a truncated result.
+    vectorcraft_doc::cancel::check()?;
     // An image the renderer couldn't decode draws nothing: say so rather than write a picture
     // that silently lacks it.
-    if f.raster && vectorcraft_render::decode_failures() > failed {
-        enc.warnings.push("an image couldn't be decoded and is missing from the picture".into());
+    if f.raster
+        && let Some(w) = crate::cmd::rasterfx::undecoded_warning(failed)
+    {
+        enc.warnings.push(w.into());
     }
     // Formats that draw type: missing fonts come out in the fallback font (PDF and SVG say so
     // themselves: SVG only when it outlines or embeds fonts).
@@ -502,7 +506,10 @@ fn encode_files(doc: &Document, f: &Format, p: &Value) -> Result<Encoded> {
             };
             let mut enc = Encoded::default();
             let mut renderer = vectorcraft_render::Renderer::new();
-            for b in chosen {
+            let total = chosen.len() as u64;
+            for (done, b) in chosen.into_iter().enumerate() {
+                vectorcraft_doc::cancel::check()?;
+                vectorcraft_doc::cancel::progress(done as u64, total, &format!("Rendering artboard {} of {total}", done + 1));
                 let region = doc.artboards.get(b).ok_or_else(|| bad(C, format!("no artboard {}", b + 1)))?.rect;
                 check_format_size(f, region.width() * scale, region.height() * scale)?;
                 vectorcraft_render::raster_size(region, scale).map_err(|e| bad(C, e))?;
@@ -522,6 +529,8 @@ fn encode_files(doc: &Document, f: &Format, p: &Value) -> Result<Encoded> {
             if enc.files.is_empty() {
                 return Err(bad(C, "the document has no artboard"));
             }
+            let regions: Vec<Rect> = enc.files.iter().filter_map(|(b, _)| b.and_then(|b| doc.artboards.get(b))).map(|a| a.rect).collect();
+            enc.warnings.extend(crate::cmd::fonts::export_overflow_warning(doc, &doc.layers, Some(&regions)));
             if format == RasterFormat::WebP && o.lossless == Some(false) {
                 enc.warnings.push("lossy WebP isn't available yet: the file is lossless (exact, but larger)".into());
             }

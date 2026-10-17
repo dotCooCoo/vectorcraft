@@ -516,6 +516,21 @@ fn type_is_written_as_text_objects() {
     assert!(!out.warnings.iter().any(|w| w == TYPE), "{:?}", out.warnings);
 }
 
+/// A legacy `.ai` text object names a font, not a setting of its variation axes: type with
+/// Variable Font settings is written in the font's style, with the warning that they are left out.
+#[test]
+fn variable_font_settings_are_warned_as_left_out() {
+    let mut doc = typed();
+    assert!(!write(&doc).warnings.iter().any(|w| w == TYPE_ATTRIBUTES));
+    let id = texts(&doc)[0].0.id;
+    if let Some(NodeKind::Text(t)) = doc.node_mut(id).map(|n| &mut n.kind) {
+        t.runs[0].style.font_axes.insert("wght".into(), 650.0);
+    }
+    let out = write(&doc);
+    assert!(out.warnings.iter().any(|w| w == TYPE_ATTRIBUTES), "{:?}", out.warnings);
+    assert!(String::from_utf8(out.bytes).unwrap().contains("(H\\351llo \\2005\\r) Tx\n"), "still written as text");
+}
+
 #[test]
 fn type_reads_back_as_text() {
     use vectorcraft_doc::{Justify, TextKind};

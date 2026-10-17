@@ -22,6 +22,15 @@ pub fn specs() -> Vec<CommandSpec> {
             create
         ),
         cmd!(
+            "text.thread.add",
+            "Thread Text",
+            [],
+            None,
+            "{from, to?, rect?: [x, y, width, height], at?: [x, y]} thread area type `from` (a click on its out port) into one more frame, put after it in its thread: closed path or area type `to`, a new rectangle `rect`, or a new frame of `from`'s shape and size with its top-left at `at` (give one of the three) → {id}; the two frames are selected",
+            has_doc,
+            add
+        ),
+        cmd!(
             "text.thread.releaseSelection",
             "Release Selection",
             ["Type", "Threaded Text"],
@@ -203,6 +212,90 @@ fn create(s: &mut Session, _: &Value) -> Result<Value> {
         Ok(())
     })?;
     Ok(json!({ "ids": out.iter().map(|i| i.0).collect::<Vec<_>>() }))
+}
+
+/// `text.thread.add`: the out port's loaded text, placed.
+fn add(s: &mut Session, p: &Value) -> Result<Value> {
+    const C: &str = "text.thread.add";
+    let given = |k: &str| p.get(k).filter(|v| !v.is_null());
+    let from = checked_id(s, given("from").unwrap_or(&Value::Null), C)?;
+    let d = &s.doc()?.doc;
+    let src = text_of(d, from).ok_or_else(|| bad(C, "`from` must be area type"))?;
+    let style = src.first_style();
+    // The frame to thread into: an existing object (`to`), or a new one beside `from`.
+    let (to, new) = match (given("to"), given("rect"), given("at")) {
+        (Some(v), None, None) => {
+            let to = checked_id(s, v, C)?;
+            let parent = d.parent_of(to).and_then(|i| d.node(i));
+            let frame = text_of(d, to).is_some() || d.node(to).is_some_and(|n| frame_from_path(n, style.clone()).is_some());
+            if to == from || !frame || parent.is_some_and(|n| matches!(n.kind, NodeKind::Compound { .. })) {
+                return Err(bad(C, "`to` must be a closed path or area type other than `from`"));
+            }
+            if d.text_threads.iter().any(|t| t.contains(&to)) {
+                return Err(bad(C, "`to` is already threaded"));
+            }
+            (to, None)
+        }
+        (None, Some(v), None) => {
+            let [x, y, w, h] = finite_numbers(v)
+                .filter(|[_, _, w, h]| *w > 0.0 && *h > 0.0)
+                .ok_or_else(|| bad(C, "`rect` must be [x, y, width, height] with a positive size"))?;
+            let frame = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(0.0, 0.0, w, h));
+            (NodeId(0), Some(empty_frame(src, style.clone(), frame, vectorcraft_geom::Affine::translate((x, y)))))
+        }
+        (None, None, Some(v)) => {
+            let [x, y] = finite_numbers(v).ok_or_else(|| bad(C, "`at` must be [x, y]"))?;
+            let TextKind::Area { frame } = &src.kind else { return Err(bad(C, "`from` must be area type")) };
+            let b = frame.bounds().map(|b| src.xf.transform_rect_bbox(b)).ok_or_else(|| bad(C, "`from` has an empty frame"))?;
+            let xf = vectorcraft_geom::Affine::translate((x - b.x0, y - b.y0)) * src.xf;
+            (NodeId(0), Some(empty_frame(src, style.clone(), frame.clone(), xf)))
+        }
+        _ => return Err(bad(C, "give one of `to`, `rect` or `at`")),
+    };
+    let appearance = d.node(from).map(|n| n.appearance.clone());
+    let id = s.edit("Thread Text", |d, sel| {
+        let to = match new {
+            Some(t) => {
+                let (parent, idx, _) = d.position(from).ok_or(EngineError::NoNode(from))?;
+                let id = d.alloc_id();
+                let mut n = Node::new(id, NodeKind::Text(Box::new(t)));
+                if let Some(a) = appearance {
+                    n.appearance = a;
+                }
+                d.insert(parent, idx + 1, n)?;
+                id
+            }
+            None => {
+                if text_of(d, to).is_none() {
+                    let n = d.node(to).cloned().ok_or(EngineError::NoNode(to))?;
+                    *d.node_mut(to).ok_or(EngineError::NoNode(to))? = frame_from_path(&n, style).ok_or_else(|| bad(C, "not a closed path"))?;
+                }
+                to
+            }
+        };
+        match d.text_threads.iter_mut().find(|t| t.contains(&from)) {
+            Some(t) => {
+                let at = t.iter().position(|x| *x == from).map_or(t.len(), |i| i + 1);
+                t.insert(at, to);
+            }
+            None => d.text_threads.push(vec![from, to]),
+        }
+        // `to` is new or changed, so [`reflow`] flows the story into it after this edit.
+        sel.set([from, to]);
+        Ok(to)
+    })?;
+    Ok(json!({ "id": id.0 }))
+}
+
+/// An empty area-type frame `frame` placed by `xf`, with the type options of `src`.
+fn empty_frame(src: &TextObject, style: vectorcraft_doc::CharStyle, frame: vectorcraft_geom::PathData, xf: vectorcraft_geom::Affine) -> TextObject {
+    let mut t = src.clone();
+    t.runs = vec![TextRun { text: String::new(), style, inline: None }];
+    t.set_all_paras(src.para_at(0).clone());
+    t.kind = TextKind::Area { frame };
+    t.xf = xf;
+    refresh_bounds(&mut t);
+    t
 }
 
 /// Give a node a fresh allocation so [`reflow`] sees its thread as changed.
@@ -411,6 +504,80 @@ mod tests {
             let runs: usize = ids.iter().filter_map(|id| text_of(d, NodeId(*id))).map(|t| t.runs.len()).sum();
             println!("{runs} runs in 8 frames: typing {typing:.1} ms, a move below them {edit:.3} ms, a drag frame {frame:.3} ms (medians)");
         }
+    }
+
+    fn new_id(v: Value) -> u64 {
+        v["id"].as_u64().unwrap()
+    }
+
+    fn threads(s: &Session) -> Vec<Vec<u64>> {
+        s.doc().unwrap().doc.text_threads.iter().map(|t| t.iter().map(|i| i.0).collect()).collect()
+    }
+
+    /// Bounds of area type `id`'s frame on the page.
+    fn frame_box(s: &Session, id: u64) -> vectorcraft_geom::Rect {
+        let Some(t) = text_of(&s.doc().unwrap().doc, NodeId(id)) else { panic!("not area type") };
+        let TextKind::Area { frame } = &t.kind else { panic!("not area type") };
+        t.xf.transform_rect_bbox(frame.bounds().unwrap())
+    }
+
+    /// #2572: the text loaded from an out port threads into a closed path, into a new frame of the
+    /// first one's shape and size at a point, and into a new rectangle, each in one undo step.
+    #[test]
+    fn add_threads_into_a_path_a_frame_at_a_point_and_a_rectangle() {
+        let (mut s, a, b) = setup();
+        assert_eq!(new_id(s.execute("text.thread.add", &json!({"from": a, "to": b})).unwrap()), b);
+        assert_eq!(threads(&s), [[a, b]]);
+        assert!(!text(&s, b).is_empty(), "the overflow flowed into the path");
+        assert_eq!(format!("{}{}", text(&s, a), text(&s, b)), TEXT.repeat(4));
+        assert_eq!(s.doc().unwrap().selection.objects, [NodeId(a), NodeId(b)]);
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert!(threads(&s).is_empty());
+        assert!(matches!(s.doc().unwrap().doc.node(NodeId(b)).unwrap().kind, NodeKind::Path { .. }), "undo gives the path back");
+
+        let c = new_id(s.execute("text.thread.add", &json!({"from": a, "at": [400, 200]})).unwrap());
+        assert_eq!(frame_box(&s, c), vectorcraft_geom::Rect::new(400.0, 200.0, 550.0, 260.0), "the first frame's size, its top-left at the click");
+        let d = new_id(s.execute("text.thread.add", &json!({"from": c, "rect": [10, 100, 300, 150]})).unwrap());
+        assert_eq!(frame_box(&s, d), vectorcraft_geom::Rect::new(10.0, 100.0, 310.0, 250.0));
+        assert_eq!(threads(&s), [[a, c, d]], "each new frame comes after the one it was threaded from");
+        assert_eq!(format!("{}{}{}", text(&s, a), text(&s, c), text(&s, d)), TEXT.repeat(4));
+        assert!(!text(&s, d).is_empty());
+        // A frame threaded from the middle of a thread goes in after it.
+        let e = new_id(s.execute("text.thread.add", &json!({"from": a, "at": [0, 0]})).unwrap());
+        assert_eq!(threads(&s), [[a, e, c, d]]);
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert!(s.doc().unwrap().doc.node(NodeId(e)).is_none());
+        assert_eq!(threads(&s), [[a, c, d]]);
+    }
+
+    #[test]
+    fn add_refuses_bad_params_and_leaves_the_document_alone() {
+        let (mut s, a, b) = setup();
+        let line = new_id(s.execute("shape.line", &json!({"x1": 0, "y1": 280, "x2": 50, "y2": 290})).unwrap());
+        let before = s.doc().unwrap().doc.clone();
+        for p in [
+            json!({"to": b}),
+            json!({"from": b, "at": [0, 0]}),
+            json!({"from": 9999, "at": [0, 0]}),
+            json!({"from": -1, "at": [0, 0]}),
+            json!({"from": a}),
+            json!({"from": a, "to": b, "at": [0, 0]}),
+            json!({"from": a, "to": a}),
+            json!({"from": a, "to": line}),
+            json!({"from": a, "to": 9999}),
+            json!({"from": a, "at": [0]}),
+            json!({"from": a, "at": ["1", 2]}),
+            json!({"from": a, "rect": [0, 0, -10, 10]}),
+            json!({"from": a, "rect": [0, 0, 10, 0]}),
+            json!({"from": a, "rect": [0, 0, 10]}),
+            json!({"from": a, "rect": "big"}),
+        ] {
+            assert!(s.execute("text.thread.add", &p).is_err(), "{p} was accepted");
+            assert!(std::sync::Arc::ptr_eq(&s.doc().unwrap().doc, &before), "{p} changed the document");
+        }
+        s.execute("text.thread.add", &json!({"from": a, "to": b})).unwrap();
+        let c = new_id(s.execute("text.create", &json!({"x": 10, "y": 200, "text": "x", "area": {"width": 50, "height": 20}})).unwrap());
+        assert!(s.execute("text.thread.add", &json!({"from": c, "to": b})).is_err(), "a frame already threaded");
     }
 
     #[test]

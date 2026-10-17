@@ -186,7 +186,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Batch…",
             [],
             None,
-            "{commands: [{command, params}] (the action's steps), source?: folder (default) | datasets, folder? (required for folder: the source folder), includeSubdirs?: false, destination?: none (default: leave each file open) | saveAndClose (save over the source and close) | folder (save or export into destinationFolder and close), destinationFolder? (required when destination is folder; also the folder Override Save/Export write into), overrideOpen?: true (skip document.open / file.open steps: the batch opens each source file), overrideSave?: true (point document.save / file.save / file.saveAs at destinationFolder/{stem}.{ext}), overrideExport?: true (point document.export / document.exportForScreens / document.exportSelection the same way), stopOnError?: true, label?} play the commands on every readable file in folder (and its subfolders when includeSubdirs), or on every data set of the open document (source: datasets; File + Data Set Name for Override Save/Export). Caps: 500 files or data sets, 8 folder levels, 256 steps. Batches cannot nest. → {processed: [{path|dataset, result|error}…], count, failed, stopped}",
+            "{commands: [{command, params}] (the action's steps), source?: folder (default) | datasets, folder? (required for folder: the source folder), includeSubdirs?: false, destination?: none (default: leave each file open) | saveAndClose (save over the source and close) | folder (save or export into destinationFolder and close), destinationFolder? (required when destination is folder; also the folder Override Save/Export write into), overrideOpen?: true (skip document.open / file.open steps: the batch opens each source file), overrideSave?: true (point document.save / file.save / file.saveAs at destinationFolder/{stem}.{ext}), overrideExport?: true (point document.export / document.exportForScreens / document.exportSelection the same way), stopOnError?: true, label?} play the commands on every readable file in folder (and its subfolders when includeSubdirs), or on every data set of the open document (source: datasets; File + Data Set Name for the folder destination and Override Save/Export, with `/`, `\\` and `:` in the data set's name as `-`, and `-2`, `-3`… added to a name already used). Caps: 500 files or data sets, 8 folder levels, 256 steps. Batches cannot nest. → {processed: [{path|dataset, result|error}…], count, failed, stopped}",
             always,
             action_batch::action_batch
         ),
@@ -635,7 +635,7 @@ pub const FORMATS: &[Format] = &[
     Format {
         id: "eps",
         label: "EPS",
-        extensions: &["eps"],
+        extensions: &["eps", "epsf"],
         mime: "application/postscript",
         read: true,
         write: true,
@@ -651,6 +651,8 @@ pub const FORMATS: &[Format] = &[
     reader("affinity", "Affinity", &["af", "afdesign", "afpub"], "application/vnd.affinity", false),
     // Photoshop's large document format: read like a PSD (its merged image), never written.
     reader("psb", "PSB", &["psb"], "image/x-psb", true),
+    // PostScript programs, read as EPS files are; Print to PostScript writes them, exports don't.
+    reader("ps", "PostScript", &["ps"], "application/postscript", false),
 ];
 
 /// Every extension `document.open` reads (the "All readable files" filter of open dialogs).
@@ -677,6 +679,8 @@ pub const OPEN_EXTS: &[&str] = &[
     "emf",
     "wmf",
     "eps",
+    "epsf",
+    "ps",
     "af",
     "afdesign",
     "afpub",
@@ -684,8 +688,9 @@ pub const OPEN_EXTS: &[&str] = &[
 
 /// Extensions in [`OPEN_EXTS`] the desktop packaging doesn't associate with VectorCraft: Photoshop
 /// documents belong to raster editors, so Finder and file managers don't offer a vector app for
-/// them (File › Open and Place still read them).
-pub const UNASSOCIATED_EXTS: &[&str] = &["psd", "psb"];
+/// them, and the packaging declares no `.epsf` or `.ps` type (File › Open and Place still read
+/// them all).
+pub const UNASSOCIATED_EXTS: &[&str] = &["psd", "psb", "epsf", "ps"];
 
 /// The extension that picks each writable format when exporting (the format's first; PNG-8 shares
 /// `.png` with PNG, so `.png` comes once), in [`FORMATS`] order.
@@ -702,7 +707,10 @@ pub fn export_extensions() -> Vec<&'static str> {
 /// Text files: File → Place sets them as area type (Text Import Options).
 pub const TEXT_EXTS: &[&str] = &["txt"];
 
-/// Every extension File → Place reads: [`OPEN_EXTS`] and [`TEXT_EXTS`].
+/// RTF files: File → Place sets them as area type with their formatting.
+pub const RTF_EXTS: &[&str] = &["rtf"];
+
+/// Every extension File → Place reads: [`OPEN_EXTS`], [`TEXT_EXTS`] and [`RTF_EXTS`].
 pub const PLACE_EXTS: &[&str] = &[
     "vectorcraft",
     "drawcraft",
@@ -726,10 +734,13 @@ pub const PLACE_EXTS: &[&str] = &[
     "emf",
     "wmf",
     "eps",
+    "epsf",
+    "ps",
     "af",
     "afdesign",
     "afpub",
     "txt",
+    "rtf",
 ];
 
 /// One dialog filter per readable format.
@@ -753,11 +764,13 @@ pub fn open_filters() -> impl Iterator<Item = (&'static str, &'static [&'static 
         .chain(std::iter::once(("Plug-ins", super::plugin::EXTS)))
 }
 
-/// File → Place dialog filters: "All placeable files", then one per placeable format, then text.
+/// File → Place dialog filters: "All placeable files", then one per placeable format, then text
+/// and RTF.
 pub fn place_filters() -> impl Iterator<Item = (&'static str, &'static [&'static str])> {
     std::iter::once(("All placeable files", PLACE_EXTS))
         .chain(format_filters().filter(|(_, exts)| exts.iter().all(|ext| PLACE_EXTS.contains(ext))))
         .chain(std::iter::once(("Text", TEXT_EXTS)))
+        .chain(std::iter::once(("RTF", RTF_EXTS)))
 }
 
 /// A format by id or extension (any case, leading dot allowed; `jpeg` finds `jpg`).
@@ -861,6 +874,8 @@ pub(crate) fn read_file_head(path: &str, max: usize) -> Result<Vec<u8>> {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn write_file(path: &str, bytes: &[u8]) -> Result<()> {
+    // Work that stops early for a cancel can leave a truncated result: none of it is written.
+    vectorcraft_doc::cancel::check()?;
     may_write(path)?;
     // Never a half-written file: see [`write_atomic`].
     write_atomic(std::path::Path::new(path), bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))
@@ -869,6 +884,7 @@ pub(crate) fn write_file(path: &str, bytes: &[u8]) -> Result<()> {
 /// [`write_file`] with what `fill` writes into the file (a save streamed into it).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn write_file_with(path: &str, fill: &mut dyn FnMut(&mut dyn std::io::Write) -> std::io::Result<()>) -> Result<()> {
+    vectorcraft_doc::cancel::check()?;
     may_write(path)?;
     vectorcraft_format::write_atomic_with(std::path::Path::new(path), |f| fill(f)).map_err(|e| EngineError::Other(format!("{path}: {e}")))
 }
@@ -1073,14 +1089,18 @@ pub fn artboard_file_names(doc: &vectorcraft_doc::Document, boards: &[usize]) ->
 /// characters as `-`, the fallback when it is empty, and `-2`, `-3`… after a name already used
 /// (compared without case).
 pub(crate) fn unique_file_names<'a>(names: impl IntoIterator<Item = (&'a str, String)>) -> Vec<String> {
+    distinct_names(names.into_iter().map(|(name, fallback)| {
+        let base: String = name.chars().map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '-' }).collect();
+        if base.is_empty() { fallback } else { base }
+    }))
+}
+
+/// `names` with `-2`, `-3`… after a name already used (compared without case).
+fn distinct_names(names: impl IntoIterator<Item = String>) -> Vec<String> {
     let mut taken = std::collections::HashSet::new();
     names
         .into_iter()
-        .map(|(name, fallback)| {
-            let mut base: String = name.chars().map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '-' }).collect();
-            if base.is_empty() {
-                base = fallback;
-            }
+        .map(|base| {
             let mut name = base.clone();
             for i in 2.. {
                 if taken.insert(name.to_lowercase()) {

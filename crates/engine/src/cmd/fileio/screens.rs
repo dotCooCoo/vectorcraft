@@ -148,9 +148,9 @@ fn safe_name(s: &str) -> Option<String> {
     (!n.trim_matches('.').is_empty()).then_some(n)
 }
 
-/// Text that goes into a file name (prefix, suffix): path separators and `:` become `-`, so it can't
-/// start a folder or climb out of the export folder.
-fn file_part(s: &str) -> String {
+/// Text that goes into a file name (prefix, suffix, a data set's name in Batch): path separators and
+/// `:` become `-`, so the name cannot make a subfolder or point outside the folder the file is written to.
+pub(super) fn file_part(s: &str) -> String {
     s.chars().map(|c| if matches!(c, '/' | '\\' | ':') { '-' } else { c }).collect()
 }
 

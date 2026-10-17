@@ -1171,6 +1171,67 @@ mod tests {
         assert_eq!(kind(&app), None, "another tool has its own Enter");
     }
 
+    /// A drag with the Selection tool, then Enter: the Move dialog opens on the drag's offset, and
+    /// Enter is its OK. With Copy ticked once, each Enter, Enter after that makes another copy at
+    /// the same spacing.
+    #[test]
+    fn enter_after_a_drag_repeats_its_offset() {
+        use vectorcraft_tools::{PointerEvent, PointerKind};
+        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        app.session.execute("file.new", &json!({"width": 800, "height": 300})).unwrap();
+        app.session.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap();
+        let ctx = egui::Context::default();
+        let enter = || egui::Event::Key { key: Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE };
+        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+            let screen_rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1280.0, 800.0)));
+            let mut out = ctx.run_ui(egui::RawInput { events, screen_rect, ..Default::default() }, |ui| {
+                app.logic(ui.ctx());
+                app.ui(ui);
+            });
+            out.textures_delta.clear();
+        };
+        let lefts = |app: &VectorcraftApp| {
+            let kids = app.session.doc().unwrap().doc.layers[0].children().unwrap();
+            kids.iter().map(|n| n.geometric_bounds().unwrap().x0.round()).collect::<Vec<_>>()
+        };
+        app.select_tool("selection");
+        let view = app.view_info();
+        for (kind, x, y) in
+            [(PointerKind::Down, 20.0, 20.0), (PointerKind::Drag, 40.0, 20.0), (PointerKind::Drag, 60.0, 20.0), (PointerKind::Up, 60.0, 20.0)]
+        {
+            app.session.pointer(&PointerEvent::new(kind, x, y), view).unwrap();
+        }
+        let [moved] = lefts(&app)[..] else { panic!("one rectangle") };
+        let step = moved - 10.0;
+        assert!(step > 0.0);
+        // Keys reach the canvas from the second frame on.
+        frame(&mut app, vec![]);
+        frame(&mut app, vec![enter()]);
+        let d = app.ui.dialog.as_mut().expect("Enter opens Move");
+        assert_eq!((d.kind.as_str(), d.f64("dx", f64::NAN).round(), d.f64("dy", f64::NAN)), ("move", step, 0.0));
+        d.fields.insert("copy".into(), json!(true));
+        frame(&mut app, vec![enter()]);
+        for _ in 0..2 {
+            frame(&mut app, vec![enter()]);
+            frame(&mut app, vec![enter()]);
+        }
+        assert!(app.ui.dialog.is_none());
+        assert_eq!(lefts(&app), (0..4).map(|i| moved + step * f64::from(i)).collect::<Vec<_>>());
+        // With Preview on too, each Enter, Enter still makes one copy, and one undo step.
+        frame(&mut app, vec![enter()]);
+        app.ui.dialog.as_mut().expect("Move").fields.insert("preview".into(), json!(true));
+        frame(&mut app, vec![enter()]);
+        let steps = app.session.active().unwrap().history.undo.len();
+        for _ in 0..2 {
+            frame(&mut app, vec![enter()]);
+            assert!(app.ui.dialog.as_ref().is_some_and(|d| d.bool("preview") && d.bool("copy")) && app.session.in_interaction());
+            frame(&mut app, vec![enter()]);
+            assert!(app.ui.dialog.is_none() && !app.session.in_interaction());
+        }
+        assert_eq!(app.session.active().unwrap().history.undo.len(), steps + 2);
+        assert_eq!(lefts(&app), (0..7).map(|i| moved + step * f64::from(i)).collect::<Vec<_>>());
+    }
+
     /// #1661: typed `[` and `]` reach the tool that takes them: the Blob Brush's and the Eraser's
     /// size (Option or AltGr brackets too), the stroke weight left as it is; other tools leave them
     /// alone.

@@ -640,3 +640,35 @@ fn floating_group_paints_an_opaque_background() {
     assert!(opaque_at(pos2(690.0, 210.0)), "tab strip is transparent");
     assert!(opaque_at(pos2(690.0, 610.0)), "body is transparent");
 }
+
+/// Library panels (#2603) float in the shared layout titled by their libraries' names, and their
+/// menu's Persistent item keeps them for the next launch.
+#[test]
+fn library_panels_float_with_their_names_and_a_persistent_menu_item() {
+    let mut app = app();
+    app.run("file.new", json!({})).unwrap();
+    for (library, x) in [("pastels", 40), ("brights", 420)] {
+        let panel = format!("library:swatches:{library}");
+        app.run("window.swatchLibrary", json!({"library": library})).unwrap();
+        app.run("window.panel.float", json!({"panel": panel, "x": x, "y": 100})).unwrap();
+    }
+    let mut h = harness(app, vec2(1280.0, 900.0));
+    for name in ["Pastels", "Brights"] {
+        assert!(h.query_all_by_label(name).next().is_some(), "the {name} tab");
+    }
+    let click = |h: &mut Harness<'static, VectorcraftApp>, at: Pos2| {
+        h.hover_at(at);
+        h.run_steps(1);
+        for pressed in [true, false] {
+            h.event(Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Modifiers::NONE });
+            h.run_steps(1);
+        }
+        h.run_steps(2);
+    };
+    let menu = h.query_all_by_label("Panel menu").find(|node| node.rect().center().x < 400.0).expect("the Pastels panel's menu").rect().center();
+    click(&mut h, menu);
+    let item = h.query_all_by_label("   Persistent").next().expect("Persistent is in the panel menu").rect().center();
+    click(&mut h, item);
+    let persistent: Vec<&str> = h.state().ui.library_panels.iter().filter(|p| p.persistent).map(|p| p.id.as_str()).collect();
+    assert_eq!(persistent, ["pastels"]);
+}

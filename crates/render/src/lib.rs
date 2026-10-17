@@ -64,6 +64,19 @@ pub fn effect_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
     }
 }
 
+/// Bounds of what `n` draws with its own and its members' geometry effects applied and with the
+/// reach of its own and its members' raster effects, measured as [`Node::visual_bounds_with`]
+/// measures art without effects: what Object › Rasterize makes its image over.
+pub fn drawn_bounds(doc: &Document, n: &Node) -> Option<Rect> {
+    fx::painted_reach(&doc.symbol_boxes(), n)
+}
+
+/// The outline, with `n`'s geometry effects applied, that the canvas clips `n`'s Rasterize with
+/// Create Clipping Mask to. Object › Rasterize's clipping mask follows it.
+pub fn drawn_outline(doc: &Document, n: &Node) -> Option<(BezPath, FillRule)> {
+    fx::drawn_outline(doc, n)
+}
+
 /// Largest raster an export may ask [`Renderer::render_region`] for, per side. The CPU rasteriser
 /// addresses at most `u16::MAX` pixels per side (and panics at that edge).
 pub const MAX_RASTER_SIDE: u32 = 32_768;
@@ -1129,6 +1142,10 @@ impl Renderer {
 
     fn draw_node(&mut self, ctx: &mut RenderContext, f: &Frame, n: &Node, force: bool) {
         if !force && (!n.visible || f.opts.hidden.contains(&n.id)) {
+            return;
+        }
+        // A cancelled export stops drawing; whoever asked for the picture drops it (see `cancel`).
+        if vectorcraft_doc::cancel::is_cancelled() {
             return;
         }
         if force {
@@ -2297,9 +2314,10 @@ fn text_geom_snapped(t: &TextObject, snap: Option<Affine>) -> TextGeom {
         .runs
         .iter()
         .map(|r| match db.resolve(&r.style.font_family, &r.style.font_style) {
-            // The version the type names, when it's installed (see `FontDb::face_version`).
+            // The version the type names, when it's installed (see `FontDb::face_version`), at its
+            // Variable Font settings (see `FontDb::style_face`).
             Some((f, m)) => {
-                let face = db.face_version(&r.style.font_family, &r.style.font_style, r.style.font_version.as_deref()).unwrap_or(f);
+                let face = db.style_face(&r.style).unwrap_or(f);
                 (m == vectorcraft_text::FontMatch::Missing, Some(face.id()))
             }
             None => (true, None),
@@ -2422,6 +2440,8 @@ mod tests_memory;
 mod tests_objectfx;
 #[cfg(test)]
 mod tests_placed_document;
+#[cfg(test)]
+mod tests_rasterize;
 #[cfg(test)]
 mod tests_setup;
 #[cfg(test)]

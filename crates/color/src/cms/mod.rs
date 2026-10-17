@@ -257,9 +257,25 @@ pub fn register_icc(bytes: &[u8], name: Option<String>) -> Result<ProfileInfo, C
     Ok(info)
 }
 
-/// A number that changes whenever [`register_icc`] registers a profile: conversions through a
-/// profile looked up by name, such as those of a [`ProofTarget::Cmyk`] proof, give the same colors
-/// as long as the number stays the same.
+/// Forget a profile [`register_icc`] registered (by its name); `false` when there is none of that
+/// name (the built-in profiles can't be removed). Settings that name it no longer resolve, so a
+/// caller checks [`active_settings`] first.
+pub fn unregister_icc(name: &str) -> bool {
+    let mut u = USER.write().unwrap_or_else(|e| e.into_inner());
+    let before = u.len();
+    u.retain(|x| x.name != name);
+    let removed = u.len() != before;
+    drop(u);
+    if removed {
+        clear_proof_cache();
+        PROFILES_GENERATION.fetch_add(1, Ordering::Relaxed);
+    }
+    removed
+}
+
+/// A number that changes whenever [`register_icc`] registers a profile or [`unregister_icc`]
+/// removes one: conversions through a profile looked up by name, such as those of a
+/// [`ProofTarget::Cmyk`] proof, give the same colors as long as the number stays the same.
 pub fn profiles_generation() -> u64 {
     PROFILES_GENERATION.load(Ordering::Relaxed)
 }

@@ -192,6 +192,7 @@ pub type PickOpen = Box<dyn FnMut(&FilePick) -> Option<String>>;
 pub type PickSave = Box<dyn FnMut(&FilePick) -> Option<String>>;
 pub type ReadFn = Box<dyn Fn(&str) -> Result<Vec<u8>, String>>;
 pub type WriteFn = Box<dyn FnMut(&str, &[u8]) -> Result<(), String>>;
+pub type ExistsFn = Box<dyn Fn(&str) -> bool>;
 pub type Inbox = Arc<Mutex<Vec<(String, Vec<u8>)>>>;
 /// Starts a browser download of the bytes under a file name; an error when it couldn't be started
 /// (the save or export then fails as a refused write does: #1693).
@@ -212,6 +213,10 @@ pub struct Services {
     pub pick_save: Option<PickSave>,
     pub read: Option<ReadFn>,
     pub write: Option<WriteFn>,
+    /// Is there a file or folder at a path (desktop)? The app asks before replacing a file that a
+    /// save panel's name names once the app gives it an extension ([`picks::ask_to_replace`]).
+    /// Without it, no file counts as there.
+    pub exists: Option<ExistsFn>,
     /// Files that arrived asynchronously (web open / drops): (name, bytes).
     pub inbox: Option<Inbox>,
     /// Web: trigger a browser download instead of writing a path.
@@ -625,9 +630,11 @@ impl VectorcraftApp {
         self.session.active_index().and_then(|i| self.views.get(i))
     }
 
-    /// The zero point shown by rulers and position fields; command coordinates stay absolute.
+    /// The zero point shown by rulers and position fields: the document's with global rulers, the
+    /// active artboard's with artboard rulers. Command coordinates stay absolute.
     pub(crate) fn ruler_origin(&self) -> vectorcraft_geom::Point {
-        self.session.active().map_or(vectorcraft_geom::Point::ZERO, |d| d.doc.ruler_origin_or_zero())
+        let artboard = self.view().map_or(0, |v| v.artboard);
+        self.session.active().map_or(vectorcraft_geom::Point::ZERO, |d| d.doc.ruler_origin_for(artboard))
     }
     pub fn view_mut(&mut self) -> Option<&mut View> {
         self.sync_views();
@@ -649,6 +656,7 @@ impl VectorcraftApp {
             snap_to_point: self.ui.view.snap_to_point,
             corner_widgets: self.ui.view.corner_widgets && self.ui.view.edges,
             screen: self.screen_frame(),
+            artboard: self.view().map_or(0, |v| v.artboard),
         }
     }
 
@@ -743,6 +751,12 @@ impl VectorcraftApp {
         match &r {
             Err(e) => self.ui.status = e.clone(),
             Ok(v) => {
+                // Image Trace's notes (a large image traces more slowly, or was scaled down).
+                if id.starts_with("imageTrace.make")
+                    && let Some(w) = v["warnings"].as_array().and_then(|w| w.first()).and_then(Value::as_str)
+                {
+                    self.ui.status = w.to_string();
+                }
                 if id == "file.new" {
                     self.ui.status.clear();
                     // New Document's Pixel preview mode (Overprint Preview is the engine's).
@@ -757,6 +771,11 @@ impl VectorcraftApp {
                     r.retain(|f| f != font);
                     r.insert(0, font.to_string());
                     r.truncate(MAX_RECENT_FONTS);
+                }
+                // A command's warning (Rasterize's when an image couldn't be decoded) shows in the
+                // status bar, as a tool preview's does.
+                if let Some(w) = v.get("warning").and_then(Value::as_str) {
+                    self.ui.status = w.to_string();
                 }
             }
         }
@@ -1353,6 +1372,7 @@ impl VectorcraftApp {
             return;
         }
         let t0 = now_ms();
+        widgets::set_dialog_open(&ctx, self.ui.dialog.is_some());
         scrub::begin_frame(self, &ctx);
         font_menu::end_stale_preview(self, &ctx);
         floating::track(self, &ctx);
@@ -1373,6 +1393,7 @@ impl VectorcraftApp {
         if self.ui.toolbar && self.ui.screen_mode < 3 {
             toolbar::show(self, ui);
         }
+        panels::library_panel::tidy(self);
         if self.ui.dock && self.ui.screen_mode < 3 {
             dock::show(self, ui);
         }
@@ -1384,7 +1405,6 @@ impl VectorcraftApp {
         });
         dock::floating_panel(self, &ctx);
         floating::show(self, &ctx);
-        panels::library_panel::show_window(self, &ctx);
         dialogs::show(self, &ctx);
         palette::show(self, &ctx);
         if self.custom_titlebar {

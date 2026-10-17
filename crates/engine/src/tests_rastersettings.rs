@@ -1,5 +1,6 @@
 //! Effect → Document Raster Effects Settings (`document.rasterEffectsSettings`): the settings, the
-//! raster effect images they make (PDF export, Expand Appearance) and the Rasterize defaults.
+//! raster effect images they make (PDF export, Expand Appearance), the Rasterize defaults, and
+//! Effect › Rasterize's image.
 
 use serde_json::{Value, json};
 use vectorcraft_doc::rastersettings::MAX_ADD_AROUND;
@@ -197,6 +198,156 @@ fn rasterize_takes_the_document_settings_as_defaults() {
     assert!((clip.width() - 40.0).abs() < 1e-6 && matches!(children[1].kind, NodeKind::Image(_)));
     assert_eq!(s.doc().unwrap().selection.objects.to_vec(), [id(&out)]);
     assert!(s.execute("object.rasterize", &json!({"colorModel": "lab"})).is_err());
+}
+
+/// An image Object › Rasterize or Expand Appearance made, `n` or the image in its clip group:
+/// (width, height, where its pixels lie, its PNG, the clipping path's geometry).
+fn rasterized(d: &Document, n: &vectorcraft_doc::Node) -> (u32, u32, vectorcraft_geom::Affine, Vec<u8>, Option<vectorcraft_geom::PathData>) {
+    let (image, clip) = match &n.kind {
+        NodeKind::Group { children, clip: true } => (&*children[1], children[0].path_data().cloned()),
+        _ => (n, None),
+    };
+    let NodeKind::Image(im) = &image.kind else { panic!("an image: {:?}", image.kind_label()) };
+    (im.width, im.height, im.xf, d.images[&im.key].bytes.to_vec(), clip)
+}
+
+/// A rectangle of 40 × 30 pt with its default stroke and a red fill, selected.
+fn red_rectangle(s: &mut Session) -> NodeId {
+    let r = id(&s.execute("shape.rectangle", &json!({"x": 50.5, "y": 50.25, "width": 40, "height": 30})).unwrap());
+    s.execute("paint.setFill", &json!({"color": "#ff0000", "ids": [r.0]})).unwrap();
+    s.execute("select.set", &json!({"ids": [r.0]})).unwrap();
+    r
+}
+
+#[test]
+fn the_rasterize_effect_keeps_the_path_and_expands_to_the_image_object_rasterize_makes() {
+    let cases = [
+        (
+            json!({"useDocumentResolution": false, "resolution": 150, "background": "white", "colorModel": "grayscale", "antiAlias": "none", "addAround": 3}),
+            json!({"ppi": 150, "background": "white", "colorModel": "grayscale", "antiAlias": "none", "addAround": 3}),
+        ),
+        // At the document's resolution (300 ppi here), clipped to the art's outline.
+        (
+            json!({"clippingMask": true, "antiAlias": "type"}),
+            json!({"ppi": 300, "clippingMask": true, "antiAlias": "type", "background": "transparent"}),
+        ),
+    ];
+    for (effect, object) in cases {
+        let mut s = session();
+        s.execute(C, &json!({"resolution": "high"})).unwrap();
+        let r = red_rectangle(&mut s);
+        let before = s.doc().unwrap().doc.node(r).unwrap().path_data().cloned();
+        s.execute("effect.apply", &json!({"effect": "rasterize", "params": effect, "ids": [r.0]})).unwrap();
+        let d = s.doc().unwrap().doc.clone();
+        let n = d.node(r).unwrap();
+        assert_eq!((n.path_data().cloned(), n.appearance.effects[0].id.as_str()), (before, "rasterize"), "the path stays as it was");
+        // Saved and read back.
+        let back = vectorcraft_format::load(&vectorcraft_format::save_file(&d)).unwrap();
+        assert_eq!(back.node(r).unwrap().appearance.effects, n.appearance.effects);
+        // Object › Rasterize of the same rectangle.
+        let mut o = session();
+        o.execute(C, &json!({"resolution": "high"})).unwrap();
+        red_rectangle(&mut o);
+        let made = id(&o.execute("object.rasterize", &object).unwrap());
+        let od = &o.doc().unwrap().doc;
+        let want = rasterized(od, od.node(made).unwrap());
+        // PDF export draws that image in its place.
+        let flat = crate::flatten_raster_effects(&d).unwrap();
+        assert_eq!(rasterized(&flat, &flat.layers[0].children().unwrap()[0]), want, "{effect}");
+        // So does Expand Appearance.
+        s.execute("effect.expandAppearance", &json!({"ids": [r.0]})).unwrap();
+        let d = &s.doc().unwrap().doc;
+        assert_eq!(rasterized(d, d.node(r).unwrap()), want, "{effect}");
+    }
+}
+
+#[test]
+fn the_rasterize_effect_follows_edits_to_the_path() {
+    let mut s = session();
+    let r = red_rectangle(&mut s);
+    s.execute("effect.apply", &json!({"effect": "rasterize", "params": {"background": "white"}, "ids": [r.0]})).unwrap();
+    let width = |s: &Session| {
+        let flat = crate::flatten_raster_effects(&s.doc().unwrap().doc).unwrap();
+        rasterized(&flat, &flat.layers[0].children().unwrap()[0]).0
+    };
+    let before = width(&s);
+    // Direct Selection moves the right-hand anchors 20 pt: the image widens with the path.
+    s.execute("select.anchors", &json!({"id": r.0, "anchors": [[0, 1], [0, 2]]})).unwrap();
+    s.execute("path.moveAnchors", &json!({"dx": 20, "dy": 0})).unwrap();
+    let n = s.doc().unwrap().doc.node(r).unwrap().clone();
+    assert!(matches!(n.kind, NodeKind::Path { .. }) && n.appearance.effects.len() == 1);
+    assert_eq!(width(&s), before + 20, "72 ppi: a pixel a point");
+}
+
+#[test]
+fn rasterize_measures_the_art_its_geometry_effects_draw() {
+    let mut s = session();
+    let r = red_rectangle(&mut s);
+    s.execute("effect.apply", &json!({"effect": "distort.transform", "params": {"moveH": 100}, "ids": [r.0]})).unwrap();
+    s.execute("effect.apply", &json!({"effect": "rasterize", "params": {"background": "white"}, "ids": [r.0]})).unwrap();
+    s.execute("effect.expandAppearance", &json!({"ids": [r.0]})).unwrap();
+    let d = &s.doc().unwrap().doc;
+    let (width, _, xf, ..) = rasterized(d, d.node(r).unwrap());
+    // The rectangle as the Transform effect draws it: 100 pt to the right, 41 pt wide with its stroke.
+    assert_eq!((xf.translation().x, width), (150.0, 41));
+}
+
+#[test]
+fn the_clipping_mask_follows_the_art_its_geometry_effects_draw() {
+    let clip = |s: &Session, n: NodeId| match &s.doc().unwrap().doc.node(n).unwrap().kind {
+        NodeKind::Group { children, clip: true } => children[0].geometric_bounds(),
+        _ => None,
+    };
+    let moved = |s: &mut Session, n: NodeId| {
+        s.execute("effect.apply", &json!({"effect": "distort.transform", "params": {"moveH": 100}, "ids": [n.0]})).unwrap();
+    };
+    // Expand Appearance clips the image to the rectangle drawn 100 pt to the right, from 150.5 to
+    // 190.5 pt.
+    let mut s = session();
+    let r = red_rectangle(&mut s);
+    moved(&mut s, r);
+    s.execute("effect.apply", &json!({"effect": "rasterize", "params": {"clippingMask": true}, "ids": [r.0]})).unwrap();
+    s.execute("effect.expandAppearance", &json!({"ids": [r.0]})).unwrap();
+    let b = clip(&s, r).expect("a clip group");
+    assert!((b.x0 - 150.5).abs() < 1e-6 && (b.x1 - 190.5).abs() < 1e-6, "{b:?}");
+    // Object › Rasterize clips its image there too.
+    let mut s = session();
+    let r = red_rectangle(&mut s);
+    moved(&mut s, r);
+    let made = id(&s.execute("object.rasterize", &json!({"clippingMask": true})).unwrap());
+    let b = clip(&s, made).expect("a clip group");
+    assert!((b.x0 - 150.5).abs() < 1e-6 && (b.x1 - 190.5).abs() < 1e-6, "{b:?}");
+    // Type's image is clipped to its glyphs, 100 pt right of where they are without the effect.
+    let glyphs = |effect: bool| {
+        let mut s = session();
+        let t = id(&s.execute("text.create", &json!({"x": 50, "y": 100, "text": "H", "size": 40})).unwrap());
+        if effect {
+            moved(&mut s, t);
+        }
+        s.execute("select.set", &json!({"ids": [t.0]})).unwrap();
+        let made = id(&s.execute("object.rasterize", &json!({"clippingMask": true})).unwrap());
+        clip(&s, made).expect("a clip group")
+    };
+    let (plain, shifted) = (glyphs(false), glyphs(true));
+    assert!((shifted.x0 - plain.x0 - 100.0).abs() < 1e-6 && (shifted.x1 - plain.x1 - 100.0).abs() < 1e-6, "{plain:?} {shifted:?}");
+}
+
+#[test]
+fn object_rasterize_takes_in_everything_an_effect_stack_paints() {
+    let mut s = session();
+    let r = red_rectangle(&mut s);
+    s.execute("effect.apply", &json!({"effect": "blur.gaussian", "params": {"radius": 4}, "ids": [r.0]})).unwrap();
+    let live = json!({"useDocumentResolution": false, "resolution": 72, "background": "white", "addAround": 10});
+    s.execute("effect.apply", &json!({"effect": "rasterize", "params": live, "ids": [r.0]})).unwrap();
+    s.execute("select.set", &json!({"ids": [r.0]})).unwrap();
+    let made = id(&s.execute("object.rasterize", &json!({"ppi": 72, "background": "transparent"})).unwrap());
+    let d = &s.doc().unwrap().doc;
+    let (width, height, xf, png, _) = rasterized(d, d.node(made).unwrap());
+    let img = image::load_from_memory(&png).unwrap().to_rgba8();
+    // 41 pt of rectangle and stroke, and 6 pt of blur and 10 pt of white on each side: white from
+    // the first column to the last.
+    assert_eq!((width, xf.translation().x), (73, 34.0));
+    assert_eq!((img.get_pixel(0, height / 2).0, img.get_pixel(width - 1, height / 2).0), ([255; 4], [255; 4]));
 }
 
 #[test]

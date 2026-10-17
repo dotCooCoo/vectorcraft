@@ -32,6 +32,11 @@ pub struct CharStyle {
     /// wouldn't pick (an imported file's type matched to it); None = the one they pick.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub font_version: Option<String>,
+    /// Variation axis settings of a variable font (Character panel › Variable Font), by axis tag
+    /// (`wght`, `wdth`), in the axis's own units. They replace the named instance's setting of
+    /// each axis they name; the other axes keep the style's settings. Empty: the style as it is.
+    #[serde(default, rename = "fontAxes", skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub font_axes: std::collections::BTreeMap<String, f64>,
     /// Size in points.
     pub size: f64,
     /// Leading in points; None = Auto (120% of size).
@@ -231,6 +236,7 @@ impl Default for CharStyle {
             font_family: "Source Sans 3".into(),
             font_style: "Regular".into(),
             font_version: None,
+            font_axes: std::collections::BTreeMap::new(),
             size: 12.0,
             leading: None,
             tracking: 0.0,
@@ -1067,6 +1073,12 @@ pub struct TextObject {
     /// Wrap objects above this area type, resolved by the engine after each edit (text space).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub wrap: Vec<WrapShape>,
+    /// Type › Optical Margin Alignment: in every paragraph, Latin punctuation and the slanted
+    /// sides of letters such as A and W at a line's start or end hang outside the margin there
+    /// (point and area type of left-to-right paragraphs; see the layout's `optical_hangs`). Off
+    /// for new type and for documents from before it, and saved only when on.
+    #[serde(default, rename = "opticalMarginAlignment", skip_serializing_if = "crate::skip::is_default")]
+    pub optical_margin: bool,
     /// Cached layout bounds in text space, filled in by the layout engine (not serialized).
     #[serde(skip)]
     pub cached_bounds: Option<Rect>,
@@ -1132,6 +1144,7 @@ impl TextObject {
             path_align: PathAlign::default(),
             path_spacing: 0.0,
             wrap: Vec::new(),
+            optical_margin: false,
             cached_bounds: None,
             cached_baselines: Vec::new(),
         }
