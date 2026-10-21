@@ -121,6 +121,25 @@ fn exports_run_in_the_background_and_the_preference_turns_both_off() {
     assert!(app.background.jobs.is_empty());
 }
 
+/// A save that returns before the file is written still says what it writes and which options it
+/// does not use, as `app.save` (MCP's `save_file`) replies with it.
+#[test]
+fn a_background_save_names_its_format_and_unused_options_at_once() {
+    let gate = Gate::default();
+    let (mut app, files) = app(gate.clone());
+    app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
+    let r = app.run("file.save", json!({"path": "/out/a.svg", "compress": true})).unwrap();
+    assert_eq!((r["background"].as_bool(), r["format"].as_str()), (Some(true), Some("svg")), "{r}");
+    assert_eq!(r["warnings"], json!(["`compress` was not used: SVG files don't read it"]), "{r}");
+    gate.open();
+    background::wait_all(&mut app);
+    let r = app.run("file.save", json!({"path": "/out/b.vectorcraft", "compress": true})).unwrap();
+    assert_eq!((r["background"].as_bool(), r["format"].as_str()), (Some(true), Some("vectorcraft")), "{r}");
+    assert_eq!(r["warnings"], json!([]), "{r}");
+    background::wait_all(&mut app);
+    assert_eq!(written(&files), ["/out/a.svg", "/out/b.vectorcraft"]);
+}
+
 #[test]
 fn a_cancelled_export_writes_nothing() {
     let (gate, writing) = (Gate::default(), Gate::default());

@@ -2,7 +2,7 @@
 //! [`Backend`].
 
 use serde_json::{Map, Value, json};
-use vectorcraft_engine::cmd::fileio::{ARTBOARD_PARAMS, FORMATS, OPEN_EXTS, SAVE_FORMATS, format, writable_format};
+use vectorcraft_engine::cmd::fileio::{ARTBOARD_PARAMS, FORMATS, OPEN_EXTS, SAVE_FORMATS, format, save_reads_option, writable_format};
 
 use crate::backend::Backend;
 
@@ -36,6 +36,8 @@ fn num(desc: &str) -> Value {
 fn string(desc: &str) -> Value {
     json!({"type": "string", "description": desc})
 }
+/// The arguments `save_file` passes on to `document.save` beside `path`.
+const SAVE_FILE_OPTIONS: [&str; 4] = ["compress", "version", "preview", "options"];
 /// The arguments `doc_inspect` / `inspect_document` pass on to `document.inspect`.
 const INSPECT_KEYS: [&str; 6] = ["depth", "childLimit", "ids", "kind", "limit", "offset"];
 
@@ -354,10 +356,19 @@ pub fn tool_definitions() -> Vec<Value> {
             "save_file",
             "Save file",
             &format!(
-                "Save the active document with the engine's document.save: by default to its own file in its own format (native .vectorcraft unless it was opened from or saved as SVG, PDF or a restorable .ai). With `path`, the extension picks the format: .{}. Other formats are exports (see export). The reply's `format` says what was written and `warnings` what that format loses.",
+                "Save the active document with the engine's document.save: by default to its own file in its own format (native .vectorcraft unless it was opened from or saved as SVG, PDF or a restorable .ai). With `path`, the extension picks the format: .{}. Other formats are exports (see export). A native file is gzipped when `compress` is true (default: the useCompression preference, Preferences > File Handling > Use Compression); `version` writes it for an older VectorCraft and `preview` embeds a PNG of the first artboard. `options` carries the format's save options (see run_command document.formats); giving `compress`, `version` or `preview` both at the top level and in `options` with different values is an error. The reply's `format` says what was written and `warnings` what that format loses and each option given that the format doesn't read (such as `compress` for .svg).",
                 save_extensions().join(", .")
             ),
-            obj(json!({"path": string("Destination; its extension picks the format (default: the document's own file)")}), &[]),
+            obj(
+                json!({
+                    "path": string("Destination; its extension picks the format (default: the document's own file)"),
+                    "compress": {"type": "boolean", "description": "Native files: gzip the file (default: the useCompression preference)"},
+                    "version": {"type": "integer", "minimum": 1, "maximum": vectorcraft_format::VERSION, "description": "Native files: the format version to write (default: the current one; 1 and 2 are never compressed)"},
+                    "preview": {"type": "boolean", "description": "Native files: embed a PNG of the first artboard, at most 256 px (default false)"},
+                    "options": {"type": "object", "description": "The format's save options, passed through (see run_command document.formats); default: as last saved"},
+                }),
+                &[],
+            ),
             false,
         ),
         tool(
@@ -1011,7 +1022,22 @@ fn dispatch(b: &mut dyn Backend, name: &str, a: &Args) -> Result<ToolResult, Str
         }
         "screenshot" => screenshot(b, a),
         "open_file" => j(b.call("app.open", json!({"path": req_str(a, "path")?}))?),
-        "save_file" => j(b.call("app.save", json!({"path": a.get("path").and_then(Value::as_str)}))?),
+        "save_file" => {
+            let mut p = json!({"path": a.get("path").and_then(Value::as_str)});
+            for k in SAVE_FILE_OPTIONS {
+                if let Some(v) = a.get(k).filter(|v| !v.is_null()) {
+                    p[k] = v.clone();
+                }
+            }
+            let mut r = b.call("app.save", p)?;
+            let notes = save_file_warnings(a, r.get("format").and_then(Value::as_str));
+            if let Some(o) = r.as_object_mut().filter(|_| !notes.is_empty()) {
+                let mut all = o.get("warnings").and_then(Value::as_array).cloned().unwrap_or_default();
+                all.extend(notes.into_iter().map(Value::from));
+                o.insert("warnings".into(), Value::Array(all));
+            }
+            j(r)
+        }
         "export" => {
             // One params object for every backend; the named arguments win over `options` (a named
             // artboard or range replaces every artboard choice in `options`).
@@ -1082,6 +1108,20 @@ fn named_export_params(a: &Args) -> &'static [&'static str] {
     } else {
         &["path", "format", "artboard", "range", "outlineText"]
     }
+}
+
+/// What `save_file` with arguments `a` adds to the save's `warnings`, for a file written in format
+/// `written` (none when nothing was written yet): each key in `options` that the format doesn't
+/// read. The save itself warns about `compress`, `version` and `preview` given at the top level.
+fn save_file_warnings(a: &Args, written: Option<&str>) -> Vec<String> {
+    let Some(f) = written.and_then(format) else { return vec![] };
+    let nested = a.get("options").and_then(Value::as_object);
+    nested
+        .into_iter()
+        .flatten()
+        .filter(|(key, v)| !v.is_null() && !save_reads_option(f, key))
+        .map(|(key, _)| format!("`options.{key}` was not used: {} files don't read it", f.label))
+        .collect()
 }
 
 /// Run one tool. Failures (unknown tool, bad arguments, command errors) come back as an

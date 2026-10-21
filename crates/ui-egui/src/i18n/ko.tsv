@@ -4197,6 +4197,7 @@ theme	Appearance	외관
 @msg	invalid image data for `{0}`	`{0}`의 이미지 데이터가 올바르지 않습니다
 @msg	not a VectorCraft file: {0}	VectorCraft 파일이 아닙니다: {0}
 @msg	the compressed file unpacks to more than {_1} MB	압축된 파일의 압축을 풀면 {_1}MB를 넘습니다
+@msg	`{key}: {top}` and `options.{key}: {inner}` disagree: give the option once	`{key}: {top}`와(과) `options.{key}: {inner}`이(가) 일치하지 않습니다: 옵션을 한 번만 지정하세요
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	버전 {0} 파일은 압축할 수 없습니다: 버전 {COMPRESSED_SINCE} 이상만 압축 파일을 엽니다
 @msg	a bitmap is empty	비트맵이 비어 있습니다
 @msg	a bitmap is too large to read	비트맵이 너무 커서 읽을 수 없습니다

@@ -77,6 +77,28 @@ fn control_requests_stay_inside_the_roots() {
     let _ = std::fs::remove_dir_all(base);
 }
 
+/// `app.save` (MCP's `save_file`) writes a native file with the save options it is given, without
+/// asking for them.
+#[test]
+fn control_saves_take_the_native_save_options() {
+    let (mut app, tx, base) = confined("saveopts");
+    app.run("file.new", json!({"width": 100, "height": 50})).unwrap();
+    app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap();
+    let saved = |app: &mut VectorcraftApp, name: &str, mut params: Value| {
+        let path = base.join("out").join(name);
+        params["path"] = json!(s(path.clone()));
+        let r = request(app, &tx, "app.save", params);
+        assert_eq!(r["ok"], true, "{r}");
+        assert!(r["result"].get("pending").is_none() && app.ui.dialog.is_none(), "no dialog opens: {r}");
+        std::fs::read(path).unwrap()
+    };
+    assert_eq!(saved(&mut app, "gz.vectorcraft", json!({"compress": true}))[..2], [0x1f, 0x8b]);
+    let v3: Value = serde_json::from_slice(&saved(&mut app, "v3.vectorcraft", json!({"version": 3}))).unwrap();
+    assert_eq!(v3["version"], 3);
+    assert!(vectorcraft_format::preview(&saved(&mut app, "p.vectorcraft", json!({"preview": true}))).is_some());
+    let _ = std::fs::remove_dir_all(base);
+}
+
 /// A shortcut set another app saved (`.kys`) is read only from inside the read root, whichever way a
 /// control request names it: `shortcutSet.read`, Import Shortcut Set, Keyboard Shortcuts' Import…
 /// and File › Open.

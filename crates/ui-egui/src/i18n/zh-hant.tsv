@@ -1976,6 +1976,7 @@ file-filter	Templates	範本
 @msg	invalid image data for `{0}`	`{0}` 的影像資料無效
 @msg	not a VectorCraft file: {0}	不是 VectorCraft 檔案：{0}
 @msg	the compressed file unpacks to more than {_1} MB	壓縮檔解壓縮後超過 {_1} MB
+@msg	`{key}: {top}` and `options.{key}: {inner}` disagree: give the option once	`{key}: {top}` 與 `options.{key}: {inner}` 不一致：該選項只能指定一次
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	版本 {0} 的檔案無法壓縮：只有版本 {COMPRESSED_SINCE} 及更新版本才能開啟壓縮檔
 @msg	a bitmap is empty	有一個點陣圖是空的
 @msg	a bitmap is too large to read	有一個點陣圖過大，無法讀取

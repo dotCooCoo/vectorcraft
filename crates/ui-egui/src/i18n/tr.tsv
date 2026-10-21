@@ -4098,6 +4098,7 @@ axis	Both	Her İkisi
 @msg	unknown tool or command `{key}`	bilinmeyen araç veya komut `{key}`
 @msg	unknown workspace (one of {_1})	bilinmeyen çalışma alanı ({_1}'den biri)
 @msg	unsupported: {0}	desteklenmeyen: {0}
+@msg	`{key}: {top}` and `options.{key}: {inner}` disagree: give the option once	`{key}: {top}` ile `options.{key}: {inner}` çelişiyor: seçeneği yalnızca bir kez verin
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	{0} sürümü dosyaları sıkıştırılamaz: yalnızca {COMPRESSED_SINCE} sürümü ve sonraki sürümler sıkıştırılmış dosyaları açar
 @msg	width and height are at least 1 pixel	genişlik ve yükseklik en az 1 pikseldir
 @msg	workspace name can't be empty	çalışma alanı adı boş olamaz

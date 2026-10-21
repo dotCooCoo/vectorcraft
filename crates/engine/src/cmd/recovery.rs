@@ -780,6 +780,7 @@ pub fn jobs(s: &mut Session, store: &Arc<dyn RecoveryStore>) -> Result<(Vec<Reco
             name: format!("{file}{DOC_EXT}"),
             folder: None,
             modified: None,
+            notes: Vec::new(),
         };
         let save = fileio::job_for(s, st, plan)?;
         let meta = Meta {
