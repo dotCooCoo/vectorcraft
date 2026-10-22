@@ -19,8 +19,7 @@ use vectorcraft_doc::{Appearance, Document, GapOptions, GapSize, LiveShape, Node
 use vectorcraft_geom::{FillRule, PathData, Point, Rect, SubPath};
 use vectorcraft_pathops as po;
 use vectorcraft_tools::builder::{
-    self as b, BuilderMap, EDGE_NAME, FACE_NAME, LIVE_PAINT_NAME, SOURCES_NAME, Touched, edge_near, face_at, is_live_paint, sample_polyline,
-    sorted_roots,
+    self as b, BuilderMap, EDGE_NAME, FACE_NAME, LIVE_PAINT_NAME, SOURCES_NAME, Touched, edge_near, face_at, is_live_paint, sorted_roots,
 };
 use vectorcraft_trace as tr;
 
@@ -296,7 +295,6 @@ fn sb_merge(s: &mut Session, p: &Value) -> Result<Value> {
         if map.shapes.is_empty() {
             return Err(EngineError::Other("Shape Builder: select paths or compound paths".into()));
         }
-        let step = (d.bounds_of(&roots, false).map(|r| r.width().max(r.height())).unwrap_or(100.0) / 2000.0).max(0.25);
         if let Some(tol) = split_tol
             && let Some(&q) = pts.first()
             && let Some((i, run)) = map.stroke_at(&outlines, q, tol)
@@ -329,9 +327,7 @@ fn sb_merge(s: &mut Session, p: &Value) -> Result<Value> {
             return Ok((ids, None, touched, Some(split)));
         }
         let mut touched = Touched { regions: marquee.map(|(a, b)| map.regions_in_marquee(a, b)).unwrap_or_default(), ..Default::default() };
-        for q in sample_polyline(&pts, step) {
-            touched.add(map.hit(q, piece_tol));
-        }
+        touched.extend(&map.hits_along(&pts, piece_tol));
         touched.edges = map.erased_edges(&touched);
         if touched.is_empty() {
             return Err(EngineError::Other("Shape Builder: no region under the pointer".into()));

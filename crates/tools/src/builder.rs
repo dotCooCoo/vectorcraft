@@ -392,6 +392,74 @@ impl BuilderMap {
         Some((i, run))
     }
 
+    /// What a gesture along the polyline `pts` touches, in order: [`Self::hit`] at each vertex and
+    /// at the points [`Self::probes`] picks between them, so it touches every region it crosses,
+    /// however narrow.
+    pub fn hits_along(&self, pts: &[Point], piece_tol: Option<f64>) -> Touched {
+        let mut touched = Touched::default();
+        let mut last: Option<Point> = None;
+        for &p in pts {
+            if let Some(a) = last {
+                for q in self.probes(a, p, piece_tol) {
+                    touched.add(self.hit(q, piece_tol));
+                }
+            }
+            touched.add(self.hit(p, piece_tol));
+            last = Some(p);
+        }
+        touched
+    }
+
+    /// The points strictly between `a` and `b`, in order, that [`Self::hits_along`] tests: the
+    /// middle of each stretch between two places where the segment crosses a region's outline, and
+    /// with `piece_tol` (erasing) those crossings, the places where it crosses a line piece or an
+    /// edge, and points `piece_tol / 2` apart (at most 4,000 per segment), so the line pieces and
+    /// edges the segment crosses or passes close to are touched too.
+    fn probes(&self, a: Point, b: Point, piece_tol: Option<f64>) -> Vec<Point> {
+        let len = a.distance(b);
+        if !(len.is_finite() && len > 0.0) {
+            return vec![];
+        }
+        let line = kurbo::Line::new(a, b);
+        let lb = Rect::from_points(a, b);
+        let mut cross: Vec<f64> = vec![];
+        for (_, bp, rb) in &self.regions {
+            if rb.x0 > lb.x1 || rb.x1 < lb.x0 || rb.y0 > lb.y1 || rb.y1 < lb.y0 {
+                continue;
+            }
+            for seg in bp.segments() {
+                cross.extend(seg.intersect_line(line).iter().map(|x| x.line_t));
+            }
+        }
+        cross.retain(|t| t.is_finite() && *t > 0.0 && *t < 1.0);
+        cross.sort_by(f64::total_cmp);
+        // Crossings closer than this along the segment are one place.
+        let gap = 1e-9 / len;
+        let mut ts: Vec<f64> = vec![];
+        let mut from = 0.0;
+        for &t in cross.iter().chain([1.0].iter()) {
+            if t - from > gap {
+                ts.push((from + t) / 2.0);
+                from = t;
+            }
+        }
+        if let Some(tol) = piece_tol {
+            ts.extend(cross.iter().copied());
+            for (piece, pb) in self.lines.iter().chain(&self.edges) {
+                if pb.x0 > lb.x1 || pb.x1 < lb.x0 || pb.y0 > lb.y1 || pb.y1 < lb.y0 {
+                    continue;
+                }
+                for seg in piece.path.to_bezpath().segments() {
+                    ts.extend(seg.intersect_line(line).iter().map(|x| x.line_t).filter(|t| t.is_finite() && *t > 0.0 && *t < 1.0));
+                }
+            }
+            let n = ((len / (tol / 2.0).max(1e-3)).ceil() as usize).min(4000);
+            ts.extend((1..n).map(|k| k as f64 / n as f64));
+            ts.sort_by(f64::total_cmp);
+        }
+        ts.into_iter().map(|t| a.lerp(b, t)).collect()
+    }
+
     /// The regions just either side of the middle of `piece` (None: outside every region).
     pub fn sides(&self, piece: &po::Shape) -> [Option<usize>; 2] {
         let Some(sp) = piece.path.subpaths.first() else { return [None; 2] };
@@ -443,6 +511,14 @@ impl Touched {
         };
         if !list.contains(&i) {
             list.push(i);
+        }
+    }
+
+    /// Adds what `other` touched, in its order.
+    pub fn extend(&mut self, other: &Touched) {
+        let regions = other.regions.iter().map(|&i| Hit::Region(i));
+        for hit in regions.chain(other.lines.iter().map(|&i| Hit::Line(i))).chain(other.edges.iter().map(|&i| Hit::Edge(i))) {
+            self.add(Some(hit));
         }
     }
 
@@ -737,16 +813,12 @@ impl ShapeBuilderTool {
         alt.then(|| cx.tol(LINE_TOL_PX))
     }
 
+    /// Adds what the drag from `from` to `to` touches, picked as `shapeBuilder.merge` picks it.
     fn touch(&mut self, cx: &ToolContext, from: Option<Point>, to: Point) {
-        let pts = match from {
-            Some(a) => sample_polyline(&[a, to], cx.tol(2.0)),
-            None => vec![to],
-        };
+        let pts: Vec<Point> = from.into_iter().chain([to]).collect();
         let tol = Self::line_tol(cx, self.alt);
-        let map = self.cache.get(cx, self.alt, self.opts.open_filled_as_closed);
-        for p in pts {
-            self.touched.add(map.hit(p, tol));
-        }
+        let touched = self.cache.get(cx, self.alt, self.opts.open_filled_as_closed).hits_along(&pts, tol);
+        self.touched.extend(&touched);
     }
 
     /// Selection Straight Line: the drag touches what the line from its first point to `p` crosses.
