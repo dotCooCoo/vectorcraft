@@ -85,6 +85,7 @@ impl VectorcraftApp {
                         }
                     }
                 }
+                control::Outcome::AfterToolEdit { from, to } => self.pointer_replies.push((from, to, reply)),
             }
         }
         if handled == control::MAX_CONTROL_REQUESTS_PER_FRAME {
@@ -92,6 +93,37 @@ impl VectorcraftApp {
             ctx.request_repaint();
         }
         self.control_rx = Some(rx);
+    }
+
+    /// Sends the `ui.pointer` replies that wait for the tool's edit once their events have been
+    /// made and the edit is applied. The canvas checks on the tool each frame it is drawn; this
+    /// checks too, for frames without it.
+    pub(crate) fn answer_pointer_replies(&mut self, ctx: &egui::Context) {
+        // Those whose events the canvas's check made go first, before this check makes the input
+        // held after them.
+        self.send_pointer_replies();
+        if self.pointer_replies.is_empty() {
+            return;
+        }
+        if self.session.tool_editing() {
+            let r = self.session.tool_poll(self.view_info(), false);
+            canvas::apply_requests(self, r);
+        }
+        self.send_pointer_replies();
+        if !self.pointer_replies.is_empty() {
+            ctx.request_repaint_after(std::time::Duration::from_millis(16));
+        }
+    }
+
+    /// Sends the waiting `ui.pointer` replies whose events have been made.
+    fn send_pointer_replies(&mut self) {
+        for (from, to, reply) in std::mem::take(&mut self.pointer_replies) {
+            if self.session.input_applied(from, to) {
+                let _ = reply.send(control::pointer_reply(self));
+            } else {
+                self.pointer_replies.push((from, to, reply));
+            }
+        }
     }
 
     /// The active document's identity: its process-unique uid and revision. A capture records it

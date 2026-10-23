@@ -131,6 +131,9 @@ pub struct VectorcraftApp {
     control_rx: Option<Receiver<ControlRequest>>,
     /// Window captures asked for and not answered yet.
     pending_screenshots: Vec<PendingScreenshot>,
+    /// `ui.pointer` replies waiting for their events and the edit the tool computes on another
+    /// thread ([`control::Outcome::AfterToolEdit`]), with the numbers of those events.
+    pointer_replies: Vec<(u64, u64, Sender<ControlResponse>)>,
     /// Admitted captures whose settled frame has not come yet (issued one at a time).
     queued_screenshots: Vec<QueuedScreenshot>,
     screenshot_token: u64,

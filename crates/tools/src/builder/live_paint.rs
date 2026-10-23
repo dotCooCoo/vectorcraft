@@ -132,9 +132,9 @@ impl Tool for LivePaintBucketTool {
         self.cache.waiting()
     }
 
-    fn poll(&mut self, cx: &ToolContext, wait: bool) {
+    fn poll(&mut self, cx: &ToolContext, wait: bool) -> Vec<Action> {
         if !self.cache.waiting() {
-            return;
+            return vec![];
         }
         // As the Shape Builder's: the map that arrives may be for an earlier revision. Over a part
         // of a Live Paint group the hover takes no map.
@@ -147,6 +147,7 @@ impl Tool for LivePaintBucketTool {
                 break;
             }
         }
+        vec![]
     }
 }
 

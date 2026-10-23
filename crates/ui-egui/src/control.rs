@@ -145,6 +145,21 @@ pub enum Outcome {
         path: Option<String>,
         data: bool,
     },
+    /// A `ui.pointer` reply ([`pointer_reply`]), sent once the events numbered `from..to`
+    /// ([`vectorcraft_engine::Session::input_applied`]) have been made and the edit they started
+    /// on another thread is applied, so it shows the selection after the edit.
+    AfterToolEdit {
+        from: u64,
+        to: u64,
+    },
+}
+
+/// The reply to `ui.pointer`: the selection, the key object and the active tool.
+pub(crate) fn pointer_reply(app: &mut VectorcraftApp) -> Value {
+    match app.run("document.inspect", json!({})) {
+        Ok(d) => json!({"ok": true, "result": {"selection": d["selection"], "key": d["key"], "tool": app.session.tool_id()}}),
+        Err(e) => json!({"ok": false, "error": e.to_string()}),
+    }
 }
 
 fn ok(v: Value) -> Outcome {
@@ -264,6 +279,7 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context, req: &ControlReques
             let base_mods: Mods = p.get("mods").and_then(|m| serde_json::from_value(m.clone()).ok()).unwrap_or_default();
             let view = app.view_info();
             let xf = app.canvas_rect.zip(app.view().copied()).map(|(rect, v)| Xf::new(rect, &v));
+            let from = app.session.input_count();
             for e in events {
                 let kind = match e.get("kind").and_then(Value::as_str).unwrap_or("") {
                     "down" => PointerKind::Down,
@@ -292,7 +308,15 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context, req: &ControlReques
                 }
             }
             ctx.request_repaint();
-            wrap(app.run("document.inspect", json!({})).map(|d| json!({"selection": d["selection"], "key": d["key"], "tool": app.session.tool_id()})))
+            // A Shape Builder merge of a large selection is computed on another thread, and the
+            // reply to the events that started it waits for it without holding the frames up. A
+            // gesture sent while it is computed is made after it, and its reply waits until then;
+            // a hover is answered at once.
+            let to = app.session.input_count();
+            if !app.session.input_applied(from, to) {
+                return Outcome::AfterToolEdit { from, to };
+            }
+            Outcome::Done(pointer_reply(app))
         }
         "ui.key" => {
             let Some(k) = s("key").and_then(key_from) else { return err("unknown or missing `key`") };
