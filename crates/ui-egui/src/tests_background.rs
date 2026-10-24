@@ -122,7 +122,8 @@ fn exports_run_in_the_background_and_the_preference_turns_both_off() {
 }
 
 /// A save that returns before the file is written still says what it writes and which options it
-/// does not use, as `app.save` (MCP's `save_file`) replies with it.
+/// does not use, as `app.save` (MCP's `save_file`) replies with it: what the format loses first, as
+/// the reply of a save written at once.
 #[test]
 fn a_background_save_names_its_format_and_unused_options_at_once() {
     let gate = Gate::default();
@@ -130,7 +131,10 @@ fn a_background_save_names_its_format_and_unused_options_at_once() {
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     let r = app.run("file.save", json!({"path": "/out/a.svg", "compress": true})).unwrap();
     assert_eq!((r["background"].as_bool(), r["format"].as_str()), (Some(true), Some("svg")), "{r}");
-    assert_eq!(r["warnings"], json!(["`compress` was not used: SVG files don't read it"]), "{r}");
+    let warnings = r["warnings"].as_array().unwrap();
+    assert_eq!(warnings.len(), 2, "{r}");
+    assert!(warnings[0].as_str().unwrap().starts_with("SVG keeps the artwork but not everything"), "{r}");
+    assert_eq!(warnings[1], "`compress` was not used: SVG files don't read it", "{r}");
     gate.open();
     background::wait_all(&mut app);
     let r = app.run("file.save", json!({"path": "/out/b.vectorcraft", "compress": true})).unwrap();

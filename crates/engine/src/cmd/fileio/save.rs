@@ -601,12 +601,24 @@ impl SaveJob {
             let one = self.encode_one(&artboard_doc(&self.doc, b))?;
             enc.files.extend(one.files.into_iter().map(|(_, bytes)| (Some(b), bytes)));
         }
-        // Lost artboards first: the status bar shows only the first warning.
-        let f = self.plan.format;
-        let lost = if is_svg(f) { super::svg::lost_artboards_warning(&self.doc, &self.params, f.label) } else { None };
-        enc.warnings.splice(0..0, lost.into_iter().chain(fidelity_warning(f)));
+        enc.warnings.splice(0..0, self.format_losses());
         enc.warnings.extend(self.plan.notes.iter().cloned());
         Ok(enc)
+    }
+
+    /// What the file loses against the document: the artboards an SVG file leaves out first (the
+    /// status bar shows only the first warning), then what the format loses.
+    fn format_losses(&self) -> impl Iterator<Item = String> {
+        let f = self.plan.format;
+        let lost = if is_svg(f) { super::svg::lost_artboards_warning(&self.doc, &self.params, f.label) } else { None };
+        lost.into_iter().chain(fidelity_warning(f))
+    }
+
+    /// The warnings known before the file is encoded, in the order a written file's reply gives
+    /// them: what the format loses, then the plan's notes on its params (a reply sent before the
+    /// file is written, as Background Save's, gives these).
+    pub fn known_warnings(&self) -> Vec<String> {
+        self.format_losses().chain(self.plan.notes.iter().cloned()).collect()
     }
 
     /// Encode one file of `doc` in the job's format.
@@ -698,8 +710,7 @@ impl SaveJob {
         };
         let r = stream(path, &mut fill);
         r.map_err(|e| failed.take().unwrap_or(e))?;
-        let warnings: Vec<String> = fidelity_warning(f).into_iter().chain(self.plan.notes.iter().cloned()).collect();
-        Ok(json!({ "path": path, "bytes": written, "format": f.id, "warnings": warnings }))
+        Ok(json!({ "path": path, "bytes": written, "format": f.id, "warnings": self.known_warnings() }))
     }
 
     /// Once written: Save and Save As (except to a template) make the file `st`'s own: path,

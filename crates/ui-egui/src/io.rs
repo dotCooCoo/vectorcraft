@@ -700,8 +700,8 @@ fn saved_status(path: &str, r: &Value) -> String {
 /// Write a planned save through the services and report it in the status bar.
 /// With Background Save on, the file is encoded and written from a snapshot off the UI thread
 /// ([`background`]): this returns `{path, background: true, status, format, warnings}` at once
-/// (`warnings`: the save's notes on its params, such as an option the format doesn't read), and the document
-/// takes the file (and counts as saved, as of the snapshot) once it is written.
+/// (`warnings`: what the format loses, then the save's notes on its params, such as an option the format
+/// doesn't read), and the document takes the file (and counts as saved, as of the snapshot) once it is written.
 fn write_plan(app: &mut VectorcraftApp, plan: SavePlan) -> Result<Value, String> {
     let uid = app.session.active().ok_or("no document")?.uid;
     // Saves of one document finish in order.
@@ -710,7 +710,7 @@ fn write_plan(app: &mut VectorcraftApp, plan: SavePlan) -> Result<Value, String>
     }
     let job = fileio::save_job(&mut app.session, plan).map_err(|e| e.to_string())?;
     let (retargets, target) = (job.plan().retargets(), job.plan().path.clone());
-    let (format, notes) = (job.plan().format.id, job.plan().notes.clone());
+    let (format, warnings) = (job.plan().format.id, job.known_warnings());
     let label = match &target {
         Some(path) => format!("Saving {}", fileio::file_name(path)),
         None => "Saving".into(),
@@ -747,7 +747,7 @@ fn write_plan(app: &mut VectorcraftApp, plan: SavePlan) -> Result<Value, String>
     }
     if r.get("background").and_then(Value::as_bool) == Some(true) {
         r["format"] = json!(format);
-        r["warnings"] = json!(notes);
+        r["warnings"] = json!(warnings);
     }
     Ok(r)
 }
