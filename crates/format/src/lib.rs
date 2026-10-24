@@ -227,11 +227,26 @@ pub struct SaveOptions {
     pub profiles: BTreeMap<String, Vec<u8>>,
     /// Create PDF-Compatible File: a PDF of the document to carry.
     pub pdf: Option<Vec<u8>>,
+    /// Decimal places to round path anchors and handles to ([`Document::round_geometry`]), at
+    /// most [`MAX_PRECISION`] (a larger value rounds to that many); `None` writes them exactly.
+    pub precision: Option<u8>,
 }
+
+/// The most decimal places [`SaveOptions::precision`] rounds path geometry to.
+pub const MAX_PRECISION: u8 = 9;
 
 impl Default for SaveOptions {
     fn default() -> Self {
-        Self { pretty: false, compress: false, version: VERSION, preview: None, include_linked: false, profiles: BTreeMap::new(), pdf: None }
+        Self {
+            pretty: false,
+            compress: false,
+            version: VERSION,
+            preview: None,
+            include_linked: false,
+            profiles: BTreeMap::new(),
+            pdf: None,
+            precision: None,
+        }
     }
 }
 
@@ -323,6 +338,10 @@ pub fn save_to(doc: &Document, o: &SaveOptions, w: impl Write) -> Result<(), For
         d.placed_as_groups();
     } else {
         d.drop_placed_resources();
+    }
+    // The art placed documents became for older versions is rounded too.
+    if let Some(decimals) = o.precision {
+        d.round_geometry(decimals.min(MAX_PRECISION));
     }
     let linked = d.linked_only_images();
     // The blobs go in the file's `images` (only those the document uses).
