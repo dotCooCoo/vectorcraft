@@ -900,6 +900,7 @@ fn create_in_path(s: &mut Session, p: &Value) -> Result<Value> {
         optical_margin: false,
         system_layout: false,
         fractional_widths: true,
+        list_count: 0,
         cached_bounds: None,
         cached_baselines: Vec::new(),
     };
@@ -1148,6 +1149,7 @@ fn headline_tracking(t: &TextObject, target: f64) -> Option<f64> {
             optical_margin: false,
             system_layout: t.system_layout,
             fractional_widths: t.fractional_widths,
+            list_count: 0,
             cached_bounds: None,
             cached_baselines: Vec::new(),
         };

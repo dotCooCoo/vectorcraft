@@ -286,6 +286,8 @@
 	Bullets	Punktory
 	Bullets and Numbering	Punktory i numeracja
 	Apply Bullets	Zastosuj punktory
+	Numbered List	Lista numerowana
+	Apply Numbers	Zastosuj numerację
 	Filled Dot	Pełna kropka
 	Dash	Myślnik
 	Hollow Circle	Pusty okrąg
@@ -3771,6 +3773,7 @@ font-technology	Variable	Zmienne
 	View:	Widok:
 	Tracing Result	Wynik obrysu
 	Outlines with Source Image	Kontury z obrazem źródłowym
+	Press and hold to view the source image	Przytrzymaj, aby wyświetlić obraz źródłowy
 	SVG Options	Opcje SVG
 	Maximize	Maksymalizuj
 	Restore	Przywróć
@@ -3961,6 +3964,7 @@ imageTrace	Outline	Kontur
 @msg	Installed plug-in {_1}	Zainstalowano wtyczkę {_1}
 @msg	Internal error: {msg} (please report this bug)	Błąd wewnętrzny: {msg} (zgłoś ten błąd)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Scal aktywne malowanie: zaznacz grupę aktywnego malowania i ścieżki do dodania
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Aktywne malowanie przyjmuje ścieżki i ścieżki złożone: najpierw przekształć tekst, obrazy i inne obiekty w ścieżki
 @msg	Live Paint: select paths or compound paths	Aktywne malowanie: zaznacz ścieżki lub ścieżki złożone
 @msg	Live Paint: these paths are too degenerate to paint	Aktywne malowanie: te ścieżki są zbyt zdegenerowane, aby je malować
 @msg	Make Guides: select paths	Utwórz linie pomocnicze: zaznacz ścieżki
@@ -4026,6 +4030,12 @@ imageTrace	Outline	Kontur
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` musi mieścić się w zakresie od {min} do {max} (podano {x})
 @msg	`{key}` must be one of {_1}	`{key}` musi mieć jedną z wartości: {_1}
 @msg	`{key}` must be true or false	`{key}` musi mieć wartość true lub false
+@msg	`select` must be true or false	`select` musi mieć wartość true lub false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` i `maxAnchors` muszą być liczbami całkowitymi
+@msg	`{key}` must be a number not below 0	`{key}` musi być liczbą nie mniejszą niż 0
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` musi mieć postać [x, y, width, height]: cztery skończone liczby, szerokość i wysokość nieujemne
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` jest większe niż `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	podaj co najmniej jeden z parametrów `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` musi mieć wartość grayscale, rgb, hsb, cmyk lub websafe
 @msg	`{k}` must be [x, y]	`{k}` musi mieć postać [x, y]
 @msg	`{name}` has no options	`{name}` nie ma opcji
@@ -4589,6 +4599,8 @@ imageTrace	Outline	Kontur
 @msg	{key} must be an array of non-negative integer object ids	{key} musi być tablicą identyfikatorów obiektów, które są nieujemnymi liczbami całkowitymi
 @msg	invalid object id {value}: expected a non-negative integer	nieprawidłowy identyfikator obiektu {value}: oczekiwano nieujemnej liczby całkowitej
 @msg	no such object id {value}	brak obiektu o identyfikatorze {value}
+@msg	id {value} is a layer, not an object	identyfikator {value} oznacza warstwę, a nie obiekt
+@msg	id {value} is a layer, not an object; move layers with layer.move	identyfikator {value} oznacza warstwę, a nie obiekt; warstwy przenosi się za pomocą layer.move
 @msg	automation filesystem access is not granted: read authority is absent: {path}	nie przyznano dostępu automatyzacji do systemu plików: brak uprawnień do odczytu: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	nie przyznano dostępu automatyzacji do systemu plików: brak uprawnień do zapisu: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	odrzucono ścieżkę automatyzacji: poza katalogiem głównym odczytu {root}: {path}
@@ -5237,6 +5249,7 @@ mark-style	Japanese	Japońskie
 	Snap to Perpendicular	Przyciągaj do prostopadłych
 @msg	unknown snap option `{key}` (use {options})	nieznana opcja przyciągania `{key}` (użyj: {options})
 	Gap Length:	Długość przerwy:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Tryb Płaskie logo obrysował obraz w rozdzielczości {_1} × {_2} pikseli, po zmniejszeniu przez uśrednienie z {_3} × {_4}.
 	Artboard {n} of {total}	Obszar kompozycji {n} z {total}
 	File {n} of {total}	Plik {n} z {total}
 	Encoding and writing the file…	Kodowanie i zapisywanie pliku…

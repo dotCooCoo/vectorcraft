@@ -2003,9 +2003,10 @@ impl Writer<'_> {
                 self.warn("type on a path with glyphs hanging outside its brackets is outlined to keep its look");
                 return self.text_outlines(n, t);
             }
-            // A `<textPath>` holds the characters of the text, not the bullets drawn before them.
+            // A `<textPath>` holds the characters of the text, not the bullets or numbers drawn
+            // before them.
             if !lay.markers.is_empty() {
-                self.warn("type on a path with bullets is outlined to keep its look");
+                self.warn("type on a path with bullets or numbers is outlined to keep its look");
                 return self.text_outlines(n, t);
             }
             return self.text_on_path(n, t, path, *start);

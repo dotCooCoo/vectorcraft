@@ -1452,6 +1452,18 @@ impl Node {
         self.walk(&mut |_| n += 1);
         n
     }
+    /// [`Self::count`], with the art of the opacity masks in the subtree (and theirs): what copying
+    /// and transforming the subtree makes, as [`Self::walk`] doesn't go into masks.
+    pub fn count_with_masks(&self) -> usize {
+        let mut n = 0;
+        self.walk(&mut |c| {
+            n += 1;
+            if let Some(m) = &c.extras().mask {
+                n += m.art.count_with_masks();
+            }
+        });
+        n
+    }
     /// Fix this node's unplaced gradients to their fit on its current bounds (before a transform
     /// or warp that refitting wouldn't reproduce). Descendants pin their own when transformed.
     pub fn pin_gradients(&mut self) {

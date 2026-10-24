@@ -355,6 +355,8 @@ font-technology	Variable	Variabili
 	Bullets	Punti elenco
 	Bullets and Numbering	Punti elenco e numerazione
 	Apply Bullets	Applica punti elenco
+	Numbered List	Elenco numerato
+	Apply Numbers	Applica numerazione
 	Filled Dot	Punto pieno
 	Dash	Trattino
 	Hollow Circle	Cerchio vuoto
@@ -3115,6 +3117,7 @@ mark-style	Japanese	Giapponese
 	Outlines	Contorni
 	Outlines with Source Image	Contorni con immagine di origine
 	Source Image	Immagine di origine
+	Press and hold to view the source image	Tieni premuto per visualizzare l'immagine di origine
 	Image Trace View	Vista del ricalco immagine
 	Snap Options	Opzioni di aggancio
 	Snap to Glyph	Aggancia a glifo
@@ -3875,6 +3878,7 @@ axis	Both	Entrambi
 @msg	Installed plug-in {_1}	Plug-in installato: {_1}
 @msg	Internal error: {msg} (please report this bug)	Errore interno: {msg} (segnala questo bug)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Fondi pittura dinamica: seleziona un gruppo di pittura dinamica e i tracciati da aggiungere
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	La pittura dinamica accetta tracciati e tracciati composti: converti prima in tracciati testo, immagini e altri oggetti
 @msg	Live Paint: select paths or compound paths	Pittura dinamica: seleziona tracciati o tracciati composti
 @msg	Live Paint: these paths are too degenerate to paint	Pittura dinamica: questi tracciati sono troppo degeneri per essere dipinti
 @msg	Make Guides: select paths	Crea guide: seleziona tracciati
@@ -3941,6 +3945,12 @@ axis	Both	Entrambi
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` deve essere compreso tra {min} e {max} (ricevuto {x})
 @msg	`{key}` must be one of {_1}	`{key}` deve essere uno dei seguenti: {_1}
 @msg	`{key}` must be true or false	`{key}` deve essere true o false
+@msg	`select` must be true or false	`select` deve essere true o false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` e `maxAnchors` devono essere numeri interi
+@msg	`{key}` must be a number not below 0	`{key}` deve essere un numero non inferiore a 0
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` deve essere [x, y, width, height]: quattro numeri finiti, con larghezza e altezza non negative
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` è maggiore di `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	indica almeno uno tra `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` deve essere grayscale, rgb, hsb, cmyk o websafe
 @msg	`{k}` must be [x, y]	`{k}` deve essere [x, y]
 @msg	`{name}` has no options	`{name}` non ha opzioni
@@ -4525,6 +4535,8 @@ axis	Both	Entrambi
 @msg	{key} must be an array of non-negative integer object ids	{key} deve essere un array di ID oggetto interi non negativi
 @msg	invalid object id {value}: expected a non-negative integer	ID oggetto {value} non valido: è richiesto un intero non negativo
 @msg	no such object id {value}	nessun oggetto con ID {value}
+@msg	id {value} is a layer, not an object	l’ID {value} è un livello, non un oggetto
+@msg	id {value} is a layer, not an object; move layers with layer.move	l’ID {value} è un livello, non un oggetto; sposta i livelli con layer.move
 @msg	automation filesystem access is not granted: read authority is absent: {path}	l'automazione non ha accesso al file system: manca l'autorizzazione di lettura: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	l'automazione non ha accesso al file system: manca l'autorizzazione di scrittura: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	percorso di automazione rifiutato: fuori dalla cartella radice di lettura {root}: {path}
@@ -4998,6 +5010,7 @@ lighting	Light	Luce
 	Snap to Perpendicular	Aggancia alla perpendicolare
 @msg	unknown snap option `{key}` (use {options})	opzione di aggancio sconosciuta `{key}` (usare {options})
 	Gap Length:	Lunghezza lacuna:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	La modalità Logo piatto ha vettorializzato l’immagine a {_1} × {_2} pixel, ridotta per media da {_3} × {_4}.
 	Artboard {n} of {total}	Tavola da disegno {n} di {total}
 	File {n} of {total}	File {n} di {total}
 	Encoding and writing the file…	Codifica e scrittura del file…

@@ -287,6 +287,8 @@
 	Bullets	Poin
 	Bullets and Numbering	Poin dan penomoran
 	Apply Bullets	Terapkan poin
+	Numbered List	Daftar bernomor
+	Apply Numbers	Terapkan penomoran
 	Filled Dot	Titik penuh
 	Dash	Tanda pisah
 	Hollow Circle	Lingkaran kosong
@@ -3675,6 +3677,7 @@ font-technology	Variable	Variabel
 	View:	Tampilan:
 	Tracing Result	Hasil penelusuran
 	Outlines with Source Image	Kontur dengan gambar sumber
+	Press and hold to view the source image	Tekan dan tahan untuk melihat gambar sumber
 	SVG Options	Opsi SVG
 	Maximize	Maksimalkan
 	Restore	Pulihkan
@@ -3872,6 +3875,7 @@ imageTrace	Outline	Kontur
 @msg	Installed plug-in {_1}	Berhasil memasang plug-in {_1}
 @msg	Internal error: {msg} (please report this bug)	Kesalahan internal: {msg} (harap laporkan bug ini)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Gabungkan Live Paint: pilih grup Live Paint dan jalur yang akan ditambahkan
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Live Paint menerima jalur dan jalur majemuk: konversikan dulu teks, gambar, dan objek lain menjadi jalur
 @msg	Live Paint: select paths or compound paths	Live Paint: pilih jalur atau jalur majemuk
 @msg	Live Paint: these paths are too degenerate to paint	Live Paint: jalur ini terlalu terdegenerasi untuk dicat
 @msg	Make Guides: select paths	Buat panduan: pilih jalur

@@ -1457,12 +1457,34 @@ static USER_FONT_DIRS: std::sync::RwLock<Vec<PathBuf>> = std::sync::RwLock::new(
 /// if installed. The next check for installed fonts ([`FontDb::installed_fonts_changed`]) then
 /// reports the change, and a scan catalogs them.
 pub fn set_user_font_dirs(dirs: Vec<PathBuf>) {
+    set_user_font_dirs_confined(dirs, false);
+}
+
+/// [`set_user_font_dirs`]; `confined` when a caller confined to some folders (automation) chose
+/// them: the scan then reads only what is inside them, not files or folders that links in them
+/// lead to elsewhere, since the caller could plant such a link.
+pub fn set_user_font_dirs_confined(dirs: Vec<PathBuf>, confined: bool) {
     #[cfg(not(target_arch = "wasm32"))]
     {
         *USER_FONT_DIRS.write().unwrap_or_else(std::sync::PoisonError::into_inner) = dirs;
+        USER_FONT_DIRS_CONFINED.store(confined, std::sync::atomic::Ordering::Relaxed);
     }
     #[cfg(target_arch = "wasm32")]
-    let _ = dirs;
+    let _ = (dirs, confined);
+}
+
+/// Whether [`USER_FONT_DIRS`] were chosen by a confined caller ([`set_user_font_dirs_confined`]).
+#[cfg(not(target_arch = "wasm32"))]
+static USER_FONT_DIRS_CONFINED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The folders, as found on disk, that the scan reads only the inside of
+/// ([`set_user_font_dirs_confined`]).
+#[cfg(not(target_arch = "wasm32"))]
+fn confined_font_dirs() -> Vec<PathBuf> {
+    if !USER_FONT_DIRS_CONFINED.load(std::sync::atomic::Ordering::Relaxed) {
+        return vec![];
+    }
+    user_font_dirs().iter().filter_map(|d| std::fs::canonicalize(d).ok()).collect()
 }
 
 /// The folders [`set_user_font_dirs`] added (none on wasm).
@@ -2031,10 +2053,14 @@ impl FontDb {
         let mut stack = paths.clone();
         // Each folder once, however links lead back to it.
         let mut visited = std::collections::HashSet::new();
+        let confined = confined_font_dirs();
+        let inside_confined = |p: &Path| std::fs::canonicalize(p).is_ok_and(|r| confined.iter().any(|root| r.starts_with(root)));
         while let Some(d) = stack.pop() {
             if !visited.insert(std::fs::canonicalize(&d).unwrap_or_else(|_| d.clone())) {
                 continue;
             }
+            // In a confined folder, a link is followed only to somewhere inside one.
+            let in_confined = !confined.is_empty() && inside_confined(&d);
             // Before listing it: a font installed meanwhile changes it after this.
             modified_at.push((d.clone(), modified(&d)));
             // Not a folder: a font file named by itself (or nothing, yet).
@@ -2044,6 +2070,9 @@ impl FontDb {
             };
             for e in rd.flatten() {
                 let p = e.path();
+                if in_confined && e.file_type().is_ok_and(|t| t.is_symlink()) && !inside_confined(&p) {
+                    continue;
+                }
                 if p.is_dir() {
                     stack.push(p);
                 } else {

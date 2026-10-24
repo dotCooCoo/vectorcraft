@@ -1139,16 +1139,14 @@ fn isolate(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn exit_isolation(s: &mut Session, _: &Value) -> Result<Value> {
-    let guides_locked = s.menu.guides_locked;
+    let menu = s.menu.clone();
     let st = s.doc_mut()?;
     if let Some(i) = st.isolation.take() {
         super::distortcmds::finish_edit_text(st, i);
         let target = st.doc.parent_of(i).filter(|p| st.doc.node(*p).is_some_and(|n| n.extras().shaper.is_some())).unwrap_or(i);
         st.selection.set([target]);
         // A guide path isolated while Lock Guides is on isn't selected (#1534).
-        if guides_locked {
-            crate::deselect_guides(&st.doc, &mut st.selection);
-        }
+        crate::deselect_hidden(&menu, &st.doc, &mut st.selection);
         // The art on a locked artboard can't be selected.
         st.protect_locked_artboards(&[], &Default::default(), None);
     }

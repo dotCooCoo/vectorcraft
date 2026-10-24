@@ -626,6 +626,9 @@ pub(crate) struct Exporter<'a> {
     /// Keys of the images left out because the writer couldn't decode them
     /// ([`leaving_out_undecodable`]).
     pub left_out: HashSet<String>,
+    /// Objects the symbol instances written held, together
+    /// ([`vectorcraft_doc::MAX_SYMBOL_NODES`]).
+    symbol_nodes: u64,
 }
 
 /// How deep inline graphics nest before they are left out.
@@ -665,6 +668,7 @@ impl<'a> Exporter<'a> {
             layers: false,
             layer_index: crate::forms::pdf_layers(doc).iter().enumerate().map(|(i, l)| (address(l.node), i)).collect(),
             in_layer: 0,
+            symbol_nodes: 0,
             overprint: false,
             overprinted: false,
             invisible: false,
@@ -1219,7 +1223,12 @@ impl Exporter<'_> {
             NodeKind::Text(t) => self.text(s, n, t, page),
             NodeKind::Image(im) => self.image(s, im, alpha),
             NodeKind::SymbolInstance { symbol, xf } => {
-                if let Some(sym) = self.doc.symbols.iter().find(|x| &x.name == symbol) {
+                // Within the objects a frame may draw of symbol instances, as on screen: nested
+                // instances multiply.
+                let sym = self.doc.symbols.iter().find(|x| &x.name == symbol);
+                let total = sym.map_or(0, |sym| self.symbol_nodes.saturating_add(sym.art.count() as u64));
+                if let Some(sym) = sym.filter(|_| total <= vectorcraft_doc::MAX_SYMBOL_NODES) {
+                    self.symbol_nodes = total;
                     let mut art = (*sym.art).clone();
                     art.transform(*xf, false);
                     self.node(s, &art, page, true);
@@ -1758,17 +1767,26 @@ impl Exporter<'_> {
     /// those of fonts that can't be embedded, and missing glyphs. Glyphs sharing a font, a frame
     /// (size, scale, rotation) and a baseline are written together. Colour glyphs (bitmap emoji,
     /// COLR, SVG), with `images`, are written as text too, which draws their images or layers; the
-    /// indices of those it can't write or draw (SVG glyphs) are returned with the outlines.
+    /// indices of those it can't write or draw (SVG glyphs) are returned with the outlines. The
+    /// hyphen the layout adds where it breaks a line inside a word ([`break_hyphen`]) is written
+    /// as the character its glyph stands for, on its own after the glyphs before it.
     fn glyph_text(&mut self, s: &mut Surface, layout: &TextLayout, run: usize, text: &str, fill: &Paint, images: bool) -> (BezPath, Vec<usize>) {
         let (mut rest, mut unwritten) = (BezPath::new(), vec![]);
         let mut line: Option<GlyphLine> = None;
+        // The characters the glyphs stand for: the plain text, then, when the run has glyphs that
+        // stand for no character of it, the characters a line-break hyphen can stand for.
+        let written: Cow<str> =
+            if layout.glyphs.iter().any(|g| g.run == run && g.len == 0) { Cow::Owned(format!("{text}{BREAK_HYPHENS}")) } else { Cow::Borrowed(text) };
         for (gi, g) in layout.glyphs.iter().enumerate().filter(|(_, g)| g.run == run) {
             let coloured = g.image.is_some() || g.colour.is_some();
             if coloured && !images {
                 continue;
             }
-            let range = g.byte..g.byte + g.len;
-            let ch = text.get(range.clone()).and_then(|t| t.chars().next());
+            // A list marker's glyphs stand for no character of the text either; they are not
+            // line-break hyphens, whatever the marker.
+            let hyphen = if layout.marker_of(gi).is_some() { None } else { break_hyphen(g) };
+            let range = hyphen.clone().map_or(g.byte..g.byte + g.len, |h| text.len() + h.start..text.len() + h.end);
+            let ch = written.get(range.clone()).and_then(|t| t.chars().next());
             // Spaces are written too (text extraction needs them); control characters and soft
             // hyphens draw nothing.
             let blank = g.outline.elements().is_empty() && !coloured;
@@ -1799,8 +1817,9 @@ impl Exporter<'_> {
             }
             let size = upem * sy;
             let frame = g.xf * Affine::scale(1.0 / sy);
-            // Its pen position along the frame's baseline, when it continues the line.
-            let x = line.as_ref().filter(|l| l.face == g.font_id && (l.size - size).abs() < 1e-6).and_then(|l| {
+            // Its pen position along the frame's baseline, when it continues the line (a
+            // line-break hyphen never does).
+            let x = line.as_ref().filter(|l| hyphen.is_none() && l.face == g.font_id && (l.size - size).abs() < 1e-6).and_then(|l| {
                 let [a, b, c, d, e, f] = (l.frame.inverse() * frame).as_coeffs();
                 let same = (a - 1.0).abs() < 1e-6 && b.abs() < 1e-6 && c.abs() < 1e-6 && (d - 1.0).abs() < 1e-6 && f.abs() < 1e-4;
                 same.then_some(e)
@@ -1809,7 +1828,7 @@ impl Exporter<'_> {
                 Some(x) => x,
                 None => {
                     if let Some(l) = line.take() {
-                        self.draw_glyph_line(s, l, text, fill, layout.bounds);
+                        self.draw_glyph_line(s, l, &written, fill, layout.bounds);
                     }
                     line = Some(GlyphLine { face: g.font_id, font, size, frame, glyphs: vec![] });
                     0.0
@@ -1820,9 +1839,15 @@ impl Exporter<'_> {
             if let Some(l) = line.as_mut() {
                 l.glyphs.push((g.gid, x, advance, range));
             }
+            // A line-break hyphen is written on its own.
+            if hyphen.is_some()
+                && let Some(l) = line.take()
+            {
+                self.draw_glyph_line(s, l, &written, fill, layout.bounds);
+            }
         }
         if let Some(l) = line {
-            self.draw_glyph_line(s, l, text, fill, layout.bounds);
+            self.draw_glyph_line(s, l, &written, fill, layout.bounds);
         }
         (rest, unwritten)
     }
@@ -2054,6 +2079,21 @@ fn embed(blob: &vectorcraft_doc::ImageBlob, interpolate: bool, sixteen_bit: bool
 /// Is `g` drawn from its font's SVG document, which the PDF writer can't draw as a font's glyph?
 fn is_svg_glyph(g: &vectorcraft_text::PositionedGlyph) -> bool {
     vectorcraft_text::FontDb::global().is_svg_glyph(g.font_id, g.gid)
+}
+
+/// The characters a line-break hyphen can stand for, as real text: '-' and U+2010 (HYPHEN).
+const BREAK_HYPHENS: &str = "-\u{2010}";
+
+/// The bytes of [`BREAK_HYPHENS`] that glyph `g` stands for when it is a hyphen the layout adds
+/// where it breaks a line inside a word: a glyph that stands for no character of the text (length
+/// 0) and that its face's character map gives to '-' or, failing that, to U+2010. `None` for any
+/// other glyph, kashida tatweels included.
+fn break_hyphen(g: &vectorcraft_text::PositionedGlyph) -> Option<std::ops::Range<usize>> {
+    if g.len != 0 || g.gid == 0 {
+        return None;
+    }
+    let face = vectorcraft_text::FontDb::global().face_by_id(g.font_id)?;
+    BREAK_HYPHENS.char_indices().find(|&(_, c)| face.glyph_for(c) == g.gid).map(|(i, c)| i..i + c.len_utf8())
 }
 
 #[cfg(test)]

@@ -1581,6 +1581,50 @@ fn live_paint_merge_keeps_paint_and_adds_faces() {
     assert_eq!(layer_children(&s), 1);
 }
 
+/// Live Paint builds its faces and edges from path outlines alone, so Merge, Make and the Live
+/// Paint Bucket refuse type, an image, or a group holding type: before, they went into the
+/// group's hidden sources and vanished from the canvas. Nothing changes, not even the undo
+/// history. Paths, and groups of paths, still merge.
+#[test]
+fn live_paint_refuses_type_and_images_and_changes_nothing() {
+    let mut s = session();
+    let g = live(&mut s);
+    let text = NodeId(s.execute("text.create", &json!({"x": 200, "y": 300, "text": "Hi"})).unwrap()["id"].as_u64().unwrap());
+    let image = add_image(&mut s, &vectorcraft_trace::Raster::from_fn(4, 4, |_, _| [0, 0, 0, 255]), Affine::translate((300.0, 300.0)));
+    let path = rect(&mut s, 400.0, 20.0, 40.0, 40.0);
+    s.execute("select.set", &json!({"ids": [text.0, path.0]})).unwrap();
+    let text_group = NodeId(s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap());
+    let state = |s: &Session| {
+        let d = s.doc().unwrap();
+        (d.doc.clone(), d.selection.clone(), d.history.undo.len())
+    };
+    let want = "Live Paint takes paths and compound paths: convert type, images and other objects to paths first";
+    for other in [text, image, text_group] {
+        let calls = [
+            ("livePaint.merge", json!({"ids": [g.0, other.0]})),
+            ("livePaint.make", json!({"ids": [g.0, other.0]})),
+            ("livePaint.make", json!({"ids": [other.0]})),
+            ("livePaint.fill", json!({"ids": [other.0], "point": [200, 300], "color": "#00ff00"})),
+        ];
+        for (c, p) in calls {
+            s.execute("select.set", &json!({"ids": [g.0, other.0]})).unwrap();
+            let before = state(&s);
+            let r = s.execute(c, &p);
+            assert!(matches!(&r, Err(EngineError::Other(m)) if m == want), "{c} {p}: {r:?}");
+            assert!(state(&s) == before, "{c} {p} changed the document");
+        }
+    }
+    // A group of paths and a path still merge.
+    let (a, b) = (rect(&mut s, 120.0, 20.0, 100.0, 20.0), rect(&mut s, 120.0, 60.0, 100.0, 20.0));
+    s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
+    let paths = NodeId(s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap());
+    let c = rect(&mut s, 0.0, 120.0, 100.0, 20.0);
+    let r = s.execute("livePaint.merge", &json!({"ids": [g.0, paths.0, c.0]})).unwrap();
+    assert_eq!(NodeId(r["id"].as_u64().unwrap()), g);
+    assert!(vectorcraft_tools::builder::live_paint_takes(&node(&s, g)));
+    assert!(!vectorcraft_tools::builder::live_paint_takes(&node(&s, text_group)));
+}
+
 /// Give Live Paint group `g` a lock, hidden state, appearance, knockout, opacity mask and
 /// graphic style link, and return it as it then is.
 fn dress_live_group(s: &mut Session, g: NodeId) -> Node {
@@ -2026,6 +2070,36 @@ fn a_large_image_traces_with_a_warning() {
 }
 
 #[test]
+fn flat_logo_says_when_it_traces_an_image_averaged_down() {
+    // Flat Logo works at most 1024 px on a side: a 1025 px image is averaged down to 513 px.
+    let params = json!({"params": {"mode": "logo", "logoColors": ["#000000", "#F0F0DC"]}});
+    let warnings = |n: u32| {
+        let art = vectorcraft_trace::Raster::from_fn(n, n, |x, y| {
+            if !(50..n - 50).contains(&x) || !(50..n - 50).contains(&y) {
+                [0, 0, 0, 0]
+            } else if (i64::from(x) - i64::from(y) / 8).rem_euclid(40) < 2 {
+                [0, 0, 0, 255]
+            } else {
+                [240, 240, 220, 255]
+            }
+        });
+        let mut s = session();
+        add_image(&mut s, &art, Affine::IDENTITY);
+        let r = s.execute("imageTrace.makeAndExpand", &params).unwrap();
+        assert!(r["paths"].as_u64().unwrap() > 0, "{r}");
+        r["warnings"].clone()
+    };
+    let w = warnings(1025);
+    let w = w.as_array().unwrap();
+    assert_eq!(w.len(), 1, "{w:?}");
+    let text = w[0].as_str().unwrap();
+    assert!(text.contains("513 × 513") && text.contains("1025 × 1025"), "{text}");
+    assert_eq!(warnings(1024), json!([]));
+    // Over 1500 px, Flat Logo still traces at its reduced size: no slow-trace warning.
+    assert_eq!(warnings(1600), json!(["Flat Logo traced the image at 800 × 800 pixels, averaged down from 1600 × 1600."]));
+}
+
+#[test]
 fn image_trace_make_places_paths_over_the_image() {
     let mut s = session();
     let img = image_doc(&mut s);
@@ -2159,6 +2233,40 @@ fn image_trace_gradients_fills_with_a_gradient() {
     assert!((a.x - 50.0).abs() < 3.0 && (b.x - 250.0).abs() < 3.0 && (a.y - b.y).abs() < 2.0, "{geom:?}");
     let flat = make(false);
     assert!(flat.len() > 1 && flat.iter().all(|n| matches!(n.appearance.fill_paint(), Paint::Solid { .. })));
+}
+
+/// A key inside `params` that isn't a setting is refused with the nearest setting, the image is
+/// left as it was, and the error names the command that was run.
+#[test]
+fn image_trace_refuses_an_unknown_setting() {
+    for id in ["imageTrace.make", "imageTrace.makeAndExpand"] {
+        let mut s = session();
+        let img = image_doc(&mut s);
+        let e = s.execute(id, &json!({"preset": "6 Colors", "params": {"mode": "color", "colours": 3}})).unwrap_err().to_string();
+        assert!(e.contains(&format!("`{id}`")) && e.contains("unknown parameter `colours`; did you mean `colors`?"), "{e}");
+        assert!(matches!(node(&s, img).kind, NodeKind::Image(_)));
+        let e = s.execute(id, &json!({"params": {"zz": 1}})).unwrap_err().to_string();
+        assert!(e.contains("unknown parameter `zz`; the command takes: ") && e.contains("colorDetail"), "{e}");
+        let e = s.execute(id, &json!({"enhanced": "yes"})).unwrap_err().to_string();
+        assert!(e.contains(&format!("`{id}`")), "{e}");
+        let library = json!({"preset": "6 Colors", "params": {"palette": "documentLibrary", "library": "No Such Library"}});
+        let e = s.execute(id, &library).unwrap_err().to_string();
+        assert!(e.contains(&format!("`{id}`")) && e.contains("no swatch library"), "{e}");
+    }
+}
+
+/// Every preset's settings, as imageTrace.presets lists them, trace when passed back whole.
+#[test]
+fn image_trace_takes_every_preset_back_as_params() {
+    let list = session().execute("imageTrace.presets", &json!({})).unwrap();
+    for preset in list["presets"].as_array().unwrap() {
+        for params in [&preset["params"], &preset["enhanced"]].into_iter().filter(|p| !p.is_null()) {
+            let mut s = session();
+            image_doc(&mut s);
+            let r = s.execute("imageTrace.make", &json!({"preset": preset["name"], "params": params}));
+            assert!(r.is_ok(), "{}: {r:?}", preset["name"]);
+        }
+    }
 }
 
 /// A preset's enhanced version: the preset with Auto Grouping and Shapes, under the preset's name.

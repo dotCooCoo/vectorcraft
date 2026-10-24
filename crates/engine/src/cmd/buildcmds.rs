@@ -58,7 +58,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Make",
             ["Object", "Live Paint"],
             Some("Cmd+Alt+X"),
-            "{ids?|id?} build a Live Paint group from the selected paths; with a Live Paint group among them, add the others to it as livePaint.merge does → {id, faces, edges}",
+            "{ids?|id?} build a Live Paint group from the selected paths (paths, compound paths and groups of them; type, images and other objects are refused, nothing changes); with a Live Paint group among them, add the others to it as livePaint.merge does → {id, faces, edges}",
             has_selection_or_ids,
             lp_make
         ),
@@ -67,7 +67,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Merge",
             ["Object", "Live Paint"],
             None,
-            "{ids?|id?} add the other selected paths (and Live Paint groups) to the bottom-most Live Paint group, keeping its id, its paint and its own properties (name, lock, visibility, transparency, appearance, opacity mask, graphic style link) → {id, faces, edges}",
+            "{ids?|id?} add the other selected paths (compound paths, groups of paths and Live Paint groups too; type, images and other objects are refused, nothing changes) to the bottom-most Live Paint group, keeping its id, its paint and its own properties (name, lock, visibility, transparency, appearance, opacity mask, graphic style link) → {id, faces, edges}",
             has_multi_or_ids,
             lp_merge
         ),
@@ -130,7 +130,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Make",
             ["Object", "Image Trace"],
             None,
-            "{id?: image or Image Trace group (default: selection), preset?: name (imageTrace.presets), enhanced?: false (the preset's enhanced version: with Auto Grouping, and with Shapes in all but High Fidelity Photo; Flat Logo has none and is traced as it is), params?: {mode: \"blackAndWhite\"|\"grayscale\"|\"color\"|\"logo\", threshold: 0-255, palette: \"limited\"|\"fullTone\"|\"automatic\"|\"documentLibrary\" (color mode; limited: the `colors` best colours, fullTone: as many as the tones need, more with colorDetail, automatic: flat art with its own colours, else fullTone, documentLibrary: at most `colors` of the library's colours, as they are), colors: 2-256, colorDetail: 0-100 (fullTone, automatic), library: \"document\" (the document's swatches) or a swatch library id or name (swatch.library.list; documentLibrary), paths: 0-100, corners: 0-100, noise: px, method: \"abutting\"|\"overlapping\", ignoreWhite (leave out white areas), ignoreColor?: \"#rrggbb\" (with ignoreWhite: the colour left out instead of white), snapCurvesToLines, shapes: false (filled outlines that are a circle, an ellipse, a rectangle or a regular polygon come out as that live shape), autoGrouping: false (each path that has others inside it is grouped with them), gradients: false (grayscale and color: an area whose colour changes evenly along one direction is one path with a linear gradient fill), fills: true, strokes: false (Create: lines up to strokeWidth wide become stroked centre lines; without fills, wider areas become stroked outlines), strokeWidth: px (10), logoColors?: [\"#rrggbb\"…] (mode logo: flat-colour logos only; colours found automatically or named here, white is always its own colour, at most ten; noise = areas under noise/10 px ignored; edges to a fraction of a pixel, sharp corners restored, lines and circles snapped; enclosed transparent areas are painted white unless ignoreWhite makes them holes; fills/strokes are ignored; gradients and photos are refused)}, view?: as imageTrace.setView (default: the traced object's own, else tracingResult), ids?: [id…] (instead of id)} → {id, paths, anchors, colors, warnings: [text…] (the image is over 1500 px on a side, so it traces more slowly; or it was traced scaled down)}",
+            "{id?: image or Image Trace group (default: selection), preset?: name (imageTrace.presets), enhanced?: false (the preset's enhanced version: with Auto Grouping, and with Shapes in all but High Fidelity Photo; Flat Logo has none and is traced as it is), params?: {mode: \"blackAndWhite\"|\"grayscale\"|\"color\"|\"logo\", threshold: 0-255, palette: \"limited\"|\"fullTone\"|\"automatic\"|\"documentLibrary\" (color mode; limited: the `colors` best colours, fullTone: as many as the tones need, more with colorDetail, automatic: flat art with its own colours, else fullTone, documentLibrary: at most `colors` of the library's colours, as they are), colors: 2-256, colorDetail: 0-100 (fullTone, automatic), library: \"document\" (the document's swatches) or a swatch library id or name (swatch.library.list; documentLibrary), paths: 0-100, corners: 0-100, noise: px, method: \"abutting\"|\"overlapping\", ignoreWhite (leave out white areas), ignoreColor?: \"#rrggbb\" (with ignoreWhite: the colour left out instead of white), snapCurvesToLines, shapes: false (filled outlines that are a circle, an ellipse, a rectangle or a regular polygon come out as that live shape), autoGrouping: false (each path that has others inside it is grouped with them), gradients: false (grayscale and color: an area whose colour changes evenly along one direction is one path with a linear gradient fill), fills: true, strokes: false (Create: lines up to strokeWidth wide become stroked centre lines; without fills, wider areas become stroked outlines), strokeWidth: px (10), logoColors?: [\"#rrggbb\"…] (mode logo: flat-colour logos only; colours found automatically or named here, white is always its own colour, at most ten; noise = areas under noise/10 px ignored; edges to a fraction of a pixel, sharp corners restored, lines and circles snapped; enclosed transparent areas are painted white unless ignoreWhite makes them holes; fills/strokes are ignored; gradients and photos are refused)}, view?: as imageTrace.setView (default: the traced object's own, else tracingResult), ids?: [id…] (instead of id)} → {id, paths, anchors, colors, warnings: [text…] (the image is over 1500 px on a side, so it traces more slowly; or it was traced scaled down; Flat Logo names only the size it traced a larger image at)}",
             has_selection_or_ids,
             |s, p| trace_make(s, p, false)
         ),
@@ -609,9 +609,24 @@ fn merged_gap_options(groups: &[GapOptions]) -> GapOptions {
     if !bottom.detect && groups.iter().any(|g| g.detect) { GapOptions { detect: true, size: GapSize::Small, ..bottom } } else { bottom }
 }
 
+/// Refuse `roots` when one of them is something Live Paint can't take ([`b::live_paint_takes`]):
+/// its faces and edges come from path outlines alone, so type or an image would vanish among the
+/// group's hidden sources. Checked before anything changes.
+fn check_live_paint_takes(d: &Document, roots: &[NodeId]) -> Result<()> {
+    for r in roots {
+        if !b::live_paint_takes(d.node(*r).ok_or(EngineError::NoNode(*r))?) {
+            return Err(EngineError::Other(
+                "Live Paint takes paths and compound paths: convert type, images and other objects to paths first".into(),
+            ));
+        }
+    }
+    Ok(())
+}
+
 /// Make a Live Paint group from `roots`, or add them to the first Live Paint group among them
 /// as Merge does; returns (group, faces, edges).
 fn make_live(d: &mut Document, sel: &mut Selection, roots: &[NodeId]) -> Result<(NodeId, usize, usize)> {
+    check_live_paint_takes(d, roots)?;
     if roots.iter().any(|r| d.node(*r).is_some_and(is_live_paint)) {
         return merge_live(d, sel, roots);
     }
@@ -644,6 +659,7 @@ fn merge_live(d: &mut Document, sel: &mut Selection, roots: &[NodeId]) -> Result
         .copied()
         .find(|r| d.node(*r).is_some_and(is_live_paint))
         .ok_or_else(|| EngineError::Other("Live Paint Merge: select a Live Paint group and the paths to add".into()))?;
+    check_live_paint_takes(d, roots)?;
     let old = d.node(target).cloned().ok_or(EngineError::NoNode(target))?;
     // Paint to carry over: (point inside face, fill) and (point on edge, stroke).
     let keep_faces: Vec<(Point, Paint)> = b::faces(&old)
@@ -951,40 +967,44 @@ fn view_param(cmd: &str, p: &Value) -> Result<Option<TraceView>> {
     v.as_str().and_then(TraceView::from_id).map(Some).ok_or_else(|| bad(cmd, format!("view must be one of {}", ids())))
 }
 
-fn trace_params(p: &Value) -> Result<tr::TraceParams> {
+/// The parameters command `c` traces with: the preset's, with `params` over them.
+fn trace_params(c: &str, p: &Value) -> Result<tr::TraceParams> {
     let name = str_param(p, "preset").unwrap_or("Default");
-    let enhanced = switch_or(p, "enhanced", false, "imageTrace.make")?;
+    let enhanced = switch_or(p, "enhanced", false, c)?;
     // (A preset without an enhanced version is traced as it is.)
     let base = enhanced.then(|| tr::enhanced_preset(name)).flatten().or_else(|| tr::preset(name));
-    let base = base.ok_or_else(|| bad("imageTrace.make", format!("unknown preset `{name}` (see imageTrace.presets)")))?;
+    let base = base.ok_or_else(|| bad(c, format!("unknown preset `{name}` (see imageTrace.presets)")))?;
     let Some(over) = p.get("params").filter(|v| !v.is_null()) else { return Ok(base) };
     let mut v = serde_json::to_value(&base).map_err(|e| EngineError::Other(e.to_string()))?;
-    let (Some(o), Some(src)) = (v.as_object_mut(), over.as_object()) else { return Err(bad("imageTrace.make", "params must be an object")) };
+    let (Some(o), Some(src)) = (v.as_object_mut(), over.as_object()) else { return Err(bad(c, "params must be an object")) };
+    // A key that isn't one of the settings is an error, with the nearest setting.
+    if let Some(key) = src.keys().find(|k| !o.contains_key(k.as_str())) {
+        return Err(super::params::unknown(c, key, &o.keys().map(String::as_str).collect::<Vec<_>>()));
+    }
     for (k, val) in src {
         o.insert(k.clone(), val.clone());
     }
-    let params: tr::TraceParams = serde_json::from_value(v).map_err(|e| bad("imageTrace.make", e.to_string()))?;
+    let params: tr::TraceParams = serde_json::from_value(v).map_err(|e| bad(c, e.to_string()))?;
     if !params.fills && !params.strokes {
-        return Err(bad("imageTrace.make", "Create needs fills, strokes or both"));
+        return Err(bad(c, "Create needs fills, strokes or both"));
     }
     if !(params.stroke_width.is_finite() && params.stroke_width > 0.0) {
-        return Err(bad("imageTrace.make", "strokeWidth must be a positive number of pixels"));
+        return Err(bad(c, "strokeWidth must be a positive number of pixels"));
     }
     Ok(params)
 }
 
 /// Document Library in Color mode: look the library's colours up into `params.swatches` → each
-/// one as traced (sRGB) with the colour to fill with.
-fn trace_library(s: &Session, params: &mut tr::TraceParams) -> Result<Vec<([u8; 3], Color)>> {
-    const C: &str = "imageTrace.make";
+/// one as traced (sRGB) with the colour to fill with. Errors name command `c`.
+fn trace_library(c: &str, s: &Session, params: &mut tr::TraceParams) -> Result<Vec<([u8; 3], Color)>> {
     if params.mode != tr::Mode::Color || params.palette != tr::Palette::DocumentLibrary {
         return Ok(vec![]);
     }
     let key = params.library.as_str();
     let colors = super::swatchlib::library_colors(s, key)
-        .ok_or_else(|| bad(C, format!("no swatch library `{key}` (see swatch.library.list; \"document\": the document's swatches)")))?;
+        .ok_or_else(|| bad(c, format!("no swatch library `{key}` (see swatch.library.list; \"document\": the document's swatches)")))?;
     if colors.is_empty() {
-        return Err(bad(C, format!("`{key}` has no colours")));
+        return Err(bad(c, format!("`{key}` has no colours")));
     }
     let library: Vec<([u8; 3], Color)> = colors
         .into_iter()
@@ -1088,9 +1108,9 @@ fn grouped(d: &mut Document, nodes: Vec<Node>, parents: &[Option<usize>]) -> Vec
 }
 
 fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Value> {
-    const C: &str = "imageTrace.make";
-    let mut params = trace_params(p)?;
-    let view = view_param(C, p)?;
+    let c = if expand { "imageTrace.makeAndExpand" } else { "imageTrace.make" };
+    let mut params = trace_params(c, p)?;
+    let view = view_param(c, p)?;
     let params_json = serde_json::to_value(&params).map_err(|e| EngineError::Other(e.to_string()))?;
     // The preset's name if the parameters are exactly that preset's or its enhanced version's,
     // else "Custom".
@@ -1114,14 +1134,14 @@ fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Value> {
                     _ => None,
                 }
             })
-            .ok_or_else(|| bad(C, "select an image (or an Image Trace group)"))?
+            .ok_or_else(|| bad(c, "select an image (or an Image Trace group)"))?
     };
     let blob = s.doc()?.doc.images.get(&img.key).ok_or_else(|| EngineError::Other(format!("image data `{}` is missing", img.key)))?;
     // An image over the tracer's size is traced scaled down (the paths are scaled back below).
     let raster = tr::Raster::decode_to_fit(&blob.bytes).map_err(|e| EngineError::Other(e.to_string()))?;
-    let library = trace_library(s, &mut params)?;
+    let library = trace_library(c, s, &mut params)?;
     let res = tr::trace_within(&raster, &params, MAX_TRACE_ANCHORS).map_err(|e| EngineError::Other(e.to_string()))?;
-    let warnings = trace_warnings((img.width, img.height), (raster.width, raster.height));
+    let warnings = trace_warnings((img.width, img.height), (raster.width, raster.height), res.worked_at);
     // Pixel space of the decoded raster → the image object's pixel space → document.
     let sx = img.width.max(1) as f64 / raster.width.max(1) as f64;
     let sy = img.height.max(1) as f64 / raster.height.max(1) as f64;
@@ -1197,18 +1217,21 @@ fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Value> {
 /// Images larger than this on a side are traced, but more slowly: the trace says so.
 pub const LARGE_TRACE_SIDE: u32 = 1500;
 
-/// What a trace of an image of `size` pixels, traced at `traced` pixels, tells the user: that a
-/// large image takes longer (the public documentation's warning for images over 1500 px), and that
-/// one over the tracer's [`tr::MAX_PIXELS`] was traced scaled down.
-pub(crate) fn trace_warnings(size: (u32, u32), traced: (u32, u32)) -> Vec<String> {
+/// What a trace of an image of `size` pixels, traced at `traced` pixels, tells the user: that
+/// Flat Logo averaged it down to `worked` pixels first, or else that a large image takes longer
+/// (the public documentation's warning for images over 1500 px) and that one over the tracer's
+/// [`tr::MAX_PIXELS`] was traced scaled down.
+pub(crate) fn trace_warnings(size: (u32, u32), traced: (u32, u32), worked: Option<(u32, u32)>) -> Vec<String> {
     let mut out = vec![];
-    if size.0.max(size.1) > LARGE_TRACE_SIDE {
+    if worked.is_none() && size.0.max(size.1) > LARGE_TRACE_SIDE {
         out.push(format!(
             "The image is {} × {} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.",
             size.0, size.1
         ));
     }
-    if u64::from(traced.0) * u64::from(traced.1) < u64::from(size.0) * u64::from(size.1) {
+    if let Some(worked) = worked {
+        out.push(format!("Flat Logo traced the image at {} × {} pixels, averaged down from {} × {}.", worked.0, worked.1, size.0, size.1));
+    } else if u64::from(traced.0) * u64::from(traced.1) < u64::from(size.0) * u64::from(size.1) {
         out.push(format!(
             "The image was traced at {} × {} pixels, scaled down from {} × {} ({} megapixels at most).",
             traced.0,
@@ -1294,11 +1317,19 @@ mod trace_limit_tests {
 
     #[test]
     fn trace_warnings_name_a_large_or_scaled_down_image() {
-        assert!(trace_warnings((1500, 1500), (1500, 1500)).is_empty());
-        assert_eq!(trace_warnings((1501, 10), (1501, 10)).len(), 1);
-        let w = trace_warnings((16000, 12000), (9459, 7094));
+        assert!(trace_warnings((1500, 1500), (1500, 1500), None).is_empty());
+        assert_eq!(trace_warnings((1501, 10), (1501, 10), None).len(), 1);
+        let w = trace_warnings((16000, 12000), (9459, 7094), None);
         assert_eq!(w.len(), 2, "{w:?}");
         assert!(w[0].contains("16000 × 12000") && w[1].contains("9459 × 7094") && w[1].contains("64 megapixels"), "{w:?}");
+        // Flat Logo's own working size is named instead of the megapixel limit.
+        let w = trace_warnings((1025, 1025), (1025, 1025), Some((513, 513)));
+        assert_eq!(w, ["Flat Logo traced the image at 513 × 513 pixels, averaged down from 1025 × 1025."]);
+        // Flat Logo traces a large image at its reduced size, so it gives no slow-trace warning.
+        let w = trace_warnings((1600, 1600), (1600, 1600), Some((800, 800)));
+        assert_eq!(w, ["Flat Logo traced the image at 800 × 800 pixels, averaged down from 1600 × 1600."]);
+        let w = trace_warnings((16000, 12000), (9459, 7094), Some((946, 710)));
+        assert_eq!(w, ["Flat Logo traced the image at 946 × 710 pixels, averaged down from 16000 × 12000."]);
     }
 
     // A 4000 × 3000 photo at High Fidelity Photo makes about 1.9 million anchors, which must fit;

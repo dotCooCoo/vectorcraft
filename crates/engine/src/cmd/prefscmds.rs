@@ -543,7 +543,9 @@ impl Session {
         self.prefs = p;
         if fonts_folder_changed {
             let folder = self.prefs.fonts_folder.trim();
-            vectorcraft_text::set_user_font_dirs(if folder.is_empty() { vec![] } else { vec![folder.into()] });
+            // A folder an automation caller chose is read without following its links out of it.
+            let confined = crate::file_access::current().is_some();
+            vectorcraft_text::set_user_font_dirs_confined(if folder.is_empty() { vec![] } else { vec![folder.into()] }, confined);
             // Once the fonts were scanned, scan again now: the folder's fonts appear (or go) in the
             // font menus, and type in them lays out again. The first scan reads it anyway.
             if vectorcraft_text::FontDb::global().installed_fonts_changed() {

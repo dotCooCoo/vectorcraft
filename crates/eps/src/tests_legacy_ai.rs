@@ -99,9 +99,9 @@ fn write_with(doc: &Document, o: LegacyAiOptions) -> LegacyAiOutput {
 /// hidden objects shown when `o` writes them visible, and its gradient fills and strokes painted
 /// in their first stop's color.
 fn as_printed(doc: &Document, o: &LegacyAiOptions) -> Document {
-    // A run's glyphs, laid out, as one path with the run's fill (the renderer draws no type), and
-    // its colour bitmap glyphs as images (their pixels added to `images`), its COLR glyphs as their
-    // layers.
+    // A run's glyphs, laid out, with its ruby's, as one path with the run's fill (the renderer
+    // draws no type), and its colour bitmap glyphs as images (their pixels added to `images`), its
+    // COLR glyphs as their layers.
     fn outlined(t: &vectorcraft_doc::TextObject, images: &mut std::collections::BTreeMap<String, ImageBlob>) -> Node {
         let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
         let mut nodes: Vec<Arc<Node>> = t
@@ -110,7 +110,7 @@ fn as_printed(doc: &Document, o: &LegacyAiOptions) -> Document {
             .enumerate()
             .map(|(i, run)| {
                 let mut bp = kurbo::BezPath::new();
-                for g in layout.glyphs.iter().filter(|g| g.run == i) {
+                for g in layout.glyphs.iter().chain(&layout.ruby).filter(|g| g.run == i) {
                     bp.extend(g.outline.iter());
                 }
                 let path = PathData::from_bezpath(&bp).transformed(t.xf);
@@ -1017,19 +1017,22 @@ fn variable_font_settings_are_warned_as_left_out() {
     assert!(String::from_utf8(out.bytes).unwrap().contains("(H\\351llo \\2005\\r) Tx\n"), "still written as text");
 }
 
-/// A legacy `.ai` paragraph has no list: type with a bulleted list is written as its text, with the
-/// warning that the bullets are left out.
+/// A legacy `.ai` paragraph has no list: type with a bulleted or numbered list is written as its
+/// text, with the warning that the bullets and numbers are left out.
 #[test]
-fn bulleted_lists_are_warned_as_left_out() {
-    let mut doc = typed();
-    let id = texts(&doc)[0].0.id;
-    if let Some(NodeKind::Text(t)) = doc.node_mut(id).map(|n| &mut n.kind) {
-        t.para.list = Some(vectorcraft_doc::text::ParaList::bulleted(vectorcraft_doc::text::Bullet::Square));
-        t.normalize_paras();
+fn bulleted_and_numbered_lists_are_warned_as_left_out() {
+    use vectorcraft_doc::text::{Bullet, NumberStyle, ParaList};
+    for list in [ParaList::bulleted(Bullet::Square), ParaList::numbered(NumberStyle::UpperRoman)] {
+        let mut doc = typed();
+        let id = texts(&doc)[0].0.id;
+        if let Some(NodeKind::Text(t)) = doc.node_mut(id).map(|n| &mut n.kind) {
+            t.para.list = Some(list);
+            t.normalize_paras();
+        }
+        let out = write(&doc);
+        assert!(out.warnings.iter().any(|w| w == TYPE_ATTRIBUTES && w.contains("bulleted and numbered lists")), "{list:?}: {:?}", out.warnings);
+        assert!(String::from_utf8(out.bytes).unwrap().contains("(H\\351llo \\2005\\r) Tx\n"), "still written as text");
     }
-    let out = write(&doc);
-    assert!(out.warnings.iter().any(|w| w == TYPE_ATTRIBUTES && w.contains("bulleted lists")), "{:?}", out.warnings);
-    assert!(String::from_utf8(out.bytes).unwrap().contains("(H\\351llo \\2005\\r) Tx\n"), "still written as text");
 }
 
 #[test]
@@ -1112,6 +1115,36 @@ fn type_8_bit_text_cant_hold_and_type_asked_for_as_outlines_are_outlines() {
     let text = String::from_utf8(out.bytes).unwrap();
     assert!(!text.contains(" To\n") && !text.contains("%%DocumentFonts"), "{text}");
     assert!(!out.warnings.iter().any(|w| w == TYPE), "{:?}", out.warnings);
+}
+
+/// Ruby (furigana), which a text object can't hold, makes type 8-bit text could hold outlines,
+/// with the reading's glyphs among them, where the canvas draws them (the file prints as the
+/// document draws).
+#[test]
+fn type_with_ruby_is_outlines_with_the_reading() {
+    use vectorcraft_doc::{RubySpan, TextObject};
+    let typed = |ruby: bool| {
+        let mut doc = Document::new(200.0, 100.0);
+        let layer = doc.layers[0].id;
+        let mut t = TextObject::point(vectorcraft_geom::Point::new(10.0, 60.0), "AB", style(30.0, red()));
+        if ruby {
+            t.ruby = vec![RubySpan::new(0, 2, "xyz")];
+        }
+        let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+        let reading = lay.ruby.iter().flat_map(|g| g.outline.elements()).filter(|e| matches!(e, kurbo::PathEl::MoveTo(_))).count();
+        let n = Node::new(doc.alloc_id(), NodeKind::Text(Box::new(t)));
+        doc.insert(Some(layer), usize::MAX, n).unwrap();
+        (doc, reading)
+    };
+    let moves = |text: &str| text.lines().filter(|l| l.ends_with(" m")).count();
+    let (doc, reading) = typed(true);
+    assert!(reading >= 3, "the reading has ink: {reading}");
+    let out = write(&doc);
+    assert!(out.warnings.iter().any(|w| w == TYPE), "{:?}", out.warnings);
+    let with_ruby = String::from_utf8(out.bytes).unwrap();
+    assert!(!with_ruby.contains(" To\n"), "not a text object");
+    let plain = String::from_utf8(write_with(&typed(false).0, LegacyAiOptions { outline_text: true, ..LegacyAiOptions::default() }).bytes).unwrap();
+    assert_eq!(moves(&with_ruby), moves(&plain) + reading, "the reading's contours are written");
 }
 
 /// A layer `Art` holding a group of a shown square and a hidden one; a hidden layer `Off` holding

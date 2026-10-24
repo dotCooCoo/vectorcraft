@@ -977,6 +977,24 @@ fn convert_to_artboards_and_rearrange() {
     assert_eq!(bounds(&s, b), Rect::new(50.0, 675.0, 60.0, 685.0));
 }
 
+/// Convert to Artboards names an artboard one past the highest artboard id the document has, also
+/// after a delete of the last artboard or an undo of a new one.
+#[test]
+fn convert_to_artboards_names_by_the_artboards_the_document_has() {
+    let name_after = |change: &dyn Fn(&mut Session)| {
+        let mut s = session();
+        s.execute("artboard.new", &json!({})).unwrap();
+        s.execute("artboard.new", &json!({})).unwrap();
+        change(&mut s);
+        let a = rect(&mut s, 3000.0, 0.0, 200.0, 100.0);
+        sel(&mut s, &[a]);
+        s.execute("artboard.convertToArtboards", &json!({})).unwrap();
+        s.doc().unwrap().doc.artboards.last().map(|b| b.name.clone()).unwrap()
+    };
+    assert_eq!(name_after(&|s| _ = s.execute("artboard.delete", &json!({"index": 2})).unwrap()), "Artboard 3");
+    assert_eq!(name_after(&|s| _ = s.execute("edit.undo", &json!({})).unwrap()), "Artboard 3");
+}
+
 /// Rearrange All Artboards refuses `columns` that are not a whole number (a fraction, a negative number or a string),
 /// and the artboards stay where they were; 1.0, as the Rearrange All Artboards dialog sends a count, is one column.
 #[test]
@@ -1283,6 +1301,40 @@ fn select_same_paint_reads_type_characters() {
     assert_eq!(same(&mut s, t3, "select.same.strokeColor"), vec![t3, q]);
     assert_eq!(same(&mut s, q, "select.same.strokeWeight"), vec![t3, q]);
     assert_eq!(same(&mut s, t1, "select.same.fillAndStroke"), vec![t1, r]);
+}
+
+/// Select > Same matches a compound path on its own paint, as a whole: never its member paths.
+/// When a member path is selected first, the other objects are compared with its compound path.
+#[test]
+fn select_same_matches_compound_paths_on_their_own_paint() {
+    let mut s = session();
+    let [a, b] = [0.0, 20.0].map(|x| rect(&mut s, x, 0.0, 10.0, 10.0));
+    let outer = rect(&mut s, 100.0, 0.0, 50.0, 50.0);
+    let inner = rect(&mut s, 110.0, 10.0, 20.0, 20.0);
+    let r = rect(&mut s, 40.0, 0.0, 10.0, 10.0);
+    for id in [a, b, outer, inner] {
+        fill(&mut s, id, "#000000");
+    }
+    fill(&mut s, r, "#ff0000");
+    sel(&mut s, &[outer, inner]);
+    let c = id_of(&s.execute("object.compoundPath.make", &json!({})).unwrap());
+    let same = |s: &mut Session, from: NodeId, cmd: &str| {
+        sel(s, &[from]);
+        s.execute(cmd, &json!({})).unwrap();
+        let mut v = selected(s);
+        v.sort();
+        v
+    };
+    for from in [a, c, outer] {
+        assert_eq!(same(&mut s, from, "select.same.fillColor"), vec![a, b, c], "from {from:?}");
+    }
+    assert_eq!(same(&mut s, inner, "select.same.shapeType"), vec![c]);
+    fill(&mut s, c, "#ff0000");
+    assert_eq!(same(&mut s, a, "select.same.fillColor"), vec![a, b]);
+    assert_eq!(same(&mut s, r, "select.same.fillColor"), vec![r, c]);
+    // Isolated in the compound path, its member paths are the objects to match.
+    s.execute("object.isolate", &json!({"id": c.0})).unwrap();
+    assert_eq!(same(&mut s, outer, "select.same.shapeType"), vec![outer, inner]);
 }
 
 /// Select by Color needs no object to start from: it matches fills and strokes as
@@ -2363,6 +2415,23 @@ fn a_canceled_interaction_leaves_locked_guides_deselected() {
     s.cancel_interaction().unwrap();
     assert_eq!(bounds(&s, g).x0, 0.0);
     assert!(selected(&s).is_empty());
+}
+
+/// A drag preview that fails puts back the selection from before the drag, without the guide
+/// paths that Lock Guides locked during it, so a move after the drag moves nothing.
+#[test]
+fn a_failed_preview_leaves_locked_guides_deselected() {
+    let mut s = session();
+    let g = guide_path(&mut s, 0.0);
+    sel(&mut s, &[g]);
+    s.begin_interaction("Move").unwrap();
+    s.preview("object.move", &json!({"dx": 10, "dy": 0})).unwrap();
+    s.execute("view.guides.lock", &json!({"locked": true})).unwrap();
+    assert!(s.preview("object.move", &json!({"dx": "far", "dy": 0})).is_err());
+    assert!(selected(&s).is_empty());
+    s.commit_interaction().unwrap();
+    let _ = s.execute("object.move", &json!({"dx": 10, "dy": 0}));
+    assert_eq!(bounds(&s, g).x0, 0.0);
 }
 
 fn guides(s: &Session) -> Vec<(bool, f64)> {

@@ -153,7 +153,8 @@ fn laid_out(t: &vectorcraft_doc::TextObject) -> (Vec<kurbo::BezPath>, kurbo::Bez
     let layout = vectorcraft_text::layout(db, t);
     let mut runs = vec![kurbo::BezPath::new(); t.runs.len()];
     let mut all = kurbo::BezPath::new();
-    for g in &layout.glyphs {
+    // Ruby (furigana) glyphs are painted with their base text's run, as the renderer paints them.
+    for g in layout.glyphs.iter().chain(&layout.ruby) {
         if let Some(r) = runs.get_mut(g.run) {
             r.extend(g.outline.iter());
         }

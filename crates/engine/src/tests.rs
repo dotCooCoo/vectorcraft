@@ -2616,6 +2616,156 @@ fn document_find_searches_names_kinds_and_text() {
     assert_eq!(s.execute("document.find", &json!({"kind": "nope"})).unwrap()["total"], 0);
 }
 
+/// `document.find` filters by geometric bounds (inside or touching a rectangle, width, height,
+/// thickness and area) and by anchor count, and `select: true` selects the matches that can be
+/// selected.
+#[test]
+fn document_find_filters_by_geometry_and_selects() {
+    let mut s = session();
+    let big = rect(&mut s, 0.0, 0.0, 100.0, 100.0).0;
+    let sliver = rect(&mut s, 200.0, 0.0, 95.0, 0.9).0;
+    let star = s.execute("shape.star", &json!({"cx": 400, "cy": 50, "radius1": 40, "radius2": 20, "points": 5})).unwrap()["id"].as_u64().unwrap();
+    let left = rect(&mut s, 600.0, 0.0, 10.0, 10.0).0;
+    let right = rect(&mut s, 620.0, 0.0, 10.0, 10.0).0;
+    let compound = s.execute("object.compoundPath.make", &json!({"ids": [left, right]})).unwrap()["id"].as_u64().unwrap();
+    let hidden = rect(&mut s, 0.0, 300.0, 5.0, 5.0).0;
+    s.execute("object.hide", &json!({"ids": [hidden]})).unwrap();
+    let locked = rect(&mut s, 20.0, 300.0, 5.0, 5.0).0;
+    s.execute("object.lock", &json!({"ids": [locked]})).unwrap();
+    let dot = rect(&mut s, 40.0, 300.0, 5.0, 5.0).0;
+    let found = |s: &mut Session, p: Value| {
+        let v = s.execute("document.find", &p).unwrap();
+        let mut ids: Vec<u64> = v["matches"].as_array().unwrap().iter().map(|m| m["id"].as_u64().unwrap()).collect();
+        ids.sort_unstable();
+        assert_eq!(v["total"], ids.len(), "{p}");
+        ids
+    };
+    let sorted = |mut v: Vec<u64>| {
+        v.sort_unstable();
+        v
+    };
+
+    // Edges count as inside; a rectangle touching the bounds intersects them.
+    assert_eq!(found(&mut s, json!({"within": [0, 0, 100, 100]})), [big]);
+    assert_eq!(found(&mut s, json!({"within": [0, 0, 99, 100]})), Vec::<u64>::new());
+    assert_eq!(found(&mut s, json!({"intersects": [100, 0, 100, 0.5], "kind": "rectangle"})), sorted(vec![big, sliver]));
+    // Size: a thin sliver of either orientation, and the bounds' area.
+    assert_eq!(found(&mut s, json!({"maxThickness": 1})), [sliver]);
+    assert_eq!(found(&mut s, json!({"maxHeight": 1})), [sliver]);
+    assert_eq!(found(&mut s, json!({"minWidth": 90, "maxWidth": 96})), [sliver]);
+    assert_eq!(found(&mut s, json!({"minArea": 9000, "maxArea": 10000})), [big]);
+    assert_eq!(found(&mut s, json!({"maxArea": 30})), sorted(vec![hidden, locked, dot]));
+    // Anchors: a compound path counts its members' together; the layer never matches.
+    assert_eq!(found(&mut s, json!({"minAnchors": 10, "maxAnchors": 10})), [star]);
+    assert_eq!(found(&mut s, json!({"minAnchors": 8, "maxAnchors": 8})), [compound]);
+    let four = sorted(vec![big, sliver, left, right, hidden, locked, dot]);
+    assert_eq!(found(&mut s, json!({"maxAnchors": 4})), four);
+
+    // A find that only reads is not journaled; one that selects is, so an action replays it.
+    let journaled = s.journal.len();
+    s.execute("document.find", &json!({"maxAnchors": 4})).unwrap();
+    assert_eq!(s.journal.len(), journaled);
+    // select: every match except hidden, locked and compound members; the reply counts them.
+    let v = s.execute("document.find", &json!({"maxAnchors": 4, "select": true, "limit": 0})).unwrap();
+    assert_eq!(s.journal_for_action(journaled), [("document.find".to_string(), json!({"maxAnchors": 4, "select": true, "limit": 0}))]);
+    assert_eq!((v["total"].clone(), v["selected"].clone()), (json!(7), json!(3)));
+    let selection = |s: &Session| sorted(s.doc().unwrap().selection.objects.iter().map(|i| i.0).collect());
+    assert_eq!(selection(&s), sorted(vec![big, sliver, dot]));
+    // Without select the selection stays, and the reply has no `selected`.
+    let v = s.execute("document.find", &json!({"maxThickness": 1})).unwrap();
+    assert!(v.get("selected").is_none(), "{v}");
+    assert_eq!(selection(&s), sorted(vec![big, sliver, dot]));
+    // Select > Reselect repeats the find.
+    s.execute("select.none", &json!({})).unwrap();
+    s.execute("select.reselect", &json!({})).unwrap();
+    assert_eq!(selection(&s), sorted(vec![big, sliver, dot]));
+    // A compound path matched selects as itself.
+    s.execute("document.find", &json!({"minAnchors": 8, "maxAnchors": 8, "select": true})).unwrap();
+    assert_eq!(selection(&s), [compound]);
+    // Inside an isolated compound path its members are what selects.
+    s.execute("object.isolate", &json!({"id": compound})).unwrap();
+    let v = s.execute("document.find", &json!({"maxAnchors": 4, "select": true})).unwrap();
+    assert_eq!(v["selected"], 2);
+    assert_eq!(selection(&s), sorted(vec![left, right]));
+
+    for bad in [
+        json!({"within": [0, 0, -1, 5]}),
+        json!({"within": [0, 0, 1]}),
+        json!({"intersects": "everywhere"}),
+        json!({"minArea": -1}),
+        json!({"maxWidth": "5 pt"}),
+        json!({"minWidth": 5, "maxWidth": 1}),
+        json!({"minAnchors": 1.5}),
+        json!({"maxThickness": 1, "select": "yes"}),
+        json!({"select": true}),
+    ] {
+        assert!(s.execute("document.find", &bad).is_err(), "{bad}");
+    }
+}
+
+/// `document.find {select: true}` counts the objects it selected: a guide path that Lock Guides
+/// leaves out of the selection is a match, not a selected object.
+#[test]
+fn document_find_counts_the_objects_it_selected() {
+    let mut s = session();
+    let guide = rect(&mut s, 0.0, 0.0, 5.0, 5.0);
+    s.execute("select.set", &json!({"ids": [guide.0]})).unwrap();
+    s.execute("view.guides.make", &json!({})).unwrap();
+    rect(&mut s, 20.0, 0.0, 5.0, 5.0);
+    s.execute("view.guides.lock", &json!({"locked": true})).unwrap();
+    let v = s.execute("document.find", &json!({"maxArea": 30, "select": true})).unwrap();
+    assert_eq!((v["total"].clone(), v["selected"].clone()), (json!(2), json!(1)));
+    assert_eq!(s.doc().unwrap().selection.objects.len(), 1);
+}
+
+/// Select > Object reports the number of objects it selected: a guide path that Lock Guides
+/// leaves out is not counted.
+#[test]
+fn select_object_counts_the_objects_it_selected() {
+    let mut s = session();
+    let line = |s: &mut Session, x: f64| {
+        let id = s.execute("path.create", &json!({"anchors": [{"x": x, "y": 0}, {"x": x + 10.0, "y": 10}]})).unwrap()["id"].as_u64().unwrap();
+        s.execute("brush.apply", &json!({"name": "Charcoal", "ids": [id]})).unwrap();
+        id
+    };
+    let guide = line(&mut s, 0.0);
+    s.execute("select.set", &json!({"ids": [guide]})).unwrap();
+    s.execute("view.guides.make", &json!({})).unwrap();
+    line(&mut s, 20.0);
+    s.execute("view.guides.lock", &json!({"locked": true})).unwrap();
+    for cmd in ["select.object.openPaths", "select.object.brushStrokes"] {
+        let v = s.execute(cmd, &json!({})).unwrap();
+        assert_eq!((v["count"].clone(), s.doc().unwrap().selection.objects.len()), (json!(1), 1), "{cmd}");
+    }
+}
+
+/// The geometric filters of `document.find` match objects only: a layer or sublayer whose bounds
+/// fit is not a match, so `total` counts what `select: true` can select. The text filters still
+/// find layers.
+#[test]
+fn document_find_geometric_filters_leave_out_layers() {
+    let mut s = session();
+    let a = rect(&mut s, 0.0, 0.0, 5.0, 5.0).0;
+    let sub = s.execute("layer.newSublayer", &json!({})).unwrap()["id"].as_u64().unwrap();
+    let b = rect(&mut s, 10.0, 0.0, 5.0, 5.0).0;
+    assert_eq!(s.doc().unwrap().doc.parent_of(NodeId(b)), Some(NodeId(sub)));
+    let found = |s: &mut Session, p: Value| {
+        let v = s.execute("document.find", &p).unwrap();
+        let mut ids: Vec<u64> = v["matches"].as_array().unwrap().iter().map(|m| m["id"].as_u64().unwrap()).collect();
+        ids.sort_unstable();
+        assert_eq!(v["total"], ids.len(), "{p}");
+        ids
+    };
+    assert_eq!(found(&mut s, json!({"within": [0, 0, 15, 5]})), [a, b]);
+    assert_eq!(found(&mut s, json!({"intersects": [0, 0, 1, 1]})), [a]);
+    assert_eq!(found(&mut s, json!({"maxArea": 30})), [a, b]);
+    assert_eq!(found(&mut s, json!({"minWidth": 15})), Vec::<u64>::new());
+    assert_eq!(found(&mut s, json!({"kind": "layer", "within": [0, 0, 15, 5]})), Vec::<u64>::new());
+    assert_eq!(found(&mut s, json!({"kind": "layer"})).len(), 2);
+    let v = s.execute("document.find", &json!({"within": [0, 0, 15, 5], "select": true})).unwrap();
+    assert_eq!((v["total"].clone(), v["selected"].clone()), (json!(2), json!(2)));
+}
+
 /// Type reports the paint its characters show, and its own object-level paint apart from it.
 #[test]
 fn inspect_reports_the_paint_of_types_characters() {

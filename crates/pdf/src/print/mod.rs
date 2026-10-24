@@ -67,6 +67,11 @@ pub struct PrintOptions {
     /// The job is written as PostScript, which carries halftone screens and flatness: no
     /// warnings that they are left to the device.
     pub postscript: bool,
+    /// The job goes to a print queue, which puts each page on the paper as it is (macOS does
+    /// not turn a landscape page to the paper): a page whose paper the layout turned to landscape
+    /// is written upright, the art turned a quarter anticlockwise, as a printer driver turns a
+    /// landscape job. Paper that is wide in Portrait, and transverse pages, stay as they are.
+    pub for_printer: bool,
 }
 
 /// A printed job.
@@ -375,7 +380,7 @@ pub fn plan<'a>(doc: &'a Document, opts: &PrintOptions) -> Result<PrintPlan<'a>,
                 }
                 art
             });
-            Some(PlannedSheet {
+            let sheet = PlannedSheet {
                 size: l.size,
                 trim: l.page_trim,
                 bleed: l.page_bleed,
@@ -387,11 +392,30 @@ pub fn plan<'a>(doc: &'a Document, opts: &PrintOptions) -> Result<PrintPlan<'a>,
                 negative: set.output.image == PrintImage::Negative,
                 plate: *plate,
                 ink: ink.cloned(),
-            })
+            };
+            // Only the paper the layout turned: custom paper can be wide in Portrait.
+            let turned = l.orientation.landscape() && !set.transverse;
+            Some(if opts.for_printer && turned { upright(sheet) } else { sheet })
         })
         .collect();
     let order = job.order(set);
     Ok(PrintPlan { plates, sheets, order, title, created, warnings: job.warnings, doc: job.doc })
+}
+
+/// Landscape sheet `s` upright on the paper ([`PrintOptions::for_printer`]): a page wider than
+/// tall turns a quarter anticlockwise, its top to the paper's left edge.
+fn upright(mut s: PlannedSheet) -> PlannedSheet {
+    let (w, h) = s.size;
+    if w <= h {
+        return s;
+    }
+    // y down: the top-right corner (w, 0) goes to the top-left, the top-left to the bottom-left.
+    let turn = Affine::new([0.0, -1.0, 1.0, 0.0, 0.0, w]);
+    s.size = (h, w);
+    s.view = turn * s.view;
+    s.trim = turn.transform_rect_bbox(s.trim);
+    s.bleed = turn.transform_rect_bbox(s.bleed);
+    s
 }
 
 /// Print `doc` to a PDF as `opts` say.

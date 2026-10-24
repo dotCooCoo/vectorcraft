@@ -36,6 +36,8 @@ pub(crate) const PLACED_ART_BUDGET: usize = 64 << 20;
 pub(crate) const BRUSH_BUDGET: usize = 64 << 20;
 /// Evaluated blends, envelopes and repeats (`Renderer::live_expanded`).
 pub(crate) const LIVE_BUDGET: usize = 64 << 20;
+/// What the walks of live objects and effect art found (`Renderer::live_found`).
+pub(crate) const WALK_BUDGET: usize = 16 << 20;
 /// Tessellated gradient meshes (`Renderer::mesh_quads`).
 pub(crate) const MESH_BUDGET: usize = 32 << 20;
 /// Pattern tile rasters, per thread and ink plane (`pattern::set_pattern_paint`): a tile is at

@@ -684,7 +684,7 @@ fn default_paint(s: &mut Session, p: &Value) -> Result<Value> {
 /// active item of the proxy's kind is recoloured in each selected object's own stack instead.
 fn proxy_recolor(s: &mut Session, p: &Value, cmd: &str, label: &str, f: &dyn Fn(Color) -> Color) -> Result<Value> {
     let stroke = stroke_param(s, p, cmd)?;
-    let ids = match ids_param(p, "ids") {
+    let ids = match super::given_objects(s, p, cmd)? {
         Some(ids) => ids,
         None => super::edit::selected_roots(s)?,
     };

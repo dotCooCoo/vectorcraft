@@ -311,6 +311,8 @@ font-technology	Variable	가변
 	Bullets	글머리 기호
 	Bullets and Numbering	글머리 기호 및 번호 매기기
 	Apply Bullets	글머리 기호 적용
+	Numbered List	번호 매기기 목록
+	Apply Numbers	번호 매기기 적용
 	Filled Dot	채운 점
 	Dash	대시
 	Hollow Circle	빈 원
@@ -2883,6 +2885,7 @@ mark-style	Japanese	일본식
 	Outlines	윤곽선
 	Outlines with Source Image	원본 이미지 포함 윤곽선
 	Source Image	원본 이미지
+	Press and hold to view the source image	누르고 있는 동안 원본 이미지 보기
 	Image Trace View	이미지 추적 보기
 	Snap Options	스냅 옵션
 	Snap to Unit	단위에 스냅
@@ -3858,6 +3861,7 @@ theme	Appearance	외관
 @msg	the art has no bounds	아트웍에 경계가 없습니다
 @msg	Image Trace: the traced image is missing	이미지 추적: 추적한 이미지가 없습니다
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	라이브 페인트 병합: 라이브 페인트 그룹과 추가할 패스를 선택하세요
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	라이브 페인트는 패스와 컴파운드 패스만 사용할 수 있습니다: 텍스트, 이미지 및 기타 개체를 먼저 패스로 변환하세요
 @msg	Live Paint: select paths or compound paths	라이브 페인트: 패스 또는 컴파운드 패스를 선택하세요
 @msg	Live Paint: these paths are too degenerate to paint	라이브 페인트: 이 패스는 퇴화되어 칠할 수 없습니다
 @msg	Shape Builder: no region under the pointer	모양 빌더: 포인터 아래에 영역이 없습니다
@@ -4369,6 +4373,12 @@ theme	Appearance	외관
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command`는 메뉴 항목이 대화상자를 여는 명령이어야 합니다(ui.menuDialog 참조)
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode`은(는) grayscale, rgb, hsb, cmyk, websafe 중 하나여야 합니다
 @msg	`{key}` must be true or false	`{key}`은(는) true 또는 false여야 합니다
+@msg	`select` must be true or false	`select`은(는) true 또는 false여야 합니다
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors`와 `maxAnchors`는 정수여야 합니다
+@msg	`{key}` must be a number not below 0	`{key}`은(는) 0 이상의 숫자여야 합니다
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}`은(는) [x, y, width, height]여야 합니다: 유한한 숫자 네 개이며 너비와 높이는 음수가 아니어야 합니다
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}`이(가) `{max_key}`보다 큽니다
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	다음 중 하나 이상을 지정하세요: `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	brightness must be dark|mediumDark|mediumLight|light	brightness는 dark|mediumDark|mediumLight|light 중 하나여야 합니다
 @msg	index must be a number or first, previous, next or last	index는 숫자이거나 first, previous, next, last 중 하나여야 합니다
 @msg	index must be a number or first, previous, next or last, not `{other}`	index는 숫자이거나 first, previous, next, last 중 하나여야 하며 `{other}`은(는) 안 됩니다
@@ -4495,6 +4505,8 @@ theme	Appearance	외관
 @msg	{key} must be an array of non-negative integer object ids	{key}은(는) 음이 아닌 정수인 개체 id의 배열이어야 합니다
 @msg	invalid object id {value}: expected a non-negative integer	개체 id {value}이(가) 올바르지 않습니다: 음이 아닌 정수여야 합니다
 @msg	no such object id {value}	id가 {value}인 개체가 없습니다
+@msg	id {value} is a layer, not an object	id {value}은(는) 개체가 아닌 레이어입니다
+@msg	id {value} is a layer, not an object; move layers with layer.move	id {value}은(는) 개체가 아닌 레이어입니다. 레이어는 layer.move로 이동하세요
 @msg	automation filesystem access is not granted: read authority is absent: {path}	자동화 파일 시스템 접근이 허용되지 않았습니다: 읽기 권한이 없습니다: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	자동화 파일 시스템 접근이 허용되지 않았습니다: 쓰기 권한이 없습니다: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	자동화 경로가 거부되었습니다: 읽기 루트 {root} 밖입니다: {path}
@@ -4961,6 +4973,7 @@ lighting	Light	광원
 	Snap to Perpendicular	수직선에 스냅
 @msg	unknown snap option `{key}` (use {options})	알 수 없는 스냅 옵션 `{key}` ({options} 중에서 사용하세요)
 	Gap Length:	간격 길이:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	단색 로고 모드에서 이미지를 {_3} × {_4}에서 평균을 내어 축소한 {_1} × {_2}픽셀로 추적했습니다.
 	Artboard {n} of {total}	아트보드 {n} / {total}
 	File {n} of {total}	파일 {n} / {total}
 	Encoding and writing the file…	파일을 인코딩하고 쓰는 중…

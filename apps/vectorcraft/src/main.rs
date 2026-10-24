@@ -310,13 +310,18 @@ fn save_prefs(app: &VectorcraftApp) {
     }
     if let Some(p) = prefs_path() {
         let _ = std::fs::create_dir_all(p.parent().unwrap_or(std::path::Path::new(".")));
-        let mut ui = app.ui.clone();
-        ui.engine_prefs = app.session.prefs.to_json();
-        if let Ok(bytes) = serde_json::to_vec_pretty(&ui) {
+        if let Ok(bytes) = prefs_bytes(app) {
             // Preferences are best effort: a failed write keeps the previous file.
             let _ = fileio::write_atomic(&p, &bytes);
         }
     }
+}
+
+/// The preferences file's contents: the UI state with the engine preferences.
+fn prefs_bytes(app: &VectorcraftApp) -> serde_json::Result<Vec<u8>> {
+    let mut ui = app.ui.clone();
+    ui.engine_prefs = app.session.prefs.to_json();
+    serde_json::to_vec_pretty(&ui)
 }
 
 /// The window file dialogs belong to.
@@ -1203,6 +1208,17 @@ mod tests {
             decode_saved_prefs(&serde_json::to_vec(&json!({"toolbar":"invalid"})).unwrap()).is_none(),
             "unrelated fields retain normal strict parsing"
         );
+    }
+
+    #[test]
+    fn the_image_trace_preview_setting_is_kept_across_a_restart() {
+        for preview in [false, true] {
+            let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+            app.ui.image_trace_preview = preview;
+            let saved = prefs_bytes(&app).unwrap();
+            let loaded = decode_saved_prefs(&saved).unwrap().sanitized();
+            assert_eq!(loaded.image_trace_preview, preview, "Preview {preview} after a restart");
+        }
     }
 
     #[test]

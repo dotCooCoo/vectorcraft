@@ -20,7 +20,7 @@ const FIELD_CELLS_MAX: usize = 6_000_000;
 const MIN_FLAT: f64 = 0.93;
 /// Most outlines of one colour (above the noise threshold) we will fit; more is refused, not truncated.
 const MAX_LOOPS_PER_CLASS: usize = if cfg!(test) { 500 } else { 20_000 };
-/// Most pixels `unmix` may have to work on (those that are not exactly one colour). A busier image is
+/// Most distinct pixel values `unmix` may have to work on (those that are not exactly one color). A busier image is
 /// averaged down further first, which bounds the time on pathological input.
 const EDGE_BUDGET: usize = 150_000;
 /// Palette colours closer than this (RGB distance) are one colour.
@@ -472,7 +472,7 @@ pub(crate) fn trace_logo(img: &Raster, params: &TraceParams, max_anchors: usize)
     // Painter's order: biggest shapes first, so smaller ones sit on top of what they belong to.
     shapes.sort_by(|a, b| b.area.total_cmp(&a.area).then(a.class.cmp(&b.class)));
     let to_source = ToSource { factor: factor as f64, work: (w, h), source: (w0, h0) };
-    let mut out = TraceResult::default();
+    let mut out = TraceResult { worked_at: (factor > 1).then_some((w as u32, h as u32)), ..TraceResult::default() };
     for s in shapes {
         let color = palette.get(s.class).copied().unwrap_or([255, 255, 255]);
         let mut subs: Vec<SubPath> = Vec::new();

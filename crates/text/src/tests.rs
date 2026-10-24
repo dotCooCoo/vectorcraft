@@ -970,6 +970,103 @@ fn a_list_paragraph_starts_its_text_at_the_next_tab_stop_after_the_bullet() {
     assert!(first.iter().any(|g| g.len > 0), "the first line holds more than the bullet: {:?}", lay.lines);
 }
 
+/// The list markers of `t`'s layout, in text order.
+fn marker_texts(t: &TextObject) -> Vec<String> {
+    layout(db(), t).markers.iter().map(|m| m.text.clone()).collect()
+}
+
+/// Area type `text` whose paragraphs have the lists `lists` and an 18 pt hanging indent.
+fn listed(text: &str, lists: &[Option<vectorcraft_doc::text::ParaList>]) -> TextObject {
+    let mut t = area(text, style(12.0), Rect::new(0.0, 0.0, 200.0, 400.0), Justify::Left);
+    t.para.left_indent = 18.0;
+    t.para.first_line_indent = -18.0;
+    let styles = lists.iter().map(|&list| vectorcraft_doc::ParaStyle { list, ..t.para.clone() }).collect();
+    t.set_paragraph_styles(styles);
+    t
+}
+
+/// Numbered lists: each list paragraph starts with its number and a period, counted through the
+/// list paragraphs before it, and its text starts at the left indent after the number. An empty
+/// paragraph has no number and is not counted, a bulleted paragraph keeps its bullet and is not
+/// counted, and a paragraph in no list starts the count again. Each number style writes its
+/// numbers and rolls over, and a number wider than the indent takes the text to the next tab stop.
+#[test]
+fn numbered_list_paragraphs_are_numbered_in_order() {
+    use vectorcraft_doc::text::{Bullet, NumberStyle, ParaList};
+    let numbered = Some(ParaList::numbered(NumberStyle::Arabic));
+    let t = listed("One\nTwo\nThree", &[numbered; 3]);
+    assert_eq!(marker_texts(&t), ["1.", "2.", "3."]);
+    let lay = layout(db(), &t);
+    for (k, m) in lay.markers.iter().enumerate() {
+        let number = &lay.glyphs[m.glyphs.start];
+        let line = &lay.lines[number.line];
+        let text = lay.glyphs[line.glyph_start..line.glyph_end].iter().find(|g| g.len > 0).unwrap();
+        assert!(number.origin.x.abs() < 1e-6 && (text.origin.x - 18.0).abs() < 1e-6, "item {k}: {} {}", number.origin.x, text.origin.x);
+        assert_eq!((m.tab, lay.marker_text(m.tab)), (m.glyphs.end - 1, Some("\t")), "item {k}");
+    }
+    assert_eq!(marker_texts(&listed("One\n\nTwo", &[numbered; 3])), ["1.", "2."]);
+    assert_eq!(marker_texts(&listed("A\nB\nC\nD\nE", &[numbered, numbered, None, numbered, numbered])), ["1.", "2.", "1.", "2."]);
+    assert_eq!(marker_texts(&listed("A\nB\nC", &[numbered, Some(ParaList::bulleted(Bullet::Dash)), numbered])), ["1.", "\u{2013}", "2."]);
+    // The count goes on from the earlier frames of a thread.
+    let mut t = listed("One\nTwo", &[numbered; 2]);
+    t.list_count = 9;
+    assert_eq!(marker_texts(&t), ["10.", "11."]);
+    // Each style, from the count before its rollover.
+    for (style, before, numbers) in [
+        (NumberStyle::Arabic, 0, ["1.", "2."]),
+        (NumberStyle::UpperLetters, 25, ["Z.", "AA."]),
+        (NumberStyle::LowerLetters, 25, ["z.", "aa."]),
+        (NumberStyle::UpperRoman, 3, ["IV.", "V."]),
+        (NumberStyle::LowerRoman, 8, ["ix.", "x."]),
+        (NumberStyle::TwoDigits, 98, ["99.", "100."]),
+        (NumberStyle::ThreeDigits, 998, ["999.", "1000."]),
+    ] {
+        let mut t = listed("One\nTwo", &[Some(ParaList::numbered(style)); 2]);
+        t.list_count = before;
+        assert_eq!(marker_texts(&t), numbers, "{style:?}");
+    }
+    // "1000." is wider than the 18 pt before the left indent: the text goes to the next default stop.
+    let mut wide = listed("One", &[Some(ParaList::numbered(NumberStyle::ThreeDigits))]);
+    wide.list_count = 999;
+    let lay = layout(db(), &wide);
+    let number_width: f64 = lay.glyphs[..lay.markers[0].tab].iter().map(|g| g.advance).sum();
+    let text = lay.glyphs.iter().find(|g| g.len > 0).unwrap();
+    assert!(number_width > 18.0 && (text.origin.x - 36.0).abs() < 1e-6, "{number_width} {}", text.origin.x);
+    // Type on a path numbers its paragraphs too.
+    let mut line = BezPath::new();
+    line.move_to((0.0, 50.0));
+    line.line_to((500.0, 50.0));
+    let mut on_path = listed("One\nTwo", &[numbered; 2]);
+    on_path.kind = TextKind::OnPath { path: PathData::from_bezpath(&line), start: 0.0, end: None };
+    assert_eq!(marker_texts(&on_path), ["1.", "2."]);
+}
+
+/// Numbered lists: a right-to-left list paragraph's number ends its first line at the right and
+/// reads left to right, with its period at its left and the gap before the text left of that.
+#[test]
+fn a_right_to_left_numbered_paragraph_has_its_period_left_of_its_number() {
+    use vectorcraft_doc::text::{NumberStyle, ParaList};
+    let numbered = Some(ParaList::numbered(NumberStyle::Arabic));
+    // The glyphs of "1", "2" and "." in a left-to-right "12.".
+    let mut ltr = listed("One", &[numbered]);
+    ltr.list_count = 11;
+    let lay = layout(db(), &ltr);
+    let gids: Vec<u32> = lay.glyphs[..lay.markers[0].tab].iter().map(|g| g.gid).collect();
+    assert_eq!(gids.len(), 3, "{gids:?}");
+    let mut rtl = listed("שלום עולם", &[numbered]);
+    rtl.edit_paras(None, |p| p.justify = Justify::Auto);
+    rtl.list_count = 11;
+    let lay = layout(db(), &rtl);
+    let m = &lay.markers[0];
+    assert_eq!(m.text, "12.");
+    assert_eq!(m.tab, m.glyphs.start, "the gap is drawn first, left of the number");
+    let drawn = &lay.glyphs[m.glyphs.start + 1..m.glyphs.end];
+    assert_eq!(drawn.iter().map(|g| g.gid).collect::<Vec<_>>(), [gids[2], gids[0], gids[1]], "drawn left to right: the period, 1, 2");
+    assert!(drawn.windows(2).all(|w| w[0].origin.x < w[1].origin.x), "{drawn:?}");
+    let last = drawn.last().unwrap();
+    assert!((last.origin.x + last.advance - 200.0).abs() < 1e-6, "the number ends the line at the right: {last:?}");
+}
+
 /// Are the Japanese craft-fonts faces built in? Tests of Japanese glyphs skip (and say so) when
 /// they aren't: the bundled fonts have none, and [`db`] reads no system fonts.
 fn japanese_fonts() -> bool {

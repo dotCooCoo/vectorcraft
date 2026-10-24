@@ -71,6 +71,7 @@ fn escapes(s: &str) -> String {
         let after = rest.get(c.len_utf8()..).unwrap_or("");
         if c == '\\'
             && let Some(hex) = after.strip_prefix("U+").or_else(|| after.strip_prefix("u+")).and_then(|h| h.get(..4))
+            && hex.bytes().all(|b| b.is_ascii_hexdigit())
             && let Some(ch) = u32::from_str_radix(hex, 16).ok().and_then(char::from_u32)
         {
             out.push(ch);
@@ -134,6 +135,14 @@ fn percent_codes(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unicode_escape_requires_four_hex_digits() {
+        assert_eq!(plain("\\U++041"), "\\U++041");
+        assert_eq!(plain("\\U+00G1"), "\\U+00G1");
+        assert_eq!(plain("\\U+ 041"), "\\U+ 041");
+        assert_eq!(plain("\\U+00C9"), "É");
+    }
 
     #[test]
     fn control_codes_and_escapes() {

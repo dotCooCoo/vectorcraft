@@ -349,6 +349,8 @@ font-technology	Variable	Варіативні
 	Bullets	Маркери
 	Bullets and Numbering	Маркери та нумерація
 	Apply Bullets	Застосувати маркери
+	Numbered List	Нумерований список
+	Apply Numbers	Застосувати нумерацію
 	Filled Dot	Заповнена крапка
 	Dash	Тире
 	Hollow Circle	Порожнє коло
@@ -3108,6 +3110,7 @@ effect	Points	Точки
 	Outlines	Контури
 	Outlines with Source Image	Контури з вихідним зображенням
 	Source Image	Вихідне зображення
+	Press and hold to view the source image	Утримуйте, щоб побачити вихідне зображення
 	Image Trace View	Перегляд трасування зображення
 	Snap Options	Параметри прив’язки
 	Snap to Glyph	Прив’язати до гліфу
@@ -3859,6 +3862,7 @@ axis	Both	Обидві
 @msg	Installed plug-in {_1}	Встановлено модуль {_1}
 @msg	Internal error: {msg} (please report this bug)	Внутрішня помилка: {msg} (будь ласка, повідомте про цю помилку)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Об’єднання швидкої заливки: виділіть групу швидкої заливки та контури для додавання
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Швидка заливка приймає контури та складені контури: спершу перетворіть текст, зображення й інші об'єкти на контури
 @msg	Live Paint: select paths or compound paths	Швидка заливка: виділіть контури або складені контури
 @msg	Live Paint: these paths are too degenerate to paint	Швидка заливка: ці контури занадто вироджені для заливки
 @msg	Make Guides: select paths	Створення напрямних: виділіть контури
@@ -3925,6 +3929,12 @@ axis	Both	Обидві
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` має бути від {min} до {max} (отримано {x})
 @msg	`{key}` must be one of {_1}	`{key}` має бути одним з: {_1}
 @msg	`{key}` must be true or false	`{key}` має бути true або false
+@msg	`select` must be true or false	`select` має бути true або false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` і `maxAnchors` мають бути цілими числами
+@msg	`{key}` must be a number not below 0	`{key}` має бути числом, не меншим за 0
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` має бути [x, y, width, height]: чотири скінченні числа, ширина й висота невід’ємні
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` більше за `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	укажіть принаймні один із параметрів `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` має бути grayscale, rgb, hsb, cmyk або websafe
 @msg	`{k}` must be [x, y]	`{k}` має бути [x, y]
 @msg	`{name}` has no options	`{name}` не має параметрів
@@ -4509,6 +4519,8 @@ axis	Both	Обидві
 @msg	{key} must be an array of non-negative integer object ids	{key} має бути масивом ідентифікаторів об’єктів, які є невід’ємними цілими числами
 @msg	invalid object id {value}: expected a non-negative integer	неприпустимий ідентифікатор об’єкта {value}: очікується невід’ємне ціле число
 @msg	no such object id {value}	об’єкт з ідентифікатором {value} не існує
+@msg	id {value} is a layer, not an object	ідентифікатор {value} належить шару, а не об’єкту
+@msg	id {value} is a layer, not an object; move layers with layer.move	ідентифікатор {value} належить шару, а не об’єкту; переміщуйте шари за допомогою layer.move
 @msg	automation filesystem access is not granted: read authority is absent: {path}	автоматизація не має доступу до файлової системи: немає права на читання: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	автоматизація не має доступу до файлової системи: немає права на запис: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	шлях автоматизації відхилено: поза кореневою папкою для читання {root}: {path}
@@ -4978,6 +4990,7 @@ lighting	Light	Світло
 	Snap to Perpendicular	Прив’язати до перпендикуляра
 @msg	unknown snap option `{key}` (use {options})	невідомий параметр прив’язки `{key}` (використовуйте {options})
 	Gap Length:	Довжина проміжку:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Режим «Плоский логотип» трасував зображення в розмірі {_1} × {_2} пікселів, зменшене усередненням з {_3} × {_4}.
 	Artboard {n} of {total}	Монтажна область {n} з {total}
 	File {n} of {total}	Файл {n} з {total}
 	Encoding and writing the file…	Кодування та запис файлу…

@@ -576,12 +576,13 @@ fn art_evaluated_again_in_every_frame_keeps_one_outline_per_stroke() {
     }
 }
 
-/// The instances of a symbol and the copies of a repeat replace each other's brush art, so their
-/// brush art is made again in every frame. A brushed path gets new brush art each time its brush
-/// changes. The renderer keeps no outline or gradient slices for the squares' strokes, and each
-/// frame draws what a new renderer draws.
+/// The instances of a symbol, the copies of a repeat and a path of the document keep their own
+/// brush art, and a brushed path gets new brush art each time its brush changes. A frame of the
+/// unchanged document draws the stroke outlines and gradient slices that the frame before it made
+/// for the squares' strokes, and each frame draws what a new renderer draws, with or without room
+/// in the brush cache.
 #[test]
-fn strokes_of_brush_art_made_again_draw_as_a_new_renderer_does() {
+fn strokes_of_brush_art_draw_as_a_new_renderer_does() {
     let _fonts = fonts_steady();
     use vectorcraft_brush::{Brush, BrushKind, Scatter};
     use vectorcraft_doc::{Appearance, StrokeGradientMode};
@@ -629,13 +630,216 @@ fn strokes_of_brush_art_made_again_draw_as_a_new_renderer_does() {
     d.insert(Some(l), usize::MAX, Node::new(id, NodeKind::Repeat(mirror))).unwrap();
     let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
     let mut r = Renderer::new();
+    let mut full = Renderer::new();
+    full.brushes.entries = FrameCache::new(0, 0);
+    let mut before = (vec![], vec![]);
     // Six frames of the same document, then a frame after each change of the brush's spacing.
     for (frame, spacing) in [150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 120.0, 150.0, 90.0, 150.0, 120.0, 135.0].into_iter().enumerate() {
         squares(&mut d, spacing);
         let want = Renderer::new().render(&d, 200, 140, Affine::IDENTITY, &opts).pixels;
         assert!(r.render(&d, 200, 140, Affine::IDENTITY, &opts).pixels == want, "frame {frame}");
+        assert!(full.render(&d, 200, 140, Affine::IDENTITY, &opts).pixels == want, "no room, frame {frame}");
+        if frame == 4 {
+            before = stroke_outlines(&r);
+            assert!(!before.0.is_empty() && !before.1.is_empty(), "the squares' strokes keep outlines and slices");
+        } else if frame == 5 {
+            assert_eq!(used_again(&r, &before), (before.0.len(), before.1.len()), "the sixth frame draws those the fifth used");
+        }
     }
-    assert_eq!((r.strokes.len(), r.stroke_slices.len()), (0, 0), "no outline or slices kept for the strokes of brush art");
+}
+
+/// A line 24 × 12 pt around the origin, stroked 1 pt in black with the 10 pt. Oval brush.
+fn brushed_line(d: &mut Document) -> Node {
+    let mut ap = vectorcraft_doc::Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 1.0);
+    if let Some(s) = ap.stroke_mut() {
+        s.brush = Some("10 pt. Oval".into());
+    }
+    Node::path(d.alloc_id(), vectorcraft_geom::shapes::line((-12.0, -6.0).into(), (12.0, 6.0).into()), ap)
+}
+
+/// Copies of [`brushed_line`] that share an id: three instances of symbol `Line` (the line), two
+/// of symbol `Held` (a group holding the line), type showing `Line` as two inline graphics, and a
+/// Grid Repeat of the line (nine copies).
+fn brushed_copies_doc() -> Document {
+    use vectorcraft_doc::text::{CharStyle, InlineArt, TextObject, TextRun};
+    let mut d = Document::new(200.0, 100.0);
+    let line = brushed_line(&mut d);
+    d.symbols.push(vectorcraft_doc::Symbol { name: "Line".into(), art: Arc::new(line) });
+    let line = brushed_line(&mut d);
+    let held = Node::group(d.alloc_id(), vec![Arc::new(line)]);
+    d.symbols.push(vectorcraft_doc::Symbol { name: "Held".into(), art: Arc::new(held) });
+    let l = d.layers[0].id;
+    for (symbol, at) in [("Line", (20.0, 15.0)), ("Line", (60.0, 15.0)), ("Line", (100.0, 15.0)), ("Held", (20.0, 45.0)), ("Held", (60.0, 45.0))] {
+        let id = d.alloc_id();
+        d.insert(Some(l), usize::MAX, Node::new(id, NodeKind::SymbolInstance { symbol: symbol.into(), xf: Affine::translate(at) })).unwrap();
+    }
+    let style = CharStyle { size: 24.0, ..Default::default() };
+    let mut t = TextObject::point(vectorcraft_geom::Point::new(10.0, 85.0), "A", style.clone());
+    t.runs.push(TextRun::inline(InlineArt::new("Line"), style.clone()));
+    t.runs.push(TextRun::new("B", style.clone()));
+    t.runs.push(TextRun::inline(InlineArt::new("Line"), style));
+    let id = d.alloc_id();
+    d.insert(Some(l), usize::MAX, Node::new(id, NodeKind::Text(Box::new(t)))).unwrap();
+    let mut source = brushed_line(&mut d);
+    source.transform(Affine::translate((140.0, 20.0)), true);
+    let grid = vectorcraft_doc::pattern::RepeatSpec::grid(vec![Arc::new(source)], 4.0, 4.0);
+    let id = d.alloc_id();
+    d.insert(Some(l), usize::MAX, Node::new(id, NodeKind::Repeat(grid))).unwrap();
+    d
+}
+
+/// The copies of [`brushed_copies_doc`] keep their own brush art: the second frame makes none,
+/// and draws what the first drew and what a new renderer draws. With no room in the brush cache,
+/// every frame makes the brush art of each copy again and draws the same.
+#[test]
+fn brushed_copies_keep_their_own_brush_art_between_frames() {
+    let _fonts = fonts_steady();
+    let d = brushed_copies_doc();
+    let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+    let mut r = Renderer::new();
+    let first = r.render(&d, 200, 100, Affine::IDENTITY, &opts).pixels;
+    let made = r.brushes.made;
+    assert_eq!(made, 16, "the first frame makes brush art for each of the 16 copies");
+    let second = r.render(&d, 200, 100, Affine::IDENTITY, &opts).pixels;
+    assert_eq!(r.brushes.made, made, "the second frame makes none");
+    assert!(second == first, "the second frame draws the same");
+    assert!(second == Renderer::new().render(&d, 200, 100, Affine::IDENTITY, &opts).pixels, "a new renderer draws the same");
+    let mut full = Renderer::new();
+    full.brushes.entries = FrameCache::new(0, 0);
+    for n in 1..=2 {
+        assert!(full.render(&d, 200, 100, Affine::IDENTITY, &opts).pixels == first, "no room, frame {n}: the same pixels");
+        assert_eq!(full.brushes.made, 16 * n, "no room, frame {n}: the brush art of each copy is made again");
+    }
+}
+
+/// After a frame of [`brushed_copies_doc`], the next frame draws an edit of `Line`'s art (the line
+/// turns), of the brush (its nib grows to 20 pt) and of the stroke of `Held`'s line (red instead
+/// of black) as a new renderer draws it.
+#[test]
+fn brush_art_of_copies_draws_symbol_brush_and_stroke_edits() {
+    let _fonts = fonts_steady();
+    edit_draws_as_new(brushed_copies_doc(), |d| {
+        let mut line = brushed_line(d);
+        if let NodeKind::Path { path, .. } = &mut line.kind {
+            *path = vectorcraft_geom::shapes::line((-12.0, 6.0).into(), (12.0, -6.0).into());
+        }
+        d.symbols[0].art = Arc::new(line);
+    });
+    edit_draws_as_new(brushed_copies_doc(), |d| {
+        let mut lib = vectorcraft_brush::library(d);
+        if let Some(vectorcraft_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "10 pt. Oval").map(|b| &mut b.kind) {
+            c.size = 20.0;
+        }
+        vectorcraft_brush::store(d, &lib);
+    });
+    edit_draws_as_new(brushed_copies_doc(), |d| {
+        let mut held = (*d.symbols[1].art).clone();
+        if let Some([line]) = held.children_mut().map(Vec::as_mut_slice)
+            && let Some(st) = Arc::make_mut(line).appearance.stroke_mut()
+        {
+            st.paint = Paint::solid(Color::rgb(1.0, 0.0, 0.0));
+        }
+        d.symbols[1].art = Arc::new(held);
+    });
+}
+
+/// A path stroked with scatter brush `Dots`, whose art is an instance of symbol `Dot` (a blue
+/// square) and a square painted with pattern `Fill` (a green square). After a frame, the next one
+/// draws as a new renderer does when the art of `Dot` or `Fill` starts or stops drawing a brushed
+/// stroke, which decides whether the brush art shows that instance or that pattern.
+#[test]
+fn brush_art_draws_edits_of_the_symbols_and_patterns_it_shows() {
+    let _fonts = fonts_steady();
+    use vectorcraft_brush::{Brush, BrushKind, Scatter};
+    use vectorcraft_doc::pattern::{PatternDef, pattern_paint};
+    use vectorcraft_geom::shapes::{line, rectangle};
+    let square = |d: &mut Document, paint: Paint| filled(d, rectangle(Rect::new(-4.0, -4.0, 4.0, 4.0)), paint, vec![]);
+    // A square painted `paint`, with a brushed line beside it when `brushed`.
+    let art = |d: &mut Document, paint: Paint, brushed: bool| {
+        let mut members = vec![Arc::new(square(d, paint))];
+        if brushed {
+            members.push(Arc::new(brushed_line(d)));
+        }
+        Node::group(d.alloc_id(), members)
+    };
+    let doc = |dot_brushed: bool, fill_brushed: bool| {
+        let mut d = Document::new(200.0, 100.0);
+        let dot = art(&mut d, Paint::solid(Color::rgb(0.0, 0.0, 1.0)), dot_brushed);
+        d.symbols.push(vectorcraft_doc::Symbol { name: "Dot".into(), art: Arc::new(dot) });
+        let fill = art(&mut d, Paint::solid(Color::rgb(0.0, 0.6, 0.0)), fill_brushed);
+        let mut def = PatternDef::new("Fill", vec![Arc::new(fill)]);
+        def.tile = Rect::new(-6.0, -6.0, 6.0, 6.0);
+        d.patterns.push(def);
+        let id = d.alloc_id();
+        let instance = Node::new(id, NodeKind::SymbolInstance { symbol: "Dot".into(), xf: Affine::translate((0.0, -8.0)) });
+        let mut painted = square(&mut d, pattern_paint("Fill"));
+        painted.transform(Affine::translate((0.0, 8.0)), true);
+        let scatter = Node::group(d.alloc_id(), vec![Arc::new(instance), Arc::new(painted)]);
+        let mut lib = vectorcraft_brush::library(&d);
+        lib.push(Brush { name: "Dots".into(), kind: BrushKind::Scatter(Scatter { art: scatter, spacing: (150.0, 150.0), ..Default::default() }) });
+        vectorcraft_brush::store(&mut d, &lib);
+        let mut ap = vectorcraft_doc::Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 1.0);
+        if let Some(s) = ap.stroke_mut() {
+            s.brush = Some("Dots".into());
+        }
+        let path = Node::path(d.alloc_id(), line((20.0, 50.0).into(), (180.0, 50.0).into()), ap);
+        let l = d.layers[0].id;
+        d.insert(Some(l), usize::MAX, path).unwrap();
+        d
+    };
+    for brushed in [false, true] {
+        edit_draws_as_new(doc(brushed, false), |d| {
+            let dot = art(d, Paint::solid(Color::rgb(0.0, 0.0, 1.0)), !brushed);
+            d.symbols[0].art = Arc::new(dot);
+        });
+        edit_draws_as_new(doc(false, brushed), |d| {
+            let fill = art(d, Paint::solid(Color::rgb(0.0, 0.6, 0.0)), !brushed);
+            if let Some(def) = d.pattern_mut("Fill") {
+                def.art = vec![Arc::new(fill)];
+            }
+        });
+    }
+}
+
+/// A path of the document and an instance of symbol `Wave` (a group holding another path) are
+/// stroked with scatter brush `Bent`, whose art is an arc envelope around a green band: the second
+/// frame evaluates none of the envelopes in their brush art again, and draws what the first drew
+/// and what a new renderer draws.
+#[test]
+fn live_objects_in_brush_art_keep_their_evaluations_between_frames() {
+    let _fonts = fonts_steady();
+    use vectorcraft_brush::{Brush, BrushKind, Scatter};
+    use vectorcraft_geom::shapes::{line, rectangle};
+    let mut d = Document::new(200.0, 100.0);
+    let band = filled(&mut d, rectangle(Rect::new(-4.0, -3.0, 4.0, 3.0)), Paint::solid(Color::rgb(0.0, 0.5, 0.0)), vec![]);
+    let art = arc_envelope(&mut d, vec![band], false);
+    let mut lib = vectorcraft_brush::library(&d);
+    lib.push(Brush { name: "Bent".into(), kind: BrushKind::Scatter(Scatter { art, spacing: (150.0, 150.0), ..Default::default() }) });
+    vectorcraft_brush::store(&mut d, &lib);
+    let bent = |d: &mut Document, from: (f64, f64), to: (f64, f64)| {
+        let mut ap = vectorcraft_doc::Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 1.0);
+        if let Some(s) = ap.stroke_mut() {
+            s.brush = Some("Bent".into());
+        }
+        Node::path(d.alloc_id(), line(from.into(), to.into()), ap)
+    };
+    let held = bent(&mut d, (-60.0, 0.0), (60.0, 0.0));
+    let held = Node::group(d.alloc_id(), vec![Arc::new(held)]);
+    d.symbols.push(vectorcraft_doc::Symbol { name: "Wave".into(), art: Arc::new(held) });
+    let path = bent(&mut d, (20.0, 25.0), (180.0, 25.0));
+    let l = d.layers[0].id;
+    d.insert(Some(l), usize::MAX, path).unwrap();
+    let id = d.alloc_id();
+    d.insert(Some(l), usize::MAX, Node::new(id, NodeKind::SymbolInstance { symbol: "Wave".into(), xf: Affine::translate((100.0, 70.0)) })).unwrap();
+    let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+    let mut r = Renderer::new();
+    let first = r.render(&d, 200, 100, Affine::IDENTITY, &opts).pixels;
+    let evaluated = r.live.evaluated;
+    assert!(evaluated >= 2, "the first frame evaluates the envelopes of both paths' brush art: {evaluated}");
+    let second = r.render(&d, 200, 100, Affine::IDENTITY, &opts).pixels;
+    assert_eq!(r.live.evaluated, evaluated, "the second frame evaluates none of them again");
+    assert!(second == first, "the second frame draws the same");
+    assert!(second == Renderer::new().render(&d, 200, 100, Affine::IDENTITY, &opts).pixels, "a new renderer draws the same");
 }
 
 /// Moving an instance places its art again, and editing a symbol's art places the art of its
@@ -1090,6 +1294,95 @@ fn live_objects_draw_symbol_and_pattern_art_edits() {
     let band = filled(&mut d, rectangle(Rect::new(20.0, 20.0, 180.0, 80.0)), pattern_paint("Dots"), vec![]);
     let envelope = arc_envelope(&mut d, vec![band], true);
     edit_draws_as_new(with_art(d, vec![envelope]), red_bar);
+}
+
+/// Symbol `S` ([`symbol_art`]) at twice its size: bent by an envelope on the page at (50, 50), as
+/// the opacity mask of a black square at (350, 50) and in a clip group at (450, 50); not bent, in a
+/// group with a drop shadow at (150, 50); and an instance at (250, 50), at twice its size, of
+/// symbol `Bent`, whose art is an envelope bending a copy of `S`'s art.
+fn symbol_in_live_and_effect_art() -> Document {
+    use vectorcraft_geom::shapes::rectangle;
+    let mut d = Document::new(500.0, 100.0);
+    let art = symbol_art(&mut d);
+    d.symbols.push(vectorcraft_doc::Symbol { name: "S".into(), art: Arc::new(art) });
+    let bent = |d: &mut Document, x: f64| {
+        let xf = Affine::translate((x, 50.0)) * Affine::scale(2.0);
+        let s = Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "S".into(), xf });
+        arc_envelope(d, vec![s], false)
+    };
+    let envelope = bent(&mut d, 50.0);
+    let xf = Affine::translate((150.0, 50.0)) * Affine::scale(2.0);
+    let shadowed = Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "S".into(), xf });
+    let mut group = Node::group(d.alloc_id(), vec![Arc::new(shadowed)]);
+    group.appearance.effects.push(drop_shadow());
+    let copy = symbol_art(&mut d);
+    let art = arc_envelope(&mut d, vec![copy], false);
+    d.symbols.push(vectorcraft_doc::Symbol { name: "Bent".into(), art: Arc::new(art) });
+    let xf = Affine::translate((250.0, 50.0)) * Affine::scale(2.0);
+    let symbol = Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "Bent".into(), xf });
+    let mask = bent(&mut d, 350.0);
+    let mut masked = filled(&mut d, rectangle(Rect::new(310.0, 10.0, 390.0, 90.0)), Paint::solid(Color::BLACK), vec![]);
+    masked.extras_mut().mask = Some(Box::new(vectorcraft_doc::OpacityMask::new(mask, true)));
+    let clip = filled(&mut d, rectangle(Rect::new(410.0, 10.0, 490.0, 90.0)), Paint::None, vec![]);
+    let member = bent(&mut d, 450.0);
+    let clipped = Node::new(d.alloc_id(), NodeKind::Group { children: vec![Arc::new(clip), Arc::new(member)], clip: true });
+    with_art(d, vec![envelope, group, symbol, masked, clipped])
+}
+
+/// A renderer draws [`symbol_in_live_and_effect_art`] a second time, in Preview and in Outline
+/// view, from what it kept, without walking any of its envelopes or its group with a drop shadow
+/// again.
+#[test]
+fn unchanged_live_objects_and_effect_art_are_not_walked_again() {
+    let _fonts = fonts_steady();
+    let d = symbol_in_live_and_effect_art();
+    let preview = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+    let outline = RenderOptions { outline: true, ..preview.clone() };
+    for (view, opts) in [("Preview", &preview), ("Outline", &outline)] {
+        let mut r = Renderer::new();
+        let first = r.render(&d, 500, 100, Affine::IDENTITY, opts).pixels;
+        let walked = r.live.walked;
+        assert!(walked >= 3, "{view}: the first frame walks the envelopes: {walked}");
+        let second = r.render(&d, 500, 100, Affine::IDENTITY, opts).pixels;
+        assert_eq!(r.live.walked, walked, "{view}: the second frame walks nothing again");
+        assert!(second == first, "{view}: the second frame draws the same");
+    }
+}
+
+/// A thumbnail of an envelope around a symbol instance evaluates a copy of the envelope that the
+/// live cache does not keep, without walking it for the symbols it shows.
+#[test]
+fn live_objects_evaluated_without_the_cache_are_not_walked() {
+    let _fonts = fonts_steady();
+    let d = symbol_in_live_and_effect_art();
+    let envelope = d.layers[0].children().unwrap()[0].clone();
+    let mut r = Renderer::new();
+    r.render_node_thumbnail(&d, &envelope, 32, None).unwrap();
+    assert!(r.live.evaluated >= 1, "the thumbnail evaluates the envelope");
+    assert_eq!(r.live.walked, 0, "the thumbnail walks nothing");
+}
+
+/// After two frames of [`symbol_in_live_and_effect_art`], the second drawn from what the renderer
+/// kept, an edit of `S`'s art draws in Preview and in Outline view as a new renderer draws it.
+#[test]
+fn live_objects_and_effect_art_kept_without_a_walk_draw_symbol_edits() {
+    let _fonts = fonts_steady();
+    let preview = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+    let outline = RenderOptions { outline: true, ..preview.clone() };
+    for (view, opts) in [("Preview", &preview), ("Outline", &outline)] {
+        let mut d = symbol_in_live_and_effect_art();
+        let mut r = Renderer::new();
+        r.render(&d, 500, 100, Affine::IDENTITY, opts);
+        let before = r.render(&d, 500, 100, Affine::IDENTITY, opts).pixels;
+        // `S` becomes a wide red bar.
+        let bar = vectorcraft_geom::shapes::rectangle(Rect::new(-20.0, -4.0, 20.0, 4.0));
+        let red = vectorcraft_doc::Appearance::basic(Paint::solid(Color::rgb(1.0, 0.0, 0.0)), Paint::None, 0.0);
+        d.symbols[0].art = Arc::new(Node::path(d.alloc_id(), bar, red));
+        let after = r.render(&d, 500, 100, Affine::IDENTITY, opts).pixels;
+        assert!(after != before, "{view}: the edit changes the frame");
+        let fresh = Renderer::new().render(&d, 500, 100, Affine::IDENTITY, opts).pixels;
+        assert!(after == fresh, "{view}: a new renderer draws the same");
+    }
 }
 
 /// Installs live-effect plug-in `id`, replacing one with the same id: its effect draws `shape` in

@@ -344,6 +344,8 @@ font-technology	Variable	Variabla
 	Bullets	Punkter
 	Bullets and Numbering	Punkter och numrering
 	Apply Bullets	Använd punkter
+	Numbered List	Numrerad lista
+	Apply Numbers	Använd numrering
 	Filled Dot	Fylld punkt
 	Dash	Tankstreck
 	Hollow Circle	Tom cirkel
@@ -3013,6 +3015,7 @@ font-technology	Variable	Variabla
 	Outlines	Konturlinjer
 	Outlines with Source Image	Konturlinjer med källbild
 	Source Image	Källbild
+	Press and hold to view the source image	Håll ned för att visa källbilden
 	Image Trace View	Vy för bildkalkering
 	Snap Options	Fästalternativ
 	Snap to Glyph	Fäst mot glyf
@@ -3755,6 +3758,7 @@ axis	Both	Båda
 @msg	Installed plug-in {_1}	Installerade insticksmodulen {_1}
 @msg	Internal error: {msg} (please report this bug)	Internt fel: {msg} (rapportera gärna felet)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Sammanfoga Live Paint: markera en Live Paint-grupp och de banor som ska läggas till
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Live Paint tar banor och sammansatta banor: konvertera först text, bilder och andra objekt till banor
 @msg	Live Paint: select paths or compound paths	Live Paint: markera banor eller sammansatta banor
 @msg	Live Paint: these paths are too degenerate to paint	Live Paint: de här banorna är för degenererade för att målas
 @msg	Make Guides: select paths	Skapa stödlinjer: markera banor
@@ -3821,6 +3825,12 @@ axis	Both	Båda
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` måste vara mellan {min} och {max} (fick {x})
 @msg	`{key}` must be one of {_1}	`{key}` måste vara något av {_1}
 @msg	`{key}` must be true or false	`{key}` måste vara true eller false
+@msg	`select` must be true or false	`select` måste vara true eller false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` och `maxAnchors` måste vara heltal
+@msg	`{key}` must be a number not below 0	`{key}` måste vara ett tal som inte är under 0
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` måste vara [x, y, width, height]: fyra ändliga tal, där bredd och höjd inte är negativa
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` är större än `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	ange minst en av `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`{k}` must be [x, y]	`{k}` måste vara [x, y]
 @msg	`{name}` has no options	`{name}` har inga alternativ
 @msg	`{name}` is a built-in workspace; choose another name	`{name}` är en inbyggd arbetsyta; välj ett annat namn
@@ -4406,6 +4416,8 @@ axis	Both	Båda
 @msg	{key} must be an array of non-negative integer object ids	{key} måste vara en array med objekt-id:n som är icke-negativa heltal
 @msg	invalid object id {value}: expected a non-negative integer	ogiltigt objekt-id {value}: ett icke-negativt heltal förväntades
 @msg	no such object id {value}	det finns inget objekt med id {value}
+@msg	id {value} is a layer, not an object	id {value} är ett lager, inte ett objekt
+@msg	id {value} is a layer, not an object; move layers with layer.move	id {value} är ett lager, inte ett objekt; flytta lager med layer.move
 @msg	automation filesystem access is not granted: read authority is absent: {path}	automatiseringen har inte fått åtkomst till filsystemet: läsbehörighet saknas: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	automatiseringen har inte fått åtkomst till filsystemet: skrivbehörighet saknas: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	automatiseringssökvägen avvisades: utanför läsroten {root}: {path}
@@ -5341,6 +5353,7 @@ theme	Appearance	Utseende
 	Snap to Perpendicular	Fäst mot vinkelrät
 @msg	unknown snap option `{key}` (use {options})	okänt fästalternativ `{key}` (använd {options})
 	Gap Length:	Lucklängd:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Läget Platt logotyp vektoriserade bilden vid {_1} × {_2} pixlar, nedskalad genom medelvärdesbildning från {_3} × {_4}.
 	Artboard {n} of {total}	Rityta {n} av {total}
 	File {n} of {total}	Fil {n} av {total}
 	Encoding and writing the file…	Kodar och skriver filen…

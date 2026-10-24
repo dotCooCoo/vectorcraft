@@ -409,6 +409,8 @@ font-technology	Variable	Biến thiên
 	Bullets	Dấu đầu dòng
 	Bullets and Numbering	Dấu đầu dòng và đánh số
 	Apply Bullets	Áp dụng dấu đầu dòng
+	Numbered List	Danh sách đánh số
+	Apply Numbers	Áp dụng đánh số
 	Filled Dot	Chấm đặc
 	Dash	Gạch ngang
 	Hollow Circle	Hình tròn rỗng
@@ -1779,6 +1781,7 @@ file-filter	Templates	Mẫu
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	Tệp ghi phím và phím bổ trợ dưới dạng mã. Hãy kiểm tra các nghĩa được đề xuất và trả lời những mã chưa biết.
 	Click, then press the key this code stands for (Esc cancels)	Bấm, rồi nhấn phím mà mã này biểu thị (Esc để hủy)
 	Press a key…	Nhấn một phím…
+	Press and hold to view the source image	Nhấn giữ để xem ảnh nguồn
 	from your earlier imports	từ các lần nhập trước của bạn
 	from the format's public description	từ mô tả công khai của định dạng
 	not known yet	chưa biết
@@ -4082,6 +4085,12 @@ theme	Appearance	Giao diện
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` phải nằm trong khoảng {min} đến {max} (nhận được {x})
 @msg	`{key}` must be one of {_1}	`{key}` phải là một trong {_1}
 @msg	`{key}` must be true or false	`{key}` phải là true hoặc false
+@msg	`select` must be true or false	`select` phải là true hoặc false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` và `maxAnchors` phải là số nguyên
+@msg	`{key}` must be a number not below 0	`{key}` phải là một số không nhỏ hơn 0
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` phải là [x, y, width, height]: bốn số hữu hạn, chiều rộng và chiều cao không âm
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` lớn hơn `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	hãy cung cấp ít nhất một trong `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` phải là grayscale, rgb, hsb, cmyk hoặc websafe
 @msg	`{k}` must be [x, y]	`{k}` phải là [x, y]
 @msg	`{name}` has no options	`{name}` không có tùy chọn
@@ -4342,6 +4351,7 @@ theme	Appearance	Giao diện
 @msg	layers can't be wrap objects	lớp không thể là đối tượng bọc
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	ảnh liên kết hiển thị bản xem trước độ phân giải thấp đã lưu trong tệp cho đến khi tìm thấy tệp gốc: liên kết lại trong bảng Liên kết
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Hợp nhất tô trực tiếp: chọn nhóm tô trực tiếp và các đường dẫn để thêm
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Tô trực tiếp nhận đường dẫn và đường dẫn phức: hãy chuyển văn bản, hình ảnh và các đối tượng khác thành đường dẫn trước
 @msg	Live Paint: select paths or compound paths	Tô trực tiếp: chọn đường dẫn hoặc đường dẫn phức
 @msg	Live Paint: these paths are too degenerate to paint	Tô trực tiếp: các đường dẫn này quá suy biến để tô
 @msg	Loading VectorCraft…	Đang tải VectorCraft…
@@ -4492,6 +4502,8 @@ theme	Appearance	Giao diện
 @msg	{key} must be an array of non-negative integer object ids	{key} phải là một mảng id đối tượng là số nguyên không âm
 @msg	invalid object id {value}: expected a non-negative integer	id đối tượng {value} không hợp lệ: cần một số nguyên không âm
 @msg	no such object id {value}	không có đối tượng nào có id {value}
+@msg	id {value} is a layer, not an object	id {value} là một lớp, không phải đối tượng
+@msg	id {value} is a layer, not an object; move layers with layer.move	id {value} là một lớp, không phải đối tượng; hãy di chuyển lớp bằng layer.move
 @msg	object {0} cannot have children	đối tượng {0} không thể có phần tử con
 @msg	object {id} is not a path	đối tượng {id} không phải là đường dẫn
 @msg	object {id} is not a selected top-level object	đối tượng {id} không phải là đối tượng cấp cao nhất đã chọn
@@ -4978,6 +4990,7 @@ theme	Appearance	Giao diện
 	Snap to Perpendicular	Hút vào đường vuông góc
 @msg	unknown snap option `{key}` (use {options})	tùy chọn hút không hợp lệ `{key}` (dùng {options})
 	Gap Length:	Độ dài khoảng hở:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Chế độ Logo phẳng đã dò ảnh ở {_1} × {_2} điểm ảnh, thu nhỏ bằng cách lấy trung bình từ {_3} × {_4}.
 	Artboard {n} of {total}	Bảng vẽ {n} / {total}
 	File {n} of {total}	Tệp {n} / {total}
 	Encoding and writing the file…	Đang mã hóa và ghi tệp…

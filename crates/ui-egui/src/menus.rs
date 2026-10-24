@@ -231,6 +231,12 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "{bullet?: \"dot\"|\"dash\"|\"circle\"|\"square\"|\"none\"} Type › Bullets and Numbering › Apply Bullets: the selected type's paragraphs (or those the Type tool's selection touches) become a bulleted list with that bullet (text.setFormat {bullet}); without it, a list keeps its bullet and other paragraphs take the dot (text.setFormat {list: \"bullet\"}); \"none\" turns the list off",
     ),
     (
+        "type.applyNumbers",
+        "Apply Numbers",
+        "",
+        "{number?: \"arabic\"|\"upperLetters\"|\"lowerLetters\"|\"upperRoman\"|\"lowerRoman\"|\"twoDigits\"|\"threeDigits\"|\"none\"} Type › Bullets and Numbering › Apply Numbers: the selected type's paragraphs (or those the Type tool's selection touches) become a numbered list in that number style (text.setFormat {number}); without it, a numbered list keeps its style and other paragraphs are numbered 1, 2, 3 (text.setFormat {list: \"number\"}); \"none\" turns the list off",
+    ),
+    (
         "align.horizontalLeft",
         "Horizontal Align Left",
         "",
@@ -1416,6 +1422,7 @@ pub fn run_ui_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<R
             crate::panels::paragraph::align(app, justify)
         }
         "type.applyBullets" => crate::panels::paragraph::apply_bullets(app, p),
+        "type.applyNumbers" => crate::panels::paragraph::apply_numbers(app, p),
         id if let Some(b) = crate::panels::align::button(id) => crate::panels::align::run_button(app, b),
         "view.gradientAnnotator" => flag(&mut app.ui.view.gradient_annotator),
         "view.livePaintGaps" => flag(&mut app.ui.view.live_paint_gaps),
@@ -2504,7 +2511,7 @@ pub fn enabled(app: &VectorcraftApp, id: &str) -> bool {
         "file.save" => app.session.active().is_some_and(|d| d.path.is_none() || d.converted || d.is_dirty()),
         "type.bold" | "type.italic" => crate::panels::character::text_style(app).is_some(),
         id if crate::panels::paragraph::ALIGN_COMMANDS.iter().any(|c| c.0 == id) => crate::panels::character::text_style(app).is_some(),
-        "type.applyBullets" => crate::panels::character::text_style(app).is_some(),
+        "type.applyBullets" | "type.applyNumbers" => crate::panels::character::text_style(app).is_some(),
         id if let Some(b) = crate::panels::align::button(id) => enabled(app, b.command()),
         "file.reveal" => app.services.reveal.is_some() && app.session.active().is_some_and(|d| d.path.is_some()),
         "file.cancelExport" | "file.exportInBackground" => app.background.jobs.iter().any(|j| j.progress.is_some() && !j.cancelled()),
@@ -3001,7 +3008,7 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                     ],
                 ),
                 cp("Smart Punctuation…", "type.smartPunctuation", json!({"quotes": true, "dashes": true, "ellipsis": true, "scope": "selection"})),
-                sub("Bullets and Numbering", vec![c("Apply Bullets", "type.applyBullets")]),
+                sub("Bullets and Numbering", vec![c("Apply Bullets", "type.applyBullets"), c("Apply Numbers", "type.applyNumbers")]),
                 Sep,
                 c("Create Outlines", "type.createOutlines"),
                 c("Scale Text Attributes", "type.scaleTextAttributes"),
@@ -3382,7 +3389,7 @@ pub fn context_items(app: &VectorcraftApp) -> Vec<Item> {
         }
         // The paragraphs of the selected type, or those the Type tool's selection touches.
         if crate::panels::character::text_style(app).is_some() {
-            v.push(sub("Bullets and Numbering", vec![c("Apply Bullets", "type.applyBullets")]));
+            v.push(sub("Bullets and Numbering", vec![c("Apply Bullets", "type.applyBullets"), c("Apply Numbers", "type.applyNumbers")]));
         }
         v.extend([
             c("Make Guides", "view.guides.make"),

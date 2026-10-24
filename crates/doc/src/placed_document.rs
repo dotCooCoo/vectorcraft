@@ -525,6 +525,9 @@ fn rename(n: &mut Node, prefix: &str) {
     });
 }
 
+/// Most placed documents [`Document::with_placed_art`] reads for one export, nested ones included.
+pub const MAX_PLACED_READS: usize = 256;
+
 impl Document {
     /// This document ready to export its placed documents: their files read (the file read again
     /// when only the preview is stored, else the preview), and the resources their art uses added
@@ -544,9 +547,17 @@ impl Document {
         }
         let mut d = self.clone();
         let mut found: Vec<Arc<ReadDocument>> = vec![];
+        // Placed documents are told apart by the names their art's resources get here, so one
+        // file placed in itself, or many times in a file placed many times, read again in every
+        // branch: past [`MAX_PLACED_READS`] reads, the rest show their previews.
+        let mut reads = 0usize;
         while let Some((p, depth)) = queue.pop() {
             let Some(blob) = d.images.get(&p.key).cloned() else { continue };
-            let full = if depth < MAX_DEPTH { full_bytes(&p, &blob) } else { None };
+            // Top-level placements are distinct already (by key): only reads nested inside placed
+            // documents count, so a catalogue placing many files still reads each of them.
+            let read_full = depth < MAX_DEPTH && (depth == 0 || reads < MAX_PLACED_READS);
+            reads += usize::from(read_full && depth > 0);
+            let full = if read_full { full_bytes(&p, &blob) } else { None };
             if full.and_then(|b| read(&p, &b)).is_none() {
                 let preview = if blob.is_proxy() { Some(blob.bytes.clone()) } else { blob.proxy.clone() };
                 if let Some(bytes) = preview {
@@ -562,7 +573,7 @@ impl Document {
                 .chain(e.doc.symbols.iter().map(|s| &s.art))
                 .chain(e.doc.graph_designs.iter().map(|g| &g.art))
                 .chain(e.doc.patterns.iter().flat_map(|p| &p.art));
-            for root in inner {
+            for root in inner.filter(|_| reads < MAX_PLACED_READS) {
                 walk_all(root, &mut |n| {
                     if let NodeKind::PlacedDocument(q) = &n.kind {
                         let key = format!("{prefix}{}", q.key);

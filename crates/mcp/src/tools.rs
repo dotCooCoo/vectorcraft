@@ -354,7 +354,7 @@ pub fn tool_definitions() -> Vec<Value> {
             "save_file",
             "Save file",
             &format!(
-                "Save the active document with the engine's document.save: by default to its own file in its own format (native .vectorcraft unless it was opened from or saved as SVG, PDF or a restorable .ai). With `path`, the extension picks the format: .{}. Other formats are exports (see export). The reply's `format` says what was written and `warnings` what that format loses.",
+                "Save the active document with the engine's document.save: by default to its own file in its own format (native .vectorcraft unless it was opened from or saved as SVG, PDF or a restorable .ai). With `path`, the extension picks the format: .{}. Other formats are exports (see export). The reply's `format` says what was written and `warnings` what that format loses. In the running app the call returns once the file is written, or with the error, even with Background Save on. When the save asks first (before replacing a file that opened with losses, or with a file dialog for an untitled document without `path`), the reply is `pending` or \"cancelled\" as before.",
                 save_extensions().join(", .")
             ),
             obj(json!({"path": string("Destination; its extension picks the format (default: the document's own file)")}), &[]),
@@ -370,7 +370,7 @@ pub fn tool_definitions() -> Vec<Value> {
                     "path": string("Destination file (omit to get dataBase64)"),
                     "scale": num("Raster pixels per point (default 1)"),
                     "artboard": {"type": "integer", "minimum": 0, "description": "0-based artboard (default: the first; PDF and .ai default: all)"},
-                    "range": string("1-based artboards such as \"1-3, 5\" (PDF and .ai: one page each; SVG, SVGZ and EPS: one file each; rasters, DXF, EMF and WMF: one, or one file each with options.useArtboards: true)"),
+                    "range": string("1-based artboards such as \"1-3, 5\" (PDF and .ai: one page each; SVG and SVGZ: one file each; EPS: one file each, after a central file of the whole document when there are two or more; rasters, DXF, EMF and WMF: one, or one file each with options.useArtboards: true)"),
                     "selection": {"type": "boolean", "description": "Export only the selection, cropped to it"},
                     "outlineText": {"type": "boolean", "description": "SVG/SVGZ: true writes text as outlines (viewable without the fonts). DXF takes it too (type outlined anyway unless preserve: editability). PDF uses options.advanced.outlineText instead (default false: live text)"},
                     "options": {"type": "object", "description": "More format options, passed through (see run_command document.formats), e.g. {\"quality\": 80} for jpg or {\"advanced\": {\"outlineText\": true}} for PDF text as outlines (default false: live text)"},
@@ -500,6 +500,16 @@ type Args = Map<String, Value>;
 
 fn req_str<'a>(a: &'a Args, k: &str) -> Result<&'a str, String> {
     a.get(k).and_then(Value::as_str).filter(|s| !s.is_empty()).ok_or_else(|| format!("missing string argument `{k}`"))
+}
+
+/// A file tool's path made absolute against this process's working directory. An empty path is
+/// returned as given.
+fn absolute_path(p: &str) -> Result<String, String> {
+    if p.is_empty() {
+        return Ok(String::new());
+    }
+    let abs = std::path::absolute(p).map_err(|e| format!("{p}: {e}"))?;
+    abs.into_os_string().into_string().map_err(|abs| format!("{p}: the absolute path {} is not UTF-8", abs.to_string_lossy()))
 }
 
 fn exec(b: &mut dyn Backend, cmd: &str, params: Value) -> Result<Value, String> {
@@ -810,7 +820,8 @@ fn transform(b: &mut dyn Backend, a: &Args) -> Result<Value, String> {
 }
 
 fn screenshot(b: &mut dyn Backend, a: &Args) -> Result<ToolResult, String> {
-    let path = a.get("path").and_then(Value::as_str);
+    let path = a.get("path").and_then(Value::as_str).map(absolute_path).transpose()?;
+    let path = path.as_deref();
     let window = a.get("window").and_then(Value::as_bool) == Some(true);
     // The backend writes the file, where its automation roots allow, and sends the image back too
     // (`data`): this process writes nothing.
@@ -1010,8 +1021,16 @@ fn dispatch(b: &mut dyn Backend, name: &str, a: &Args) -> Result<ToolResult, Str
             j(b.call("ui.set", json!({"panel": req_str(a, "panel")?}))?)
         }
         "screenshot" => screenshot(b, a),
-        "open_file" => j(b.call("app.open", json!({"path": req_str(a, "path")?}))?),
-        "save_file" => j(b.call("app.save", json!({"path": a.get("path").and_then(Value::as_str)}))?),
+        "open_file" => j(b.call("app.open", json!({"path": absolute_path(req_str(a, "path")?)?}))?),
+        "save_file" => {
+            let mut p = json!({"path": a.get("path").and_then(Value::as_str).map(absolute_path).transpose()?});
+            // The app writes the file before it replies, even with Background Save on, so a failed
+            // save is this call's error.
+            if b.has_ui() {
+                p["wait"] = json!(true);
+            }
+            j(b.call("app.save", p)?)
+        }
         "export" => {
             // One params object for every backend; the named arguments win over `options` (a named
             // artboard or range replaces every artboard choice in `options`).
@@ -1025,6 +1044,10 @@ fn dispatch(b: &mut dyn Backend, name: &str, a: &Args) -> Result<ToolResult, Str
                 if let Some(v) = a.get(*k).filter(|v| !v.is_null()) {
                     params.insert((*k).into(), v.clone());
                 }
+            }
+            if let Some(path) = params.get("path").and_then(Value::as_str) {
+                let path = absolute_path(path)?;
+                params.insert("path".into(), json!(path));
             }
             let cmd = if a.get("selection").and_then(Value::as_bool) == Some(true) { "document.exportSelection" } else { "document.export" };
             j(exec(b, cmd, Value::Object(params))?)
@@ -1235,7 +1258,7 @@ fn render_preview(b: &mut dyn Backend, a: &Args) -> Result<ToolResult, String> {
     let encoded = r.get("pngBase64").and_then(Value::as_str).ok_or("renderer returned no image")?;
     let png = vectorcraft_format::base64_decode(encoded).ok_or("renderer returned bad base64")?;
     let img = image::load_from_memory_with_format(&png, image::ImageFormat::Png).map_err(|e| format!("read preview: {e}"))?;
-    let img = img.thumbnail(max as u32, max as u32);
+    let img = if img.width() > max as u32 || img.height() > max as u32 { img.thumbnail(max as u32, max as u32) } else { img };
     let mut out = std::io::Cursor::new(Vec::new());
     img.write_to(&mut out, image::ImageFormat::Png).map_err(|e| format!("encode preview: {e}"))?;
     Ok(image_result(out.get_ref(), json!({"width":img.width(),"height":img.height()})))

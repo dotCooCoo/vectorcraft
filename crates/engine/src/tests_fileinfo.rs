@@ -113,6 +113,29 @@ fn saving_to_a_file_stamps_the_modified_date() {
 }
 
 #[test]
+fn inspect_and_open_report_the_file_info_title_beside_the_file_name() {
+    let dir = std::env::temp_dir().join(format!("vc-fileinfotitle-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("poster.vectorcraft");
+    let mut s = session();
+    // Untitled, the two are the same.
+    let r = s.execute("document.inspect", &json!({"depth": 0})).unwrap();
+    assert_eq!((r["title"].as_str(), r["fileInfoTitle"].as_str()), (Some("Poster"), Some("Poster")));
+    s.execute("file.info", &json!({"title": "Poster: final"})).unwrap();
+    s.execute("document.save", &json!({"path": path.to_str().unwrap()})).unwrap();
+    let r = s.execute("document.inspect", &json!({"depth": 0})).unwrap();
+    assert_eq!((r["title"].as_str(), r["fileInfoTitle"].as_str()), (Some("poster.vectorcraft"), Some("Poster: final")));
+    // Opened from the file, in another session.
+    let mut s = Session::new();
+    let opened = s.execute("document.open", &json!({"path": path.to_str().unwrap()})).unwrap();
+    assert_eq!((opened["title"].as_str(), opened["fileInfoTitle"].as_str()), (Some("poster.vectorcraft"), Some("Poster: final")));
+    let r = s.execute("document.inspect", &json!({"depth": 0})).unwrap();
+    assert_eq!((r["title"].as_str(), r["fileInfoTitle"].as_str()), (Some("poster.vectorcraft"), Some("Poster: final")));
+    assert_eq!(r["fileInfoTitle"], s.execute("file.info", &json!({})).unwrap()["title"]);
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 fn pdf_info_carries_author_subject_and_keywords() {
     let mut s = session();
     s.execute("file.info", &info()).unwrap();

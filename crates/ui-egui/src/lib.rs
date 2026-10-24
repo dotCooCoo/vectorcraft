@@ -430,6 +430,9 @@ pub struct CacheKey {
     pub rich_black: bool,
     /// Colour and style of guide paths ([`vectorcraft_render::RenderOptions::guide`]).
     pub guide: ([u8; 3], bool),
+    /// The Image Trace objects drawn with their source image
+    /// ([`vectorcraft_render::RenderOptions::trace_source`]).
+    pub trace_source: Option<std::sync::Arc<Vec<vectorcraft_doc::NodeId>>>,
 }
 
 #[derive(Clone, Copy, Debug, Default)]

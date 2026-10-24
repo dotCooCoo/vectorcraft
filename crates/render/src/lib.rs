@@ -159,6 +159,10 @@ pub struct RenderOptions {
     /// Screen view: Image Trace objects draw as their View asks (outlines, the source image…);
     /// off, they draw their tracing result, as exports and printing do.
     pub trace_views: bool,
+    /// Screen view with `trace_views` on: the Image Trace objects drawn with the Source Image view
+    /// for this render only, whatever View they have (the Image Trace panel's eye button, while it
+    /// is held down).
+    pub trace_source: Option<Arc<Vec<NodeId>>>,
     /// Images are sampled smoothly when scaled or rotated; off, each pixel takes its nearest image
     /// pixel (Pixel Preview with File Handling › Display Bitmaps as Anti-aliased Images off).
     pub smooth_images: bool,
@@ -266,6 +270,7 @@ impl Default for RenderOptions {
             anti_alias: AntiAlias::Art,
             progressive_placed: false,
             trace_views: false,
+            trace_source: None,
             smooth_images: true,
             isolated: None,
             precise: false,
@@ -466,11 +471,12 @@ pub struct Renderer {
     /// Expanded stroke outlines keyed by ([`Self::stroke_owner`], stroke layer address, width bits,
     /// tolerance level): panning re-renders reuse them instead of re-expanding every stroke.
     strokes: PtrMap<(usize, usize, u64, i32), StrokeEntry>,
-    /// The node being drawn on the plain-path fast path (owner of cached stroke outlines).
+    /// The node being drawn on the plain-path fast path, or the path of brush art being drawn
+    /// ([`Self::draw_brush_pieces`]): the owner of cached stroke outlines.
     cur: Option<Arc<Node>>,
     /// Whether the art being drawn is made again in every frame: symbol art that
-    /// [`Self::placed_art`] did not keep, and evaluations of live objects and effect art that their
-    /// caches did not keep.
+    /// [`Self::placed_art`] did not keep, evaluations of live objects and effect art that their
+    /// caches did not keep, and brush art that the brush cache did not keep.
     made_again: bool,
     /// The node `draw_shape_fx` may cache the live-effect geometry of (the one `draw_arc` is drawing).
     /// In Outline view its path comes from `geom` too ([`Self::outline_path`]), and
@@ -478,8 +484,8 @@ pub struct Renderer {
     /// Trace object that it draws.
     fx_owner: Option<Arc<Node>>,
     /// The live object [`Self::draw_kept_node`] is drawing (kept symbol art, an opacity mask's art,
-    /// a member of a clip group in Outline view): [`Self::draw_content`] draws its evaluation from
-    /// the live cache.
+    /// a member of a clip group in Outline view, kept brush art): [`Self::draw_content`] draws its
+    /// evaluation from the live cache.
     live_root: Option<Arc<Node>>,
     /// Live-effect geometry per node ([`fx::FxGeom`]), keyed by `Arc` identity like `geom`.
     fx_geom: PtrMap<usize, fx::FxGeom>,
@@ -537,6 +543,10 @@ pub struct Renderer {
     /// at the start of every frame.
     offscreen_live: u64,
     offscreen_budget: u64,
+    /// Objects the symbol instances drawn in this frame held, together ([`vectorcraft_doc::MAX_SYMBOL_NODES`]).
+    symbol_nodes: u64,
+    /// Groups drawn twice (blending with their backdrop) that hold what is being drawn.
+    twice_drawn: u32,
     /// What clipping paths paint, per clipping path (see [`Self::clip_paint_of`]).
     clip_paints: FrameCache<usize, ClipPaintEntry>,
     /// Gradients along or across strokes (see [`Self::fill_path_gradient`]), keyed by
@@ -665,6 +675,8 @@ impl Renderer {
             picture: None,
             offscreen_live: 0,
             offscreen_budget: 0,
+            symbol_nodes: 0,
+            twice_drawn: 0,
             clip_paints: FrameCache::new(lru::CLIP_BUDGET, 256),
             stroke_slices: PtrMap::default(),
             adjusts: HashMap::new(),
@@ -751,6 +763,8 @@ impl Renderer {
         self.inline_depth = 0;
         // Nothing is drawn offscreen yet (even if an earlier frame stopped part way).
         (self.offscreen_live, self.offscreen_budget) = (0, 0);
+        self.symbol_nodes = 0;
+        self.twice_drawn = 0;
     }
 
     /// End a frame: drop cache entries not used for a few frames (every render, thumbnails too,
@@ -1292,8 +1306,8 @@ impl Renderer {
     /// What `n` draws inside its transparency group (`knockout`: its children knock each other out).
     fn draw_content(&mut self, ctx: &mut RenderContext, f: &Frame, n: &Node, knockout: bool) {
         match &n.kind {
-            NodeKind::Group { children, clip: false } if f.opts.trace_views && !f.opts.outline && n.trace_view() != TraceView::Result => {
-                self.draw_trace_view(ctx, f, children, n.trace_view(), knockout)
+            NodeKind::Group { children, clip: false } if f.opts.trace_views && !f.opts.outline && Self::trace_view(f, n) != TraceView::Result => {
+                self.draw_trace_view(ctx, f, children, Self::trace_view(f, n), knockout)
             }
             NodeKind::Layer { children, clip: false, .. } | NodeKind::Group { children, clip: false } => {
                 self.draw_children(ctx, f, children, knockout)
@@ -1339,9 +1353,13 @@ impl Renderer {
                 let bp = self.outline_path(f, n).unwrap_or_else(|| Arc::new(path.to_bezpath()));
                 if *guide {
                     let ([r, g, b], dots) = f.opts.guide;
-                    if dots {
-                        let mut screen = BezPath::clone(&bp);
-                        screen.apply_affine(f.view);
+                    let mut screen = BezPath::clone(&bp);
+                    screen.apply_affine(f.view);
+                    // The rasterizer makes every dash of the whole path before clipping: a guide
+                    // running far off screen (from a file) asked for millions of them. Past
+                    // [`MAX_GUIDE_DASHES`] (by its control polygon, which is at least as long) it
+                    // is drawn solid.
+                    if dots && polygon_length(&screen) / 4.0 <= MAX_GUIDE_DASHES {
                         ctx.set_transform(Affine::IDENTITY);
                         ctx.set_stroke(kurbo::Stroke::new(1.5).with_dashes(0.0, [1.5, 2.5]));
                         ctx.set_paint(f.ink.fixed([r, g, b, 255]));
@@ -1368,7 +1386,9 @@ impl Renderer {
             NodeKind::Text(t) => self.draw_text(ctx, f, n, t),
             NodeKind::Image(im) => self.draw_image(ctx, f, im),
             NodeKind::SymbolInstance { symbol, xf } => {
-                if let Some(sym) = f.doc.symbols.iter().find(|s| &s.name == symbol) {
+                if let Some(sym) = f.doc.symbols.iter().find(|s| &s.name == symbol)
+                    && self.charge_symbol(&sym.art)
+                {
                     let (art, kept) = self.placed_art(&sym.art, *xf, false, Some(n));
                     self.draw_placed_art(ctx, f, &art, kept);
                 }
@@ -1383,6 +1403,13 @@ impl Renderer {
                 None => self.draw_live_node(ctx, f, n),
             },
         }
+    }
+
+    /// Count symbol art `art`'s objects against the frame's [`vectorcraft_doc::MAX_SYMBOL_NODES`]: `false` (the
+    /// instance isn't drawn) once they would pass it.
+    fn charge_symbol(&mut self, art: &Node) -> bool {
+        let total = self.symbol_nodes.saturating_add(art.count() as u64);
+        (total <= vectorcraft_doc::MAX_SYMBOL_NODES).then(|| self.symbol_nodes = total).is_some()
     }
 
     /// Draw symbol art `art` as [`Self::placed_art`] placed it for an instance or an inline graphic
@@ -1405,6 +1432,15 @@ impl Renderer {
         let outer = std::mem::replace(&mut self.live_root, live);
         self.draw_node(ctx, f, a, true);
         self.live_root = outer;
+    }
+
+    /// The View `n` draws with on screen: Source Image when it is an Image Trace object listed in
+    /// [`RenderOptions::trace_source`], else its own.
+    fn trace_view(f: &Frame, n: &Node) -> TraceView {
+        match &f.opts.trace_source {
+            Some(ids) if n.extras().trace.is_some() && ids.contains(&n.id) => TraceView::Source,
+            _ => n.trace_view(),
+        }
     }
 
     /// An Image Trace object's `children` (the hidden source image, then the traced shapes) as
@@ -1715,11 +1751,11 @@ impl Renderer {
         }
     }
 
-    /// The line part of a stroke of the fast-path node `self.cur` (see
-    /// [`effects::stroke::line_outline`]), cached across frames under [`Self::stroke_owner`] and
-    /// the stroke layer. The tolerance (vello's 0.25 device px) is bucketed to powers of two, never
-    /// coarser than needed, so zooming reuses outlines until the level changes. Only the node's own
-    /// strokes are cached: for the strokes of the brush art drawn for it, this returns `None`.
+    /// The line part of a stroke of `self.cur` (see [`effects::stroke::line_outline`]), cached
+    /// across frames under [`Self::stroke_owner`] and the stroke layer. The tolerance (vello's 0.25
+    /// device px) is bucketed to powers of two, never coarser than needed, so zooming reuses
+    /// outlines until the level changes. Only `self.cur`'s own strokes are cached: for other
+    /// strokes, this returns `None`.
     fn cached_stroke(&mut self, f: &Frame, line: &BezPath, st: &StrokeLayer, width: f64) -> Option<Arc<BezPath>> {
         let node = self.cur.clone().filter(|n| owns_stroke(n, st))?;
         let level = (f.px * 0.25).log2().floor() as i32;
@@ -1735,7 +1771,7 @@ impl Renderer {
         Some(outline)
     }
 
-    /// What the `strokes` and `stroke_slices` keys hold for the fast-path node `node`: its address,
+    /// What the `strokes` and `stroke_slices` keys hold for `node` (`self.cur`): its address,
     /// or 0 while art made again in every frame is drawn ([`Self::made_again`]).
     fn stroke_owner(&self, node: &Arc<Node>) -> usize {
         if self.made_again { 0 } else { Arc::as_ptr(node) as usize }
@@ -2378,6 +2414,33 @@ fn stain_bits(stain: Option<(vectorcraft_color::Color, f32)>) -> [u32; 6] {
 
 /// Preferred rasterizer thread count set by the app (Preferences → Performance); negative = automatic.
 static THREADS_OVERRIDE: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(-1);
+
+/// Most dashes a dotted guide is drawn with (1.5 on, 2.5 off on screen); a longer one is solid.
+const MAX_GUIDE_DASHES: f64 = 100_000.0;
+
+/// The length of `p`'s control polygon: at least its own length (infinite when a point is).
+fn polygon_length(p: &BezPath) -> f64 {
+    let (mut last, mut len): (Option<kurbo::Point>, f64) = (None, 0.0);
+    for el in p.elements() {
+        let points = match *el {
+            kurbo::PathEl::MoveTo(q) => {
+                last = Some(q);
+                continue;
+            }
+            kurbo::PathEl::LineTo(q) => [Some(q), None, None],
+            kurbo::PathEl::QuadTo(a, b) => [Some(a), Some(b), None],
+            kurbo::PathEl::CurveTo(a, b, c) => [Some(a), Some(b), Some(c)],
+            kurbo::PathEl::ClosePath => continue,
+        };
+        for q in points.into_iter().flatten() {
+            if let Some(l) = last {
+                len += l.distance(q);
+            }
+            last = Some(q);
+        }
+    }
+    if len.is_nan() { f64::INFINITY } else { len }
+}
 
 /// Override the worker-thread count used by renderers created from now on (`None` = automatic).
 pub fn set_default_threads(n: Option<u16>) {

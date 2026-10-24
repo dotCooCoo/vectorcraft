@@ -969,10 +969,12 @@ fn convert_to_artboards(s: &mut Session, _: &Value) -> Result<Value> {
             if b.width() <= 0.0 || b.height() <= 0.0 {
                 continue;
             }
+            // Named one past the highest artboard id the document has, whatever id it is given.
+            let number = d.artboards.iter().map(|a| a.id).max().map_or(1, |m| m.saturating_add(1));
             let aid = d.next_artboard_id();
             d.artboards.push(vectorcraft_doc::Artboard {
                 id: aid,
-                name: format!("Artboard {aid}"),
+                name: format!("Artboard {number}"),
                 rect: b,
                 locked: false,
                 show_center_mark: false,

@@ -127,7 +127,7 @@ pub const AI_OPTIONS: &[FormatOption] = &[
         name: "outlineText",
         ty: "boolean",
         default: "false",
-        description: "with aiVersion 7, type as its outlines instead of text (which apps reading the file set in the fonts it names: they need them installed); type 8-bit text can't hold (characters outside Windows Latin-1, vertical type, inline graphics, gradient or pattern fills) is always outlines",
+        description: "with aiVersion 7, type as its outlines instead of text (which apps reading the file set in the fonts it names: they need them installed); type 8-bit text can't hold (characters outside Windows Latin-1, vertical type, ruby, inline graphics, gradient or pattern fills) is always outlines",
     },
 ];
 
@@ -153,11 +153,14 @@ pub(super) struct Extras {
 /// are left to [`encode`]).
 pub(super) fn save_options(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result<(SaveOptions, Extras)> {
     let o: NativeOptions = super::encode::options_for(cmd, f, p)?;
-    let mut so = SaveOptions::for_doc(doc);
-    so.compress = o.compress.unwrap_or(false);
-    so.version = o.version.unwrap_or(vectorcraft_format::VERSION);
-    so.include_linked = o.include_linked;
-    so.precision = o.precision.map(|v| precision(cmd, &v)).transpose()?;
+    // Pretty or compact is decided by [`encode_to`] on the document it writes.
+    let mut so = SaveOptions {
+        compress: o.compress.unwrap_or(false),
+        version: o.version.unwrap_or(vectorcraft_format::VERSION),
+        include_linked: o.include_linked,
+        precision: o.precision.map(|v| precision(cmd, &v)).transpose()?,
+        ..SaveOptions::default()
+    };
     if o.embed_profiles.unwrap_or(true) {
         so.profiles = embedded_profiles(doc);
     }
@@ -212,6 +215,7 @@ pub(super) fn encode_to(cmd: &str, f: &Format, doc: &Document, p: &Value, w: imp
         }
         other => other,
     };
+    so.pretty = so.pretty_fits(&native);
     vectorcraft_format::save_to(&native, &so, w).map_err(|e| bad(cmd, e.to_string()))
 }
 

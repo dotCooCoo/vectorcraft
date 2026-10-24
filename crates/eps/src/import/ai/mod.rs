@@ -22,6 +22,7 @@ mod lex;
 mod mesh;
 mod obj;
 mod paint;
+mod palette;
 mod read;
 mod style;
 

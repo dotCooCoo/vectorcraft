@@ -463,11 +463,11 @@ fn use_precise_cursors_swaps_the_tools_own_pointers_for_a_crosshair() {
     }
 }
 
-/// With Alt held, the Pencil and the Paintbrush show their closing cursors, and Use Precise Cursors turns those into
-/// a crosshair too.
+/// With Alt held while drawing, the Pencil and the Paintbrush show their closing cursors, and Use Precise Cursors
+/// turns those into a crosshair too.
 #[test]
 fn alt_shows_the_pencil_and_paintbrush_closing_cursors() {
-    use vectorcraft_tools::{Cursor, Mods};
+    use vectorcraft_tools::{Cursor, Mods, PointerEvent, PointerKind};
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
     let at = vectorcraft_geom::Point::new(300.0, 300.0);
@@ -476,7 +476,10 @@ fn alt_shows_the_pencil_and_paintbrush_closing_cursors() {
         s.execute("prefs.set", &json!({"key": "usePreciseCursors", "value": precise})).unwrap();
         for (tool, c) in [("pencil", Cursor::PencilClose), ("paintbrush", Cursor::PaintbrushClose)] {
             s.select_tool(tool, ViewInfo::default()).unwrap();
+            s.pointer(&PointerEvent::new(PointerKind::Down, 250.0, 250.0), ViewInfo::default()).unwrap();
+            s.pointer(&PointerEvent::new(PointerKind::Drag, 300.0, 300.0), ViewInfo::default()).unwrap();
             assert_eq!(s.cursor(at, alt, ViewInfo::default()), if precise { Cursor::Crosshair } else { c }, "{tool}, precise {precise}");
+            s.pointer(&PointerEvent::new(PointerKind::Up, 300.0, 300.0), ViewInfo::default()).unwrap();
         }
     }
 }

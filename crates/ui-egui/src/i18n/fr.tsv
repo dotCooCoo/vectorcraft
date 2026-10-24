@@ -356,6 +356,8 @@ font-technology	Variable	Variables
 	Bullets	Puces
 	Bullets and Numbering	Puces et numérotation
 	Apply Bullets	Appliquer les puces
+	Numbered List	Liste numérotée
+	Apply Numbers	Appliquer la numérotation
 	Filled Dot	Point plein
 	Dash	Tiret
 	Hollow Circle	Cercle vide
@@ -3078,6 +3080,7 @@ font-technology	Variable	Variables
 	Outlines	Contours
 	Outlines with Source Image	Tracés avec l’image source
 	Source Image	Image source
+	Press and hold to view the source image	Maintenez le bouton enfoncé pour afficher l’image source
 	Image Trace View	Affichage de la vectorisation de l’image
 	Snap Options	Options de magnétisme
 	Snap to Glyph	Magnétisme du glyphe
@@ -3832,6 +3835,7 @@ axis	Both	Les deux
 @msg	Installed plug-in {_1}	Module externe {_1} installé
 @msg	Internal error: {msg} (please report this bug)	Erreur interne : {msg} (merci de signaler ce bogue)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Fusion de peinture dynamique : sélectionnez un groupe de peinture dynamique et les tracés à ajouter
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	La peinture dynamique accepte les tracés et les tracés transparents : convertissez d'abord le texte, les images et les autres objets en tracés
 @msg	Live Paint: select paths or compound paths	Peinture dynamique : sélectionnez des tracés ou des tracés transparents
 @msg	Live Paint: these paths are too degenerate to paint	Peinture dynamique : ces tracés sont trop dégénérés pour être peints
 @msg	Make Guides: select paths	Créer des repères : sélectionnez des tracés
@@ -3898,6 +3902,12 @@ axis	Both	Les deux
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` doit être compris entre {min} et {max} (reçu : {x})
 @msg	`{key}` must be one of {_1}	`{key}` doit valoir l’une de ces valeurs : {_1}
 @msg	`{key}` must be true or false	`{key}` doit valoir true ou false
+@msg	`select` must be true or false	`select` doit valoir true ou false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` et `maxAnchors` doivent être des nombres entiers
+@msg	`{key}` must be a number not below 0	`{key}` doit être un nombre supérieur ou égal à 0
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` doit être [x, y, width, height] : quatre nombres finis, largeur et hauteur non négatives
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` est supérieur à `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	indiquez au moins l’un des paramètres `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` doit valoir grayscale, rgb, hsb, cmyk ou websafe
 @msg	`{k}` must be [x, y]	`{k}` doit être [x, y]
 @msg	`{name}` has no options	`{name}` n’a pas d’options
@@ -4496,6 +4506,8 @@ axis	Both	Les deux
 @msg	{key} must be an array of non-negative integer object ids	{key} doit être un tableau d’identifiants d’objet, entiers positifs ou nuls
 @msg	invalid object id {value}: expected a non-negative integer	identifiant d’objet {value} non valide (un entier positif ou nul est attendu)
 @msg	no such object id {value}	aucun objet ne porte l’identifiant {value}
+@msg	id {value} is a layer, not an object	l’identifiant {value} désigne un calque, pas un objet
+@msg	id {value} is a layer, not an object; move layers with layer.move	l’identifiant {value} désigne un calque, pas un objet ; déplacez les calques avec layer.move
 @msg	automation filesystem access is not granted: read authority is absent: {path}	l’automatisation n’a pas accès au système de fichiers : aucune autorisation de lecture : {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	l’automatisation n’a pas accès au système de fichiers : aucune autorisation d’écriture : {path}
 @msg	automation path rejected: outside the read root {root}: {path}	chemin d’automatisation refusé : hors du dossier racine de lecture {root} : {path}
@@ -5384,6 +5396,7 @@ theme	Appearance	Apparence
 	Snap to Perpendicular	Magnétisme de la perpendiculaire
 @msg	unknown snap option `{key}` (use {options})	option de magnétisme inconnue `{key}` (utilisez {options})
 	Gap Length:	Longueur de lacune :
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Le mode Logo en aplats a vectorisé l’image à {_1} × {_2} pixels, réduite par moyennage de {_3} × {_4}.
 	Artboard {n} of {total}	Plan de travail {n} sur {total}
 	File {n} of {total}	Fichier {n} sur {total}
 	Encoding and writing the file…	Encodage et écriture du fichier…

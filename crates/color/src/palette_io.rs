@@ -515,12 +515,23 @@ fn read_acb(bytes: &[u8], fallback: &str) -> Result<SwatchLibrary, String> {
     let spot = data.0.windows(8).last() != Some(b"spflproc".as_slice());
     let mut lib = SwatchLibrary { name: if title.is_empty() { fallback.into() } else { title }, ..Default::default() };
     let mut names = UniqueNames::default();
+    // Every name gets the prefix and the suffix, and is kept twice (the swatch's and the set of
+    // names taken): a megabyte book of long affixes and many colors came to hundreds of MB.
+    let mut kept = 0usize;
     for (name, color) in colors.into_iter().filter(|(n, _)| !n.trim().is_empty()) {
+        kept = kept.saturating_add(2 * (prefix.len() + name.len() + suffix.len()));
+        if kept > ACB_MAX_NAME_BYTES {
+            return Err(format!("the color book's names take more than {} MB", ACB_MAX_NAME_BYTES >> 20));
+        }
         let name = names.unique(format!("{prefix}{name}{suffix}").trim().to_string());
         lib.swatches.push(Swatch { name, paint: Paint::solid(color), global: spot, spot });
     }
     Ok(lib)
 }
+
+/// Most bytes a color book's full color names (with its prefix and suffix) may take, counted
+/// twice as they are kept twice.
+const ACB_MAX_NAME_BYTES: usize = 64 << 20;
 
 /// The swatch of an `.ase` color block, `None` for a model other than RGB, CMYK, Lab and Gray.
 /// Components are clamped to their ranges.

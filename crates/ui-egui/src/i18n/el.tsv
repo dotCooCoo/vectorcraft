@@ -330,6 +330,8 @@ font-technology	Variable	Μεταβλητές
 	Bullets	Κουκκίδες
 	Bullets and Numbering	Κουκκίδες και αρίθμηση
 	Apply Bullets	Εφαρμογή κουκκίδων
+	Numbered List	Αριθμημένη λίστα
+	Apply Numbers	Εφαρμογή αρίθμησης
 	Filled Dot	Γεμάτη κουκκίδα
 	Dash	Παύλα
 	Hollow Circle	Κενός κύκλος
@@ -1881,6 +1883,7 @@ font-technology	Variable	Μεταβλητές
 	Absolute	Απόλυτο
 	View:	Προβολή:
 	Outlines	Περιγράμματα
+	Press and hold to view the source image	Πατήστε παρατεταμένα για να δείτε την αρχική εικόνα
 	Snap to Grid	Προσκόλληση στο πλέγμα
 	Snap to Pixel	Προσκόλληση σε εικονοστοιχείο
 	Snap to Point	Προσκόλληση σε σημείο
@@ -2101,6 +2104,7 @@ axis	Both	Και τα δύο
 @msg	Installed plug-in {_1}	Εγκαταστάθηκε η επέκταση {_1}
 @msg	Internal error: {msg} (please report this bug)	Εσωτερικό σφάλμα: {msg} (παρακαλούμε αναφέρετε αυτό το σφάλμα)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Συγχώνευση δυναμικής βαφής: επιλέξτε ομάδα δυναμικής βαφής και τις διαδρομές προς προσθήκη
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Η δυναμική βαφή δέχεται διαδρομές και σύνθετες διαδρομές: μετατρέψτε πρώτα κείμενο, εικόνες και άλλα αντικείμενα σε διαδρομές
 @msg	Live Paint: select paths or compound paths	Δυναμική βαφή: επιλέξτε διαδρομές ή σύνθετες διαδρομές
 @msg	Live Paint: these paths are too degenerate to paint	Δυναμική βαφή: αυτές οι διαδρομές είναι πολύ εκφυλισμένες για να χρωματιστούν
 @msg	Make Guides: select paths	Δημιουργία οδηγών: επιλέξτε διαδρομές
@@ -2167,6 +2171,12 @@ axis	Both	Και τα δύο
 @msg	`{key}` must be between {min} and {max} (got {x})	Το `{key}` πρέπει να είναι μεταξύ {min} και {max} (δόθηκε {x})
 @msg	`{key}` must be one of {_1}	Το `{key}` πρέπει να είναι ένα από τα {_1}
 @msg	`{key}` must be true or false	Το `{key}` πρέπει να είναι true ή false
+@msg	`select` must be true or false	Το `select` πρέπει να είναι true ή false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	Τα `minAnchors` και `maxAnchors` πρέπει να είναι ακέραιοι αριθμοί
+@msg	`{key}` must be a number not below 0	Το `{key}` πρέπει να είναι αριθμός όχι μικρότερος από 0
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	Το `{key}` πρέπει να είναι [x, y, width, height]: τέσσερις πεπερασμένοι αριθμοί, με πλάτος και ύψος όχι αρνητικά
+@msg	`{min_key}` is greater than `{max_key}`	Το `{min_key}` είναι μεγαλύτερο από το `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	δώστε τουλάχιστον ένα από τα `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`{k}` must be [x, y]	Το `{k}` πρέπει να είναι [x, y]
 @msg	`{name}` has no options	Το `{name}` δεν έχει επιλογές
 @msg	`{name}` is a built-in workspace; choose another name	Το `{name}` είναι ενσωματωμένος χώρος εργασίας· επιλέξτε άλλο όνομα
@@ -4464,6 +4474,8 @@ theme	Appearance	Εμφάνιση
 @msg	{key} must be an array of non-negative integer object ids	{key}: πρέπει να είναι πίνακας αναγνωριστικών αντικειμένων που είναι μη αρνητικοί ακέραιοι
 @msg	invalid object id {value}: expected a non-negative integer	μη έγκυρο αναγνωριστικό αντικειμένου {value}: αναμένεται μη αρνητικός ακέραιος
 @msg	no such object id {value}	δεν υπάρχει αντικείμενο με αναγνωριστικό {value}
+@msg	id {value} is a layer, not an object	το αναγνωριστικό {value} είναι επίπεδο, όχι αντικείμενο
+@msg	id {value} is a layer, not an object; move layers with layer.move	το αναγνωριστικό {value} είναι επίπεδο, όχι αντικείμενο· μετακινήστε τα επίπεδα με το layer.move
 @msg	automation filesystem access is not granted: read authority is absent: {path}	δεν έχει επιτραπεί πρόσβαση αυτοματισμού στο σύστημα αρχείων: δεν υπάρχει δικαίωμα ανάγνωσης: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	δεν έχει επιτραπεί πρόσβαση αυτοματισμού στο σύστημα αρχείων: δεν υπάρχει δικαίωμα εγγραφής: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	απορρίφθηκε η διαδρομή αυτοματισμού: εκτός ρίζας ανάγνωσης {root}: {path}
@@ -5337,6 +5349,7 @@ effect	Points	Σημεία
 	Snap to Perpendicular	Προσκόλληση σε κάθετο
 @msg	unknown snap option `{key}` (use {options})	άγνωστη επιλογή προσκόλλησης `{key}` (χρησιμοποιήστε {options})
 	Gap Length:	Μήκος κενού:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Η λειτουργία Επίπεδο λογότυπο ανίχνευσε την εικόνα σε {_1} × {_2} εικονοστοιχεία, σμικρυμένη με μέσο όρο από {_3} × {_4}.
 	Artboard {n} of {total}	Πίνακας σχεδίασης {n} από {total}
 	File {n} of {total}	Αρχείο {n} από {total}
 	Encoding and writing the file…	Κωδικοποίηση και εγγραφή του αρχείου…

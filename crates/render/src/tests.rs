@@ -579,6 +579,57 @@ fn outline_view_draws_paths_from_kept_geometry() {
     }
 }
 
+/// An Image Trace object listed in `trace_source` draws its source image on screen whatever its
+/// View, also inside a group whose raster effect a renderer keeps; without the list, and in
+/// exports, it draws its result. A group that is not an Image Trace object draws its members.
+#[test]
+fn trace_source_draws_the_source_image_of_the_listed_objects() {
+    use vectorcraft_doc::{ImageBlob, ImageObject};
+    let img = image::RgbaImage::from_pixel(1, 1, image::Rgba([255, 0, 0, 255]));
+    let mut png = vec![];
+    img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+    let mut d = Document::new(100.0, 100.0);
+    d.images.insert("red".into(), ImageBlob::new("image/png", png));
+    // A group at `x`: the hidden red source image, then a blue traced square over it.
+    let group = |d: &mut Document, x: f64, traced: bool| {
+        let xf = Affine::translate((x, 10.0)) * Affine::scale(20.0);
+        let im = ImageObject { key: "red".into(), width: 1, height: 1, xf, link: None, placement: Default::default(), pixels: None };
+        let mut source = Node::new(d.alloc_id(), NodeKind::Image(Box::new(im)));
+        source.visible = false;
+        let shape = rect_node(d, Rect::new(x, 10.0, x + 20.0, 30.0), Paint::solid(Color::rgb(0.0, 0.0, 1.0)), Paint::None, 0.0);
+        let mut g = Node::group(d.alloc_id(), vec![Arc::new(source), Arc::new(shape)]);
+        if traced {
+            g.extras_mut().trace = Some(Box::new(serde_json::json!({ "view": "tracingResult" })));
+        }
+        g
+    };
+    let plain = group(&mut d, 10.0, true);
+    let blurred = group(&mut d, 40.0, true);
+    let other = group(&mut d, 70.0, false);
+    let ids = Arc::new(vec![plain.id, blurred.id, other.id]);
+    let mut holder = Node::group(d.alloc_id(), vec![Arc::new(blurred)]);
+    holder.appearance.effects.push(vectorcraft_doc::Effect { id: "blur.gaussian".into(), params: serde_json::json!({ "radius": 1 }), visible: true });
+    let l = d.layers[0].id;
+    for n in [plain, holder, other] {
+        d.insert(Some(l), usize::MAX, n).unwrap();
+    }
+    let screen = RenderOptions { trace_views: true, background: Some([255; 4]), ..Default::default() };
+    let held = RenderOptions { trace_source: Some(ids.clone()), ..screen.clone() };
+    let export = RenderOptions { trace_source: Some(ids), background: Some([255; 4]), ..Default::default() };
+    let red = |p: [u8; 4]| p[0] > 200 && p[2] < 60;
+    let blue = |p: [u8; 4]| p[2] > 200 && p[0] < 60;
+    let mut kept = Renderer::new();
+    for (opts, source) in [(&screen, false), (&held, true), (&screen, false), (&export, false)] {
+        for r in [kept.render(&d, 100, 100, Affine::IDENTITY, opts), Renderer::new().render(&d, 100, 100, Affine::IDENTITY, opts)] {
+            for (x, what) in [(20, "the Image Trace object"), (50, "the one in the blurred group")] {
+                let p = r.pixel(x, 20);
+                assert!(if source { red(p) } else { blue(p) }, "{what} with trace_source {source}: {p:?}");
+            }
+            assert!(blue(r.pixel(80, 20)), "the plain group draws its square: {:?}", r.pixel(80, 20));
+        }
+    }
+}
+
 #[test]
 fn artboards_white_on_pasteboard() {
     let d = Document::new(50.0, 50.0);

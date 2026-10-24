@@ -166,6 +166,42 @@ fn exporting_native_keeps_the_document_path() {
     assert_eq!(h.session.doc().unwrap().path.as_deref(), Some(doc.as_str()));
 }
 
+/// The app is asked to write the file before it replies (`wait`), even with Background Save on, so a
+/// save that fails is the call's error; a headless session always does, and is sent no `wait`.
+#[test]
+fn save_file_waits_for_the_file_in_the_app() {
+    struct Recording {
+        ui: bool,
+        seen: Vec<(String, Value)>,
+    }
+    impl Backend for Recording {
+        fn call(&mut self, method: &str, params: Value) -> Result<Value, String> {
+            self.seen.push((method.to_string(), params));
+            if self.ui { Err("Saving a.vectorcraft failed: disk full".into()) } else { Ok(json!({})) }
+        }
+        fn has_ui(&self) -> bool {
+            self.ui
+        }
+        fn describe(&self) -> String {
+            "recording".into()
+        }
+    }
+    for ui in [true, false] {
+        let mut b = Recording { ui, seen: vec![] };
+        let r = call_tool(&mut b, "save_file", &json!({"path": "/out/a.vectorcraft"}));
+        assert_eq!(r.is_error, ui, "the app's error is the call's: {r:?}");
+        let [(method, params)] = &b.seen[..] else { panic!("one call: {:?}", b.seen) };
+        assert_eq!(method, "app.save");
+        // The tool sends the path made absolute (on Windows, against the current drive).
+        let path = std::path::absolute("/out/a.vectorcraft").unwrap().to_string_lossy().into_owned();
+        let mut want = json!({"path": path});
+        if ui {
+            want["wait"] = json!(true);
+        }
+        assert_eq!(params, &want, "has_ui: {ui}");
+    }
+}
+
 fn pdf_pages(pdf: &[u8]) -> usize {
     let mut h = Headless::new();
     h.call("engine.execute", json!({"command": "document.open", "params": {"name": "p.pdf", "dataBase64": vectorcraft_format::base64_encode(pdf)}}))

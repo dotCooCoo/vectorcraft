@@ -330,6 +330,8 @@ font-technology	Variable	Variabel
 	Bullets	Aufzählungszeichen
 	Bullets and Numbering	Aufzählungszeichen und Nummerierung
 	Apply Bullets	Aufzählungszeichen anwenden
+	Numbered List	Nummerierte Liste
+	Apply Numbers	Nummerierung anwenden
 	Filled Dot	Gefüllter Punkt
 	Dash	Strich
 	Hollow Circle	Leerer Kreis
@@ -3051,6 +3053,7 @@ effect	Points	Punkte
 	Outlines	Pfade
 	Outlines with Source Image	Pfade mit Quellbild
 	Source Image	Quellbild
+	Press and hold to view the source image	Gedrückt halten, um das Quellbild anzuzeigen
 	Image Trace View	Bildnachzeichner-Ansicht
 	Snap Options	Einrastoptionen
 	Snap to Glyph	An Glyphe ausrichten
@@ -3759,6 +3762,7 @@ theme	Appearance	Erscheinungsbild
 @msg	Installed plug-in {_1}	Plug-in {_1} installiert
 @msg	Internal error: {msg} (please report this bug)	Interner Fehler: {msg} (bitte melden Sie diesen Fehler)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Interaktiv malen – Zusammenfügen: Wählen Sie eine Interaktiv-malen-Gruppe und die hinzuzufügenden Pfade aus
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Interaktiv malen nimmt Pfade und zusammengesetzte Pfade an: Wandeln Sie Text, Bilder und andere Objekte zuerst in Pfade um
 @msg	Live Paint: select paths or compound paths	Interaktiv malen: Wählen Sie Pfade oder zusammengesetzte Pfade aus
 @msg	Live Paint: these paths are too degenerate to paint	Interaktiv malen: Diese Pfade sind zu entartet, um sie zu bemalen
 @msg	Make Guides: select paths	Hilfslinien erstellen: Wählen Sie Pfade aus
@@ -3825,6 +3829,12 @@ theme	Appearance	Erscheinungsbild
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` muss zwischen {min} und {max} liegen (erhalten: {x})
 @msg	`{key}` must be one of {_1}	`{key}` muss einer der folgenden Werte sein: {_1}
 @msg	`{key}` must be true or false	`{key}` muss true oder false sein
+@msg	`select` must be true or false	`select` muss true oder false sein
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` und `maxAnchors` müssen ganze Zahlen sein
+@msg	`{key}` must be a number not below 0	`{key}` muss eine Zahl nicht kleiner als 0 sein
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` muss [x, y, width, height] sein: vier endliche Zahlen, Breite und Höhe nicht negativ
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` ist größer als `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	geben Sie mindestens einen der Parameter `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors` an
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` muss grayscale, rgb, hsb, cmyk oder websafe sein
 @msg	`{k}` must be [x, y]	`{k}` muss [x, y] sein
 @msg	`{name}` has no options	`{name}` hat keine Optionen
@@ -4423,6 +4433,8 @@ theme	Appearance	Erscheinungsbild
 @msg	{key} must be an array of non-negative integer object ids	{key} muss ein Array von Objekt-IDs sein, die nicht negative ganze Zahlen sind
 @msg	invalid object id {value}: expected a non-negative integer	ungültige Objekt-ID {value}: erwartet wird eine nicht negative ganze Zahl
 @msg	no such object id {value}	kein Objekt mit der ID {value}
+@msg	id {value} is a layer, not an object	die ID {value} ist eine Ebene, kein Objekt
+@msg	id {value} is a layer, not an object; move layers with layer.move	die ID {value} ist eine Ebene, kein Objekt; verschieben Sie Ebenen mit layer.move
 @msg	automation filesystem access is not granted: read authority is absent: {path}	Dateisystemzugriff für die Automatisierung ist nicht gewährt: Die Leseberechtigung fehlt: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	Dateisystemzugriff für die Automatisierung ist nicht gewährt: Die Schreibberechtigung fehlt: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	Automatisierungspfad abgelehnt: außerhalb des Lesestammordners {root}: {path}
@@ -4964,6 +4976,7 @@ effect	Soft	Weich
 	Snap to Perpendicular	An Senkrechter ausrichten
 @msg	unknown snap option `{key}` (use {options})	unbekannte Einrastoption `{key}` (möglich: {options})
 	Gap Length:	Lückenlänge:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Der Modus „Flaches Logo“ hat das Bild mit {_1} × {_2} Pixeln nachgezeichnet, durch Mittelung verkleinert von {_3} × {_4}.
 	Artboard {n} of {total}	Zeichenfläche {n} von {total}
 	File {n} of {total}	Datei {n} von {total}
 	Encoding and writing the file…	Datei wird codiert und geschrieben…

@@ -339,6 +339,8 @@ font-technology	Variable	Değişken
 	Bullets	Madde İşaretleri
 	Bullets and Numbering	Madde İşaretleri ve Numaralandırma
 	Apply Bullets	Madde İşaretlerini Uygula
+	Numbered List	Numaralı Liste
+	Apply Numbers	Numaralandırmayı Uygula
 	Filled Dot	Dolu Nokta
 	Dash	Tire
 	Hollow Circle	Boş Daire
@@ -2921,6 +2923,7 @@ font-technology	Variable	Değişken
 	Outlines	Ana hatlar
 	Outlines with Source Image	Kaynak Resimli Ana Hatlar
 	Source Image	Kaynak Resim
+	Press and hold to view the source image	Kaynak resmi görmek için basılı tutun
 	Image Trace View	Görüntü İzleme Görünümü
 	Snap Options	Yapış Seçenekleri
 	Snap to Glyph	Glif'e Yapış
@@ -3644,6 +3647,7 @@ axis	Both	Her İkisi
 @msg	Installed plug-in {_1}	Yüklü eklenti {_1}
 @msg	Internal error: {msg} (please report this bug)	Dahili hata: {msg} (lütfen bu hatayı bildirin)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Canlı Boyama Birleştirme: Canlı Boyama grubunu ve eklenecek yolları seçin
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Canlı Boyama yolları ve bileşik yolları kabul eder: önce metni, görüntüleri ve diğer nesneleri yollara dönüştürün
 @msg	Live Paint: select paths or compound paths	Canlı Boyama: yolları veya bileşik yolları seçin
 @msg	Live Paint: these paths are too degenerate to paint	Canlı Boyama: Bu yollar boyanamayacak kadar yozlaşmış
 @msg	Make Guides: select paths	Kılavuzlar Oluşturun: yolları seçin
@@ -3705,6 +3709,12 @@ axis	Both	Her İkisi
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}`, {min} ile {max} arasında olmalıdır ({x}'yi aldı)
 @msg	`{key}` must be one of {_1}	`{key}`, {_1}'den biri olmalıdır
 @msg	`{key}` must be true or false	"{key}" doğru veya yanlış olmalıdır
+@msg	`select` must be true or false	`select` true veya false olmalıdır
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` ve `maxAnchors` tam sayı olmalıdır
+@msg	`{key}` must be a number not below 0	`{key}` 0'dan küçük olmayan bir sayı olmalıdır
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` [x, y, width, height] olmalıdır: dört sonlu sayı, genişlik ve yükseklik negatif olmamalı
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}`, `{max_key}` değerinden büyük
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	şunlardan en az birini verin: `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	"mod" gri tonlamalı, rgb, hsb, cmyk veya web uyumlu olmalıdır
 @msg	`{k}` must be [x, y]	"{k}" [x, y] olmalıdır
 @msg	`{name}` has no options	`{name}`nin seçeneği yok
@@ -5195,6 +5205,8 @@ theme	Appearance	Görünüm
 @msg	{key} must be an array of non-negative integer object ids	{key}, negatif olmayan tam sayı nesne kimlikleri dizisi olmalıdır
 @msg	invalid object id {value}: expected a non-negative integer	geçersiz nesne kimliği {value}: negatif olmayan bir tam sayı bekleniyordu
 @msg	no such object id {value}	böyle bir nesne kimliği yok: {value}
+@msg	id {value} is a layer, not an object	{value} kimliği bir katmana ait, bir nesneye değil
+@msg	id {value} is a layer, not an object; move layers with layer.move	{value} kimliği bir katmana ait, bir nesneye değil; katmanları layer.move ile taşıyın
 @msg	{key} must be Unix seconds (an integer) or null	{key}, Unix saniyesi (bir tam sayı) veya null olmalıdır
 @msg	its zlib compression is damaged	zlib sıkıştırması hasarlı
 @msg	its Zstandard compression is damaged	Zstandard sıkıştırması hasarlı
@@ -5379,6 +5391,7 @@ theme	Appearance	Görünüm
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	Görüntü {_1} × {_2} piksel, bir kenarı {LARGE_TRACE_SIDE} değerinden büyük: izlenir, ancak daha yavaş. Daha düşük doğruluklu bir ön ayar veya görüntünün daha küçük bir kopyası daha hızlı izlenir.
 @msg	The image was traced at {_1} × {_2} pixels, scaled down from {_3} × {_4} ({_5} megapixels at most).	Görüntü {_3} × {_4} boyutundan küçültülerek {_1} × {_2} pikselde izlendi (en fazla {_5} megapiksel).
 	Gap Length:	Boşluk Uzunluğu:
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Düz Logo modu görüntüyü {_3} × {_4} boyutundan ortalama alarak küçültüp {_1} × {_2} pikselde izledi.
 @plural	{n} more export waiting|{n} more exports waiting	{n} dışa aktarma daha bekliyor|{n} dışa aktarma daha bekliyor
 @msg	Export cancelled	Dışa aktarma iptal edildi
 	Add filters from the list above	Yukarıdaki listeden filtre ekleyin

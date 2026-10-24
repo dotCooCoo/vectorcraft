@@ -342,6 +342,8 @@ font-technology	Variable	Променливи
 	Bullets	Булети
 	Bullets and Numbering	Булети и номериране
 	Apply Bullets	Прилагане на булети
+	Numbered List	Номериран списък
+	Apply Numbers	Прилагане на номериране
 	Filled Dot	Плътна точка
 	Dash	Тире
 	Hollow Circle	Празен кръг
@@ -3013,6 +3015,7 @@ font-technology	Variable	Променливи
 	Outlines	Контури
 	Outlines with Source Image	Контури с изходно изображение
 	Source Image	Изходно изображение
+	Press and hold to view the source image	Задръжте натиснато, за да видите изходното изображение
 	Image Trace View	Изглед на трасиране на изображение
 	Snap Options	Опции за прилепване
 	Snap to Glyph	Прилепване към глиф
@@ -3751,6 +3754,7 @@ axis	Both	И двете
 @msg	Installed plug-in {_1}	Инсталирана добавка {_1}
 @msg	Internal error: {msg} (please report this bug)	Вътрешна грешка: {msg} (моля, докладвайте този софтуерен дефект)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Обединяване в интерактивно боядисване: изберете група за интерактивно боядисване и пътищата за добавяне
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Интерактивното боядисване приема пътища и съставни пътища: първо преобразувайте текста, изображенията и другите обекти в пътища
 @msg	Live Paint: select paths or compound paths	Интерактивно боядисване: изберете пътища или съставни пътища
 @msg	Live Paint: these paths are too degenerate to paint	Интерактивно боядисване: тези пътища са твърде дегенерирали за боядисване
 @msg	Make Guides: select paths	Създаване на водачи: изберете пътища

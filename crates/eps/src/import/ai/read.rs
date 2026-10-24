@@ -38,7 +38,10 @@
 //! - Type in the legacy format (version 7 specification §15): `type To` … `TO`, read by
 //!   [`legacy_text`].
 //!
-//! Sections the reader doesn't need (brushes, symbols, styles, swatches, filters) are skipped;
+//! - Swatches: the palette (`%AI5_BeginPalette`), read by [`super::palette`], replaces the
+//!   default swatches.
+//!
+//! Sections the reader doesn't need (brushes, symbols, styles, filters) are skipped;
 //! type, symbols, fills with a pattern it can't read, placed files without a preview and operators
 //! it doesn't know are errors.
 
@@ -518,6 +521,8 @@ struct Reader<'a> {
     mesh: Option<(super::mesh::MeshReader, bool)>,
     /// The art styles (`%AI9_BeginArtStyles`), by name.
     styles: HashMap<String, super::style::ArtStyle>,
+    /// The swatches (`%AI5_BeginPalette`).
+    palette: super::palette::Palette,
     /// See [`Structure::restyled`].
     restyled: Vec<Rect>,
     /// CMYK samples converted, by value.
@@ -599,7 +604,6 @@ const SKIPPED: &[(&str, &str)] = &[
     ("BeginPluginObject", "EndPluginObject"),
     ("BeginArtStyles", "EndArtStyles"),
     ("BeginArtStyleList", "EndArtStyleList"),
-    ("BeginPalette", "EndPalette"),
     ("BeginSymbolList", "EndSymbolList"),
     ("BeginTextDocument", "EndTextDocument"),
     ("BeginEncoding", "EndEncoding"),
@@ -668,6 +672,7 @@ impl<'a> Reader<'a> {
             group_ended: false,
             layer_state: None,
             styles: HashMap::new(),
+            palette: super::palette::Palette::default(),
             restyled: vec![],
             mesh: None,
             cmyk_cache: HashMap::new(),
@@ -758,6 +763,11 @@ impl<'a> Reader<'a> {
         if m == "BeginArtStyles" {
             let section = self.section("EndArtStyles")?;
             self.styles = super::style::art_styles(section);
+            return Ok(());
+        }
+        if m == "BeginPalette" {
+            let section = self.section("EndPalette")?;
+            self.palette = super::palette::palette(section);
             return Ok(());
         }
         if m == "BeginEncoding" {
@@ -1241,7 +1251,7 @@ impl<'a> Reader<'a> {
                 self.paint(&op, hidden, true)?;
             }
             // Colours.
-            "g" | "G" | "k" | "K" | "x" | "X" | "Xa" | "XA" | "Xx" | "XX" | "Xk" | "XK" => self.color(w, &vals),
+            "g" | "G" | "k" | "K" | "x" | "X" | "Xa" | "XA" | "Xx" | "XX" | "Xk" | "XK" | "Xs" | "XS" | "Xz" | "XZ" => self.color(w, &vals),
             "p" | "P" => self.pattern_paint(w, &vals),
             // A pattern's definition ends.
             "E" if self.pattern.is_some() => self.done = true,
@@ -1726,7 +1736,9 @@ impl<'a> Reader<'a> {
 
     fn color(&mut self, w: &str, vals: &[V]) {
         let Some((p, named)) = paint::color_op(w, vals) else { return };
-        match p.color() {
+        // Registration (`Xs`, `Xz`) says nothing of the document's colour model.
+        let registration = matches!(w, "Xs" | "XS" | "Xz" | "XZ");
+        match p.color().filter(|_| !registration) {
             Some(vectorcraft_color::Color::Rgb { .. }) => self.rgb_colors += 1,
             Some(vectorcraft_color::Color::Cmyk { .. }) => self.cmyk_colors += 1,
             _ => {}
@@ -2377,6 +2389,34 @@ impl<'a> Reader<'a> {
         }
         if let Some(u) = self.ruler_units.and_then(ruler_unit) {
             doc.units = u;
+        }
+        // The file's own swatches in place of the defaults, in its order and colour groups.
+        if !self.palette.is_empty() {
+            let palette = std::mem::take(&mut self.palette);
+            let swatch = |e: super::palette::Entry| -> Option<Swatch> {
+                use super::palette::Cell;
+                let (paint, global, spot) = match e.cell {
+                    Cell::Color { color, global, spot } => (Paint::solid(color), global, spot),
+                    Cell::Gradient(g) => {
+                        let mut gp = vectorcraft_color::gradient::GradientPaint::new(self.gradients.get(&g)?.clone());
+                        gp.swatch = Some(e.name.clone());
+                        (Paint::Gradient(Box::new(gp)), false, false)
+                    }
+                    Cell::Pattern(p) => {
+                        doc.patterns.iter().find(|d| d.name == p)?;
+                        (Paint::Pattern { pattern: p, xf: Affine::IDENTITY }, false, false)
+                    }
+                };
+                Some(Swatch { name: e.name, paint, global, spot })
+            };
+            let mut swatches = vec![Swatch { name: "[None]".into(), paint: Paint::None, global: false, spot: false }];
+            swatches.extend(palette.swatches.into_iter().filter_map(swatch));
+            let groups: Vec<_> = palette
+                .groups
+                .into_iter()
+                .map(|(name, s)| vectorcraft_color::swatch::SwatchGroup { name, swatches: s.into_iter().filter_map(swatch).collect() })
+                .collect();
+            (doc.swatches, doc.swatch_groups) = (swatches.into(), groups.into());
         }
         // The colour operators' definitions first: a gradient, defined before the art, names a
         // global process colour as a stop and would otherwise make it an ink (#1771).

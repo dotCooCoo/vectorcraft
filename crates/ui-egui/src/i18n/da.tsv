@@ -287,6 +287,8 @@
 	Bullets	Kugletegn
 	Bullets and Numbering	Kugletegn og nummerering
 	Apply Bullets	Anvend kugletegn
+	Numbered List	Nummereret liste
+	Apply Numbers	Anvend nummerering
 	Filled Dot	Udfyldt prik
 	Dash	Tankestreg
 	Hollow Circle	Tom cirkel
@@ -3675,6 +3677,7 @@ font-technology	Variable	Variable
 	View:	Visning:
 	Tracing Result	Sporingsresultat
 	Outlines with Source Image	Konturer med kildebillede
+	Press and hold to view the source image	Hold nede for at se kildebilledet
 	SVG Options	SVG-indstillinger
 	Maximize	Maksimér
 	Restore	Gendan
@@ -3872,6 +3875,7 @@ imageTrace	Outline	Kontur
 @msg	Installed plug-in {_1}	Installerede plug-in'en {_1}
 @msg	Internal error: {msg} (please report this bug)	Intern fejl: {msg} (meld venligst denne fejl)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Live Paint-fletning: markér en Live Paint-gruppe og de kurver, der skal tilføjes
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Live Paint tager kurver og sammensatte kurver: konvertér først tekst, billeder og andre objekter til kurver
 @msg	Live Paint: select paths or compound paths	Live Paint: markér kurver eller sammensatte kurver
 @msg	Live Paint: these paths are too degenerate to paint	Live Paint: disse kurver er for degenererede til at blive malet
 @msg	Make Guides: select paths	Opret hjælpelinjer: markér kurver

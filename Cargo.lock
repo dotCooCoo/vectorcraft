@@ -4730,6 +4730,7 @@ dependencies = [
  "log",
  "proptest",
  "roxmltree 0.21.1",
+ "rustix 1.1.5",
  "ruzstd",
  "serde",
  "serde_json",

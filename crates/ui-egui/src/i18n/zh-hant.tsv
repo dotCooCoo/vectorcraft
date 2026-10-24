@@ -317,6 +317,8 @@ font-technology	Variable	可變
 	Bullets	項目符號
 	Bullets and Numbering	項目符號與編號
 	Apply Bullets	套用項目符號
+	Numbered List	編號清單
+	Apply Numbers	套用編號
 	Filled Dot	實心圓點
 	Dash	短破折號
 	Hollow Circle	空心圓
@@ -1652,6 +1654,7 @@ file-filter	Templates	範本
 @msg	the art has no bounds	圖稿沒有邊界
 @msg	Image Trace: the traced image is missing	影像描圖：找不到描圖的影像
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	即時上色合併：請選取即時上色群組和要加入的路徑
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	即時上色只接受路徑和複合路徑：請先將文字、影像和其他物件轉換為路徑
 @msg	Live Paint: select paths or compound paths	即時上色：請選取路徑或複合路徑
 @msg	Live Paint: these paths are too degenerate to paint	即時上色：這些路徑過度退化，無法上色
 @msg	Shape Builder: no region under the pointer	形狀建立：指標下方沒有區域
@@ -2143,6 +2146,12 @@ file-filter	Templates	範本
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command` 必須是選單項目會開啟對話框的指令 (請參閱 ui.menuDialog)
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` 必須是 grayscale、rgb、hsb、cmyk 或 websafe
 @msg	`{key}` must be true or false	`{key}` 必須是 true 或 false
+@msg	`select` must be true or false	`select` 必須是 true 或 false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` 和 `maxAnchors` 必須是整數
+@msg	`{key}` must be a number not below 0	`{key}` 必須是不小於 0 的數字
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` 必須是 [x, y, width, height]：四個有限數字，寬度和高度不能為負
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` 大於 `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	請至少提供下列其中之一：`name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	brightness must be dark|mediumDark|mediumLight|light	brightness 必須是 dark|mediumDark|mediumLight|light
 @msg	index must be a number or first, previous, next or last	index 必須是數字，或 first、previous、next 或 last
 @msg	index must be a number or first, previous, next or last, not `{other}`	index 必須是數字，或 first、previous、next 或 last，而非 `{other}`
@@ -2364,6 +2373,7 @@ file-filter	Templates	範本
 @msg	too many library panels were opened in this session	本次工作階段開啟的資料庫面板過多
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	影像為 {_1} × {_2} 像素，有一邊超過 {LARGE_TRACE_SIDE}：仍會描圖，但速度較慢。使用精確度較低的預設集或較小的影像拷貝，描圖會較快。
 @msg	The image was traced at {_1} × {_2} pixels, scaled down from {_3} × {_4} ({_5} megapixels at most).	影像已以 {_1} × {_2} 像素描圖，由 {_3} × {_4} 縮小而來 (最多 {_5} 百萬像素)。
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	「扁平標誌」模式已以 {_1} × {_2} 像素描圖，由 {_3} × {_4} 平均縮小而來。
 # Links and Attributes: files and URLs handed to other apps.
 @msg	Edit Original opens image and document files only; “{name}” is not one	「編輯原稿」只能開啟影像與文件檔案；「{name}」不屬於這兩類
 @msg	only http, https and mailto URLs open in the browser, not “{url}”	只有 http、https 和 mailto URL 會在瀏覽器中開啟，「{url}」不會
@@ -3872,6 +3882,7 @@ font-script	Japanese	漢字
 	Outlines	外框
 	Outlines with Source Image	外框（含來源影像）
 	Source Image	來源影像
+	Press and hold to view the source image	按住以檢視來源影像
 	Image Trace View	影像描圖檢視
 	Snap Options	靠齊選項
 	Snap to Glyph	靠齊字符
@@ -5046,6 +5057,8 @@ lighting	Light	光源
 @msg	{key} must be an array of non-negative integer object ids	{key} 必須是由非負整數物件 id 組成的陣列
 @msg	invalid object id {value}: expected a non-negative integer	無效的物件 id {value}：應為非負整數
 @msg	no such object id {value}	沒有 id 為 {value} 的物件
+@msg	id {value} is a layer, not an object	id {value} 是圖層，不是物件
+@msg	id {value} is a layer, not an object; move layers with layer.move	id {value} 是圖層，不是物件；請使用 layer.move 移動圖層
 	Move Anchor Point	移動錨點
 @msg	{label} keeps 1 of the document's {n} artboards: the file reopens with one. Turn on Preserve Editing Capabilities to keep them all.	{label} 只保留文件 {n} 個工作區域中的 1 個：檔案重新開啟時只有一個。開啟「保留編輯功能」可全部保留。
 	Chalk & Charcoal…	粉筆和炭筆…

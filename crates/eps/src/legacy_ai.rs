@@ -49,7 +49,7 @@
 //! doesn't size), transparent image pixels over white. Hidden objects go to a hidden layer of
 //! their own above their layer, are left out or show, as [`HiddenObjects`] says (in a hidden
 //! layer they stay where they are). Type that 8-bit text can't hold (characters outside
-//! Windows-1252, vertical type, inline graphics, gradient or pattern fills) is written as its
+//! Windows-1252, vertical type, ruby, inline graphics, gradient or pattern fills) is written as its
 //! outlines, and all type with [`LegacyAiOptions::outline_text`]. Layer, spot color and gradient
 //! names and the title are written in Windows-1252 too, and a character outside it is written as
 //! `?`. Two spot colors or two gradients whose names become the same that way are numbered (`? 2`).
@@ -82,8 +82,8 @@ const MAX_IMAGE_PIXELS: u64 = 1 << 26;
 const HEX_LINE: usize = 60;
 
 pub const SUBLAYERS: &str = "sublayers are written as groups in their top-level layer (legacy .ai files have no sublayers)";
-pub const TYPE: &str = "type a legacy .ai can't hold as text (characters outside Windows Latin-1, vertical type, inline graphics, gradient or pattern fills) is written as outlines";
-pub const TYPE_ATTRIBUTES: &str = "type attributes legacy .ai files don't have (underline, strikethrough, small caps, superscript and subscript, character rotation, OpenType features, Variable Font settings, area type options, type on a path effects, space after paragraphs, tabs, bulleted lists) are left out";
+pub const TYPE: &str = "type a legacy .ai can't hold as text (characters outside Windows Latin-1, vertical type, ruby, inline graphics, gradient or pattern fills) is written as outlines";
+pub const TYPE_ATTRIBUTES: &str = "type attributes legacy .ai files don't have (underline, strikethrough, small caps, superscript and subscript, character rotation, OpenType features, Variable Font settings, area type options, type on a path effects, space after paragraphs, tabs, bulleted and numbered lists) are left out";
 pub const HIDDEN: &str = "hidden objects are left out (hidden layers are kept, hidden)";
 pub const HIDDEN_LAYER: &str = "hidden objects are moved to a hidden layer above their own (legacy .ai files can hide only layers)";
 pub const HIDDEN_SHOWN: &str = "hidden objects are written visible (legacy .ai files can hide only layers)";
@@ -1268,7 +1268,8 @@ impl<'a> Writer<'a> {
         self.line("u");
         for (i, run) in t.runs.iter().enumerate() {
             let mut bp = BezPath::new();
-            for g in layout.glyphs.iter().filter(|g| g.run == i) {
+            // Ruby (furigana) glyphs in their base text's run's paint, as the canvas draws them.
+            for g in layout.glyphs.iter().chain(&layout.ruby).filter(|g| g.run == i) {
                 bp.extend(g.outline.iter());
             }
             if bp.elements().is_empty() {
@@ -1371,11 +1372,13 @@ impl<'a> Writer<'a> {
     }
 }
 
-/// Can type `t` be written as text: horizontal, its runs plain characters (no inline graphics)
-/// that 8-bit text can hold, filled and stroked with colours?
+/// Can type `t` be written as text: horizontal, without ruby (which a text object can't hold), its
+/// runs plain characters (no inline graphics) that 8-bit text can hold, filled and stroked with
+/// colours?
 fn writable(t: &TextObject) -> bool {
     let solid = |p: &Paint| matches!(p, Paint::Solid { .. } | Paint::None);
     !t.vertical
+        && t.ruby.is_empty()
         && t.runs.iter().any(|r| !r.text.is_empty())
         && t.runs.iter().all(|r| {
             r.inline.is_none()

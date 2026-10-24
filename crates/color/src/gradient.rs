@@ -133,6 +133,16 @@ impl GradientStop {
     }
 }
 
+/// The colour and opacity at `t` between stops `a` and `b`, through `a`'s midpoint (`u` = midpoint
+/// maps to `v` = ½), mixed by `mix`.
+fn between(a: &GradientStop, b: &GradientStop, t: f32, mix: &impl Fn(&Color, &Color, f32) -> Color) -> (Color, f32) {
+    let span = (b.offset - a.offset).max(1e-6);
+    let u = (t - a.offset) / span;
+    let m = a.midpoint.clamp(0.01, 0.99);
+    let v = if u < m { 0.5 * u / m } else { 0.5 + 0.5 * (u - m) / (1.0 - m) };
+    (mix(&a.color, &b.color, v), a.opacity + (b.opacity - a.opacity) * v)
+}
+
 fn one() -> f32 {
     1.0
 }
@@ -191,18 +201,40 @@ impl Gradient {
         for w in stops.windows(2) {
             let (a, b) = (&w[0], &w[1]);
             if t <= b.offset {
-                let span = (b.offset - a.offset).max(1e-6);
-                let u = (t - a.offset) / span;
-                // Map through the midpoint: u=mid → 0.5.
-                let m = a.midpoint.clamp(0.01, 0.99);
-                let v = if u < m { 0.5 * u / m } else { 0.5 + 0.5 * (u - m) / (1.0 - m) };
-                return (mix(&a.color, &b.color, v), a.opacity + (b.opacity - a.opacity) * v);
+                return between(a, b, t, &mix);
             }
         }
         match stops.last() {
             Some(l) => (l.color, l.opacity),
             None => (Color::BLACK, 1.0),
         }
+    }
+    /// [`Self::sample_with`] at each of `ts`, which must not decrease. Each search starts where
+    /// the one before it stopped, so the work is the samples plus the stops, not their product.
+    pub fn sample_increasing_with(&self, ts: impl IntoIterator<Item = f32>, mix: impl Fn(&Color, &Color, f32) -> Color) -> Vec<(Color, f32)> {
+        let stops = &self.stops;
+        // The shared index assumes ordered stops; others (a file's, unsorted) sample one by one.
+        if stops.windows(2).any(|w| w[1].offset < w[0].offset) {
+            return ts.into_iter().map(|t| self.sample_with(t, &mix)).collect();
+        }
+        let mut j = 0;
+        ts.into_iter()
+            .map(|t| {
+                let Some(first) = stops.first() else { return (Color::BLACK, 1.0) };
+                if t <= first.offset {
+                    return (first.color, first.opacity);
+                }
+                // The first pair whose end `t` doesn't pass, as `sample_with` finds it: one that a
+                // smaller `t` passed, this one passes too.
+                while j + 1 < stops.len() && t > stops[j + 1].offset {
+                    j += 1;
+                }
+                match (stops.get(j), stops.get(j + 1)) {
+                    (Some(a), Some(b)) => between(a, b, t, &mix),
+                    _ => stops.last().map_or((Color::BLACK, 1.0), |l| (l.color, l.opacity)),
+                }
+            })
+            .collect()
     }
     /// Stops expanded so that midpoints are represented as explicit stops (for renderers without
     /// midpoints), and a Perceptual gradient's segments as stops on its curve (for renderers that
@@ -213,13 +245,18 @@ impl Gradient {
     /// [`Self::expanded_stops`], each stop that stands for a midpoint with that midpoint (`None`
     /// on the gradient's own stops and a Perceptual gradient's other in-between stops).
     pub fn expanded(&self) -> impl Iterator<Item = (f32, Color, f32, Option<f32>)> + '_ {
+        // Direct interpolation matches `sample` only for strictly increasing offsets.
+        let increasing = self.stops.windows(2).all(|w| w[0].offset < w[1].offset);
         self.stops.iter().enumerate().flat_map(move |(i, s)| {
             let next = self.stops.get(i + 1);
             let off_centre = (s.midpoint - 0.5).abs() > 1e-3;
             // Classic: a stop at the midpoint, when it is off-centre.
             let classic = next.filter(|_| off_centre && self.method.is_classic()).map(|n| {
                 let t = s.offset + (n.offset - s.offset) * s.midpoint;
-                let (c, o) = self.sample(t);
+                // Mixed from the two stops it lies between, as `sample` would: searching all the
+                // stops again for each midpoint made many stops cost their square.
+                let mix = |a: &Color, b: &Color, v| self.method.mix(a, b, v);
+                let (c, o) = if increasing { between(s, n, t, &mix) } else { self.sample_with(t, mix) };
                 (t, c, o, Some(s.midpoint))
             });
             // Perceptual: stops along the mix (`v`) where a straight line would stray from it, the
@@ -774,6 +811,26 @@ mod tests {
         assert_eq!(g.sample(1.0).0.to_hex(), "#000000");
         let mid = g.sample(0.5).0.to_rgb()[0];
         assert!((mid - 0.5).abs() < 1e-5);
+    }
+
+    /// Sampling increasing positions in one pass gives what sampling each alone does, out-of-order
+    /// and repeated stop offsets included.
+    #[test]
+    fn increasing_samples_match_single_samples() {
+        let stop = |offset: f32, hex: &str, midpoint: f32| GradientStop { midpoint, ..GradientStop::new(offset, Color::from_hex(hex).unwrap()) };
+        let g = Gradient::new(
+            GradientKind::Linear,
+            vec![
+                stop(0.1, "#ff0000", 0.3),
+                stop(0.4, "#00ff00", 0.7),
+                stop(0.4, "#0000ff", 0.5),
+                stop(0.2, "#ffff00", 0.5),
+                stop(0.9, "#000000", 0.5),
+            ],
+        );
+        let ts: Vec<f32> = (0..=40).map(|k| k as f32 / 40.0).collect();
+        let one_by_one: Vec<_> = ts.iter().map(|&t| g.sample_with(t, Color::lerp_keep_model)).collect();
+        assert_eq!(g.sample_increasing_with(ts, Color::lerp_keep_model), one_by_one);
     }
 
     #[test]

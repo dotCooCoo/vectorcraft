@@ -8,7 +8,7 @@ pub(crate) const WHITE_MIN: u8 = 245;
 /// `#rrggbb` or `rrggbb`.
 pub(crate) fn parse_hex(s: &str) -> Option<[u8; 3]> {
     let h = s.trim().trim_start_matches('#');
-    if h.len() != 6 || !h.is_ascii() {
+    if h.len() != 6 || !h.bytes().all(|b| b.is_ascii_hexdigit()) {
         return None;
     }
     let v = |i: usize| u8::from_str_radix(h.get(i..i + 2)?, 16).ok();
@@ -403,7 +403,7 @@ mod tests {
     fn hex_parsing() {
         assert_eq!(parse_hex("#6C60F6"), Some([0x6c, 0x60, 0xf6]));
         assert_eq!(parse_hex("ea4335"), Some([0xea, 0x43, 0x35]));
-        for bad in ["", "#12345", "#1234567", "#gg0000", "é2345z", "  "] {
+        for bad in ["", "#12345", "#1234567", "#gg0000", "é2345z", "  ", "+1+2+3", "#+1+2+3"] {
             assert_eq!(parse_hex(bad), None, "{bad:?}");
         }
     }

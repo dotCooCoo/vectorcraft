@@ -574,9 +574,13 @@ pub enum Cursor {
     MagicWand,
     /// The Pencil tool.
     Pencil,
-    /// The Pencil tool with Alt held while Alt key toggles to Smooth Tool is off: releasing the
-    /// mouse button with Alt still held closes the path. A crosshair with a ring.
+    /// The Pencil tool with Alt pressed after the drag starts and Alt key toggles to Smooth Tool off:
+    /// releasing the mouse button with Alt still held closes the path. A drag started with Shift or
+    /// Alt held draws an open straight line instead. A crosshair with a ring.
     PencilClose,
+    /// The Pencil tool before a press that draws a straight line (Shift or Alt held). A crosshair with a
+    /// short straight line.
+    PencilStraight,
     /// The Paintbrush tool.
     Paintbrush,
     /// The Paintbrush tool with Alt held: releasing the mouse button with Alt still held closes
@@ -693,6 +697,7 @@ impl Cursor {
             | Cursor::MagicWand
             | Cursor::Pencil
             | Cursor::PencilClose
+            | Cursor::PencilStraight
             | Cursor::Paintbrush
             | Cursor::PaintbrushClose
             | Cursor::BlobBrush
@@ -885,6 +890,20 @@ impl Tool for NoopTool {
     fn pointer(&mut self, _cx: &ToolContext, _ev: &PointerEvent) -> Vec<Action> {
         vec![]
     }
+}
+
+/// The most samples a drawn stroke (freehand, Liquify) keeps: later drags add nothing to it.
+pub(crate) const MAX_STROKE_SAMPLES: usize = 100_000;
+
+/// Samples up to which every drag previews the whole stroke; past it, a drag previews it every
+/// `n / PREVIEW_ALL_UNTIL` samples. Each preview carries every sample so far, so previewing at
+/// every sample cost the square of the stroke's length (a gesture of many drags sent at once
+/// spent seconds); this way it is about `PREVIEW_ALL_UNTIL` per sample.
+const PREVIEW_ALL_UNTIL: usize = 1000;
+
+/// Whether a drag that made the stroke `n` samples long previews it ([`PREVIEW_ALL_UNTIL`]).
+pub(crate) fn previews_at(n: usize) -> bool {
+    n <= PREVIEW_ALL_UNTIL || n.is_multiple_of(n / PREVIEW_ALL_UNTIL)
 }
 
 pub(crate) fn json_ids(ids: &[NodeId]) -> Value {

@@ -162,7 +162,7 @@ fn built_in_effect(id: &str) -> bool {
 
 /// [`effect_label`] as shown: a built-in effect's in the UI language (an `@id` row for the
 /// effect's id wins over the plain row of its English label), a plug-in's as it is.
-fn shown_effect_label(id: &str) -> String {
+pub(crate) fn shown_effect_label(id: &str) -> String {
     match catalog().iter().find(|c| c.0 == id) {
         Some(c) => crate::i18n::t_id(id, &c.1).to_string(),
         None => effect_label(id),

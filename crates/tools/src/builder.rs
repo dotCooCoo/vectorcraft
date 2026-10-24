@@ -39,6 +39,19 @@ pub fn is_live_paint(n: &Node) -> bool {
     matches!(n.kind, NodeKind::Group { clip: false, .. }) && n.name.as_deref().is_some_and(|s| s.starts_with(LIVE_PAINT_PREFIX))
 }
 
+/// Whether Live Paint can take `n` as it is: a Live Paint group, a path or compound path, or a
+/// group of those. Type, images, symbols, blends, meshes and the rest have to be converted to
+/// paths first (<https://helpx.adobe.com/illustrator/desktop/paint-and-fill/learn-painting-basics/create-live-paint-groups.html>);
+/// Make and Merge refuse them rather than hide them among the group's sources.
+pub fn live_paint_takes(n: &Node) -> bool {
+    is_live_paint(n)
+        || match &n.kind {
+            NodeKind::Path { .. } | NodeKind::Compound { .. } => true,
+            NodeKind::Group { children, .. } => children.iter().all(|c| live_paint_takes(c)),
+            _ => false,
+        }
+}
+
 fn named(n: &Node, name: &str) -> bool {
     n.name.as_deref() == Some(name)
 }

@@ -1,8 +1,8 @@
 //! Paragraph panel: seven alignment buttons, Paragraph Direction (with the Indic options), the
-//! Bullets button and its presets, indents, space before/after, Hyphenate, Insert Kashidas (with
-//! the Indic options), Mojikumi Set and Kinsoku Set (with the East Asian options); the panel menu
-//! turns Roman Hanging Punctuation on and off, opens Justification… and Hyphenation… and picks the
-//! Single-line or Every-line Composer.
+//! Bullets and Numbered List buttons and their presets, indents, space before/after, Hyphenate,
+//! Insert Kashidas (with the Indic options), Mojikumi Set and Kinsoku Set (with the East Asian
+//! options); the panel menu turns Roman Hanging Punctuation on and off, opens Justification… and
+//! Hyphenation… and picks the Single-line or Every-line Composer.
 
 use egui::{Ui, vec2};
 use serde_json::{Value, json};
@@ -345,6 +345,19 @@ pub(crate) fn apply_bullets(app: &mut VectorcraftApp, p: &Value) -> Result<Value
     run_on_paragraphs(app, "text.setFormat", params)
 }
 
+/// Type › Bullets and Numbering › Apply Numbers (`type.applyNumbers {number?}`): the paragraphs of
+/// the selected type, or those the Type tool's selection touches, become a numbered list with
+/// number style `number`; without it, a numbered list keeps its style and other paragraphs are
+/// numbered 1, 2, 3.
+pub(crate) fn apply_numbers(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+    text_style(app).ok_or("select some type first")?;
+    let params = match p.get("number") {
+        Some(n) => json!({ "number": n }),
+        None => json!({ "list": "number" }),
+    };
+    run_on_paragraphs(app, "text.setFormat", params)
+}
+
 /// The Bullets button and the arrow beside it (Paragraph panel). The button makes the paragraphs
 /// the panel acts on a bulleted list (`text.setFormat {list: "bullet"}`) and shows pressed while
 /// they all are one. The arrow lists the presets (`{bullet}`): None turns the list off, and the
@@ -352,7 +365,7 @@ pub(crate) fn apply_bullets(app: &mut VectorcraftApp, p: &Value) -> Result<Value
 pub fn bullets_button(app: &mut VectorcraftApp, ui: &mut Ui, size: f32) {
     use vectorcraft_doc::text::Bullet;
     let t = Tokens::get(ui.ctx());
-    let shown = shared_para(app, |p| p.list.map(|l| l.bullet));
+    let shown = shared_para(app, |p| p.list.filter(|l| l.number.is_none()).map(|l| l.bullet));
     if widgets::icon_button(ui, "dc-para-bullets", tl!("Bullets"), matches!(shown, Some(Some(_))), size).clicked() {
         format(app, json!({"list": "bullet"}));
     }
@@ -412,6 +425,60 @@ fn bullet_row(ui: &mut Ui, name: &str, bullet: Option<vectorcraft_doc::text::Bul
     resp.clicked()
 }
 
+/// The Numbered List button and the arrow beside it (Paragraph panel). The button makes the
+/// paragraphs the panel acts on a numbered list (`text.setFormat {list: "number"}`) and shows
+/// pressed while they all are one. The arrow lists the presets (`{number}`), each shown by its
+/// first three numbers: None turns the list off, and the one every paragraph has is checked.
+pub fn numbers_button(app: &mut VectorcraftApp, ui: &mut Ui, size: f32) {
+    use vectorcraft_doc::text::NumberStyle;
+    let t = Tokens::get(ui.ctx());
+    let shown = shared_para(app, |p| p.list.and_then(|l| l.number));
+    if widgets::icon_button(ui, "dc-para-numbers", tl!("Numbered List"), matches!(shown, Some(Some(_))), size).clicked() {
+        format(app, json!({"list": "number"}));
+    }
+    let (rect, arrow) = ui.allocate_exact_size(vec2(14.0, size), egui::Sense::click());
+    if arrow.hovered() {
+        ui.painter().rect_filled(rect, egui::CornerRadius::same(4), t.hover);
+    }
+    crate::icons::paint(ui, "chevron-down", egui::Rect::from_center_size(rect.center(), vec2(10.0, 10.0)), t.text_dim);
+    arrow.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tl!("Numbered List")));
+    let arrow = arrow.on_hover_text(tl!("Numbered List"));
+    let picked = egui::Popup::menu(&arrow).show(|ui| {
+        let mut picked = None;
+        if bullet_row(ui, tl!("None"), None, shown == Some(None)) {
+            picked = Some(None);
+        }
+        for style in NumberStyle::ALL {
+            let sample = (1..=3).map(|n| style.format(n)).collect::<Vec<_>>().join(", ");
+            if number_row(ui, &sample, shown == Some(Some(style))) {
+                picked = Some(Some(style));
+            }
+        }
+        picked
+    });
+    if let Some(style) = picked.and_then(|r| r.inner) {
+        format(app, json!({ "number": style.map_or(json!("none"), |s| json!(s)) }));
+    }
+}
+
+/// A row of the Numbered List presets: a check when `checked`, then the style's first numbers
+/// (`sample`). Whether it was clicked.
+fn number_row(ui: &mut Ui, sample: &str, checked: bool) -> bool {
+    let t = Tokens::get(ui.ctx());
+    let (rect, resp) = ui.allocate_exact_size(vec2(130.0, 22.0), egui::Sense::click());
+    if resp.hovered() {
+        ui.painter().rect_filled(rect, egui::CornerRadius::same(4), t.hover);
+    }
+    let painter = ui.painter();
+    let font = egui::FontId::proportional(12.5);
+    if checked {
+        painter.text(rect.left_center() + vec2(6.0, 0.0), egui::Align2::LEFT_CENTER, "✓", font.clone(), t.text_strong);
+    }
+    painter.text(rect.left_center() + vec2(22.0, 0.0), egui::Align2::LEFT_CENTER, sample, font, t.text_strong);
+    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::RadioButton, ui.is_enabled(), checked, sample));
+    resp.clicked()
+}
+
 /// The Hyphenate checkbox for the paragraphs the panel acts on.
 pub fn hyphenate_check(app: &mut VectorcraftApp, ui: &mut Ui, _para: &ParaStyle) {
     let hyphenate = shared_hyphenate(app);
@@ -446,6 +513,8 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 0.0;
         bullets_button(app, ui, 28.0);
+        ui.add_space(6.0);
+        numbers_button(app, ui, 28.0);
     });
     ui.add_space(4.0);
     let fw = ((ui.available_width() - 66.0) / 2.0).clamp(60.0, 100.0);
@@ -990,6 +1059,80 @@ mod tests {
         assert_eq!(lists(&app), (Some(ParaList::bulleted(Bullet::Dot)), Some(ParaList::bulleted(Bullet::Dot))));
         app.run("type.applyBullets", json!({"bullet": "dash"})).unwrap();
         assert_eq!(lists(&app).0, Some(ParaList::bulleted(Bullet::Dash)));
+        app.session.set_tool_option("selectAll", &json!(true));
+        reset_panel(&mut app);
+        assert_eq!(lists(&app), (None, None));
+    }
+
+    /// The Numbered List button makes the paragraphs the Type tool's selection touches a numbered
+    /// list 1, 2, 3 and shows pressed; the arrow's presets, each shown by its first three numbers,
+    /// pick another style, None turns the list off, Type › Bullets and Numbering › Apply Numbers
+    /// applies a numbered list, and Reset Panel turns it off.
+    #[test]
+    fn the_numbered_list_button_and_its_presets_set_the_list_and_reset_panel_clears_it() {
+        use vectorcraft_doc::text::{NumberStyle, ParaList};
+        crate::i18n::set_current(crate::i18n::Lang::EN);
+        let (mut app, id) = editing_text("One\nTwo");
+        select_range(&mut app, 0, 0);
+        let lists = |app: &VectorcraftApp| {
+            let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap();
+            let NodeKind::Text(text) = &node.kind else { panic!("text") };
+            (text.para_at(0).list, text.para_at(1).list)
+        };
+        let numbered = |style| Some(ParaList::numbered(style));
+        let ctx = egui::Context::default();
+        crate::theme::install_fonts(&ctx);
+        let row = std::cell::Cell::new(egui::Rect::NOTHING);
+        let mut draw = |app: &mut VectorcraftApp, ui: &mut Ui| {
+            row.set(ui.horizontal(|ui| numbers_button(app, ui, 28.0)).response.rect);
+        };
+        super::super::tests_appearance::frame_events(&ctx, &mut app, vec![], &mut draw);
+        let min = row.get().min;
+        let (button, arrow) = (min + vec2(14.0, 14.0), min + vec2(28.0 + 7.0, 14.0));
+        super::super::tests_appearance::click(&ctx, &mut app, button, &mut draw);
+        assert_eq!(lists(&app), (numbered(NumberStyle::Arabic), None), "the caret's paragraph");
+        assert_eq!(shared_para(&app, |p| p.list.and_then(|l| l.number)), Some(Some(NumberStyle::Arabic)), "the button shows pressed");
+        let mut pick = |app: &mut VectorcraftApp, name: &str| {
+            super::super::tests_appearance::click(&ctx, app, arrow, &mut draw);
+            let texts = super::super::tests_appearance::frame_events(&ctx, app, vec![], &mut draw);
+            let at = super::super::tests_appearance::text_rect(&texts, name).center();
+            super::super::tests_appearance::click(&ctx, app, at, &mut draw);
+        };
+        for (name, style) in [
+            ("I, II, III", NumberStyle::UpperRoman),
+            ("a, b, c", NumberStyle::LowerLetters),
+            ("001, 002, 003", NumberStyle::ThreeDigits),
+            ("1, 2, 3", NumberStyle::Arabic),
+        ] {
+            pick(&mut app, name);
+            assert_eq!(lists(&app), (numbered(style), None), "{name}");
+        }
+        pick(&mut app, "None");
+        assert_eq!(lists(&app), (None, None));
+        app.session.set_tool_option("selectAll", &json!(true));
+        app.run("type.applyNumbers", json!({})).unwrap();
+        assert_eq!(lists(&app), (numbered(NumberStyle::Arabic), numbered(NumberStyle::Arabic)));
+        // The Numbered List button shows pressed and the Bullets button doesn't, and the other way
+        // round for a bulleted list.
+        // Each button and the arrow beside it have the same name; only a button shows pressed.
+        let pressed = |app: &mut VectorcraftApp| {
+            let nodes = crate::widgets::accessibility_tests::tree(|ui| {
+                ui.horizontal(|ui| {
+                    bullets_button(app, ui, 28.0);
+                    numbers_button(app, ui, 28.0);
+                });
+            });
+            let on = |label| nodes.iter().any(|n| n.label() == Some(label) && n.toggled() == Some(egui::accesskit::Toggled::True));
+            (on("Bullets"), on("Numbered List"))
+        };
+        assert_eq!(pressed(&mut app), (false, true));
+        app.session.set_tool_option("selectAll", &json!(true));
+        app.run("type.applyBullets", json!({})).unwrap();
+        assert_eq!(pressed(&mut app), (true, false));
+        app.session.set_tool_option("selectAll", &json!(true));
+        app.run("type.applyNumbers", json!({})).unwrap();
+        app.run("type.applyNumbers", json!({"number": "upperLetters"})).unwrap();
+        assert_eq!(lists(&app).0, numbered(NumberStyle::UpperLetters));
         app.session.set_tool_option("selectAll", &json!(true));
         reset_panel(&mut app);
         assert_eq!(lists(&app), (None, None));
