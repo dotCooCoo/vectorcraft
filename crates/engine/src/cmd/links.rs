@@ -231,7 +231,12 @@ impl Found {
 
     /// `base` pointing at this file as read now (`bytes`).
     fn link(&self, bytes: &[u8], base: &LinkInfo) -> LinkInfo {
-        LinkInfo { path: self.path.clone(), size: Some(self.size), modified: self.modified, hash: Some(hash_bytes(bytes)), ..base.clone() }
+        self.link_hashed(hash_bytes(bytes), base)
+    }
+
+    /// [`Self::link`] with the bytes' hash already taken.
+    fn link_hashed(&self, hash: String, base: &LinkInfo) -> LinkInfo {
+        LinkInfo { path: self.path.clone(), size: Some(self.size), modified: self.modified, hash: Some(hash), ..base.clone() }
     }
 }
 
@@ -542,8 +547,11 @@ fn clip_image(d: &mut Document, id: NodeId, (frame, room): Clip) -> Result<()> {
 /// Replace image `id` with the raster at `path`, keeping the object's bounds (what an image
 /// variable does on `dataset.select`). The file is linked; a missing or unreadable path is an
 /// error so the dataset application can skip that binding.
-pub(crate) fn set_image_from_path(d: &mut Document, id: NodeId, path: &str) -> Result<()> {
-    let path = absolute_path(path);
+pub(crate) fn set_image_from_path(d: &mut Document, id: NodeId, path: &str, doc_path: Option<&str>) -> Result<()> {
+    // A path stored in the document (a data set's value) is followed as its other stored paths
+    // are: on this computer or the document's own share only, so choosing a data set can't make
+    // the app connect to another computer.
+    let path = fileio::document_path(path, doc_path).map_err(|r| EngineError::Other(format!("the image `{path}` isn't followed: {r}")))?;
     let bytes = read_file(&path)?;
     let read = (link_info(&path, &bytes), fileio::raster_image(&bytes)?);
     install(d, &[id], read, Some(Preserve::Bounds))
@@ -618,6 +626,10 @@ impl Resolved {
 /// image's bounds, which isn't a change to report. Nothing here is an undo step.
 pub fn resolve(d: &mut Document, doc_path: Option<&str>, update: bool, low_res_proxy_eps: bool) -> Resolved {
     let mut out = Resolved::default();
+    // The image (with its preview) and hash of each file read for a preview here, by path: images
+    // of other keys linking to the same file share them, rather than each reading, decoding and
+    // keeping a copy of its own.
+    let mut read_images: BTreeMap<String, (ImageBlob, String)> = BTreeMap::new();
     for g in groups(d, None) {
         let row = rows(std::iter::once(&g), doc_path);
         let unread = g.document.is_none() && g.link.hash.is_none() && g.link.size.is_none() && previewing(d, &g.key);
@@ -655,14 +667,24 @@ pub fn resolve(d: &mut Document, doc_path: Option<&str>, update: bool, low_res_p
             }
             (Status::Ok, Some(mut f)) => {
                 let preview = previewing(d, &g.key);
+                if let Some((blob, hash)) = read_images.get(&f.path).filter(|_| preview && !eps_preview).cloned() {
+                    store_image(d, &g.key, blob, true);
+                    let link = f.link_hashed(hash, &g.link);
+                    if link != g.link {
+                        set_links(d, &g.ids, &link);
+                    }
+                    continue;
+                }
                 // Read when the images show the preview, or when the file's details changed.
                 let bytes = if (preview && !eps_preview) || f.bytes.is_some() { f.read().ok() } else { None };
                 if preview && !eps_preview {
-                    let Some(img) = bytes.as_deref().and_then(|b| fileio::raster_image(b).ok()) else {
+                    let Some((b, img)) = bytes.as_deref().and_then(|b| Some((b, fileio::raster_image(b).ok()?))) else {
                         out.missing.extend(row);
                         continue;
                     };
-                    store_image(d, &g.key, img.blob, true);
+                    let blob = img.blob.with_proxy();
+                    read_images.insert(f.path.clone(), (blob.clone(), hash_bytes(b)));
+                    store_image(d, &g.key, blob, true);
                 } else if let Some(b) = d.images.get(&g.key).filter(|b| b.proxy.is_none()) {
                     // Linked before links kept a preview.
                     let b = b.clone().with_proxy();
@@ -1266,6 +1288,11 @@ fn placement_json(o: PlacementOptions) -> Value {
 
 /// Link Info's fields of the linked file `l` (of object `id` of `st`) into `out`.
 fn file_fields(st: &crate::DocState, id: NodeId, l: &LinkInfo, out: &mut Value) {
+    // Within what the caller that opened the document may read, whoever asks.
+    crate::file_access::confine(st.opened_by.as_ref(), || file_fields_here(st, id, l, out));
+}
+
+fn file_fields_here(st: &crate::DocState, id: NodeId, l: &LinkInfo, out: &mut Value) {
     let status = groups(&st.doc, Some(&[id])).first().map_or(Status::Missing, |g| probe(g, st.path.as_deref()).0);
     let doc_path = st.path.as_deref();
     let path = fileio::document_path(&l.path, doc_path).ok();

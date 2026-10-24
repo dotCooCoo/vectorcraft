@@ -188,10 +188,21 @@ impl Review {
             });
         }
         let codes = |list: &Value, field: &str, described: &[(i64, &str)], of: fn(&Row) -> Option<i64>| -> BTreeMap<i64, Code> {
+            // The first few names for each code, in one pass over the rows: a scan per code made a
+            // file of many distinct codes cost codes × rows.
+            let mut examples: BTreeMap<i64, Vec<String>> = BTreeMap::new();
+            for r in &rows {
+                if let Some(value) = of(r) {
+                    let names = examples.entry(value).or_default();
+                    if names.len() < NAMES_SHOWN {
+                        names.push(r.name.clone());
+                    }
+                }
+            }
             let mut out = BTreeMap::new();
             for c in list.as_array().into_iter().flatten() {
                 let Some(value) = c["value"].as_i64() else { continue };
-                let names = rows.iter().filter(|r| of(r) == Some(value)).take(NAMES_SHOWN).map(|r| r.name.clone()).collect();
+                let names = examples.get(&value).cloned().unwrap_or_default();
                 let (text, from) = match (c[field].as_str(), described.iter().find(|(v, _)| *v == value)) {
                     (Some(t), _) => (Some(t.to_string()), "saved"),
                     (None, Some((_, t))) => (Some(t.to_string()), "described"),

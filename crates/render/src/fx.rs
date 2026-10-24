@@ -977,6 +977,11 @@ impl Reads {
         self.plugins || self.symbols || self.patterns
     }
 
+    /// Does the content show symbol or pattern art?
+    pub(crate) fn shows_definitions(self) -> bool {
+        self.symbols || self.patterns
+    }
+
     fn add(&mut self, n: &Node) {
         let pattern = |p: &vectorcraft_color::Paint| matches!(p, vectorcraft_color::Paint::Pattern { .. });
         n.walk(&mut |c| {
@@ -1039,7 +1044,8 @@ impl Inputs {
 /// pixels, the address of the color settings, and whether the patterns' and symbols' art has a
 /// plug-in effect. Art, pixels and previews are hashed by the addresses of their shared values,
 /// and names, keys, tiles, tile types and overlaps are hashed by value. The live cache keeps these
-/// inputs with each evaluated live object and with each mesh's quads (`crate::live`), and
+/// inputs with each evaluated live object, with each mesh's quads and with what each walk of a
+/// live object or of effect art found when it found no placed file (`crate::live`), and
 /// [`Renderer::fx_art`] keeps them with art that can be made from evaluated live objects.
 pub(crate) struct DocInputs {
     patterns: u64,
@@ -1053,6 +1059,14 @@ pub(crate) struct DocInputs {
     /// allocation, not the value, so no other value gets one of those addresses while these
     /// inputs are kept.
     _held: Held,
+}
+
+impl DocInputs {
+    /// Whether `self` and `other` were made from the same patterns and symbols: their names,
+    /// tilings and art.
+    pub(crate) fn same_art(&self, other: &DocInputs) -> bool {
+        (self.patterns, self.symbols) == (other.patterns, other.symbols)
+    }
 }
 
 /// The pattern and symbol art, the image pixels and the color settings, held weakly.

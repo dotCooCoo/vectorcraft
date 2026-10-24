@@ -1614,6 +1614,14 @@ fn affine_between(s: [Point; 3], d: [Point; 3]) -> Option<Affine> {
 /// edges (at most half a point) so neighbours overlap and no seams show.
 fn warp_image(n: &Node, im: &ImageObject, w: &Warper) -> Node {
     let k = w.cells.max(1);
+    // Two triangles a cell, three objects each; an image an inner envelope already cut into
+    // pieces is cut again here, so the pieces count against [`MAX_GENERATED`]. Past it, the image
+    // is left out.
+    if !Generating::charge(k.saturating_mul(k).saturating_mul(6)) {
+        let mut g = n.clone();
+        g.kind = NodeKind::Group { children: vec![], clip: false };
+        return g;
+    }
     let (pw, ph) = (im.width as f64, im.height as f64);
     let at = |i: usize, j: usize| Point::new(pw * i as f64 / k as f64, ph * j as f64 / k as f64);
     let mut pieces = Vec::with_capacity(2 * k * k);
@@ -1791,6 +1799,7 @@ pub fn expand_live_with(n: &Node, outline: Outliner) -> Vec<Node> {
 
 /// [`expand_live_with`] with everything an envelope can ask of the crates above (see [`Hooks`]).
 pub fn expand_live_hooks(n: &Node, hooks: Hooks) -> Vec<Node> {
+    let _generating = Generating::enter();
     match &n.kind {
         NodeKind::Blend { children, spec } => blend_expand(children, spec),
         NodeKind::Envelope { content, kind, fidelity, options, frame, .. } => expand_envelope(content, kind, *fidelity, *options, **frame, hooks),
@@ -1809,6 +1818,7 @@ pub fn expanded_group(n: &Node, outline: Outliner) -> Node {
 
 /// [`expanded_group`] with [`Hooks`].
 pub fn expanded_group_hooks(n: &Node, hooks: Hooks) -> Node {
+    let _generating = Generating::enter();
     let children = expand_live_hooks(n, hooks).into_iter().map(Arc::new).collect();
     let mut g = Node::new(n.id, NodeKind::Group { children, clip: false });
     g.name = n.name.clone();
@@ -1832,9 +1842,21 @@ pub fn expand_deep(n: &Node, outline: Outliner) -> Node {
     expand_deep_hooks(n, outline.into())
 }
 
-/// [`expand_deep`] with [`Hooks`].
+/// [`expand_deep`] with [`Hooks`]. The objects live art makes here count against one
+/// [`MAX_GENERATED`] ([`Generating`]): blends of blends kept their inner blends live, and each
+/// copy expanded on its own, so step counts capped one by one multiplied. Past it, live art
+/// expands to nothing.
 pub fn expand_deep_hooks(n: &Node, hooks: Hooks) -> Node {
-    let mut out = if is_live(n) { expanded_group_hooks(n, hooks) } else { n.clone() };
+    let _generating = Generating::enter();
+    let mut out = if is_live(n) {
+        let g = expanded_group_hooks(n, hooks);
+        if !Generating::charge(g.count()) {
+            return Node::new(n.id, NodeKind::Group { children: vec![], clip: false });
+        }
+        g
+    } else {
+        n.clone()
+    };
     if let Some(ch) = out.children_mut() {
         for c in ch.iter_mut() {
             if subtree_has_live(c) {
@@ -1843,6 +1865,48 @@ pub fn expand_deep_hooks(n: &Node, hooks: Hooks) -> Node {
         }
     }
     out
+}
+
+/// Most objects one evaluation of live art (an expansion, an envelope's mapping and everything
+/// inside them) may make.
+pub const MAX_GENERATED: usize = 4_000_000;
+
+std::thread_local! {
+    /// What is left of [`MAX_GENERATED`] for the evaluation running on this thread; `None` outside
+    /// one.
+    static GENERATED_LEFT: std::cell::Cell<Option<usize>> = const { std::cell::Cell::new(None) };
+}
+
+/// The outermost live evaluation on this thread: it starts [`GENERATED_LEFT`] and ends it.
+struct Generating(bool);
+
+impl Generating {
+    fn enter() -> Self {
+        let outermost = GENERATED_LEFT.get().is_none();
+        if outermost {
+            GENERATED_LEFT.set(Some(MAX_GENERATED));
+        }
+        Self(outermost)
+    }
+
+    /// Spend `n` objects; `false` (and nothing left) when there aren't that many.
+    fn charge(n: usize) -> bool {
+        match GENERATED_LEFT.get() {
+            None => true,
+            Some(left) => {
+                GENERATED_LEFT.set(Some(left.saturating_sub(n)));
+                n <= left
+            }
+        }
+    }
+}
+
+impl Drop for Generating {
+    fn drop(&mut self) {
+        if self.0 {
+            GENERATED_LEFT.set(None);
+        }
+    }
 }
 
 /// Does `n` or any descendant need live evaluation?

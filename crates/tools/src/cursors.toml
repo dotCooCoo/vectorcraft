@@ -530,13 +530,13 @@ look = "Crosshair with a minus badge."
 [[cursor]]
 id = "Pencil"
 group = "Drawing and editing tools"
-shown_when = ["The Pencil tool: draws a freeform path; starting near the end of a selected open path continues it; Alt while drawing closes the path."]
+shown_when = ["The Pencil tool: draws a freeform path; starting near the end of a selected open path continues it; Shift or Alt held at the press draws a straight line; Alt pressed after the drag starts closes the path."]
 hotspot = "The lead tip."
 
 [[cursor]]
 id = "PencilClose"
 group = "Drawing and editing tools"
-shown_when = ["The Pencil tool with Alt held, before a press and while drawing, when Alt key toggles to Smooth Tool is off: releasing the mouse button with Alt still held closes the path."]
+shown_when = ["The Pencil tool with Alt pressed after the drag starts, when Alt key toggles to Smooth Tool is off: releasing the mouse button with Alt still held closes the path. A drag started with Shift or Alt held draws an open straight line and does not show this cursor."]
 hotspot = "The lead tip."
 look = "The Pencil cursor with a ring badge (closing the loop), like PenClose."
 

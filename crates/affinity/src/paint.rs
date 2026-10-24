@@ -181,7 +181,10 @@ fn color_within(r: &mut Reader, id: ObjId, depth: u32) -> Option<Color> {
             if depth >= MAX_SPOT_CHAIN {
                 return None;
             }
-            return s.obj(id, b"srgb").and_then(|c| color_within(r, c, depth + 1)).or_else(|| s.obj(id, b"base").and_then(|c| color_within(r, c, depth + 1)));
+            return s
+                .obj(id, b"srgb")
+                .and_then(|c| color_within(r, c, depth + 1))
+                .or_else(|| s.obj(id, b"base").and_then(|c| color_within(r, c, depth + 1)));
         }
         b"RegC" => Color::Cmyk { c: 1.0, m: 1.0, y: 1.0, k: 1.0, a: 1.0 },
         _ => {

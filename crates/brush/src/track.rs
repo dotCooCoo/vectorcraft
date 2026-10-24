@@ -171,7 +171,9 @@ pub fn tracks(bp: &BezPath, tol: f64) -> Vec<Track> {
     // Far outside any drawing a curve flattens to millions of points; past a few million, the
     // rest are not kept.
     let b = bp.control_box();
-    if !(b.x0.abs().max(b.x1.abs()).max(b.y0.abs()).max(b.y1.abs()) <= 1e9) {
+    let extent = b.x0.abs().max(b.x1.abs()).max(b.y0.abs()).max(b.y1.abs());
+    // NaN coordinates must be rejected too, so keep the negation of the `<=` check.
+    if extent.is_nan() || extent > 1e9 {
         return out;
     }
     let mut els = vec![];

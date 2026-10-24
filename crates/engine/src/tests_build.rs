@@ -2161,6 +2161,40 @@ fn image_trace_gradients_fills_with_a_gradient() {
     assert!(flat.len() > 1 && flat.iter().all(|n| matches!(n.appearance.fill_paint(), Paint::Solid { .. })));
 }
 
+/// A key inside `params` that isn't a setting is refused with the nearest setting, the image is
+/// left as it was, and the error names the command that was run.
+#[test]
+fn image_trace_refuses_an_unknown_setting() {
+    for id in ["imageTrace.make", "imageTrace.makeAndExpand"] {
+        let mut s = session();
+        let img = image_doc(&mut s);
+        let e = s.execute(id, &json!({"preset": "6 Colors", "params": {"mode": "color", "colours": 3}})).unwrap_err().to_string();
+        assert!(e.contains(&format!("`{id}`")) && e.contains("unknown parameter `colours`; did you mean `colors`?"), "{e}");
+        assert!(matches!(node(&s, img).kind, NodeKind::Image(_)));
+        let e = s.execute(id, &json!({"params": {"zz": 1}})).unwrap_err().to_string();
+        assert!(e.contains("unknown parameter `zz`; the command takes: ") && e.contains("colorDetail"), "{e}");
+        let e = s.execute(id, &json!({"enhanced": "yes"})).unwrap_err().to_string();
+        assert!(e.contains(&format!("`{id}`")), "{e}");
+        let library = json!({"preset": "6 Colors", "params": {"palette": "documentLibrary", "library": "No Such Library"}});
+        let e = s.execute(id, &library).unwrap_err().to_string();
+        assert!(e.contains(&format!("`{id}`")) && e.contains("no swatch library"), "{e}");
+    }
+}
+
+/// Every preset's settings, as imageTrace.presets lists them, trace when passed back whole.
+#[test]
+fn image_trace_takes_every_preset_back_as_params() {
+    let list = session().execute("imageTrace.presets", &json!({})).unwrap();
+    for preset in list["presets"].as_array().unwrap() {
+        for params in [&preset["params"], &preset["enhanced"]].into_iter().filter(|p| !p.is_null()) {
+            let mut s = session();
+            image_doc(&mut s);
+            let r = s.execute("imageTrace.make", &json!({"preset": preset["name"], "params": params}));
+            assert!(r.is_ok(), "{}: {r:?}", preset["name"]);
+        }
+    }
+}
+
 /// A preset's enhanced version: the preset with Auto Grouping and Shapes, under the preset's name.
 #[test]
 fn image_trace_enhanced_presets() {

@@ -202,7 +202,7 @@ pub fn check_keys(id: &str, doc: &'static str, params: &Value) -> Result<()> {
 
 /// The parameter error of command `id` for `key`, which isn't one of `keys`: with the nearest of
 /// them, or all of them.
-fn unknown(id: &str, key: &str, keys: &[&str]) -> crate::EngineError {
+pub(crate) fn unknown(id: &str, key: &str, keys: &[&str]) -> crate::EngineError {
     bad(
         id,
         match nearest(key, keys) {

@@ -951,40 +951,44 @@ fn view_param(cmd: &str, p: &Value) -> Result<Option<TraceView>> {
     v.as_str().and_then(TraceView::from_id).map(Some).ok_or_else(|| bad(cmd, format!("view must be one of {}", ids())))
 }
 
-fn trace_params(p: &Value) -> Result<tr::TraceParams> {
+/// The parameters command `c` traces with: the preset's, with `params` over them.
+fn trace_params(c: &str, p: &Value) -> Result<tr::TraceParams> {
     let name = str_param(p, "preset").unwrap_or("Default");
-    let enhanced = switch_or(p, "enhanced", false, "imageTrace.make")?;
+    let enhanced = switch_or(p, "enhanced", false, c)?;
     // (A preset without an enhanced version is traced as it is.)
     let base = enhanced.then(|| tr::enhanced_preset(name)).flatten().or_else(|| tr::preset(name));
-    let base = base.ok_or_else(|| bad("imageTrace.make", format!("unknown preset `{name}` (see imageTrace.presets)")))?;
+    let base = base.ok_or_else(|| bad(c, format!("unknown preset `{name}` (see imageTrace.presets)")))?;
     let Some(over) = p.get("params").filter(|v| !v.is_null()) else { return Ok(base) };
     let mut v = serde_json::to_value(&base).map_err(|e| EngineError::Other(e.to_string()))?;
-    let (Some(o), Some(src)) = (v.as_object_mut(), over.as_object()) else { return Err(bad("imageTrace.make", "params must be an object")) };
+    let (Some(o), Some(src)) = (v.as_object_mut(), over.as_object()) else { return Err(bad(c, "params must be an object")) };
+    // A key that isn't one of the settings is an error, with the nearest setting.
+    if let Some(key) = src.keys().find(|k| !o.contains_key(k.as_str())) {
+        return Err(super::params::unknown(c, key, &o.keys().map(String::as_str).collect::<Vec<_>>()));
+    }
     for (k, val) in src {
         o.insert(k.clone(), val.clone());
     }
-    let params: tr::TraceParams = serde_json::from_value(v).map_err(|e| bad("imageTrace.make", e.to_string()))?;
+    let params: tr::TraceParams = serde_json::from_value(v).map_err(|e| bad(c, e.to_string()))?;
     if !params.fills && !params.strokes {
-        return Err(bad("imageTrace.make", "Create needs fills, strokes or both"));
+        return Err(bad(c, "Create needs fills, strokes or both"));
     }
     if !(params.stroke_width.is_finite() && params.stroke_width > 0.0) {
-        return Err(bad("imageTrace.make", "strokeWidth must be a positive number of pixels"));
+        return Err(bad(c, "strokeWidth must be a positive number of pixels"));
     }
     Ok(params)
 }
 
 /// Document Library in Color mode: look the library's colours up into `params.swatches` → each
-/// one as traced (sRGB) with the colour to fill with.
-fn trace_library(s: &Session, params: &mut tr::TraceParams) -> Result<Vec<([u8; 3], Color)>> {
-    const C: &str = "imageTrace.make";
+/// one as traced (sRGB) with the colour to fill with. Errors name command `c`.
+fn trace_library(c: &str, s: &Session, params: &mut tr::TraceParams) -> Result<Vec<([u8; 3], Color)>> {
     if params.mode != tr::Mode::Color || params.palette != tr::Palette::DocumentLibrary {
         return Ok(vec![]);
     }
     let key = params.library.as_str();
     let colors = super::swatchlib::library_colors(s, key)
-        .ok_or_else(|| bad(C, format!("no swatch library `{key}` (see swatch.library.list; \"document\": the document's swatches)")))?;
+        .ok_or_else(|| bad(c, format!("no swatch library `{key}` (see swatch.library.list; \"document\": the document's swatches)")))?;
     if colors.is_empty() {
-        return Err(bad(C, format!("`{key}` has no colours")));
+        return Err(bad(c, format!("`{key}` has no colours")));
     }
     let library: Vec<([u8; 3], Color)> = colors
         .into_iter()
@@ -1088,9 +1092,9 @@ fn grouped(d: &mut Document, nodes: Vec<Node>, parents: &[Option<usize>]) -> Vec
 }
 
 fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Value> {
-    const C: &str = "imageTrace.make";
-    let mut params = trace_params(p)?;
-    let view = view_param(C, p)?;
+    let c = if expand { "imageTrace.makeAndExpand" } else { "imageTrace.make" };
+    let mut params = trace_params(c, p)?;
+    let view = view_param(c, p)?;
     let params_json = serde_json::to_value(&params).map_err(|e| EngineError::Other(e.to_string()))?;
     // The preset's name if the parameters are exactly that preset's or its enhanced version's,
     // else "Custom".
@@ -1114,12 +1118,12 @@ fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Value> {
                     _ => None,
                 }
             })
-            .ok_or_else(|| bad(C, "select an image (or an Image Trace group)"))?
+            .ok_or_else(|| bad(c, "select an image (or an Image Trace group)"))?
     };
     let blob = s.doc()?.doc.images.get(&img.key).ok_or_else(|| EngineError::Other(format!("image data `{}` is missing", img.key)))?;
     // An image over the tracer's size is traced scaled down (the paths are scaled back below).
     let raster = tr::Raster::decode_to_fit(&blob.bytes).map_err(|e| EngineError::Other(e.to_string()))?;
-    let library = trace_library(s, &mut params)?;
+    let library = trace_library(c, s, &mut params)?;
     let res = tr::trace_within(&raster, &params, MAX_TRACE_ANCHORS).map_err(|e| EngineError::Other(e.to_string()))?;
     let warnings = trace_warnings((img.width, img.height), (raster.width, raster.height));
     // Pixel space of the decoded raster → the image object's pixel space → document.

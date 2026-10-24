@@ -596,6 +596,10 @@ impl<'a> Scene<'a> {
                     self.node(&art, true);
                 }
             }
+            // Ruby (furigana) glyphs in their base text's run's paint, as the canvas draws them.
+            for g in layout.ruby.iter().filter(|g| g.run == i) {
+                bp.extend(g.outline.iter());
+            }
             if bp.elements().is_empty() {
                 continue;
             }

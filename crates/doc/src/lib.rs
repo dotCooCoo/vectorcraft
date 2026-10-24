@@ -93,7 +93,7 @@ pub use appearance::{
 };
 pub use assets::ExportAsset;
 pub use corners::LiveCorners;
-pub use depth::MAX_DEPTH;
+pub use depth::{MAX_DEPTH, MAX_SYMBOL_NODES};
 pub use graph::{
     ColumnDesign, ColumnType, Fractions, GraphDesign, GraphKind, GraphSpec, LabelStyles, MAX_GRAPH_CATEGORIES, MAX_GRAPH_SERIES, PiePosition,
     PieSort, SeriesPaint, TickLength, ValueAxisSide,
@@ -959,6 +959,12 @@ pub struct Document {
     /// engine sets it from the selection's ([`Selection::new_art`]). Editing state, never saved.
     #[serde(skip)]
     pub new_art: NewArtIds,
+    /// The highest artboard id given out ([`Document::next_artboard_id`]) or deleted from the
+    /// document ([`Document::retire_artboard_id`]): a new artboard takes a higher one. Shared by
+    /// every copy of the document, the undo history's included, so an undo does not lower it.
+    /// Never saved.
+    #[serde(skip)]
+    pub retired_artboard_id: RetiredArtboardId,
     /// Some object is a dimension (the Dimension tool): edits refresh dimensions only while this
     /// is set, so documents without any pay nothing for them.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -966,6 +972,27 @@ pub struct Document {
     /// Where each node is in the tree, for lookups by id ([`id_index`]): a cache, never saved.
     #[serde(skip)]
     index: id_index::IdIndex,
+}
+
+/// [`Document::retired_artboard_id`]: not document content, so two documents are equal whatever it
+/// holds. A clone shares the value with the document it was cloned from.
+#[derive(Clone, Debug, Default)]
+pub struct RetiredArtboardId(Arc<std::sync::atomic::AtomicU32>);
+
+impl RetiredArtboardId {
+    pub fn get(&self) -> u32 {
+        self.0.load(std::sync::atomic::Ordering::Relaxed)
+    }
+    /// Raise the value to `id` when `id` is higher.
+    pub fn raise(&self, id: u32) {
+        self.0.fetch_max(id, std::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+impl PartialEq for RetiredArtboardId {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
 }
 
 fn ppi72() -> f64 {
@@ -1052,6 +1079,7 @@ impl Document {
             puppet,
             new_art,
             dimensions,
+            retired_artboard_id: _,
             index: _,
         } = self;
         *version == other.version
@@ -1225,6 +1253,7 @@ impl Document {
             puppet: None,
             new_art: Default::default(),
             dimensions: false,
+            retired_artboard_id: Default::default(),
             index: Default::default(),
         };
         let id = d.alloc_id();
@@ -1940,8 +1969,18 @@ impl Document {
             self.guides.iter().filter(|g| g.artboard == Some(from)).map(|g| Guide { artboard: Some(to), ..g.moved(d) }).collect();
         self.guides.extend(copies);
     }
+    /// An id for a new artboard: one no artboard has, above the ids given out before and the ids of
+    /// the artboards deleted from the document ([`Document::retired_artboard_id`]). The id counts
+    /// as given out, so an artboard made after an undo does not take the id of one the undo took
+    /// away.
     pub fn next_artboard_id(&self) -> u32 {
-        free_id(self.artboards.iter().map(|a| a.id))
+        let id = free_id(self.artboards.iter().map(|a| a.id).chain([self.retired_artboard_id.get()]));
+        self.retired_artboard_id.raise(id);
+        id
+    }
+    /// Record that the artboard with `id` was deleted: no later artboard takes its id.
+    pub fn retire_artboard_id(&self, id: u32) {
+        self.retired_artboard_id.raise(id);
     }
     pub fn pattern(&self, name: &str) -> Option<&PatternDef> {
         self.patterns.iter().find(|p| p.name == name)

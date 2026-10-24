@@ -122,6 +122,33 @@ fn conventions_commands_batch_and_bounded_preview() {
     }
 }
 
+/// `render_preview` and `screenshot` draw the artboard pixel for pixel as a PNG export on white
+/// does: two rectangles that meet at x 40.3 and a diagonal edge. `render_preview` with the default
+/// `max_side`, which is larger than the artboard, returns the export's size.
+#[test]
+fn render_preview_and_screenshot_match_a_png_export_on_white() {
+    let mut s = Server::new(Box::new(Headless::with_document()));
+    assert_eq!(call(&mut s, "run_command", json!({"command":"file.new","params":{"width":120,"height":80}}))["isError"], false);
+    for (x, w, fill) in [(0.0, 40.3, "#204080"), (40.3, 49.7, "#e0a020")] {
+        let r = call(&mut s, "draw_shape", json!({"shape":"rectangle","x":x,"y":10,"width":w,"height":50,"fill":fill}));
+        assert_eq!(r["isError"], false, "{r}");
+    }
+    let r = call(&mut s, "draw_path", json!({"points":[[10,75],[110,5],[115,30]],"closed":true,"fill":"#30a050"}));
+    assert_eq!(r["isError"], false, "{r}");
+    let pixels = |b64: &str| image::load_from_memory(&vectorcraft_format::base64_decode(b64).unwrap()).unwrap().to_rgba8();
+    let export = payload(&call(&mut s, "run_command", json!({"command":"document.export","params":{"format":"png","background":"white"}})));
+    let export = pixels(export["dataBase64"].as_str().unwrap());
+    assert_eq!(export.dimensions(), (120, 80));
+    for (name, args) in [("render_preview", json!({"max_side":120})), ("render_preview", json!({})), ("screenshot", json!({}))] {
+        let r = call(&mut s, name, args);
+        assert_eq!(r["isError"], false, "{name}: {r}");
+        let img = pixels(r["content"][0]["data"].as_str().unwrap());
+        assert_eq!(img.dimensions(), export.dimensions(), "{name}");
+        let differ = img.pixels().zip(export.pixels()).filter(|(a, b)| a != b).count();
+        assert_eq!(differ, 0, "{name}: {differ} pixels differ from the export");
+    }
+}
+
 struct Panics;
 impl Backend for Panics {
     fn call(&mut self, _: &str, _: Value) -> Result<Value, String> {

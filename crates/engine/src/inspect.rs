@@ -265,6 +265,8 @@ fn document_base(s: &Session) -> Value {
     json!({
         "uid": st.uid,
         "title": st.title(),
+        // The File Info title (`file.info`), where `title` comes from the file name once the document has one.
+        "fileInfoTitle": d.title,
         "path": st.path,
         "dirty": st.is_dirty(),
         "revision": st.revision,

@@ -102,7 +102,11 @@ pub(crate) fn decode_within_allowance(bytes: &[u8]) -> image::ImageResult<image:
         Ok(r)
     };
     let (w, h) = reader()?.into_dimensions()?;
-    if u64::from(w) * u64::from(h) > MAX_DECODE_ALLOC / 4 {
+    let bytes = (u64::from(w) * u64::from(h)).saturating_mul(4);
+    // The images paints hold can't be evicted from the cache, so a document of many images held
+    // them all at once: a new one is decoded only while those and it fit twice the allowance.
+    let pinned = crate::images::store().pinned_bytes() as u64;
+    if bytes > MAX_DECODE_ALLOC || bytes.saturating_add(pinned) > 2 * MAX_DECODE_ALLOC {
         return Err(image::ImageError::Limits(image::error::LimitError::from_kind(image::error::LimitErrorKind::InsufficientMemory)));
     }
     reader()?.decode()

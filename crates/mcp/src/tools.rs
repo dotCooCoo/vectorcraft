@@ -513,6 +513,16 @@ fn req_str<'a>(a: &'a Args, k: &str) -> Result<&'a str, String> {
     a.get(k).and_then(Value::as_str).filter(|s| !s.is_empty()).ok_or_else(|| format!("missing string argument `{k}`"))
 }
 
+/// A file tool's path made absolute against this process's working directory. An empty path is
+/// returned as given.
+fn absolute_path(p: &str) -> Result<String, String> {
+    if p.is_empty() {
+        return Ok(String::new());
+    }
+    let abs = std::path::absolute(p).map_err(|e| format!("{p}: {e}"))?;
+    abs.into_os_string().into_string().map_err(|abs| format!("{p}: the absolute path {} is not UTF-8", abs.to_string_lossy()))
+}
+
 fn exec(b: &mut dyn Backend, cmd: &str, params: Value) -> Result<Value, String> {
     b.call("engine.execute", json!({"command": cmd, "params": params}))
 }
@@ -821,7 +831,8 @@ fn transform(b: &mut dyn Backend, a: &Args) -> Result<Value, String> {
 }
 
 fn screenshot(b: &mut dyn Backend, a: &Args) -> Result<ToolResult, String> {
-    let path = a.get("path").and_then(Value::as_str);
+    let path = a.get("path").and_then(Value::as_str).map(absolute_path).transpose()?;
+    let path = path.as_deref();
     let window = a.get("window").and_then(Value::as_bool) == Some(true);
     // The backend writes the file, where its automation roots allow, and sends the image back too
     // (`data`): this process writes nothing.
@@ -1021,9 +1032,9 @@ fn dispatch(b: &mut dyn Backend, name: &str, a: &Args) -> Result<ToolResult, Str
             j(b.call("ui.set", json!({"panel": req_str(a, "panel")?}))?)
         }
         "screenshot" => screenshot(b, a),
-        "open_file" => j(b.call("app.open", json!({"path": req_str(a, "path")?}))?),
+        "open_file" => j(b.call("app.open", json!({"path": absolute_path(req_str(a, "path")?)?}))?),
         "save_file" => {
-            let mut p = json!({"path": a.get("path").and_then(Value::as_str)});
+            let mut p = json!({"path": a.get("path").and_then(Value::as_str).map(absolute_path).transpose()?});
             for k in SAVE_FILE_OPTIONS {
                 if let Some(v) = a.get(k).filter(|v| !v.is_null()) {
                     p[k] = v.clone();
@@ -1051,6 +1062,10 @@ fn dispatch(b: &mut dyn Backend, name: &str, a: &Args) -> Result<ToolResult, Str
                 if let Some(v) = a.get(*k).filter(|v| !v.is_null()) {
                     params.insert((*k).into(), v.clone());
                 }
+            }
+            if let Some(path) = params.get("path").and_then(Value::as_str) {
+                let path = absolute_path(path)?;
+                params.insert("path".into(), json!(path));
             }
             let cmd = if a.get("selection").and_then(Value::as_bool) == Some(true) { "document.exportSelection" } else { "document.export" };
             j(exec(b, cmd, Value::Object(params))?)
@@ -1275,7 +1290,7 @@ fn render_preview(b: &mut dyn Backend, a: &Args) -> Result<ToolResult, String> {
     let encoded = r.get("pngBase64").and_then(Value::as_str).ok_or("renderer returned no image")?;
     let png = vectorcraft_format::base64_decode(encoded).ok_or("renderer returned bad base64")?;
     let img = image::load_from_memory_with_format(&png, image::ImageFormat::Png).map_err(|e| format!("read preview: {e}"))?;
-    let img = img.thumbnail(max as u32, max as u32);
+    let img = if img.width() > max as u32 || img.height() > max as u32 { img.thumbnail(max as u32, max as u32) } else { img };
     let mut out = std::io::Cursor::new(Vec::new());
     img.write_to(&mut out, image::ImageFormat::Png).map_err(|e| format!("encode preview: {e}"))?;
     Ok(image_result(out.get_ref(), json!({"width":img.width(),"height":img.height()})))

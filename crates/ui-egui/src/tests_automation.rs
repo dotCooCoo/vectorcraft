@@ -127,6 +127,27 @@ fn shortcut_sets_are_read_only_inside_the_read_root() {
     let _ = std::fs::remove_dir_all(base);
 }
 
+/// `ui.render` (MCP's `render_preview` and `screenshot` in the app) draws the artboard pixel for
+/// pixel as `app.export` writes a PNG on white: two rectangles that meet at x 40.3 and a diagonal
+/// edge.
+#[test]
+fn control_render_matches_a_png_export_on_white() {
+    let (mut app, tx, base) = confined("render");
+    let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect x="0" y="10" width="40.3" height="50" fill="#204080"/><rect x="40.3" y="10" width="49.7" height="50" fill="#e0a020"/><path d="M10 75 L110 5 L115 30 Z" fill="#30a050"/></svg>"##;
+    std::fs::write(base.join("in/edges.svg"), svg).unwrap();
+    let r = request(&mut app, &tx, "app.open", json!({"path": s(base.join("in/edges.svg"))}));
+    assert_eq!(r["ok"], true, "{r}");
+    let pixels = |v: &Value| image::load_from_memory(&vectorcraft_format::base64_decode(v.as_str().unwrap()).unwrap()).unwrap().to_rgba8();
+    let r = request(&mut app, &tx, "app.export", json!({"format": "png", "background": "white"}));
+    let export = pixels(&r["result"]["dataBase64"]);
+    let r = request(&mut app, &tx, "ui.render", json!({}));
+    let render = pixels(&r["result"]["pngBase64"]);
+    assert_eq!(render.dimensions(), export.dimensions());
+    let differ = render.pixels().zip(export.pixels()).filter(|(a, b)| a != b).count();
+    assert_eq!(differ, 0, "{differ} pixels differ from the export");
+    let _ = std::fs::remove_dir_all(base);
+}
+
 #[test]
 fn frames_with_injected_input_are_confined() {
     let (mut app, tx, base) = confined("synthetic");

@@ -626,6 +626,9 @@ pub(crate) struct Exporter<'a> {
     /// Keys of the images left out because the writer couldn't decode them
     /// ([`leaving_out_undecodable`]).
     pub left_out: HashSet<String>,
+    /// Objects the symbol instances written held, together
+    /// ([`vectorcraft_doc::MAX_SYMBOL_NODES`]).
+    symbol_nodes: u64,
 }
 
 /// How deep inline graphics nest before they are left out.
@@ -665,6 +668,7 @@ impl<'a> Exporter<'a> {
             layers: false,
             layer_index: crate::forms::pdf_layers(doc).iter().enumerate().map(|(i, l)| (address(l.node), i)).collect(),
             in_layer: 0,
+            symbol_nodes: 0,
             overprint: false,
             overprinted: false,
             invisible: false,
@@ -1219,7 +1223,12 @@ impl Exporter<'_> {
             NodeKind::Text(t) => self.text(s, n, t, page),
             NodeKind::Image(im) => self.image(s, im, alpha),
             NodeKind::SymbolInstance { symbol, xf } => {
-                if let Some(sym) = self.doc.symbols.iter().find(|x| &x.name == symbol) {
+                // Within the objects a frame may draw of symbol instances, as on screen: nested
+                // instances multiply.
+                let sym = self.doc.symbols.iter().find(|x| &x.name == symbol);
+                let total = sym.map_or(0, |sym| self.symbol_nodes.saturating_add(sym.art.count() as u64));
+                if let Some(sym) = sym.filter(|_| total <= vectorcraft_doc::MAX_SYMBOL_NODES) {
+                    self.symbol_nodes = total;
                     let mut art = (*sym.art).clone();
                     art.transform(*xf, false);
                     self.node(s, &art, page, true);

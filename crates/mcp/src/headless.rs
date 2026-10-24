@@ -7,6 +7,7 @@ use vectorcraft_engine::file_access::{self, AutomationRoots};
 use vectorcraft_engine::{Session, UiRequest, ViewInfo};
 use vectorcraft_geom::Point;
 use vectorcraft_render::Renderer;
+use vectorcraft_render::encode::{RasterExportOptions, RasterFormat};
 use vectorcraft_tools::{Mods, PointerEvent, PointerKind, TOOL_GROUPS, ToolKey};
 
 use crate::backend::Backend;
@@ -256,7 +257,9 @@ impl Headless {
         let r = doc.artboards.get(idx).map(|a| a.rect).ok_or("no such artboard")?;
         let scale = p.get("scale").and_then(Value::as_f64).unwrap_or(1.0).clamp(0.01, 16.0);
         vectorcraft_render::raster_size(r, scale)?;
-        let img = self.renderer.render_region(&doc, r, scale, true);
+        // Rendered with the options of a PNG export on white, so its pixels are the exported file's.
+        let opts = RasterExportOptions { background: Some([255; 3]), ..Default::default() }.render_options(RasterFormat::Png);
+        let img = self.renderer.render_region_with(&doc, r, scale, &opts);
         // A cancelled render stops drawing: the picture is not whole and is not written.
         vectorcraft_engine::cancel::check().map_err(|e| e.to_string())?;
         let png = img.to_png()?;

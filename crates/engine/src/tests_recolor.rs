@@ -77,6 +77,97 @@ fn five_colours_reduce_to_two() {
 }
 
 #[test]
+fn colors_with_nothing_selected_come_from_all_the_art() {
+    let mut s = session();
+    let red = rect(&mut s, json!("#ff0000"));
+    let blue = rect(&mut s, json!("#0000ff"));
+    run(&mut s, "select.set", json!({"ids": []}));
+    let hexes = |v: &Value| v["colors"].as_array().unwrap().iter().map(|c| c["hex"].as_str().unwrap().to_string()).collect::<Vec<_>>();
+    let mut all = hexes(&run(&mut s, "recolor.colors", json!({})));
+    all.sort();
+    assert_eq!(all, ["#0000ff", "#ff0000"]);
+    assert!(s.doc().unwrap().selection.objects.is_empty(), "the selection is left as it was");
+    assert_eq!(run(&mut s, "recolor.reduce", json!({}))["map"].as_array().unwrap().len(), 2);
+    // `ids` names the objects; otherwise the selection does.
+    assert_eq!(hexes(&run(&mut s, "recolor.colors", json!({"ids": [blue.0]}))), ["#0000ff"]);
+    // An id listed twice counts once.
+    let once = run(&mut s, "recolor.colors", json!({"ids": [red.0]}))["colors"].clone();
+    assert_eq!(run(&mut s, "recolor.colors", json!({"ids": [red.0, red.0]}))["colors"], once);
+    assert_eq!(run(&mut s, "recolor.reduce", json!({"ids": [red.0]}))["map"][0]["from"], json!(["rgb 255 0 0"]));
+    run(&mut s, "select.set", json!({"ids": [red.0]}));
+    assert_eq!(hexes(&run(&mut s, "recolor.colors", json!({}))), ["#ff0000"]);
+    let e = s.execute("recolor.colors", &json!({"ids": [9999]})).unwrap_err().to_string();
+    assert!(e.contains("no such object id 9999"), "{e}");
+    // Recolor Artwork still recolors only what is selected.
+    run(&mut s, "select.set", json!({"ids": []}));
+    assert!(s.execute("recolor.apply", &json!({"map": {"#ff0000": "#00ff00"}})).is_err());
+    assert_eq!(fill(&s, red).to_hex(), "#ff0000");
+}
+
+#[test]
+fn colors_with_nothing_selected_leave_out_what_select_all_leaves_out() {
+    let mut s = session();
+    rect(&mut s, json!("#ff0000"));
+    let hidden = rect(&mut s, json!("#0000ff"));
+    let locked = rect(&mut s, json!("#00ff00"));
+    run(&mut s, "object.hide", json!({"ids": [hidden.0]}));
+    run(&mut s, "object.lock", json!({"ids": [locked.0]}));
+    // A hidden layer and a locked layer, each holding a rectangle.
+    for (fill, props) in [("#ffff00", json!({"visible": false})), ("#ff00ff", json!({"locked": true}))] {
+        let layer = run(&mut s, "layer.new", json!({}))["id"].as_u64().unwrap();
+        let id = run(&mut s, "shape.rectangle", json!({"x": 300, "y": 10, "width": 15, "height": 15}))["id"].as_u64().unwrap();
+        run(&mut s, "paint.setFill", json!({"ids": [id], "color": fill}));
+        assert_eq!(s.doc().unwrap().doc.layer_containing(NodeId(id)), Some(NodeId(layer)));
+        let mut p = props;
+        p["id"] = json!(layer);
+        run(&mut s, "layer.setProps", p);
+    }
+    let hexes = |v: &Value| v["colors"].as_array().unwrap().iter().map(|c| c["hex"].as_str().unwrap().to_string()).collect::<Vec<_>>();
+    run(&mut s, "select.set", json!({"ids": []}));
+    let none = hexes(&run(&mut s, "recolor.colors", json!({})));
+    assert_eq!(none, ["#ff0000"]);
+    assert_eq!(run(&mut s, "recolor.reduce", json!({}))["map"], json!([{"from": ["rgb 255 0 0"], "to": "rgb 255 0 0"}]));
+    select_all(&mut s);
+    assert_eq!(hexes(&run(&mut s, "recolor.colors", json!({}))), none, "the same colors as after Select All");
+    // `ids` still reads hidden and locked objects.
+    assert_eq!(hexes(&run(&mut s, "recolor.colors", json!({"ids": [hidden.0]}))), ["#0000ff"]);
+}
+
+#[test]
+fn colors_with_nothing_selected_leave_out_hidden_and_locked_objects_in_groups() {
+    let mut s = session();
+    rect(&mut s, json!("#ff0000"));
+    let hidden = rect(&mut s, json!("#0000ff"));
+    let locked = rect(&mut s, json!("#00ff00"));
+    // A group inside the group, holding a hidden rectangle.
+    let inner_hidden = rect(&mut s, json!("#ffff00"));
+    run(&mut s, "select.set", json!({"ids": [inner_hidden.0]}));
+    run(&mut s, "object.group", json!({}));
+    select_all(&mut s);
+    let g = NodeId(run(&mut s, "object.group", json!({}))["id"].as_u64().unwrap());
+    assert_eq!(s.doc().unwrap().doc.layers[0].children().unwrap().len(), 1, "one group holds the art");
+    run(&mut s, "object.hide", json!({"ids": [hidden.0, inner_hidden.0]}));
+    run(&mut s, "object.lock", json!({"ids": [locked.0]}));
+    let hexes = |v: &Value| {
+        let mut h = v["colors"].as_array().unwrap().iter().map(|c| c["hex"].as_str().unwrap().to_string()).collect::<Vec<_>>();
+        h.sort();
+        h
+    };
+    run(&mut s, "select.set", json!({"ids": []}));
+    assert_eq!(hexes(&run(&mut s, "recolor.colors", json!({}))), ["#ff0000"]);
+    assert_eq!(run(&mut s, "recolor.reduce", json!({}))["map"], json!([{"from": ["rgb 255 0 0"], "to": "rgb 255 0 0"}]));
+    // Isolation mode reads the same objects of the group.
+    run(&mut s, "object.isolate", json!({"id": g.0}));
+    assert_eq!(hexes(&run(&mut s, "recolor.colors", json!({}))), ["#ff0000"]);
+    run(&mut s, "object.exitIsolation", json!({}));
+    // The group named in `ids`, or selected, is read with everything it holds.
+    let all = ["#0000ff", "#00ff00", "#ff0000", "#ffff00"];
+    assert_eq!(hexes(&run(&mut s, "recolor.colors", json!({"ids": [g.0]}))), all);
+    run(&mut s, "select.set", json!({"ids": [g.0]}));
+    assert_eq!(hexes(&run(&mut s, "recolor.colors", json!({}))), all);
+}
+
+#[test]
 fn preserve_flags_leave_neutrals_out() {
     let mut s = session();
     for c in [json!("#ffffff"), json!("#000000"), json!({"gray": 50}), json!("#ff0000")] {

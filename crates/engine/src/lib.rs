@@ -378,6 +378,10 @@ pub struct DocState {
     /// That format's options as last saved (SVG options for SVG, the Save PDF settings for PDF;
     /// empty for native files): Save reuses them and `file.formatOptions` reads them back.
     pub save_options: serde_json::Map<String, Value>,
+    /// The ids of the document's artboards, in order, when `save_options` were stored: the
+    /// artboards their `artboard`, `artboards` and `range` named by number then
+    /// ([`cmd::fileio::remembered_save_options`]).
+    pub save_artboards: Vec<u32>,
     /// Opened from an older native file (former name or format version): the title says
     /// "[Converted]" and Save asks for a new name instead of overwriting it.
     pub converted: bool,
@@ -401,6 +405,10 @@ pub struct DocState {
     /// Transform Again after a perspective move or scale (Perspective Selection tool): the
     /// `perspective.transform` params it repeats. `None` once an ordinary transform follows.
     pub last_perspective: Option<Value>,
+    /// The folders a confined (automation) caller that opened or made the document may read: the
+    /// paths the document links to are looked at within them later too, when the Links panel
+    /// asks about a link outside any caller's scope.
+    pub opened_by: Option<Arc<file_access::AutomationRoots>>,
 }
 
 static NEXT_DOC_UID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
@@ -565,6 +573,7 @@ impl DocState {
             transparency_grid,
             format: "vectorcraft",
             save_options: Default::default(),
+            save_artboards: vec![],
             converted: false,
             view,
             recovered: false,
@@ -574,6 +583,7 @@ impl DocState {
             imported_from: None,
             import_losses: vec![],
             last_perspective: None,
+            opened_by: file_access::current(),
         }
     }
     /// Unsaved changes: the document differs from the saved one (selection changes and changes that
@@ -1677,6 +1687,17 @@ impl Session {
         st.revision = old.revision + 1;
         st.format = old.format;
         st.save_options = old.save_options.clone();
+        // The remembered artboard pick follows the artboards it named when the file read back has
+        // the artboards the document had at the save, in the same order and with the same ids (a
+        // native file keeps them; a PDF's pages get new ids in page order); otherwise it is left
+        // out.
+        if old.save_artboards.is_empty() || st.doc.artboards.iter().map(|a| a.id).eq(old.save_artboards.iter().copied()) {
+            st.save_artboards = old.save_artboards.clone();
+        } else {
+            for k in cmd::fileio::ARTBOARD_PARAMS {
+                st.save_options.remove(k);
+            }
+        }
         st.converted = old.converted;
         st.imported_from = old.imported_from.clone();
         st.import_losses = old.import_losses.clone();

@@ -207,6 +207,78 @@ pub(crate) fn with_threads(d: &Document, ids: &[NodeId]) -> Vec<NodeId> {
     out
 }
 
+/// Every frame of `d`'s threads with its type, for [`leave_threads`] after an edit that may turn
+/// some of them into other art.
+pub(crate) fn frames(d: &Document) -> Vec<(NodeId, TextObject)> {
+    d.text_threads.iter().flatten().filter_map(|id| Some((*id, text_of(d, *id)?.clone()))).collect()
+}
+
+/// Update the threads for each frame of `was` (from [`frames`] before the edit) that `d` no longer
+/// holds as area type or type on a path under its id. When the art now at that id holds the frame's
+/// type under a new id (Expand Appearance groups type with its shadows, outer glows or Crop Marks),
+/// that type takes the frame's place in its thread. Otherwise (Create Outlines and Expand Appearance
+/// made outlines of it) the frame leaves its thread with the text it shows, and the other frames keep
+/// the text they hold. When a thread's last frame leaves, the text it has no room for goes after the
+/// text of the last frame that stays. A thread left with one frame is no longer a thread.
+pub(crate) fn leave_threads(d: &mut Document, was: &[(NodeId, TextObject)]) {
+    let gone: Vec<(NodeId, &TextObject, Option<NodeId>)> =
+        was.iter().filter(|(id, _)| text_of(d, *id).is_none()).map(|(id, t)| (*id, t, kept_type(d, *id))).collect();
+    if gone.is_empty() {
+        return;
+    }
+    let find = |id: &NodeId| gone.iter().find(|(g, _, _)| g == id);
+    for i in 0..d.text_threads.len() {
+        let thread = d.text_threads[i].clone();
+        if !thread.iter().any(|id| find(id).is_some()) {
+            continue;
+        }
+        let keep: Vec<NodeId> = thread
+            .iter()
+            .filter_map(|id| match find(id) {
+                Some((_, _, kept)) => *kept,
+                None => Some(*id),
+            })
+            .collect();
+        if let (Some((_, last, None)), Some(stay)) = (thread.last().and_then(find), keep.last()) {
+            take_overflow(d, *stay, last);
+        }
+        d.text_threads[i] = keep;
+    }
+    d.text_threads.retain(|t| t.len() >= 2);
+}
+
+/// The only area type or type on a path in the art at `id`.
+fn kept_type(d: &Document, id: NodeId) -> Option<NodeId> {
+    let mut found = vec![];
+    d.node(id)?.walk(&mut |n| {
+        if matches!(&n.kind, NodeKind::Text(t) if !matches!(t.kind, TextKind::Point)) {
+            found.push(n.id);
+        }
+    });
+    match found[..] {
+        [one] => Some(one),
+        _ => None,
+    }
+}
+
+/// Put the text that frame `from` holds beyond what it shows after the text of frame `to`.
+fn take_overflow(d: &mut Document, to: NodeId, from: &TextObject) {
+    let db = vectorcraft_text::FontDb::global();
+    // `from`'s text split as if it flowed on into a second frame: the second part is what `from`
+    // has no room for.
+    let parts = vectorcraft_text::thread::distribute(db, &[from, from], &from.runs, &from.paragraph_styles());
+    let Some(rest) = parts.get(1).filter(|p| p.runs.iter().any(|r| !r.text.is_empty())) else { return };
+    let mut tail = from.clone();
+    tail.runs = rest.runs.clone();
+    tail.set_paragraph_styles(rest.paras.clone());
+    if let Some(NodeKind::Text(t)) = d.node_mut(to).map(|n| &mut n.kind) {
+        let head = (**t).clone();
+        t.runs = vectorcraft_text::thread::story(&[&head, &tail]);
+        t.set_paragraph_styles(vectorcraft_text::thread::story_paras(&[&head, &tail], &[]));
+        refresh_bounds(t);
+    }
+}
+
 /// A closed path converted to an empty area-type frame with `style`.
 fn frame_from_path(n: &Node, style: vectorcraft_doc::CharStyle, system_layout: bool) -> Option<Node> {
     let NodeKind::Path { path, .. } = &n.kind else { return None };
@@ -813,6 +885,141 @@ mod tests {
         s.execute("text.thread.releaseSelection", &json!({})).unwrap();
         assert_eq!(text(&s, b), "");
         assert_eq!(text(&s, a), TEXT.repeat(4), "the story returns to the remaining frame");
+    }
+
+    /// `story` threaded through three area type frames, of 150 by 60, 40 and `last` points, each
+    /// showing part of it.
+    fn three_frames(story: &str, last: f64) -> (Session, [u64; 3]) {
+        let mut s = Session::new();
+        s.execute("file.new", &json!({"width": 600, "height": 300})).unwrap();
+        let frame = |s: &mut Session, x: f64, y: f64, h: f64, text: &str| {
+            new_id(s.execute("text.create", &json!({"x": x, "y": y, "text": text, "area": {"width": 150, "height": h}})).unwrap())
+        };
+        let a = frame(&mut s, 10.0, 10.0, 60.0, story);
+        let b = frame(&mut s, 10.0, 100.0, 40.0, "");
+        let c = frame(&mut s, 200.0, 10.0, last, "");
+        s.execute("text.thread.add", &json!({"from": a, "to": b})).unwrap();
+        s.execute("text.thread.add", &json!({"from": b, "to": c})).unwrap();
+        assert_eq!(threads(&s), [[a, b, c]]);
+        assert!([a, b, c].iter().all(|id| !text(&s, *id).is_empty()), "each frame shows part of the story");
+        (s, [a, b, c])
+    }
+
+    /// Whether the document holds area type or type on a path `id`.
+    fn is_frame(s: &Session, id: u64) -> bool {
+        text_of(&s.doc().unwrap().doc, NodeId(id)).is_some()
+    }
+
+    /// Create Outlines and Object › Expand on frames of threaded text take them out of their
+    /// thread with the text they show, which their outlines draw, and the other frames keep the
+    /// text they hold: each character is in the document once. A thread left with one frame is no
+    /// thread. Undo threads the frames again.
+    #[test]
+    fn outlined_frames_leave_their_thread_with_their_text() {
+        for command in ["type.createOutlines", "object.expand"] {
+            for out in [&[0][..], &[1], &[2], &[0, 2]] {
+                let (mut s, frames) = three_frames(&TEXT.repeat(4), 200.0);
+                let shown = frames.map(|id| text(&s, id));
+                assert_eq!(shown.concat(), TEXT.repeat(4));
+                let ids: Vec<u64> = out.iter().map(|k| frames[*k]).collect();
+                s.execute("select.set", &json!({"ids": ids})).unwrap();
+                s.execute(command, &json!({})).unwrap();
+                let rest: Vec<u64> = frames.iter().copied().filter(|id| !ids.contains(id)).collect();
+                for id in &ids {
+                    assert!(!is_frame(&s, *id), "{command} {out:?}: frame {id} is outlined");
+                }
+                let st = s.doc().unwrap();
+                let groups = st.selection.objects.iter().filter(|g| matches!(st.doc.node(**g).map(|n| &n.kind), Some(NodeKind::Group { .. })));
+                assert_eq!(groups.count(), ids.len(), "{command} {out:?}: the outlines are selected");
+                for (id, before) in frames.iter().zip(&shown).filter(|(id, _)| rest.contains(id)) {
+                    assert_eq!(text(&s, *id), *before, "{command} {out:?}: frame {id} keeps its text");
+                }
+                assert_eq!(threads(&s), if rest.len() >= 2 { vec![rest] } else { vec![] }, "{command} {out:?}");
+                s.execute("edit.undo", &json!({})).unwrap();
+                assert_eq!(threads(&s), [frames], "{command} {out:?}: undo");
+                assert_eq!(frames.map(|id| text(&s, id)), shown, "{command} {out:?}: undo");
+            }
+        }
+    }
+
+    /// Expand Appearance outlines a frame with an effect, and the frame leaves its thread with the
+    /// text it shows; Object › Expand of such a frame expands its appearance first.
+    #[test]
+    fn a_frame_whose_appearance_expands_leaves_its_thread_with_its_text() {
+        for command in ["effect.expandAppearance", "object.expand"] {
+            let (mut s, [a, b, c]) = three_frames(&TEXT.repeat(4), 200.0);
+            s.execute("effect.apply", &json!({"effect": "distort.roughen", "ids": [b]})).unwrap();
+            let shown = [a, b, c].map(|id| text(&s, id));
+            s.execute("select.set", &json!({"ids": [b]})).unwrap();
+            s.execute(command, &json!({})).unwrap();
+            assert!(!is_frame(&s, b), "{command}: the frame is outlined");
+            assert_eq!((text(&s, a), text(&s, c)), (shown[0].clone(), shown[2].clone()), "{command}: the other frames keep their text");
+            assert_eq!(threads(&s), [[a, c]], "{command}");
+            s.execute("edit.undo", &json!({})).unwrap();
+            assert_eq!(threads(&s), [[a, b, c]], "{command}: undo");
+            assert_eq!([a, b, c].map(|id| text(&s, id)), shown, "{command}: undo");
+        }
+    }
+
+    /// Expand Appearance keeps type whose only effect is a shadow or Crop Marks as type under a new
+    /// id, in a group under the frame's id: the type takes the frame's place in its thread, and
+    /// each frame keeps its text, the last frame the text it has no room for too. Type in a group
+    /// with Crop Marks keeps its id and stays in its thread.
+    #[test]
+    fn type_that_expand_appearance_keeps_takes_its_frames_place() {
+        for (effect, grouped) in [("stylize.dropShadow", false), ("cropMarks", false), ("cropMarks", true)] {
+            for k in [1, 2] {
+                let case = format!("{effect} grouped {grouped} frame {k}");
+                let (mut s, frames) = three_frames(&TEXT.repeat(12), 100.0);
+                let id = frames[k];
+                s.execute("select.set", &json!({"ids": [id]})).unwrap();
+                let target = if grouped { new_id(s.execute("object.group", &json!({})).unwrap()) } else { id };
+                s.execute("effect.apply", &json!({"effect": effect, "item": null, "ids": [target]})).unwrap();
+                let shown = frames.map(|id| text(&s, id));
+                s.execute("select.set", &json!({"ids": [target]})).unwrap();
+                s.execute("effect.expandAppearance", &json!({})).unwrap();
+                let mut types = vec![];
+                if let Some(n) = s.doc().unwrap().doc.node(NodeId(target)) {
+                    n.walk(&mut |m| {
+                        if matches!(m.kind, NodeKind::Text(_)) {
+                            types.push(m.id.0);
+                        }
+                    });
+                }
+                let [kept] = types[..] else { panic!("{case}: the type is kept: {types:?}") };
+                assert_eq!(kept == id, grouped, "{case}: the type has a new id unless it was in a group");
+                let mut now = frames;
+                now[k] = kept;
+                assert_eq!(threads(&s), [now], "{case}: the type takes the frame's place");
+                assert_eq!(now.map(|id| text(&s, id)), shown, "{case}: each frame keeps its text");
+                s.execute("edit.undo", &json!({})).unwrap();
+                assert_eq!(threads(&s), [frames], "{case}: undo");
+                assert_eq!(frames.map(|id| text(&s, id)), shown, "{case}: undo");
+            }
+        }
+    }
+
+    /// The text that does not fit a thread's last frame, which its outlines do not draw, stays in
+    /// the story: when the last frame is outlined, the frame before it takes that text after its
+    /// own.
+    #[test]
+    fn outlining_the_last_frame_keeps_the_text_it_has_no_room_for() {
+        let (mut s, [a, b, c]) = three_frames(&TEXT.repeat(12), 100.0);
+        let shown = [a, b, c].map(|id| text(&s, id));
+        let laid = {
+            let Some(t) = text_of(&s.doc().unwrap().doc, NodeId(c)) else { panic!("not area type") };
+            vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t)
+        };
+        assert!(laid.overflow, "the last frame has more text than it shows");
+        let end = laid.lines.last().map_or(0, |l| l.end);
+        let hidden = shown[2][end..].trim_start_matches(' ');
+        s.execute("select.set", &json!({"ids": [c]})).unwrap();
+        s.execute("type.createOutlines", &json!({})).unwrap();
+        assert_eq!(text(&s, a), shown[0]);
+        assert_eq!(text(&s, b), format!("{}{hidden}", shown[1]), "the frame before it keeps its text and takes the rest");
+        assert_eq!(threads(&s), [[a, b]]);
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert_eq!([a, b, c].map(|id| text(&s, id)), shown);
     }
 
     /// A story of one-line paragraphs that each start with a quotation mark, threaded from area

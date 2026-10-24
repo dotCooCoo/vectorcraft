@@ -3442,7 +3442,9 @@ fn recent_row(ui: &mut Ui, path: &str) -> egui::Response {
 }
 
 fn kurbo_flatten(p: &BezPath, tol: f64, f: &mut impl FnMut(PathEl)) {
-    vectorcraft_geom::kurbo::flatten(p.elements().iter().copied(), tol, f);
+    // Bounded per curve: a document's far-out handles, zoomed onto the screen, made kurbo
+    // reserve gigabytes for the selection outline.
+    vectorcraft_geom::flatten(p.elements().iter().copied(), tol, f);
 }
 
 /// The rendered raster `img` as an egui image. Both are premultiplied RGBA8, so its bytes are copied

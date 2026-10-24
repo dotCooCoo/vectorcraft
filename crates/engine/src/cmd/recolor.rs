@@ -1,15 +1,16 @@
-//! Edit → Edit Colors → Recolor Artwork: list the selection's colours, reduce them to rows of
+//! Edit → Edit Colors → Recolor Artwork: list the colors of the selection (or of the art Select All
+//! takes when nothing is selected), reduce them to rows of
 //! similar colours, and remap each row to a new colour by a recolour method. Colours are keyed by
 //! their identity ([`ColorKey`]: model and exact values), so a CMYK colour stays CMYK and two
 //! colours that only look alike stay apart.
 
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
 use serde_json::{Value, json};
 use vectorcraft_color::recolor::{ColorKey, Method, Preserve, Rng, RowMap, cluster};
 use vectorcraft_color::{Color, Paint, Swatch};
-use vectorcraft_doc::swatches::node_colors;
-use vectorcraft_doc::{AppearanceItem, Document, NodeId, NodeKind};
+use vectorcraft_doc::swatches::{node_colors, node_paints};
+use vectorcraft_doc::{Document, Node, NodeId, NodeKind};
 
 use super::colorcmds::{Recolor, Scope};
 use super::*;
@@ -21,8 +22,8 @@ pub fn specs() -> Vec<CommandSpec> {
             "Artwork Colors",
             [],
             None,
-            "{} → {colors: [{key: colour identity (\"rgb 255 0 0\", \"cmyk 0 100 100 0\", \"gray 40\", \"lab 55 60 -40\"), hex, count, swatch?: the global swatch it is linked to}]} unique colours used by the selection (fills, strokes, gradient stops, text, mesh points and the tiles of pattern fills and strokes), most used first",
-            has_selection,
+            "{ids?: object ids (default: the selection, or with nothing selected the objects select.all takes, without the hidden and locked objects inside them)} → {colors: [{key: colour identity (\"rgb 255 0 0\", \"cmyk 0 100 100 0\", \"gray 40\", \"lab 55 60 -40\"), hex, count, swatch?: the global swatch it is linked to}]} unique colours used by the objects (fills, strokes, gradient stops, text, mesh points and the tiles of pattern fills and strokes), most used first",
+            has_doc,
             colors
         ),
         cmd!(
@@ -39,8 +40,8 @@ pub fn specs() -> Vec<CommandSpec> {
             "Reduce Colors",
             [],
             None,
-            "{colors?: n (rows; default: one per colour, with the tints of a global swatch in its row), method?: as recolor.apply; default scaleTints (picks each row's colour), preserve?: {white?: true, black?: true, grays?: false} (left out of the rows), limitTo?: as recolor.apply (new colours snap to it)} group the selection's colours into rows of similar colours (k-means in Lab, weighted by use) → {map: [{from: [keys, the row's colour first], to: key}], preserved: [keys], method}",
-            has_selection,
+            "{colors?: n (rows; default: one per colour, with the tints of a global swatch in its row), method?: as recolor.apply; default scaleTints (picks each row's colour), preserve?: {white?: true, black?: true, grays?: false} (left out of the rows), limitTo?: as recolor.apply (new colours snap to it), ids?: as recolor.colors} group the colors of the objects (default: as recolor.colors) into rows of similar colours (k-means in Lab, weighted by use) → {map: [{from: [keys, the row's colour first], to: key}], preserved: [keys], method}",
+            has_doc,
             reduce
         ),
         cmd!(
@@ -62,9 +63,19 @@ struct Used {
     swatch: Option<String>,
 }
 
-/// The unique colours of the selection, most used first (ties by key): fills, strokes, gradient
-/// stops, text, mesh points and the tiles of the patterns used as fills or strokes.
-fn used_colors(d: &Document, ids: &[NodeId]) -> Vec<Used> {
+/// The unique colours of the objects `ids` and the objects inside them, most used first (ties by
+/// key): fills, strokes, gradient stops, text, mesh points and the tiles of the patterns used as
+/// fills or strokes. With `only`, an object not in it is left out with everything it holds.
+fn used_colors(d: &Document, ids: &[NodeId], only: Option<&BTreeSet<NodeId>>) -> Vec<Used> {
+    fn read<'a>(n: &'a Node, only: Option<&BTreeSet<NodeId>>, out: &mut Vec<&'a Node>) {
+        if only.is_some_and(|o| !o.contains(&n.id)) {
+            return;
+        }
+        out.push(n);
+        for c in n.children().into_iter().flatten() {
+            read(c, only, out);
+        }
+    }
     let mut index: HashMap<ColorKey, usize> = HashMap::new();
     let mut used: Vec<(ColorKey, Used)> = vec![];
     let mut count = |c: &Color, link: Option<&str>| {
@@ -81,25 +92,22 @@ fn used_colors(d: &Document, ids: &[NodeId]) -> Vec<Used> {
     };
     // The patterns used as fills or strokes: their tiles count once each.
     let mut patterns: Vec<&str> = vec![];
+    let mut nodes = vec![];
     for n in ids.iter().filter_map(|id| d.node(*id)) {
-        node_colors(n, &mut count);
-        n.walk(&mut |m| {
-            let runs = match &m.kind {
-                NodeKind::Text(t) => t.runs.as_slice(),
-                _ => &[],
-            };
-            let items = m.appearance.items.iter().map(|it| match it {
-                AppearanceItem::Fill(l) => &l.paint,
-                AppearanceItem::Stroke(l) => &l.paint,
-            });
-            for p in items.chain(runs.iter().flat_map(|r| [&r.style.fill, &r.style.stroke])) {
-                if let Paint::Pattern { pattern, .. } = p
-                    && !patterns.contains(&pattern.as_str())
-                {
-                    patterns.push(pattern);
-                }
+        read(n, only, &mut nodes);
+    }
+    for m in nodes {
+        for p in node_paints(m) {
+            match p {
+                Paint::Solid { color, swatch, .. } => count(color, swatch.as_deref()),
+                Paint::Gradient(g) => g.gradient.stops.iter().for_each(|s| count(&s.color, s.swatch.as_deref())),
+                Paint::Pattern { pattern, .. } if !patterns.contains(&pattern.as_str()) => patterns.push(pattern),
+                _ => {}
             }
-        });
+        }
+        if let NodeKind::Mesh(mesh) = &m.kind {
+            mesh.points.iter().for_each(|p| count(&p.color, None));
+        }
     }
     for def in patterns.iter().filter_map(|p| d.pattern(p)) {
         def.art.iter().for_each(|n| node_colors(n, &mut count));
@@ -108,9 +116,30 @@ fn used_colors(d: &Document, ids: &[NodeId]) -> Vec<Used> {
     used.into_iter().map(|(_, u)| u).collect()
 }
 
-fn colors(s: &mut Session, _: &Value) -> Result<Value> {
+/// The objects whose colors `recolor.colors` and `recolor.reduce` read, for [`used_colors`]: `ids`
+/// (each checked) or else the selection, with everything they hold; with nothing selected, the
+/// objects Select All takes and the objects inside them, leaving out every hidden or locked object
+/// with what it holds and the objects of hidden, locked and template layers (the second value
+/// lists the objects read). Objects listed twice or inside another one listed are dropped, so
+/// their colors count once.
+fn scope_ids(s: &Session, p: &Value, cmd: &str) -> Result<(Vec<NodeId>, Option<BTreeSet<NodeId>>)> {
     let st = s.doc()?;
-    let v: Vec<Value> = used_colors(&st.doc, &st.selection.objects)
+    let ids = match p.get("ids") {
+        Some(_) => checked_ids_param(s, p, "ids", cmd)?,
+        None if st.selection.is_empty() => {
+            let only = super::select::selectable_ids(&st.doc, st.isolation);
+            return Ok((super::select::selectable(&st.doc, st.isolation), Some(only)));
+        }
+        None => st.selection.objects.clone(),
+    };
+    let mut seen = BTreeSet::new();
+    Ok((super::edit::outermost(&st.doc, ids).into_iter().filter(|id| seen.insert(*id)).collect(), None))
+}
+
+fn colors(s: &mut Session, p: &Value) -> Result<Value> {
+    let (ids, only) = scope_ids(s, p, "recolor.colors")?;
+    let st = s.doc()?;
+    let v: Vec<Value> = used_colors(&st.doc, &ids, only.as_ref())
         .iter()
         .map(|u| {
             let mut v = json!({"key": key_str(&u.color), "hex": u.color.to_hex(), "count": u.count});
@@ -145,8 +174,9 @@ fn reduce(s: &mut Session, p: &Value) -> Result<Value> {
     let def = Preserve::default();
     let flag = |k: &str, d: bool| p.get("preserve").map_or(d, |v| bool_or(v, k, d));
     let preserve = Preserve { white: flag("white", def.white), black: flag("black", def.black), grays: flag("grays", def.grays) };
+    let (ids, only) = scope_ids(s, p, C)?;
     let st = s.doc()?;
-    let (kept, used): (Vec<Used>, Vec<Used>) = used_colors(&st.doc, &st.selection.objects).into_iter().partition(|u| preserve.keeps(&u.color));
+    let (kept, used): (Vec<Used>, Vec<Used>) = used_colors(&st.doc, &ids, only.as_ref()).into_iter().partition(|u| preserve.keeps(&u.color));
     // Units that stay together: the tints of a global swatch, else one colour each.
     let mut units: Vec<Vec<&Used>> = vec![];
     for u in &used {

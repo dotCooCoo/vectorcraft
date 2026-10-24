@@ -71,8 +71,10 @@ pub const MAX_JSON: u64 = 1 << 30;
 /// Most bytes one entry of the data after the JSON (an image, a placed document, the PDF, a
 /// profile) may have in a compressed file.
 pub const MAX_BLOB: u64 = 1 << 30;
-/// Most bytes the entries after the JSON may have together in a compressed file.
-pub const MAX_BLOBS: u64 = 4 << 30;
+/// Most bytes the entries after the JSON may have together in a compressed file: 1 GiB in the web
+/// build, whose 4 GiB address space also holds the JSON, the document and the app, so 4 GiB of
+/// entries failed to allocate rather than being refused.
+pub const MAX_BLOBS: u64 = if cfg!(target_arch = "wasm32") { 1 << 30 } else { 4 << 30 };
 /// Most bytes a compressed file whose JSON isn't followed by the marker where VectorCraft puts it
 /// (hand-made or damaged files) may unpack to: it is unpacked whole.
 const MAX_UNPACKED: u64 = 512 << 20;
@@ -522,8 +524,10 @@ pub fn load_info(bytes: &[u8]) -> Result<(Document, FileInfo), FormatError> {
 /// [`load`], with everything else the file carries.
 pub fn load_file(bytes: &[u8]) -> Result<NativeFile, FormatError> {
     let file = unpack::Unpacked::new(bytes)?;
-    // The JSON reader stops at 128 levels (a document's objects use three each).
-    let f: File = serde_json::from_slice(file.json()).map_err(|e| {
+    // The JSON reader stops at 128 levels (a document's objects use three each), and the paths
+    // read at `MAX_READ_ANCHORS` anchors together.
+    let read = || serde_json::from_slice::<File>(file.json());
+    let f: File = vectorcraft_doc::geom::path::with_anchor_budget(vectorcraft_doc::geom::path::MAX_READ_ANCHORS, read).map_err(|e| {
         let why = if e.to_string().contains("recursion limit") { format!("its objects are nested too deep ({e})") } else { e.to_string() };
         FormatError::NotVectorcraft(why)
     })?;
