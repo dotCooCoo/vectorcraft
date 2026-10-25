@@ -22,6 +22,7 @@ pub mod community;
 pub mod control;
 pub mod credits;
 pub mod cursors;
+mod custom_toolbars;
 pub mod dialogs;
 pub mod dock;
 mod edit_toolbar;
