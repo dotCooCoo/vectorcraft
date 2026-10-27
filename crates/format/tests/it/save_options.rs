@@ -127,10 +127,70 @@ fn few_objects_with_many_anchors_are_saved_compact() {
     assert_eq!(load(&bytes).unwrap().layers[0].count(), d.layers[0].count());
 }
 
+/// Anchors per path that make a document of `paths` paths about `bytes` of pretty-printed JSON.
+fn pretty_anchors_for(paths: usize, bytes: usize) -> usize {
+    let per_anchor = serde_json::to_vec_pretty(&paths_doc(1, 1000)).unwrap().len() / 1000;
+    bytes / per_anchor / paths
+}
+
 #[test]
 fn documents_under_the_size_limit_stay_pretty() {
-    let d = paths_doc(2, anchors_for(2, PRETTY_MAX_BYTES / 2));
+    let d = paths_doc(2, pretty_anchors_for(2, PRETTY_MAX_BYTES / 2));
     assert!(SaveOptions::for_doc(&d).pretty);
+    assert!(is_pretty(&save_file(&d)));
+}
+
+#[test]
+fn the_limit_is_on_the_pretty_printed_size() {
+    // One traced-sized path: well under the limit as compact JSON, over it pretty-printed.
+    let d = paths_doc(1, 20_000);
+    let compact = serde_json::to_vec(&d).unwrap().len();
+    let pretty = serde_json::to_vec_pretty(&d).unwrap().len();
+    assert!(compact < PRETTY_MAX_BYTES && pretty > PRETTY_MAX_BYTES, "compact {compact} bytes, pretty {pretty} bytes");
+    assert!(!SaveOptions::for_doc(&d).pretty);
+    let bytes = save_file(&d);
+    assert!(!is_pretty(&bytes));
+    assert_eq!(load(&bytes).unwrap().layers[0].count(), d.layers[0].count());
+}
+
+#[test]
+fn the_files_indentation_counts_toward_the_limit() {
+    // The pretty JSON's size and line breaks; the file indents every line after the first by two spaces more.
+    let measure = |anchors: usize| {
+        let json = serde_json::to_vec_pretty(&paths_doc(1, anchors)).unwrap();
+        (json.len(), json.iter().filter(|&&b| b == b'\n').count())
+    };
+    // The most anchors for which `fits` holds (it holds for 1 and not past twice the estimate).
+    let most = |fits: &dyn Fn((usize, usize)) -> bool| {
+        let (mut lo, mut hi) = (1, 2 * pretty_anchors_for(1, PRETTY_MAX_BYTES));
+        while lo < hi {
+            let mid = (lo + hi).div_ceil(2);
+            if fits(measure(mid)) { lo = mid } else { hi = mid - 1 }
+        }
+        lo
+    };
+    // Without the file's indentation this many anchors fit the limit, with it they do not.
+    let bare = most(&|(len, _)| len <= PRETTY_MAX_BYTES);
+    let (len, newlines) = measure(bare);
+    assert!(len + 2 * newlines > PRETTY_MAX_BYTES, "{len} bytes, {newlines} line breaks");
+    assert!(!SaveOptions::for_doc(&paths_doc(1, bare)).pretty);
+    // Indented, this many fit.
+    let indented = most(&|(len, newlines)| len + 2 * newlines <= PRETTY_MAX_BYTES);
+    assert!(indented < bare);
+    assert!(SaveOptions::for_doc(&paths_doc(1, indented)).pretty);
+    assert!(!SaveOptions::for_doc(&paths_doc(1, indented + 1)).pretty);
+}
+
+#[test]
+fn the_limit_is_on_the_version_written() {
+    // Version 1 writes every anchor with both handles as `{x, y}` maps: this document fits in the
+    // current version and not in version 1.
+    let d = paths_doc(1, pretty_anchors_for(1, PRETTY_MAX_BYTES / 2));
+    let v1 = SaveOptions { version: 1, ..SaveOptions::default() };
+    assert!(SaveOptions::default().pretty_fits(&d));
+    assert!(!v1.pretty_fits(&d));
+    let pretty = save_with(&d, &SaveOptions { pretty: true, ..v1.clone() }).unwrap();
+    assert!(pretty.len() > PRETTY_MAX_BYTES, "{} bytes", pretty.len());
 }
 
 #[test]

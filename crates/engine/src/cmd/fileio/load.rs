@@ -323,6 +323,9 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
         crate::cmd::threads::reflow(&Document::new(1.0, 1.0), &mut doc);
     } else if !doc.text_threads.is_empty() {
         crate::cmd::threads::share_optical_margin(&mut doc);
+        // A frame whose first paragraph continues from the frame before draws it without the
+        // paragraph's first-line indent and list marker.
+        crate::cmd::threads::mark_continued(&mut doc);
     }
     if let Some(mode) = opts.color_mode.filter(|m| *m != doc.color_mode) {
         super::super::colormgmt::set_color_mode(&mut doc, mode, true, None, opts.grays);
@@ -332,7 +335,7 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
     if !matches!(format.id, "vectorcraft" | "template") || doc.title.is_empty() {
         doc.title = title;
     }
-    warnings.extend(doc.images.values().filter_map(|b| too_large_note(&b.bytes)));
+    warnings.extend(doc.images.values().filter_map(|b| size_note(&b.bytes)));
     Ok(Loaded { doc, format, warnings, restored, converted, preview_only, editing_data })
 }
 
@@ -463,8 +466,12 @@ fn open_loaded(s: &mut Session, loaded: Loaded, links: Resolved, path: Option<St
     st.converted = converted;
     st.imported_from = source_path;
     st.import_losses = losses;
-    let title = s.documents()[index].title();
-    Ok(super::merge(json!({ "index": index, "title": title, "format": format.id, "warnings": warnings, "restored": restored }), links.to_json()))
+    let opened = &s.documents()[index];
+    let (title, file_info_title) = (opened.title(), opened.doc.title.clone());
+    Ok(super::merge(
+        json!({ "index": index, "title": title, "fileInfoTitle": file_info_title, "format": format.id, "warnings": warnings, "restored": restored }),
+        links.to_json(),
+    ))
 }
 
 /// A file named by a command's params: `{path}` (read from disk) or `{name, dataBase64}`.
@@ -508,8 +515,8 @@ pub(crate) use vectorcraft_doc::MAX_RASTER_ALLOC;
 
 /// What to say of encoded image `bytes` that need more than [`MAX_RASTER_ALLOC`] to decode,
 /// counted as RGBA (4 bytes a pixel) or as the decoder gives them when that is more (its header
-/// says so; the pixels aren't read): Open, Place and the Links panel say it (#1479). `None` for
-/// images within the allowance, and for bytes that aren't an image.
+/// says so; the pixels aren't read): Open, Place and the Links panel say it ([`size_note`], #1479).
+/// `None` for images within the allowance, and for bytes that aren't an image.
 pub(crate) fn too_large_note(bytes: &[u8]) -> Option<String> {
     use image::ImageDecoder as _;
     if let Some((w, h)) = vectorcraft_doc::cmyk::oversized_tiff(bytes) {
@@ -521,6 +528,17 @@ pub(crate) fn too_large_note(bytes: &[u8]) -> Option<String> {
     // gray with alpha, RGB) takes more than the decoder counts (#1717).
     let rgba_over = u64::from(w) * u64::from(h) > MAX_RASTER_ALLOC / 4;
     (rgba_over || d.total_bytes() > MAX_RASTER_ALLOC).then(|| format!("an image of {w} × {h} pixels is too large to draw"))
+}
+
+/// What Open, Place and the Links panel say of encoded image `bytes` that [`too_large_note`] is
+/// said of: that the image is shown at reduced size when the renderer decodes it smaller
+/// ([`vectorcraft_render::reduced_size`]), nothing when the renderer reads it at its own size a
+/// row at a time, otherwise that note. Returns `None` when [`too_large_note`] returns `None`.
+pub(crate) fn size_note(bytes: &[u8]) -> Option<String> {
+    let note = too_large_note(bytes)?;
+    let Some(drawn) = vectorcraft_render::reduced_size(bytes) else { return Some(note) };
+    let (w, h) = image::ImageReader::new(Cursor::new(bytes)).with_guessed_format().ok()?.into_dimensions().ok()?;
+    (drawn != (w, h)).then(|| format!("an image of {w} × {h} pixels is shown at reduced size"))
 }
 
 /// Decode an image's header (and, for formats stored as PNG, its pixels). CMYK TIFFs are kept as

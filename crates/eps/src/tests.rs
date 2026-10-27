@@ -536,3 +536,25 @@ fn colr_glyphs_are_vector_art() {
     assert!(ps.contains("1 0 0 rg"), "the red layer: {ps}");
     assert!(ps.contains("0 0 1 rg"), "the foreground layer in the fill: {ps}");
 }
+
+/// Ruby (furigana) is written with its base text, as the canvas draws it: one more `m` per contour
+/// of the reading's glyphs.
+#[test]
+fn ruby_is_written_with_its_type() {
+    use vectorcraft_doc::{CharStyle, RubySpan, TextObject};
+    let typed = |ruby: bool| {
+        let mut t = TextObject::point(Point::new(20.0, 100.0), "AB", CharStyle { size: 30.0, ..CharStyle::default() });
+        if ruby {
+            t.ruby = vec![RubySpan::new(0, 2, "xyz")];
+        }
+        t
+    };
+    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &typed(true));
+    let reading = lay.ruby.iter().flat_map(|g| g.outline.elements()).filter(|e| matches!(e, kurbo::PathEl::MoveTo(_))).count();
+    assert!(reading >= 3, "the reading has ink: {reading}");
+    let moves = |ruby: bool| {
+        let d = doc_with(|d| vec![Node::new(d.alloc_id(), NodeKind::Text(Box::new(typed(ruby))))]);
+        page_of(&d, &opts(&d)).lines().filter(|l| l.ends_with(" m")).count()
+    };
+    assert_eq!(moves(true), moves(false) + reading, "the reading's contours are written");
+}
