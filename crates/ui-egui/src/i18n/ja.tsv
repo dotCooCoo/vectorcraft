@@ -317,6 +317,7 @@ font-technology	Variable	バリアブル
 	Apply Bullets	箇条書きを適用
 	Numbered List	番号付きリスト
 	Apply Numbers	番号付けを適用
+	Convert to Text	テキストに変換
 	Filled Dot	黒丸
 	Dash	ダッシュ
 	Hollow Circle	白丸
@@ -582,6 +583,21 @@ font-technology	Variable	バリアブル
 	Saved View 8	保存した表示 8
 	Saved View 9	保存した表示 9
 	Saved View 10	保存した表示 10
+	Saved View 11	保存した表示 11
+	Saved View 12	保存した表示 12
+	Saved View 13	保存した表示 13
+	Saved View 14	保存した表示 14
+	Saved View 15	保存した表示 15
+	Saved View 16	保存した表示 16
+	Saved View 17	保存した表示 17
+	Saved View 18	保存した表示 18
+	Saved View 19	保存した表示 19
+	Saved View 20	保存した表示 20
+	Saved View 21	保存した表示 21
+	Saved View 22	保存した表示 22
+	Saved View 23	保存した表示 23
+	Saved View 24	保存した表示 24
+	Saved View 25	保存した表示 25
 	Window	ウィンドウ
 	New Window	新規ウィンドウ
 	Cascade	重ねて表示
@@ -3496,6 +3512,7 @@ file-filter	Templates	テンプレート
 	Miter Limit	角の比率
 	Miter Limit:	角の比率:
 	Mixed Objects	混在したオブジェクト
+	Mixed	混在
 	Model	モデル
 	Move All Objects	すべてのオブジェクトを移動
 	N pt per	N pt ごと
@@ -4369,6 +4386,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	no such layer or object	指定されたレイヤーまたはオブジェクトが見つかりません
 @msg	`{tool}` isn't a Liquify tool	`{tool}` はゆがみツールではありません
 @msg	{_1} linked file(s) can't be read here: their previews show	この環境では {_1} 個のリンクファイルを読み込めません: 代わりにプレビューを表示しています
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	{undecoded} 個の画像をデコードできませんでした: バツ印の付いた枠で表示しています
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} 個のリンク画像がディスク上で変更されました: 「リンクを更新」で新しいバージョンを表示できます
 @msg	Updated {_1} linked file(s) changed on disk	ディスク上で変更された {_1} 個のリンクファイルを更新しました
 @msg	pick a colour, gradient or pattern to save as a swatch	スウォッチとして保存するカラー、グラデーション、またはパターンを選択してください
@@ -4871,6 +4889,7 @@ lighting	Light	ライト
 @msg	unknown parameter `{key}`; the command takes: {keys}	`{key}` は不明なパラメーターです。このコマンドで使えるパラメーター: {keys}
 	Load EPS into Clipboard	EPS をクリップボードに読み込む
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} ピクセルの画像は大きすぎて描画できません
+@msg	an image of {w} × {h} pixels is shown at reduced size	{w} × {h} ピクセルの画像は縮小して表示されます
 @msg	the image can't be read as a texture	この画像はテクスチャとして読み込めません
 	Basic	基本
 	Fill and Stroke Controls	塗りと線のコントロール

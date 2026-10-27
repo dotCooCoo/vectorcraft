@@ -205,7 +205,7 @@ pub(crate) fn deferred(app: &VectorcraftApp, ctx: &Context) -> bool {
 /// considered, so a marker for the old request cannot complete a route that no longer exists.
 pub(crate) fn suspend_if_route_lost(app: &mut VectorcraftApp, ctx: &Context) {
     let viewport = ctx.viewport_id();
-    if !app.ime_resets.get(&viewport).is_some_and(|guard| !guard.suspended) {
+    if app.ime_resets.get(&viewport).is_none_or(|guard| guard.suspended) {
         return;
     }
     if !route_live(app, ctx) {

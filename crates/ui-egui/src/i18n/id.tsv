@@ -289,6 +289,7 @@
 	Apply Bullets	Terapkan poin
 	Numbered List	Daftar bernomor
 	Apply Numbers	Terapkan penomoran
+	Convert to Text	Konversi ke teks
 	Filled Dot	Titik penuh
 	Dash	Tanda pisah
 	Hollow Circle	Lingkaran kosong
@@ -552,6 +553,21 @@
 	Saved View 8	Tampilan tersimpan 8
 	Saved View 9	Tampilan tersimpan 9
 	Saved View 10	Tampilan tersimpan 10
+	Saved View 11	Tampilan tersimpan 11
+	Saved View 12	Tampilan tersimpan 12
+	Saved View 13	Tampilan tersimpan 13
+	Saved View 14	Tampilan tersimpan 14
+	Saved View 15	Tampilan tersimpan 15
+	Saved View 16	Tampilan tersimpan 16
+	Saved View 17	Tampilan tersimpan 17
+	Saved View 18	Tampilan tersimpan 18
+	Saved View 19	Tampilan tersimpan 19
+	Saved View 20	Tampilan tersimpan 20
+	Saved View 21	Tampilan tersimpan 21
+	Saved View 22	Tampilan tersimpan 22
+	Saved View 23	Tampilan tersimpan 23
+	Saved View 24	Tampilan tersimpan 24
+	Saved View 25	Tampilan tersimpan 25
 	Window	Jendela
 	New Window	Jendela baru
 	Cascade	Bertingkat
@@ -1260,6 +1276,7 @@ lighting	Light	Cahaya
 	Hide Thumbnail	Sembunyikan thumbnail
 	Mixed Appearances	Penampilan campuran
 	Mixed Objects	Objek campuran
+	Mixed	Campuran
 	No options	Tidak ada opsi
 	No Selection	Tidak ada seleksi
 	Offset X	Offset X
@@ -4865,6 +4882,7 @@ mark-style	Japanese	Jepang
 @msg	unknown parameter `{key}`; the command takes: {keys}	parameter `{key}` tidak dikenal; perintah menerima: {keys}
 	Load EPS into Clipboard	Muat EPS ke papan klip
 @msg	an image of {w} × {h} pixels is too large to draw	gambar {w} × {h} piksel terlalu besar untuk digambar
+@msg	an image of {w} × {h} pixels is shown at reduced size	gambar {w} × {h} piksel ditampilkan dalam ukuran yang diperkecil
 	Fill and Stroke Controls	Kontrol isian dan goresan
 	Coloring Controls	Kontrol pewarnaan
 	Draw Mode Controls	Kontrol mode menggambar

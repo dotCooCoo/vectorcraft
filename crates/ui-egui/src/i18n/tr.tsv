@@ -340,6 +340,7 @@ font-technology	Variable	Değişken
 	Apply Bullets	Madde İşaretlerini Uygula
 	Numbered List	Numaralı Liste
 	Apply Numbers	Numaralandırmayı Uygula
+	Convert to Text	Metne Dönüştür
 	Filled Dot	Dolu Nokta
 	Dash	Tire
 	Hollow Circle	Boş Daire
@@ -1709,6 +1710,7 @@ font-technology	Variable	Değişken
 	Miter Limit:	Gönye Sınırı:
 	Mixed Appearances	Karışık Görünümler
 	Mixed Objects	Karışık Nesneler
+	Mixed	Karışık
 	Mode:	Mod:
 	Model	Modeli
 	Modified	Değiştirildi
@@ -2616,7 +2618,22 @@ font-technology	Variable	Değişken
 	Saved to User Defined: {}	Kullanıcı Tanımlı'ya kaydedildi: {}
 	Saved View 1	Kaydedilen Görünüm 1
 	Saved View 10	Kaydedilen Görünüm 10
+	Saved View 11	Kaydedilen Görünüm 11
+	Saved View 12	Kaydedilen Görünüm 12
+	Saved View 13	Kaydedilen Görünüm 13
+	Saved View 14	Kaydedilen Görünüm 14
+	Saved View 15	Kaydedilen Görünüm 15
+	Saved View 16	Kaydedilen Görünüm 16
+	Saved View 17	Kaydedilen Görünüm 17
+	Saved View 18	Kaydedilen Görünüm 18
+	Saved View 19	Kaydedilen Görünüm 19
 	Saved View 2	Kaydedilen Görünüm 2
+	Saved View 20	Kaydedilen Görünüm 20
+	Saved View 21	Kaydedilen Görünüm 21
+	Saved View 22	Kaydedilen Görünüm 22
+	Saved View 23	Kaydedilen Görünüm 23
+	Saved View 24	Kaydedilen Görünüm 24
+	Saved View 25	Kaydedilen Görünüm 25
 	Saved View 3	Kaydedilen Görünüm 3
 	Saved View 4	Kaydedilen Görünüm 4
 	Saved View 5	Kaydedilen Görünüm 5
@@ -4122,6 +4139,7 @@ axis	Both	Her İkisi
 @msg	{_1} is a live effect (Effect › Plug-ins)	{_1} canlı bir efekttir (Efekt › Eklentiler)
 @msg	{_1} is already used by {_2}	{_1} zaten {_2} tarafından kullanılıyor
 @msg	{_1} linked file(s) can't be read here: their previews show	{_1} bağlantılı dosya(lar) burada okunamıyor: önizlemeleri gösteriliyor
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	{undecoded} görüntünün kodu çözülemedi: çarpı işaretli kutular olarak gösteriliyor
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} bağlantılı görseller diskte değiştirildi: Güncelleme Bağlantıları yeni sürümleri gösteriyor
 @msg	Updated {_1} linked file(s) changed on disk	Güncellenmiş {_1} bağlantılı dosya(lar) diskte değiştirildi
 @msg	{_1}: not saved, so not closed	{_1}: kaydedilmedi, dolayısıyla kapatılmadı
@@ -4935,6 +4953,7 @@ mark-style	Japanese	Japon
 theme	Appearance	Görünüm
 	Load EPS into Clipboard	EPS'yi Panoya Yükle
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} piksellik bir görüntü çizilemeyecek kadar büyük
+@msg	an image of {w} × {h} pixels is shown at reduced size	{w} × {h} piksellik bir görüntü küçültülmüş boyutta gösteriliyor
 @msg	the image can't be read as a texture	görüntü doku olarak okunamıyor
 	Fill and Stroke Controls	Dolgu ve Kontur Kontrolleri
 	Coloring Controls	Renklendirme Kontrolleri

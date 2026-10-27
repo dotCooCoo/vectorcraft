@@ -303,6 +303,7 @@
 	Apply Bullets	Opsommingstekens toepassen
 	Numbered List	Genummerde lijst
 	Apply Numbers	Nummering toepassen
+	Convert to Text	Converteren naar tekst
 	Filled Dot	Gevulde stip
 	Dash	Streepje
 	Hollow Circle	Holle cirkel
@@ -566,6 +567,21 @@
 	Saved View 8	Opgeslagen weergave 8
 	Saved View 9	Opgeslagen weergave 9
 	Saved View 10	Opgeslagen weergave 10
+	Saved View 11	Opgeslagen weergave 11
+	Saved View 12	Opgeslagen weergave 12
+	Saved View 13	Opgeslagen weergave 13
+	Saved View 14	Opgeslagen weergave 14
+	Saved View 15	Opgeslagen weergave 15
+	Saved View 16	Opgeslagen weergave 16
+	Saved View 17	Opgeslagen weergave 17
+	Saved View 18	Opgeslagen weergave 18
+	Saved View 19	Opgeslagen weergave 19
+	Saved View 20	Opgeslagen weergave 20
+	Saved View 21	Opgeslagen weergave 21
+	Saved View 22	Opgeslagen weergave 22
+	Saved View 23	Opgeslagen weergave 23
+	Saved View 24	Opgeslagen weergave 24
+	Saved View 25	Opgeslagen weergave 25
 	Window	Venster
 	New Window	Nieuw venster
 	Cascade	Trapsgewijs schikken
@@ -1274,6 +1290,7 @@ lighting	Light	Licht
 	Hide Thumbnail	Miniatuur verbergen
 	Mixed Appearances	Gemengde vormgevingen
 	Mixed Objects	Gemengde objecten
+	Mixed	Gemengd
 	No options	Geen opties
 	No Selection	Geen selectie
 	Offset X	Verschuiving X
@@ -4877,6 +4894,7 @@ mark-style	Japanese	Japans
 @msg	unknown parameter `{key}`; the command takes: {keys}	onbekende parameter `{key}`; de opdracht accepteert: {keys}
 	Load EPS into Clipboard	EPS in het klembord laden
 @msg	an image of {w} × {h} pixels is too large to draw	een afbeelding van {w} × {h} pixels is te groot om te tekenen
+@msg	an image of {w} × {h} pixels is shown at reduced size	een afbeelding van {w} × {h} pixels wordt verkleind weergegeven
 	Fill and Stroke Controls	Besturingselementen voor vulling en lijn
 	Coloring Controls	Besturingselementen voor kleuren
 	Draw Mode Controls	Besturingselementen voor tekenmodus

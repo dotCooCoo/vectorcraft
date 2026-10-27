@@ -288,6 +288,7 @@
 	Apply Bullets	Zastosuj punktory
 	Numbered List	Lista numerowana
 	Apply Numbers	Zastosuj numerację
+	Convert to Text	Konwertuj na tekst
 	Filled Dot	Pełna kropka
 	Dash	Myślnik
 	Hollow Circle	Pusty okrąg
@@ -557,6 +558,21 @@
 	Saved View 8	Zapisany widok 8
 	Saved View 9	Zapisany widok 9
 	Saved View 10	Zapisany widok 10
+	Saved View 11	Zapisany widok 11
+	Saved View 12	Zapisany widok 12
+	Saved View 13	Zapisany widok 13
+	Saved View 14	Zapisany widok 14
+	Saved View 15	Zapisany widok 15
+	Saved View 16	Zapisany widok 16
+	Saved View 17	Zapisany widok 17
+	Saved View 18	Zapisany widok 18
+	Saved View 19	Zapisany widok 19
+	Saved View 20	Zapisany widok 20
+	Saved View 21	Zapisany widok 21
+	Saved View 22	Zapisany widok 22
+	Saved View 23	Zapisany widok 23
+	Saved View 24	Zapisany widok 24
+	Saved View 25	Zapisany widok 25
 	Window	Okno
 	New Window	Nowe okno
 	Cascade	Kaskadowo
@@ -1257,6 +1273,7 @@ lighting	Light	Światło
 	Hide Thumbnail	Ukryj miniaturę
 	Mixed Appearances	Różne wyglądy
 	Mixed Objects	Różne obiekty
+	Mixed	Mieszane
 	No options	Brak opcji
 	No Selection	Brak zaznaczenia
 	Offset X	Odsunięcie X
@@ -4494,6 +4511,7 @@ imageTrace	Outline	Kontur
 @msg	{_1} is already used by {_2}	{_1} jest już używany przez {_2}
 @msg	{_1} is reserved by the system	Skrót {_1} jest zarezerwowany przez system
 @msg	{_1} linked file(s) can't be read here: their previews show	połączonych plików nie można tu odczytać ({_1}): wyświetlane są ich podglądy
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	nie udało się zdekodować obrazów ({undecoded}): są wyświetlane jako przekreślone ramki
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	połączone obrazy zmienione na dysku: {_1} — Aktualizuj łącza pokaże nowe wersje
 @msg	{_1}: not saved, so not closed	{_1}: nie zapisano, więc nie zamknięto
 @msg	{bpp}-bit bitmaps can't be read	nie można odczytać bitmap {bpp}-bitowych
@@ -5061,6 +5079,7 @@ mark-style	Japanese	Japońskie
 @msg	unknown parameter `{key}`; the command takes: {keys}	nieznany parametr `{key}`; polecenie przyjmuje: {keys}
 	Load EPS into Clipboard	Wczytaj EPS do schowka
 @msg	an image of {w} × {h} pixels is too large to draw	obraz o wymiarach {w} × {h} pikseli jest zbyt duży, aby go narysować
+@msg	an image of {w} × {h} pixels is shown at reduced size	obraz o wymiarach {w} × {h} pikseli jest wyświetlany w zmniejszonym rozmiarze
 	Basic	Podstawowy
 	Fill and Stroke Controls	Elementy sterujące wypełnieniem i obrysem
 	Coloring Controls	Elementy sterujące kolorem

@@ -313,6 +313,7 @@ font-technology	Variable	가변
 	Apply Bullets	글머리 기호 적용
 	Numbered List	번호 매기기 목록
 	Apply Numbers	번호 매기기 적용
+	Convert to Text	텍스트로 변환
 	Filled Dot	채운 점
 	Dash	대시
 	Hollow Circle	빈 원
@@ -580,6 +581,21 @@ font-technology	Variable	가변
 	Saved View 8	저장된 보기 8
 	Saved View 9	저장된 보기 9
 	Saved View 10	저장된 보기 10
+	Saved View 11	저장된 보기 11
+	Saved View 12	저장된 보기 12
+	Saved View 13	저장된 보기 13
+	Saved View 14	저장된 보기 14
+	Saved View 15	저장된 보기 15
+	Saved View 16	저장된 보기 16
+	Saved View 17	저장된 보기 17
+	Saved View 18	저장된 보기 18
+	Saved View 19	저장된 보기 19
+	Saved View 20	저장된 보기 20
+	Saved View 21	저장된 보기 21
+	Saved View 22	저장된 보기 22
+	Saved View 23	저장된 보기 23
+	Saved View 24	저장된 보기 24
+	Saved View 25	저장된 보기 25
 	Window	윈도우
 	New Window	새 창
 	Cascade	계단식 배열
@@ -3489,6 +3505,7 @@ file-filter	Templates	템플릿
 	Miter Limit	모퉁이 한계
 	Miter Limit:	모퉁이 한계:
 	Mixed Objects	혼합 개체
+	Mixed	혼합
 	Model	모델
 	Move All Objects	모든 개체 이동
 	N pt per	당 N pt
@@ -4301,6 +4318,7 @@ theme	Appearance	외관
 @msg	no such layer or object	해당 레이어나 개체가 없습니다
 @msg	`{tool}` isn't a Liquify tool	`{tool}`은(는) 픽셀 유동화 도구가 아닙니다
 @msg	{_1} linked file(s) can't be read here: their previews show	링크된 파일 {_1}개를 여기서 읽을 수 없습니다: 미리 보기가 표시됩니다
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	이미지 {undecoded}개를 디코딩할 수 없습니다: X 표시가 된 상자로 표시됩니다
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	링크된 이미지 {_1}개가 디스크에서 바뀌었습니다: 링크 업데이트를 하면 새 버전이 표시됩니다
 @msg	Updated {_1} linked file(s) changed on disk	디스크에서 바뀐 링크된 파일 {_1}개를 업데이트했습니다
 @msg	pick a colour, gradient or pattern to save as a swatch	견본으로 저장할 색상, 그레이디언트 또는 패턴을 선택하세요
@@ -4795,6 +4813,7 @@ lighting	Light	광원
 @msg	unknown parameter `{key}`; the command takes: {keys}	알 수 없는 매개변수 `{key}`: 이 명령이 받는 매개변수: {keys}
 	Load EPS into Clipboard	EPS를 클립보드로 불러오기
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h}픽셀 이미지는 너무 커서 그릴 수 없습니다
+@msg	an image of {w} × {h} pixels is shown at reduced size	{w} × {h}픽셀 이미지는 축소된 크기로 표시됩니다
 @msg	the image can't be read as a texture	이미지를 텍스처로 읽을 수 없습니다
 	Basic	기본
 	Fill and Stroke Controls	칠 및 획 컨트롤

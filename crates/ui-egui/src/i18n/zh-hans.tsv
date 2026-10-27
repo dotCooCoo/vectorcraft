@@ -305,6 +305,7 @@
 	Apply Bullets	应用项目符号
 	Numbered List	编号列表
 	Apply Numbers	应用编号
+	Convert to Text	转换为文本
 	Filled Dot	实心圆点
 	Dash	短划线
 	Hollow Circle	空心圆
@@ -1769,6 +1770,7 @@ file-filter	Templates	模板
 	Miter Limit:	斜接限制：
 	Mixed Appearances	混合外观
 	Mixed Objects	混杂对象
+	Mixed	混合
 	Mode:	模式：
 	Model	模型
 	Modified	已修改
@@ -2674,7 +2676,22 @@ font-script	Japanese	汉字
 	Saved to User Defined: {}	已存储至用户自定义：{}
 	Saved View 1	已存视图 1
 	Saved View 10	已存视图 10
+	Saved View 11	已存视图 11
+	Saved View 12	已存视图 12
+	Saved View 13	已存视图 13
+	Saved View 14	已存视图 14
+	Saved View 15	已存视图 15
+	Saved View 16	已存视图 16
+	Saved View 17	已存视图 17
+	Saved View 18	已存视图 18
+	Saved View 19	已存视图 19
 	Saved View 2	已存视图 2
+	Saved View 20	已存视图 20
+	Saved View 21	已存视图 21
+	Saved View 22	已存视图 22
+	Saved View 23	已存视图 23
+	Saved View 24	已存视图 24
+	Saved View 25	已存视图 25
 	Saved View 3	已存视图 3
 	Saved View 4	已存视图 4
 	Saved View 5	已存视图 5
@@ -4098,6 +4115,7 @@ imageTrace	Outline	轮廓
 @msg	no such layer or object	没有此图层或对象
 @msg	`{tool}` isn't a Liquify tool	`{tool}` 不是液化工具
 @msg	{_1} linked file(s) can't be read here: their previews show	此处无法读取 {_1} 个链接文件：显示的是其预览
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	无法解码 {undecoded} 张图像：它们显示为打叉的方框
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	有 {_1} 个链接图像已在磁盘上更改：“更新链接”可显示新版本
 @msg	pick a colour, gradient or pattern to save as a swatch	请选取要保存为色板的颜色、渐变或图案
 @msg	Packaged {n} file(s) in {folder} {note}	已将 {n} 个文件打包到 {folder}{note}
@@ -5093,6 +5111,7 @@ lighting	Light	光源
 @msg	unknown parameter `{key}`; the command takes: {keys}	未知参数 `{key}`；该命令接受：{keys}
 	Load EPS into Clipboard	将 EPS 载入剪贴板
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} 像素的图像过大，无法绘制
+@msg	an image of {w} × {h} pixels is shown at reduced size	{w} × {h} 像素的图像以缩小的尺寸显示
 	Fill and Stroke Controls	填色和描边控件
 	Coloring Controls	颜色控件
 	Draw Mode Controls	绘图模式控件
