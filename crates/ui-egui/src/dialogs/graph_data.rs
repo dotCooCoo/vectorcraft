@@ -336,6 +336,8 @@ fn import(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
     Ok(())
 }
 
+/// Draw the graph-data sheet: keyboard cell movement, block paste, import, transpose, switch-x/y
+/// and revert actions, decimals and column width, and only the cells in view.
 fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let entry_id = egui::Id::unique("graph-data-entry");
     if ui.memory(|m| m.has_focus(entry_id)) {

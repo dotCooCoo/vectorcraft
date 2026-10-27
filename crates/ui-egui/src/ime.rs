@@ -43,6 +43,8 @@ struct OutputContext {
 }
 
 impl From<&IMEOutput> for OutputContext {
+    /// Copy the output's owner, context generation and purpose into the comparable publication
+    /// identity.
     fn from(output: &IMEOutput) -> Self {
         Self { owner: output.owner, generation: output.context_generation, purpose: output.purpose }
     }
@@ -64,9 +66,12 @@ pub(crate) struct ResetGuard {
     pending: bool,
 }
 
+/// Temp-memory key marking whether this viewport is currently inside a UI pass.
 fn mode_id(viewport: egui::ViewportId) -> Id {
     Id::unique(("vectorcraft.ime.in-ui-pass", viewport))
 }
+/// Temp-memory key for the pass number and descriptor identity observed during this viewport's UI
+/// pass.
 fn output_id(viewport: egui::ViewportId) -> Id {
     Id::unique(("vectorcraft.ime.pass-output", viewport))
 }
@@ -133,6 +138,9 @@ fn route_live(app: &mut VectorcraftApp, ctx: &Context) -> bool {
     target(&mut app.session, view).is_some() && app.session.tool_ime_caret(view).is_some()
 }
 
+/// Allocate a reset request on an eligible custom-editor route and replace the guard with the
+/// confirmed destination, commit stamp and prior output identity; suspend instead when the route
+/// cannot publish.
 fn request_guard(app: &mut VectorcraftApp, ctx: &Context, deferred: bool) -> bool {
     if !route_live(app, ctx) {
         suspend(app, ctx);
@@ -163,11 +171,14 @@ fn request_guard(app: &mut VectorcraftApp, ctx: &Context, deferred: bool) -> boo
     true
 }
 
+/// Temp-memory key for the test-only count of IME reset requests since the last take.
 #[cfg(test)]
 fn request_count_id() -> Id {
     Id::unique("vectorcraft.ime.test-request-count")
 }
 
+/// Increment the test-only request counter for every reset allocation, including intermediates
+/// superseded before publication.
 #[cfg(test)]
 fn note_test_request(ctx: &Context) {
     ctx.data_mut(|data| {
@@ -194,7 +205,7 @@ pub(crate) fn deferred(app: &VectorcraftApp, ctx: &Context) -> bool {
 /// considered, so a marker for the old request cannot complete a route that no longer exists.
 pub(crate) fn suspend_if_route_lost(app: &mut VectorcraftApp, ctx: &Context) {
     let viewport = ctx.viewport_id();
-    if !app.ime_resets.get(&viewport).is_some_and(|guard| !guard.suspended) {
+    if app.ime_resets.get(&viewport).is_none_or(|guard| guard.suspended) {
         return;
     }
     if !route_live(app, ctx) {
@@ -202,10 +213,12 @@ pub(crate) fn suspend_if_route_lost(app: &mut VectorcraftApp, ctx: &Context) {
     }
 }
 
+/// Whether this viewport has a guard, including a suspended guard that currently owns no request.
 pub(crate) fn blocked(app: &VectorcraftApp, ctx: &Context) -> bool {
     app.ime_resets.contains_key(&ctx.viewport_id())
 }
 
+/// Return the reset request awaiting native completion for this viewport; test helper.
 #[cfg(test)]
 pub(crate) fn pending_request(app: &VectorcraftApp, ctx: &Context) -> Option<egui::ImeResetId> {
     app.ime_resets.get(&ctx.viewport_id()).and_then(|guard| guard.request)
@@ -306,6 +319,8 @@ fn mark_pending(app: &mut VectorcraftApp, ctx: &Context) {
     app.ime_compositions.insert(viewport, IncomingComposition::Stale);
 }
 
+/// Retire the guard's request and clear its deferred and pending flags while keeping the guard
+/// blocked until an eligible route allocates a replacement.
 fn suspend(app: &mut VectorcraftApp, ctx: &Context) {
     if let Some(guard) = app.ime_resets.get_mut(&ctx.viewport_id()) {
         guard.request = None;
@@ -378,6 +393,8 @@ pub(crate) fn controls_without_editor(app: &mut VectorcraftApp, ctx: &Context) {
     }
 }
 
+/// Clear the previous pass's caret rectangle and published descriptor identity before this
+/// viewport's UI runs.
 pub(crate) fn begin_ui(app: &mut VectorcraftApp, ctx: &Context) {
     app.ime_caret_rect = None;
     let id = output_id(ctx.viewport_id());
@@ -418,15 +435,21 @@ pub(crate) fn finish_ui(app: &mut VectorcraftApp, ctx: &Context) {
     }
 }
 
+/// Whether this pass can publish a custom editor and the descriptor recorded during the pass is the
+/// one actually published.
 fn eligible(app: &VectorcraftApp, ctx: &Context, custom: Option<OutputContext>) -> bool {
     let actual = ctx.output(|output| output.ime.as_ref().map(OutputContext::from));
     eligible_with(app, ctx, custom, actual)
 }
 
+/// Require a custom descriptor, a matching actual output and an eligible route before an IME guard
+/// may settle or re-arm.
 fn eligible_with(app: &VectorcraftApp, ctx: &Context, custom: Option<OutputContext>, actual: Option<OutputContext>) -> bool {
     custom.is_some() && actual == custom && pass_eligible(app, ctx)
 }
 
+/// Whether a guard needs a new fence because it was suspended, deferred or pending, its destination
+/// changed, or its published descriptor identity changed.
 fn needs_replacement(guard: &ResetGuard, destination: Option<IncomingSelection>, custom: OutputContext) -> bool {
     guard.suspended || guard.deferred || guard.pending || guard.destination != destination || guard.output.is_some_and(|previous| previous != custom)
 }
@@ -443,6 +466,8 @@ pub(crate) fn finish_logic(app: &mut VectorcraftApp, ctx: &Context) {
     }
 }
 
+/// Read the current Type-tool target and its anchor and caret offsets, or `None` when no text edit
+/// target or selection options are available.
 fn incoming_selection(app: &mut VectorcraftApp) -> Option<IncomingSelection> {
     let view = app.view_info();
     let target = target(&mut app.session, view)?;
@@ -548,6 +573,9 @@ fn sync_incoming_unbound(app: &mut VectorcraftApp, ctx: &Context) {
     sync_incoming_impl(app, ctx, Fence::Unbound);
 }
 
+/// Settle an incoming composition whose selection, composing state, session or context no longer
+/// matches the recorded expectation, applying the fence policy; with no recorded composition, also
+/// retire or replace a guard whose destination, commit stamp, context or pending state changed.
 fn sync_incoming_impl(app: &mut VectorcraftApp, ctx: &Context, fence: Fence) {
     let previous = app.ime_compositions.get(&ctx.viewport_id()).copied();
     let expected = match previous {
@@ -774,6 +802,8 @@ pub(crate) fn write_output(ctx: &Context, update: Option<ImeContextUpdate>, rect
 mod tests {
     use super::*;
 
+    /// A changed context generation or IME purpose for the same owner requires a replacement reset,
+    /// while an unchanged descriptor keeps the existing request.
     #[test]
     fn same_owner_new_generation_or_purpose_requires_a_replacement_request() {
         let owner = Id::unique("vectorcraft-ime-output-context-test");

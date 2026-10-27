@@ -13,6 +13,7 @@ use crate::VectorcraftApp;
 
 type Harness = egui_kittest::Harness<'static, VectorcraftApp>;
 
+/// Build a 300 by 300 document for a real-dialog accessibility harness.
 fn app() -> VectorcraftApp {
     let mut app = VectorcraftApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
@@ -38,6 +39,7 @@ fn strict(app: VectorcraftApp) -> Harness {
     h
 }
 
+/// Export for Screens names its three text fields and exposes no raw widget ids.
 #[test]
 fn export_for_screens_names_the_form_text_fields() {
     let mut app = app();
@@ -50,6 +52,8 @@ fn export_for_screens_names_the_form_text_fields() {
     assert!(h.query_by_role_and_label(Role::TextInput, "prefix").is_none(), "no internal widget id");
 }
 
+/// Flatten Transparency names its preset name and three resolution or balance fields and roles the
+/// balance control as a slider.
 #[test]
 fn flatten_transparency_names_its_preset_and_option_fields() {
     let mut app = app();
@@ -66,6 +70,7 @@ fn flatten_transparency_names_its_preset_and_option_fields() {
     let _ = h.get_by_role_and_label(Role::Slider, "Raster/Vector Balance:");
 }
 
+/// Document Setup names the top, bottom, left and right bleed inputs.
 #[test]
 fn document_setup_names_each_bleed_side() {
     let mut app = app();
@@ -76,6 +81,8 @@ fn document_setup_names_each_bleed_side() {
     }
 }
 
+/// Split Into Grid keeps translated visible labels while naming row and column gutter and total
+/// inputs by axis and context.
 #[test]
 fn split_into_grid_names_row_and_column_fields_with_context() {
     let mut app = app();
@@ -93,6 +100,7 @@ fn split_into_grid_names_row_and_column_fields_with_context() {
     assert_eq!(h.get_all_by_label("Total:").count(), 2, "the visible total labels are unchanged");
 }
 
+/// Artboard Options names the video ruler pixel aspect ratio input.
 #[test]
 fn artboard_options_names_the_video_pixel_aspect_ratio_field() {
     let mut app = app();
@@ -103,6 +111,7 @@ fn artboard_options_names_the_video_pixel_aspect_ratio_field() {
     let _ = h.get_by_role_and_label(Role::TextInput, "Video Ruler Pixel Aspect Ratio:");
 }
 
+/// A generic parameter dialog names its number and text inputs, combo boxes and checkbox.
 #[test]
 fn generic_parameter_dialog_names_numbers_text_and_choices() {
     let mut app = app();
@@ -130,6 +139,7 @@ fn generic_parameter_dialog_names_numbers_text_and_choices() {
     let _ = h.get_by_role_and_label(Role::CheckBox, "Flip:");
 }
 
+/// Slice Options names its multiline text-display area.
 #[test]
 fn slice_options_names_its_text_area() {
     let mut app = app();

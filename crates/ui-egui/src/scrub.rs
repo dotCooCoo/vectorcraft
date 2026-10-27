@@ -30,6 +30,7 @@ fn label_id() -> Id {
     Id::unique("numeric-field-label")
 }
 
+/// Temp-memory key for the numeric-field scrub preference.
 fn enabled_id() -> Id {
     Id::unique("numeric-field-scrub-enabled")
 }

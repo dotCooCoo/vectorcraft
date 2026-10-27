@@ -53,6 +53,7 @@ log = { workspace = true }
 # Floating panels open in OS windows of their own on the desktop; on the web they stay in the page.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 craft-ui = { workspace = true, features = ["native-windows"] }
+craft-update = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # `now_ms` (src/lib.rs) reads the page's `performance.now()` with this crate in the web build. It is

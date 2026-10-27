@@ -30,6 +30,7 @@ pub(crate) fn hint(d: &Dialog) -> &'static str {
     }
 }
 
+/// Temp-memory key for the revolve gizmo drag state.
 fn drag_id() -> Id {
     Id::unique("revolve-gizmo-drag")
 }
