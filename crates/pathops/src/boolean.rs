@@ -687,6 +687,11 @@ pub fn boolean_n(paths: &[(&PathData, FillRule)], pred: impl Fn(&[bool]) -> bool
 /// [`unite_all`] that reports a refused input instead of leaving it out of the union or returning
 /// an empty path.
 pub fn try_unite_all(paths: &[(&PathData, FillRule)]) -> Result<PathData, PathOpsError> {
+    try_unite_all_with(paths, DEFAULT_PRECISION)
+}
+
+/// [`try_unite_all`] refit to `precision`, dropping slivers thinner than it.
+pub fn try_unite_all_with(paths: &[(&PathData, FillRule)], precision: f64) -> Result<PathData, PathOpsError> {
     let mut all = BezPath::new();
     for (p, r) in paths {
         let bp = fill_bezpath(p);
@@ -700,13 +705,18 @@ pub fn try_unite_all(paths: &[(&PathData, FillRule)]) -> Result<PathData, PathOp
     if all.elements().is_empty() {
         return Ok(PathData::default());
     }
-    let tidy = Tidy::keeping(DEFAULT_PRECISION, paths.iter().map(|(p, _)| fill_bezpath(p)).collect::<Vec<_>>().iter());
+    let tidy = Tidy::keeping(precision, paths.iter().map(|(p, _)| fill_bezpath(p)).collect::<Vec<_>>().iter());
     Ok(all_contours_to_path(&normalize_bez(&all, FillRule::NonZero)?, &tidy))
 }
 
 /// Union of many filled paths. Each input is first normalised on its own, then all are swept
 /// together with a single integer winding number, which keeps this fast for thousands of shapes.
 pub fn unite_all(paths: &[(&PathData, FillRule)]) -> PathData {
+    unite_all_with(paths, DEFAULT_PRECISION)
+}
+
+/// [`unite_all`] refit to `precision`, dropping slivers thinner than it.
+pub fn unite_all_with(paths: &[(&PathData, FillRule)], precision: f64) -> PathData {
     let mut all = BezPath::new();
     for (p, r) in paths {
         let bp = fill_bezpath(p);
@@ -721,7 +731,7 @@ pub fn unite_all(paths: &[(&PathData, FillRule)]) -> PathData {
     if all.elements().is_empty() {
         return PathData::default();
     }
-    let tidy = Tidy::keeping(DEFAULT_PRECISION, paths.iter().map(|(p, _)| fill_bezpath(p)).collect::<Vec<_>>().iter());
+    let tidy = Tidy::keeping(precision, paths.iter().map(|(p, _)| fill_bezpath(p)).collect::<Vec<_>>().iter());
     match normalize_bez(&all, FillRule::NonZero) {
         Ok(c) => all_contours_to_path(&c, &tidy),
         Err(_) => PathData::default(),

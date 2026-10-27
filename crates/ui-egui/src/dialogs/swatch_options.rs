@@ -221,7 +221,7 @@ fn sliders(ui: &mut egui::Ui, d: &mut Dialog) -> bool {
                         new = Some((from_components(mode, &c2), c2));
                     }
                     let bounds = f64::from(mode.min(i))..=f64::from(mode.max(i));
-                    if let Some(fv) = widgets::range_field(ui, ("swatch-field", i), v as f64, bounds, mode.suffix(i), 0, 52.0) {
+                    if let Some(fv) = widgets::range_field(ui, ("swatch-field", i), f64::from(v), bounds, mode.suffix(i), 0, 52.0) {
                         let mut c2 = comps.clone();
                         c2[i] = (fv as f32).clamp(mode.min(i), mode.max(i));
                         new = Some((from_components(mode, &c2), c2));

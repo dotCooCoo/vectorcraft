@@ -13,6 +13,7 @@ use vectorcraft_ui_egui::graphics::GraphicsLoss;
 use vectorcraft_ui_egui::i18n;
 use vectorcraft_ui_egui::place::{DropTarget, PlaceArrival, PlaceInbox};
 use vectorcraft_ui_egui::print::{PrintJob, PrintService, Printer};
+use vectorcraft_ui_egui::stylus::StylusFeed;
 use vectorcraft_ui_egui::{Services, VectorcraftApp};
 use wasm_bindgen::JsCast as _;
 
@@ -81,6 +82,7 @@ pub fn start() {
             restarts: 0,
         };
         track_paste(&host.pasted);
+        crate::keys::keep_app_keys();
         run(host, canvas, None).await;
     });
 }
@@ -117,7 +119,8 @@ async fn run(host: Host, canvas: web_sys::HtmlCanvasElement, moving: Option<Movi
                     rs.device.set_device_lost_callback(move |reason, msg| loss.report(&ctx, format!("{reason:?}: {msg}")));
                 }
                 host.pasted.borrow_mut().ctx = Some(ctx.clone());
-                let services = services(host.inbox.clone(), host.place_inbox.clone(), ctx.clone(), host.locks.clone());
+                let stylus = host.pointers.borrow().stylus();
+                let services = services(host.inbox.clone(), host.place_inbox.clone(), ctx.clone(), host.locks.clone(), stylus);
                 let app = match taken.borrow_mut().take() {
                     Some(mut app) => {
                         // The old services asked the old context for frames.
@@ -371,6 +374,8 @@ impl eframe::App for WebShell {
         app.finish_ime_logic(ctx);
     }
 
+    /// Forward host-gathered pointer events into this frame's raw input, then let the app apply its
+    /// shared input hook before egui runs.
     fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
         raw.events.extend(self.host.pointers.borrow_mut().take());
         if let Some(app) = &mut self.app {
@@ -378,6 +383,8 @@ impl eframe::App for WebShell {
         }
     }
 
+    /// Read host paste and drop input once in the UI phase, hand files to the app's drop targets, run
+    /// the app UI, then poll control replies.
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         if let Some(app) = &mut self.app {
@@ -418,7 +425,7 @@ impl eframe::App for WebShell {
     }
 }
 
-fn services(inbox: Inbox, place_inbox: PlaceInbox, ctx: egui::Context, locks: Option<WebLocks>) -> Services {
+fn services(inbox: Inbox, place_inbox: PlaceInbox, ctx: egui::Context, locks: Option<WebLocks>, stylus: StylusFeed) -> Services {
     let open_inbox = inbox.clone();
     let picked = place_inbox.clone();
     let place_ctx = ctx.clone();
@@ -468,6 +475,8 @@ fn services(inbox: Inbox, place_inbox: PlaceInbox, ctx: egui::Context, locks: Op
         recovery_store: Some(Arc::new(BrowserStore { locks })),
         // File → Print: the browser's print dialog.
         print: Some(Box::new(BrowserPrint)),
+        // The pen's end, from the page's Pointer Events (`crate::pencil`).
+        stylus: Some(stylus),
         ..Default::default()
     }
 }
