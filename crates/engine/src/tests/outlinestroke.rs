@@ -245,6 +245,25 @@ fn a_geometry_effect_on_the_stroke_shapes_the_path_it_outlines() {
     assert!(near(area(&n), 124.0 * 124.0 - 116.0 * 116.0, 2.0), "{}", area(&n));
 }
 
+/// A stroke whose geometry effect leaves no path paints nothing on the canvas, and outlining it
+/// replaces the live stroke with an empty group.
+#[test]
+fn a_stroke_its_effects_empty_is_outlined_to_nothing() {
+    for (command, p) in outlining() {
+        let mut s = session();
+        square_with(&mut s, json!({"none": true}), json!(1), &[("path.offsetPath", json!({"offset": -60}))]);
+        let before = render(&s);
+        let n = outlined_by(&mut s, command, &p);
+        assert!(matches!(&n.kind, NodeKind::Group { children, .. } if children.is_empty()), "{command}: {n:?}");
+        let mut stroked = false;
+        for layer in &s.doc().unwrap().doc.layers {
+            layer.walk(&mut |m| stroked |= m.appearance.items.iter().any(|i| matches!(i, AppearanceItem::Stroke(_))));
+        }
+        assert!(!stroked, "{command} left a live stroke");
+        assert_eq!(differing(&before, &render(&s), 64), 0, "{command}");
+    }
+}
+
 /// A drop shadow on a stroke with a geometry effect stays on the outline, which draws as the
 /// stroke did.
 #[test]

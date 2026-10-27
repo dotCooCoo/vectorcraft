@@ -843,7 +843,8 @@ pub(crate) fn outlined_stroke(
 /// it with a gradient, or has Scale Strokes & Effects or Transform Patterns on, becomes the art the
 /// canvas draws for it, each copy with its own gradient, stroke width and pattern, and its strokes
 /// outlined before the art gets new ids. Random in a Transform effect takes its seed
-/// from the object's id, so these effects give the outline the values the canvas drew.
+/// from the object's id, so these effects give the outline the values the canvas drew. When the
+/// geometry effects leave nothing to paint, an empty group takes the path's place.
 /// `None` when `l` has no stroke to outline.
 pub(crate) fn outline_strokes(d: &mut Document, brushes: &[vectorcraft_brush::Brush], l: &Node) -> Option<Node> {
     use vectorcraft_render::effects::{GeomContext, apply_geometry_with, has_geometry, has_transform_art, is_geometry, reshape};
@@ -893,6 +894,12 @@ pub(crate) fn outline_strokes(d: &mut Document, brushes: &[vectorcraft_brush::Br
     }
     if !fills.is_empty() {
         parts.push(styled_copy(d, l, fills));
+    }
+    let reshapes = reshaped.is_some()
+        || l.appearance.items.iter().any(|i| matches!(i, AppearanceItem::Stroke(st) if outlinable(st) && has_geometry(&st.effects)));
+    if parts.is_empty() && reshapes {
+        // The geometry effects leave nothing to paint, as on the canvas: an empty group takes the path's place.
+        parts.push(Node::group(d.alloc_id(), vec![]));
     }
     assemble(d, l, parts)
 }
