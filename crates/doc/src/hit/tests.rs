@@ -571,6 +571,35 @@ fn objects_at_lists_the_stack() {
     assert!(at(90.0, None).is_empty());
 }
 
+/// A group or object isolated on an unlocked template layer: nothing in it hits and a marquee
+/// takes nothing, as outside isolation mode.
+#[test]
+fn isolation_on_a_template_layer_hits_nothing() {
+    let mut d = Document::new(200.0, 200.0);
+    let l = d.layers[0].id;
+    let (g, b) = (d.alloc_id(), d.alloc_id());
+    let pb = Node::path(b, shapes::rectangle(Rect::new(0.0, 0.0, 50.0, 50.0)), Appearance::default_art());
+    d.insert(Some(l), 0, Node::group(g, vec![Arc::new(pb)])).unwrap();
+    let p = Point::new(25.0, 25.0);
+    let all = Rect::new(-5.0, -5.0, 200.0, 200.0);
+    for scope in [g, b] {
+        let opt = HitOptions { scope: Some(scope), ..HitOptions::default() };
+        assert_eq!(hit_test(&d, p, opt).map(|h| h.leaf), Some(b), "{scope:?} isolated");
+        assert_eq!(marquee(&d, all, Some(scope), true), vec![b], "{scope:?} isolated");
+    }
+    if let NodeKind::Layer { template, .. } = &mut d.node_mut(l).unwrap().kind {
+        *template = true;
+    }
+    for scope in [g, b] {
+        let opt = HitOptions { scope: Some(scope), ..HitOptions::default() };
+        assert!(hit_test(&d, p, opt).is_none(), "{scope:?} isolated on a template layer");
+        assert!(objects_at(&d, p, HitOptions::default(), Some(scope)).is_empty(), "{scope:?} isolated on a template layer");
+        assert!(marquee(&d, all, Some(scope), true).is_empty(), "{scope:?} isolated on a template layer");
+    }
+    // Read-only sampling still reads it.
+    assert_eq!(hit_test_visible(&d, p, HitOptions { scope: Some(g), ..HitOptions::default() }).map(|h| h.leaf), Some(b));
+}
+
 /// Many overlapping paths: Select Behind must list each exactly once, front to back.
 /// This is quadratic with repeated full-document hit tests, but linear in tree size with
 /// the per-object walk.

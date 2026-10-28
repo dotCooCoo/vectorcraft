@@ -315,6 +315,10 @@ fn hit_test_skipping(doc: &Document, p: Point, opt: HitOptions, skip: &dyn Fn(No
         if locks.holds_id(scope) {
             return None;
         }
+        // Isolated on a template layer, locked or not: nothing in it hits.
+        if under_template(doc, &chain) {
+            return None;
+        }
         if isolated.is_container() {
             return hit_children(isolated, p, opt, &symbols, skip, &mut chain, editable_only).map(finish);
         }
@@ -340,6 +344,11 @@ fn hit_test_skipping(doc: &Document, p: Point, opt: HitOptions, skip: &dyn Fn(No
         chain.pop();
     }
     None
+}
+
+/// Is a node of `ancestry` a template layer?
+fn under_template(doc: &Document, ancestry: &[NodeId]) -> bool {
+    ancestry.iter().any(|i| doc.node(*i).is_some_and(Node::is_template))
 }
 
 /// Is `n` an envelope whose contents are being edited (they hit, not the envelope)?
@@ -604,12 +613,16 @@ pub fn compound_part_at(n: &Node, p: Point, tol: f64) -> Option<NodeId> {
 }
 
 /// Objects (children of layers, or of `scope` in isolation mode) touched by a marquee rect, leaving
-/// out those on a locked artboard ([`crate::LockedArtboards::holds_id`]). Symbol instances are measured
-/// by their art ([`Node::geometric_bounds_with`]). The art of a clip group or of a layer with a
-/// clipping mask counts only when the marquee meets the region its clipping path clips to, and then
-/// only within that region's bounds.
+/// out those on a locked artboard ([`crate::LockedArtboards::holds_id`]), and all of `scope` when it
+/// is on a template layer. Symbol instances are measured by their art
+/// ([`Node::geometric_bounds_with`]). The art of a clip group or of a layer with a clipping mask
+/// counts only when the marquee meets the region its clipping path clips to, and then only within
+/// that region's bounds.
 pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> Vec<NodeId> {
     let mut out = Vec::new();
+    if scope.and_then(|s| doc.ancestry(s)).is_some_and(|a| under_template(doc, &a)) {
+        return out;
+    }
     // `tops` pairs each object with the part of `r` in which the marquee can touch it.
     let tops: Vec<(&std::sync::Arc<Node>, Rect)> = match scope.and_then(|s| doc.node(s)) {
         Some(s) => match (s.children(), marquee_in(s, r)) {
