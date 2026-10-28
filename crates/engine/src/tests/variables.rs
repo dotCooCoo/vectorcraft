@@ -157,6 +157,7 @@ fn a_row_with_no_value_for_a_bound_variable_warns_that_nothing_was_applied() {
     assert_eq!((v["applied"].as_u64(), v["skipped"].as_u64(), &v["warning"]), (Some(0), Some(1), &json!(warning("B"))), "{v}");
 
     // Bound to a variable with a value, the row applies it and gives no warning.
+    s.execute("variable.unbind", &json!({"variable": "Other", "ids": [t.0]})).unwrap();
     s.execute("variable.bind", &json!({"variable": "Title", "ids": [t.0]})).unwrap();
     let v = s.execute("dataset.select", &json!({"name": "A"})).unwrap();
     assert_eq!(v["applied"].as_u64(), Some(1), "{v}");
