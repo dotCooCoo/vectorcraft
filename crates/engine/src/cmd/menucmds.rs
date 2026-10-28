@@ -14,7 +14,10 @@ use vectorcraft_render::AntiAlias;
 use vectorcraft_render::encode::{RasterExportOptions, RasterFormat};
 
 use super::edit::{duplicate_in, selected_roots};
-use super::*;
+use super::{
+    CommandSpec, EngineError, Result, Session, bad, check_numbers, check_switches, cmd, f64_or, fileio, find_command, has_doc, has_selection,
+    switch_or,
+};
 
 /// Session-level (not saved) state owned by the menu commands.
 #[derive(Clone, Debug, Default)]

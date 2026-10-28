@@ -1,5 +1,8 @@
 use super::common::{MAX_INPUT, path_kind, path_mut, point_entry, usize_opt, usize_req, within_input_bound};
-use super::*;
+use super::{
+    Anchor, BTreeSet, Beside, Color, Document, EngineError, Node, NodeId, NodeKind, Paint, PathData, Point, Result, Selection, Session, Value, Vec2,
+    add_look, bad, check_numbers, f64_or, id_param, json, number_or, ok, po, str_param, switch_or,
+};
 
 // ---------- Curvature ----------
 

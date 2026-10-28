@@ -15,7 +15,7 @@ use vectorcraft_pathops::{BoolOp, PathfinderOp};
 
 use super::edit::selected_roots;
 use super::expand::{fill_shape, reshaped, seeded};
-use super::*;
+use super::{CommandSpec, EngineError, Result, Session, always, bad, bool_or, cmd, has_doc, has_multi, has_selection, str_param};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![

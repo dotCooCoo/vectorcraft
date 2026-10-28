@@ -23,6 +23,27 @@ fn tags_map_to_languages() {
     for tag in ["fr", "fr_FR.UTF-8", "fr-BE", "fr_CA", "fr-CH", "fr-LU"] {
         assert_eq!(lang_from_tag(tag), Lang::from_code("fr"), "{tag}");
     }
+    other_tags_map_to_languages();
+    // Traditional Chinese: by region, by script, and with a region after the script.
+    assert_eq!(lang_from_tag("zh_TW.UTF-8"), Some(ZH()));
+    assert_eq!(lang_from_tag("zh-TW"), Some(ZH()));
+    assert_eq!(lang_from_tag("zh-HK"), Some(ZH()));
+    assert_eq!(lang_from_tag("zh_MO"), Some(ZH()));
+    assert_eq!(lang_from_tag("zh-Hant"), Some(ZH()));
+    assert_eq!(lang_from_tag("zh-Hant-TW"), Some(ZH()));
+    assert_eq!(lang_from_tag("zh-Hant-HK"), Some(ZH()));
+    assert_eq!(lang_from_tag("zh_TW.UTF-8@radical"), Some(ZH()));
+    // Simplified Chinese locales never pick up the Traditional catalog (they resolve to a
+    // `zh-hans` catalog once one is registered, and to English until then).
+    for tag in ["zh-CN", "zh_CN.UTF-8", "zh_SG", "zh-Hans", "zh-Hans-CN", "zh"] {
+        assert_eq!(lang_from_tag(tag), Lang::from_code("zh-hans"), "{tag}");
+    }
+    assert_eq!(lang_from_tag(""), None);
+    assert_eq!(lang_from_tag("_"), None);
+}
+
+/// The Georgian, Ukrainian, Hungarian, Korean, Vietnamese and Swedish tags of [`tags_map_to_languages`].
+fn other_tags_map_to_languages() {
     for tag in ["ka", "ka-GE", "ka_GE.UTF-8", "KA-ge"] {
         assert_eq!(lang_from_tag(tag), Some(ka()), "{tag}");
     }
@@ -41,22 +62,6 @@ fn tags_map_to_languages() {
     for tag in ["sv", "sv-SE", "sv-FI", "sv_SE.UTF-8", "SV-se"] {
         assert_eq!(lang_from_tag(tag), Lang::from_code("sv"), "{tag}");
     }
-    // Traditional Chinese: by region, by script, and with a region after the script.
-    assert_eq!(lang_from_tag("zh_TW.UTF-8"), Some(ZH()));
-    assert_eq!(lang_from_tag("zh-TW"), Some(ZH()));
-    assert_eq!(lang_from_tag("zh-HK"), Some(ZH()));
-    assert_eq!(lang_from_tag("zh_MO"), Some(ZH()));
-    assert_eq!(lang_from_tag("zh-Hant"), Some(ZH()));
-    assert_eq!(lang_from_tag("zh-Hant-TW"), Some(ZH()));
-    assert_eq!(lang_from_tag("zh-Hant-HK"), Some(ZH()));
-    assert_eq!(lang_from_tag("zh_TW.UTF-8@radical"), Some(ZH()));
-    // Simplified Chinese locales never pick up the Traditional catalog (they resolve to a
-    // `zh-hans` catalog once one is registered, and to English until then).
-    for tag in ["zh-CN", "zh_CN.UTF-8", "zh_SG", "zh-Hans", "zh-Hans-CN", "zh"] {
-        assert_eq!(lang_from_tag(tag), Lang::from_code("zh-hans"), "{tag}");
-    }
-    assert_eq!(lang_from_tag(""), None);
-    assert_eq!(lang_from_tag("_"), None);
 }
 
 /// Italian, Brazilian Portuguese, Finnish, Turkish and Polish resolve from their locale tags and

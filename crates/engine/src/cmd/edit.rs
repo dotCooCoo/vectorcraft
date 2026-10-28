@@ -8,7 +8,11 @@ use vectorcraft_doc::{Document, Node, NodeId, RulerMode, Unit};
 use vectorcraft_geom::{Affine, Point, Vec2};
 
 use super::clipboard::SwatchChoices;
-use super::*;
+use super::{
+    CommandSpec, Result, Session, always, bad, bool_or, can_clear_history, can_redo, can_undo, checked_ids_param, cmd, f64_or, f64_req,
+    finite_numbers, has_clipboard, has_doc, has_selection, has_selection_or_artboard_tool, has_selection_or_guides, id_param, index, ok, point_param,
+    str_param,
+};
 use crate::{Clipboard, EngineError, inspect};
 
 /// Register editing commands, including document-to-document artwork drops and their parameter contracts.

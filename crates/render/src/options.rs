@@ -1,5 +1,5 @@
 use super::geometry::region_pixels;
-use super::*;
+use super::{Arc, NodeId, Rect, encode, proof};
 
 /// Largest raster an export may ask [`Renderer::render_region`] for, per side. The CPU rasteriser
 /// addresses at most `u16::MAX` pixels per side (and panics at that edge).

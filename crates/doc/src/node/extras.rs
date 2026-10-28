@@ -2,7 +2,7 @@ use super::attributes::ObjectAttributes;
 use super::kind::NodeKind;
 use super::live_shape::LiveShape;
 use super::opacity::OpacityMask;
-use super::*;
+use super::{Node, PathData};
 
 /// The parts of a [`Node`] that few objects have: kept out of line, so that the nodes without
 /// them stay small ([`Node::extras`]).

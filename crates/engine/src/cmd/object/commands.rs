@@ -5,7 +5,7 @@ use super::compound::{clip_edit, clip_make, clip_release, compound_make, compoun
 use super::props::set_props;
 use super::shape::{expand_shape, set_live_shape};
 use super::transform::{move_cmd, nudge, reflect, rotate, scale, shear, transform, transform_again};
-use super::*;
+use super::{CommandSpec, cmd, has_doc, has_multi, has_selection, has_selection_or_guides};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![

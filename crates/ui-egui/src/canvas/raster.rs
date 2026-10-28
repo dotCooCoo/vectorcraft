@@ -1,4 +1,4 @@
-use super::*;
+use super::{Affine, CacheKey, VectorcraftApp, Xf};
 
 /// The rendered raster `img` as an egui image. Both are premultiplied RGBA8, so its bytes are copied
 /// over whole instead of pixel by pixel, which costs milliseconds for a canvas on a large screen.

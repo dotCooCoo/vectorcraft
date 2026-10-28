@@ -1,5 +1,8 @@
 use super::targets::{Targets, span};
-use super::*;
+use super::{
+    Affine, GuideStyle, Handle, HitOptions, Line, NodeId, OrientedBox, Overlay, ParamCurve, ParamCurveDeriv, ParamCurveNearest, PathSeg, Point, Rect,
+    ScreenFrame, ToolContext, Vec2, constrain_angle_from, hit_test,
+};
 
 /// Where curves `a` and `b` cross near `p`: a point projected from one onto the other and back
 /// settles where they meet (none when they don't nearby).
