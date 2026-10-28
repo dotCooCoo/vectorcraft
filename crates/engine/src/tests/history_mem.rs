@@ -87,9 +87,9 @@ fn the_default_budget_is_a_quarter_of_installed_memory() {
 #[test]
 #[cfg(any(target_os = "linux", windows, target_os = "macos", target_os = "freebsd"))]
 fn the_default_budget_follows_the_installed_memory_read() {
-    let memory = vectorcraft_render::physical_memory();
-    assert!(memory.is_some_and(|m| m >= 256 << 20), "{memory:?}");
-    assert_eq!(default_history_budget(), memory.map_or(0, history_budget_for));
+    // Where the memory can't be read (a sandbox that hides it), the budget is the 1 GiB fallback.
+    let memory = vectorcraft_render::physical_memory().filter(|&m| m > 0);
+    assert_eq!(default_history_budget(), memory.map_or(1 << 30, history_budget_for), "{memory:?}");
     assert_eq!(History::default().byte_budget, default_history_budget());
 }
 
