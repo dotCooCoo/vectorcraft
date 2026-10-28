@@ -189,18 +189,26 @@ pub(crate) fn show_editing(s: &mut Session, layer: Option<NodeId>) -> Result<()>
 
 /// After undo or redo, isolation follows the restored document into or out of mask editing
 /// (`was` is the editing layer before, if any), so it never names a layer that is gone (whose id
-/// a later object could reuse). Out of mask editing, View Opacity Mask ends.
+/// a later object could reuse). Out of mask editing, View Opacity Mask ends. While a pattern is
+/// edited too, the mode entered last (whose layer is higher) is isolated, and the pattern's tile
+/// layer is isolated again when mask editing ends.
 pub(crate) fn follow_history(st: &mut crate::DocState, was: Option<NodeId>) {
+    let tile = st.doc.pattern_edit.as_ref().map(|pe| pe.layer);
     match st.doc.mask_edit {
         Some(me) => {
-            st.isolation = Some(me.layer);
-            st.active_layer = Some(me.layer);
+            let index = |l: NodeId| st.doc.position(l).map(|p| p.1);
+            let layer = match tile {
+                Some(t) if index(t) > index(me.layer) => t,
+                _ => me.layer,
+            };
+            st.isolation = Some(layer);
+            st.active_layer = Some(layer);
         }
         None => {
             st.mask_view = None;
             if was.is_some() && st.isolation == was {
-                st.isolation = None;
-                st.active_layer = st.doc.default_layer();
+                st.isolation = tile;
+                st.active_layer = tile.or_else(|| st.doc.default_layer());
             }
         }
     }

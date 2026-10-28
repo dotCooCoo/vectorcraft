@@ -236,6 +236,39 @@ fn exit_isolation_from_a_pattern_edited_inside_a_mask_returns_to_the_mask() {
     assert!(st.doc.mask_edit.is_none() && st.isolation.is_none());
 }
 
+/// Undo and Redo while a mask and a pattern are edited one inside the other isolate the inner
+/// mode's layer, or the outer one's when the inner mode ends.
+#[test]
+fn undo_and_redo_with_nested_mask_and_pattern_editing_isolate_the_inner_layer() {
+    let mut s = session();
+    let r = rect(&mut s, 0.0, 10.0);
+    s.execute("select.set", &json!({"ids": [r.0]})).unwrap();
+    s.execute("object.pattern.make", &json!({"name": "P"})).unwrap();
+    let tile = doc(&s).pattern_edit.as_ref().map(|pe| pe.layer);
+    editing_mask(&mut s);
+    let mask_layer = doc(&s).mask_edit.map(|me| me.layer);
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    s.execute("edit.undo", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    assert_eq!((st.isolation, st.active_layer), (mask_layer, mask_layer));
+    s.execute("edit.redo", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    assert!(st.doc.mask_edit.is_none() && st.doc.pattern_edit.is_some());
+    assert_eq!((st.isolation, st.active_layer), (tile, tile));
+
+    let mut s = session();
+    editing_mask(&mut s);
+    let r = rect(&mut s, 0.0, 10.0);
+    s.execute("select.set", &json!({"ids": [r.0]})).unwrap();
+    s.execute("object.pattern.make", &json!({"name": "P"})).unwrap();
+    let tile = doc(&s).pattern_edit.as_ref().map(|pe| pe.layer);
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    s.execute("edit.undo", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    assert!(st.doc.pattern_edit.is_some() && st.doc.mask_edit.is_some());
+    assert_eq!((st.isolation, st.active_layer), (tile, tile));
+}
+
 /// Releasing the masks of a group and of an object inside it puts each mask's art directly above
 /// its object, as releasing one mask at a time does.
 #[test]
