@@ -4,6 +4,175 @@ use super::*;
 use vectorcraft_geom::Point;
 use vectorcraft_tools::{PointerEvent, PointerKind, ToolKey};
 
+pub(super) mod adjust;
+mod appearance;
+mod areafit;
+mod assets;
+mod attributes;
+mod bboxrotate;
+mod blendfidelity;
+mod blendopts;
+mod blendspine;
+mod brushlib;
+mod brushsym;
+mod build;
+mod cancel;
+mod charstroke;
+pub(super) mod clip;
+mod clipboard;
+mod clipflavours;
+mod clippaint;
+mod cmdsplit;
+mod cmykflatten;
+mod colorguide;
+mod colorguidelib;
+pub(super) mod colormgmt;
+mod colorthemes;
+mod colourfonts;
+mod compoundpaint;
+mod constrain_new;
+mod constrain_tools;
+mod containers;
+mod css;
+mod cut;
+mod dashalign;
+mod distort;
+mod docsetup;
+mod draw2;
+mod editcolors;
+mod effectedit;
+mod emptytype;
+mod envelope;
+mod envelope_distort;
+mod envelope_edit;
+pub(super) mod expand;
+mod eyedropper;
+mod file;
+mod fileinfo;
+mod flatpresets;
+mod flatpreview;
+mod flatten;
+mod focal;
+mod fontfiles;
+mod fontlist;
+mod freeform;
+mod globaledit;
+mod gradient;
+mod gradpanel;
+mod gradspan;
+mod halftone;
+mod history_mem;
+mod ids_without_selection;
+mod inline;
+mod interactivity;
+mod intertwine;
+mod journal;
+mod keyguide;
+mod knockout;
+mod labspots;
+pub(super) mod large_edits;
+mod layerclip;
+mod layers;
+mod legacy_ai;
+mod library;
+mod link_paths;
+mod linked_stops;
+mod linkfiles;
+pub(super) mod links;
+pub(super) mod linkspanel;
+mod linkwatch;
+mod liquify;
+mod live;
+mod livecorners;
+mod maskview;
+pub(super) mod menucmds;
+mod nativefile;
+mod newart;
+mod newdoc;
+mod objects_on_path;
+mod objexpand;
+mod opacitymask;
+mod outlineobject;
+pub(super) mod outlinestroke;
+mod overprint;
+mod package;
+mod paintproxy;
+mod panelcmds;
+mod paragraphs;
+mod params;
+mod pathops;
+mod pathtype;
+mod pattern;
+mod pdffidelity;
+mod pdfmarks;
+mod pdfpresets;
+mod pdfraster;
+mod persp_planes;
+pub(super) mod persp_select;
+mod persp_text;
+mod perspgrid;
+mod place;
+mod placed_document;
+mod plugins;
+mod prefs;
+mod previewbounds;
+mod print;
+mod printadvanced;
+mod printpresets;
+mod printpreview;
+mod printps;
+mod printtiling;
+mod proxyitems;
+mod puppetwarp;
+mod rasterfilters;
+mod rastersettings;
+mod recolor;
+mod recovery;
+mod reflecthit;
+mod registration;
+mod save;
+mod saveoptions;
+mod scalestrokes;
+mod scripts;
+mod select_ids_first;
+mod shaper;
+mod shortcutset;
+mod simplify_part;
+mod slices;
+mod smartguides;
+mod store;
+mod strokegeom;
+mod strokegradient;
+mod strokereach;
+mod strokeux;
+mod stylelib;
+mod stylepanel;
+mod styles;
+mod swatchcmds;
+mod swatches;
+mod swatchlib;
+mod symbolbounds;
+mod symbollib;
+mod targeting;
+mod textcombos;
+mod textedit;
+pub(super) mod textimport;
+mod tileedge;
+mod tints;
+mod toolsettings;
+mod transformfx;
+mod transparencygrid;
+mod trap;
+mod typearea;
+mod typescale;
+mod units;
+mod variables;
+mod webexport;
+mod widthpoints;
+mod widthprofiles;
+mod widthtool;
+mod xform;
+
 fn session() -> Session {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 800, "height": 600})).unwrap();
@@ -88,6 +257,42 @@ fn unknown_and_disabled() {
     let mut s = Session::new();
     assert!(matches!(s.execute("nope", &json!({})), Err(EngineError::UnknownCommand(_))));
     assert!(matches!(s.execute("object.group", &json!({})), Err(EngineError::Disabled(..))));
+}
+
+#[test]
+fn unknown_command_names_the_nearest_id() {
+    let mut s = session();
+    for typo in ["select.al", "Select.All", "selcet.all"] {
+        let e = s.execute(typo, &json!({})).unwrap_err();
+        assert!(matches!(&e, EngineError::UnknownCommandNear(id, near) if id == typo && near == "select.all"), "{typo}: {e:?}");
+        assert_eq!(e.to_string(), format!("unknown command `{typo}`; did you mean `select.all`?"));
+    }
+    let e = s.execute("nope", &json!({})).unwrap_err();
+    assert!(matches!(&e, EngineError::UnknownCommand(id) if id == "nope"), "{e:?}");
+    assert_eq!(e.to_string(), "unknown command `nope`");
+    let e = s.execute("command.batch", &json!({"commands": [{"command": "select.al", "params": {}}]})).unwrap_err();
+    assert!(e.to_string().contains("did you mean `select.all`?"), "{e}");
+}
+
+#[test]
+fn a_long_unknown_command_id_is_answered_at_once() {
+    let mut s = session();
+    let long = "x".repeat(200_000);
+    let start = std::time::Instant::now();
+    assert!(matches!(s.execute(&long, &json!({})), Err(EngineError::UnknownCommand(_))));
+    let e = crate::check_params("file.new", &json!({ long.as_str(): 1 })).unwrap_err();
+    assert!(e.to_string().contains("the command takes:"), "{e}");
+    assert!(start.elapsed() < std::time::Duration::from_secs(2), "{:?}", start.elapsed());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn action_batch_names_the_nearest_command_id() {
+    let mut s = session();
+    let e = s.execute("action.batch", &json!({"source": "dataSets", "commands": [{"command": "select.al"}]})).unwrap_err();
+    assert_eq!(e.to_string(), "invalid parameters for `action.batch`: commands[0]: unknown command `select.al`; did you mean `select.all`?");
+    let e = s.execute("action.batch", &json!({"source": "dataSets", "commands": [{"command": "nope"}]})).unwrap_err();
+    assert_eq!(e.to_string(), "invalid parameters for `action.batch`: commands[0]: unknown command `nope`");
 }
 
 #[test]
@@ -2449,6 +2654,34 @@ fn an_isolated_compound_paths_member_moves_alone() {
     s.execute("select.set", &json!({"ids": [c.0]})).unwrap();
     s.execute("object.move", &json!({"dx": 5, "dy": 0})).unwrap();
     assert_eq!((x0(&s, outer), x0(&s, hole)), (5.0, 55.0), "the compound path selected: the whole ring");
+}
+
+/// The X, Y, W and H of the Properties and Transform panels run `object.setBounds`, which takes the
+/// same objects as the other transforms: a path of a compound path selected alone sets its own
+/// box and leaves the ring around it (#4046). The hole is off-centre, and a plain rectangle
+/// outside the ring keeps "everything moved" from passing.
+#[test]
+fn set_bounds_of_a_compound_paths_member_sets_only_that_path() {
+    let x = |s: &Session, id: NodeId| {
+        let b = s.doc().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap();
+        (b.x0, b.x1)
+    };
+    let mut s = session();
+    let (c, outer, hole) = isolated_ring(&mut s);
+    let other = rect(&mut s, 100.0, 0.0, 10.0, 10.0);
+    s.execute("select.set", &json!({"ids": [hole.0]})).unwrap();
+    s.execute("object.setBounds", &json!({"width": 20, "reference": 0})).unwrap();
+    assert_eq!((x(&s, outer), x(&s, hole)), ((0.0, 40.0), (10.0, 30.0)), "isolated: only the hole is wider");
+    s.execute("object.setBounds", &json!({"x": 25, "reference": 0})).unwrap();
+    assert_eq!((x(&s, outer), x(&s, hole)), ((0.0, 40.0), (25.0, 45.0)), "isolated: only the hole moved");
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    s.execute("select.set", &json!({"ids": [hole.0]})).unwrap();
+    s.execute("object.setBounds", &json!({"x": 12, "reference": 0})).unwrap();
+    assert_eq!((x(&s, outer), x(&s, hole)), ((0.0, 40.0), (12.0, 32.0)), "not isolated: still only the hole");
+    s.execute("select.set", &json!({"ids": [c.0]})).unwrap();
+    s.execute("object.setBounds", &json!({"x": 5, "reference": 0})).unwrap();
+    assert_eq!((x(&s, outer), x(&s, hole)), ((5.0, 45.0), (17.0, 37.0)), "the compound path selected: the whole ring");
+    assert_eq!(x(&s, other), (100.0, 110.0), "the rectangle outside never moves");
 }
 
 /// `depth` and `childLimit` slice a summary read; a level that shows fewer children
