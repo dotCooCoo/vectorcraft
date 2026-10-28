@@ -27,7 +27,7 @@ use crate::state::Dialog;
 use crate::theme::Tokens;
 use crate::widgets::{self, Live};
 
-pub(super) const SPEC: DialogSpec = DialogSpec::window(show, confirm);
+pub(super) const SPEC: DialogSpec = DialogSpec { inputs: |_| &["color", "opacity", "location", "spread"], ..DialogSpec::window(show, confirm) };
 
 /// The field holding the frame the popover was first drawn in.
 const OPENED: &str = "__opened";
@@ -90,7 +90,7 @@ fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
     let screen =
         d.fields.get("screen").and_then(Value::as_array).and_then(|a| Some(egui::pos2(a.first()?.as_f64()? as f32, a.get(1)?.as_f64()? as f32)));
     let chip = Point::new(d.f64("x", 0.0), d.f64("y", 0.0));
-    let area = egui::Id::new("gradient-stop-popover");
+    let area = egui::Id::unique("gradient-stop-popover");
     let size = ctx.memory(|m| m.area_rect(area)).map_or(POPOVER_SIZE, |r| r.size());
     let pos = screen.unwrap_or_else(|| match app.canvas_rect.zip(app.view().copied()) {
         Some((canvas, v)) => {
@@ -206,12 +206,13 @@ fn swatch_grid(app: &mut VectorcraftApp, ui: &mut egui::Ui, target: &Target) {
     });
     let Some((name, c)) = pick else { return };
     match target {
-        // A global or spot colour (or a tint of one) stays linked.
+        // A global or spot color (or a tint of one) stays linked, and the swatch's color keeps
+        // its model.
         Target::Stop(stops, i) => {
             let link = crate::panels::gradient::dropped_link(app, &json!({ "swatch": name }));
-            set_stops(app, &recolor(stops.clone(), *i, c, link), Some(*i), Live::Released);
+            crate::panels::gradient::set_stops_keeping_models(app, &recolor(stops.clone(), *i, c, link), Some(*i), Live::Released);
         }
-        Target::Point(_, i) => edit_point(app, "paint.freeform.setPoint", json!({ "index": i, "color": color_json(&c) })),
+        Target::Point(_, i) => edit_point(app, "paint.freeform.setPoint", json!({ "index": i, "color": color_json(&c), "keepModel": true })),
     }
 }
 
