@@ -5,14 +5,15 @@
 //! gradient becomes a mesh shaped like the object. A pattern fill becomes the tiles it paints inside a clip
 //! group shaped like the object. Create Gradient Mesh shares the sampling.
 
+use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
 use vectorcraft_color::cms::Model;
 use vectorcraft_color::freeform::spread_scale;
-use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, Paint};
+use vectorcraft_color::{BlendMode, Color, Gradient, GradientKind, GradientPaint, Paint};
 use vectorcraft_doc::appearance::{AppearanceItem, FillLayer};
-use vectorcraft_doc::live::{GradientMesh, lerp_color};
+use vectorcraft_doc::live::GradientMesh;
 use vectorcraft_doc::pattern::{PatternDef, place_art};
 use vectorcraft_doc::{Appearance, Document, Node, NodeId, NodeKind, Scaling};
 use vectorcraft_geom::{Affine, PathData, Point, Rect, SubPath, Vec2, shapes};
@@ -21,7 +22,7 @@ use super::edit::selected_roots;
 use super::menucmds::{run_raw, squash};
 use super::object::as_clipping_path;
 use super::pathops::{assemble, node_path, outline_strokes, replace_leaves, styled_copy, with_transparency};
-use super::*;
+use super::{CommandSpec, EngineError, Result, Session, bad, bool_or, cmd, f64_or, has_selection, str_param};
 
 const C: &str = "object.expand";
 /// Expand Gradient To → Specify … Objects: the default and the most.
@@ -290,7 +291,7 @@ fn expand_fills(d: &mut Document, l: &Node, to: GradientTo) -> Option<Node> {
     for item in &l.appearance.items {
         // Items that paint nothing go; a gradient that can't be expanded stays.
         let art = gradient_fill(item).and_then(|(f, g)| {
-            let (fl, path, bounds) = fill_shape(l, f, &path, bounds)?;
+            let (fl, path, bounds) = fill_shape(l, item, &path, bounds)?;
             gradient_art(d, &fl, &path, bounds, f, g, to)
         });
         let Some(art) = art else {
@@ -318,7 +319,7 @@ fn expand_fills(d: &mut Document, l: &Node, to: GradientTo) -> Option<Node> {
 /// fill's opacity, blend mode and effects other than geometry effects ([`fill_effects`]).
 fn gradient_art(d: &mut Document, l: &Node, path: &PathData, bounds: Rect, f: &FillLayer, g: &GradientPaint, to: GradientTo) -> Option<Node> {
     let content = if g.gradient.kind == GradientKind::Freeform {
-        let m = GradientMesh::for_path_with(path, FREEFORM_MESH, FREEFORM_MESH, &*gradient_sampler(g, bounds))?;
+        let m = GradientMesh::for_path_with(path, FREEFORM_MESH, FREEFORM_MESH, &*gradient_sampler(g, bounds, d.color_mode.model()))?;
         vec![Node::new(d.alloc_id(), NodeKind::Mesh(m))]
     } else {
         let frame = Frame::new(g, bounds);
@@ -363,15 +364,16 @@ fn reshaped(l: &Node) -> Option<Node> {
     Some(m)
 }
 
-/// Path `l` (outline `path`, box `bounds`) as fill `f` paints it on the canvas, with its outline
-/// and box: when the fill has visible geometry effects, `l` with the outline they make of `path`
-/// as a plain path, and that outline's box.
-fn fill_shape(l: &Node, f: &FillLayer, path: &PathData, bounds: Rect) -> Option<(Node, PathData, Rect)> {
+/// Path `l` (outline `path`, box `bounds`) as its fill `item` paints it on the canvas, with its
+/// outline and box: when the fill has visible geometry effects, `l` with the outline they make of
+/// `path` as a plain path, and that outline's box.
+fn fill_shape(l: &Node, item: &AppearanceItem, path: &PathData, bounds: Rect) -> Option<(Node, PathData, Rect)> {
     use vectorcraft_render::effects::{GeomContext, apply_geometry_with, has_geometry};
-    if !has_geometry(&f.effects) {
+    if !has_geometry(item.effects()) {
         return Some((l.clone(), path.clone(), bounds));
     }
-    let outline = apply_geometry_with(&f.effects, path, bounds, &GeomContext::of(l));
+    // In the fill's context, as drawing runs them: a plug-in effect is told which fill it is on.
+    let outline = apply_geometry_with(item.effects(), path, bounds, &GeomContext::of(l).item(item));
     let b = outline.bounds()?;
     Some((with_path(l, outline.clone()), outline, b))
 }
@@ -411,6 +413,45 @@ fn expand_pattern_fills(s: &mut Session) -> Result<()> {
     })
 }
 
+/// Expand the pattern fills under `root` that paint a transparent image into the tiles they paint
+/// ([`expand_patterns_where`]), so each tile image becomes an object of its own; the other
+/// pattern fills stay. A tile image counts as
+/// transparent when its key is in `see_through` (it has see-through pixels), or when it, a group
+/// in the tile art, the fill, the shape or a group the shape is in has opacity or a blending
+/// mode. Returns how many shapes changed.
+pub(crate) fn expand_transparent_image_patterns(d: &mut Document, root: NodeId, see_through: &BTreeSet<String>) -> Result<usize> {
+    let (_, n) = replace_leaves(d, root, |d, l| {
+        // Most leaves have no pattern fill: skip the ancestry walk for them.
+        if !l.appearance.items.iter().any(|i| pattern_fill(d, i).is_some()) {
+            return None;
+        }
+        let shape = d.ancestry(l.id).unwrap_or_default().iter().filter_map(|a| d.node(*a)).any(blended);
+        let transparent = |d: &Document, i: &AppearanceItem| {
+            pattern_fill(d, i).is_some_and(|(f, def, _)| {
+                let on = shape || f.opacity < 1.0 || f.blend != BlendMode::Normal;
+                def.art.iter().any(|a| transparent_image(a, see_through, on))
+            })
+        };
+        expand_patterns_where(d, l, transparent)
+    })?;
+    Ok(n)
+}
+
+/// Whether `n` has opacity or a blending mode of its own.
+fn blended(n: &Node) -> bool {
+    n.opacity < 1.0 || n.blend != BlendMode::Normal
+}
+
+/// Whether `n` is or holds a transparent image: one with see-through pixels (key in `keys`), or
+/// with opacity or a blending mode of its own or of a group in `n`, or anywhere when `on`.
+fn transparent_image(n: &Node, keys: &BTreeSet<String>, on: bool) -> bool {
+    let on = on || blended(n);
+    match &n.kind {
+        NodeKind::Image(im) => on || keys.contains(&im.key),
+        _ => n.children().is_some_and(|ch| ch.iter().any(|c| transparent_image(c, keys, on))),
+    }
+}
+
 /// Path `l` with each pattern fill turned into the tiles it paints over the box of the outline it
 /// fills, in a clip group shaped like that outline with the fill's opacity, blend mode and effects
 /// other than geometry effects, in appearance order: the other items stay on plain copies of the
@@ -419,7 +460,15 @@ fn expand_pattern_fills(s: &mut Session) -> Result<()> {
 /// ([`pattern_tiles`]). A pattern fill that lays no tile there stays. `None` when no pattern fill
 /// lays a tile.
 fn expand_patterns(d: &mut Document, l: &Node) -> Option<Node> {
-    if !matches!(l.kind, NodeKind::Path { .. } | NodeKind::Compound { .. }) || !l.appearance.items.iter().any(|i| pattern_fill(d, i).is_some()) {
+    expand_patterns_where(d, l, |_, _| true)
+}
+
+/// [`expand_patterns`] for only the pattern fills `which` picks: the others stay like the other
+/// items.
+fn expand_patterns_where(d: &mut Document, l: &Node, which: impl Fn(&Document, &AppearanceItem) -> bool) -> Option<Node> {
+    if !matches!(l.kind, NodeKind::Path { .. } | NodeKind::Compound { .. })
+        || !l.appearance.items.iter().any(|i| pattern_fill(d, i).is_some() && which(d, i))
+    {
         return None;
     }
     let reshaped = reshaped(l);
@@ -430,9 +479,9 @@ fn expand_patterns(d: &mut Document, l: &Node) -> Option<Node> {
     let mut rest = vec![];
     let mut expanded = false;
     for item in &l.appearance.items {
-        let fill = pattern_fill(d, item).map(|(f, def, xf)| (f, def.clone(), xf));
+        let fill = pattern_fill(d, item).filter(|_| which(d, item)).map(|(f, def, xf)| (f, def.clone(), xf));
         let tiles = fill.and_then(|(f, def, xf)| {
-            let (fl, _, bounds) = fill_shape(l, f, &path, bounds)?;
+            let (fl, _, bounds) = fill_shape(l, item, &path, bounds)?;
             let t = pattern_tiles(d, &def, xf, bounds);
             (!t.is_empty()).then_some((f, fl, t))
         });
@@ -603,7 +652,7 @@ fn seeded_here(n: &Node) -> bool {
 
 /// Does `n`, something in it or one of their opacity masks have a random Transform effect
 /// ([`seeded_here`])?
-fn has_seeded(n: &Node) -> bool {
+pub(crate) fn has_seeded(n: &Node) -> bool {
     seeded_here(n)
         || n.extras().mask.as_ref().is_some_and(|m| has_seeded(&m.art))
         || (!matches!(n.kind, NodeKind::Compound { .. }) && n.children().is_some_and(|c| c.iter().any(|c| has_seeded(c))))
@@ -720,27 +769,22 @@ fn tile_art(d: &mut Document, l: &Node, f: &FillLayer, tiles: &[Node]) -> Option
 
 /// The colour and opacity gradient fill `g` paints at a document point of an object whose box is
 /// `bounds`, as the canvas draws it (the end colours continue past the ends). Colours stay in the
-/// colour model their stops (or freeform points) share; display RGB where models differ.
-pub(crate) fn gradient_sampler(g: &GradientPaint, bounds: Rect) -> Box<dyn Fn(Point) -> (Color, f32) + '_> {
+/// color model their stops share; display RGB where models differ. Freeform points mix in the
+/// model they share ([`vectorcraft_color::Freeform::model_field`]); where their models differ, the
+/// RGB color they mix to is stored in `doc_model` (the document's model) the way `paint.setFill`
+/// stores an RGB color ([`super::paint::stored_color`]).
+pub(crate) fn gradient_sampler(g: &GradientPaint, bounds: Rect, doc_model: Model) -> Box<dyn Fn(Point) -> (Color, f32) + '_> {
     if g.gradient.kind == GradientKind::Freeform {
         let b = bounds.abs();
-        let f = g.freeform_on(b);
-        let model = shared_model(f.points.iter().map(|p| p.color));
-        let field = f.field(spread_scale(b));
+        let field = g.freeform_on(b).model_field(spread_scale(b));
+        let store_in = (field.model().is_none() && doc_model != Model::Rgb).then_some(doc_model);
         return Box::new(move |p| {
-            let ([r, g, b], a) = field.sample(p);
-            let c = Color::rgb(r, g, b);
-            (model.map_or(c, |m| c.in_model(m)), a)
+            let (c, a) = field.sample(p);
+            (super::paint::stored_color(store_in, c), a)
         });
     }
     let geom = g.resolve(bounds);
-    Box::new(move |p| g.gradient.sample_with(geom.param_at(g.gradient.kind, p) as f32, lerp_color))
-}
-
-/// The colour model all of `colors` share.
-fn shared_model(mut colors: impl Iterator<Item = Color>) -> Option<Model> {
-    let m = colors.next()?.model();
-    colors.all(|c| c.model() == m).then_some(m)
+    Box::new(move |p| g.gradient.sample_keep_model(geom.param_at(g.gradient.kind, p) as f32))
 }
 
 /// Where the colour changes along a gradient between parameters `t0` and `t1`: both ends, every
@@ -749,8 +793,13 @@ fn shared_model(mut colors: impl Iterator<Item = Color>) -> Option<Model> {
 /// are over `max_gap` apart. The colour is linear in display RGB between neighbours, as the
 /// canvas draws it.
 fn breaks(g: &Gradient, t0: f64, t1: f64, max_gap: f64) -> Vec<(f64, (Color, f32))> {
-    let at = |t: f64| (t, g.sample_with(t as f32, lerp_color));
+    let at = |t: f64| (t, g.sample_keep_model(t as f32));
     let mut v = vec![at(t0)];
+    // A Perceptual gradient curves between its stops: the mesh takes a column at each of the stops
+    // its expansion adds, so the linear mix between columns follows that curve.
+    if !g.method.is_classic() {
+        v.extend(g.expanded().map(|(o, ..)| f64::from(o)).filter(|o| *o > t0 && *o < t1).map(at));
+    }
     for (i, s) in g.stops.iter().enumerate() {
         let o = s.offset as f64;
         if o > t0 && o < t1 {
@@ -848,7 +897,7 @@ impl Frame {
     /// is just its band, so nothing doubles up.
     fn pieces(&self, g: &Gradient, n: usize) -> Vec<(PathData, (Color, f32))> {
         let step = (self.t1 - self.t0) / n as f64;
-        let color = |k: usize| g.sample_with((self.t0 + (k as f64 + 0.5) * step) as f32, lerp_color);
+        let color = |k: usize| g.sample_keep_model((self.t0 + (k as f64 + 0.5) * step) as f32);
         let opaque = g.stops.iter().all(|s| s.opacity >= 1.0);
         if self.radial {
             let ellipse = |t: f64| {

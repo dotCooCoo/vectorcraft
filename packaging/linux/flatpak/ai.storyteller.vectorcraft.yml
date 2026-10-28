@@ -22,6 +22,8 @@ finish-args:
   - --socket=wayland
   - --socket=fallback-x11
   - --device=dri
+  # Network for the update check against GitHub releases.
+  - --share=network
   # Cursor theme: without the cursor-shape protocol (e.g. GNOME 46) winit loads the theme itself.
   # The sandbox sets no XCURSOR_PATH and ships no cursor themes, so the pointer would turn invisible
   # over the window. The host's themes are mounted under /run/host (#2450).
@@ -43,6 +45,7 @@ modules:
     build-commands:
       - cargo --offline build --release --locked -p vectorcraft
       - install -Dm755 target/release/vectorcraft /app/bin/vectorcraft
+      - install -Dm644 NOTICE /app/share/doc/vectorcraft/NOTICE
       - install -Dm644 packaging/linux/ai.storyteller.vectorcraft.desktop /app/share/applications/ai.storyteller.vectorcraft.desktop
       - install -Dm644 packaging/linux/ai.storyteller.vectorcraft.mime.xml /app/share/mime/packages/ai.storyteller.vectorcraft.xml
       - mkdir -p /app/share/icons && cp -R assets/app-icon/hicolor /app/share/icons/

@@ -12,7 +12,7 @@ use std::sync::Arc;
 use serde_json::{Value, json};
 use vectorcraft_doc::{Document, MaskEdit, Node, NodeId, NodeKind, Selection};
 
-use super::*;
+use super::{CommandSpec, EngineError, Result, Session, bad, cmd, has_doc, id_param};
 
 /// Name of the temporary mask-editing layer.
 pub const MASK_EDIT_LAYER: &str = "Opacity Mask Editing";
@@ -140,6 +140,8 @@ pub(crate) fn begin(d: &mut Document, sel: &mut Selection, id: NodeId) -> Result
         let copy = d.reid(part);
         ids.push(d.insert(Some(layer), usize::MAX, copy)?);
     }
+    // Copied type whose layout caches `reid` dropped has them again.
+    super::typecmd::refresh_bounds_of(d, &ids);
     d.mask_edit = Some(MaskEdit { object: id, layer });
     sel.set(ids);
     Ok(layer)

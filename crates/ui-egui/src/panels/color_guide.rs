@@ -120,12 +120,12 @@ fn edit_or_apply(app: &mut VectorcraftApp, g: &Guide) {
     app.run("ui.recolorDialog", p).ok();
 }
 
-/// Save the selected cells' colours as swatches (one undo step).
+/// Save the selected cells' colors as swatches (one undo step), each in its own model.
 fn save_selected(app: &mut VectorcraftApp, ctx: &egui::Context) {
     let g = guide(app, ctx);
     let colors: Vec<Value> = selected(ctx).into_iter().filter_map(|(r, c)| g.grid.get(r)?.get(c)).map(color_json).collect();
     if !colors.is_empty() {
-        app.run("swatch.new", json!({ "colors": colors })).ok();
+        app.run("swatch.new", json!({ "colors": colors, "keepModel": true })).ok();
     }
 }
 
@@ -156,7 +156,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     let w = strip.width() / g.colors.len() as f32;
     for (i, c) in g.colors.iter().enumerate() {
         let r = Rect::from_min_size(strip.min + vec2(i as f32 * w, 0.0), vec2(w, strip.height()));
-        let resp = ui.interact(r, ui.id().with(("cg-h", i)), Sense::click());
+        let resp = ui.interact(r, ui.scope_id().with(("cg-h", i)), Sense::click());
         ui.painter().rect_filled(r, 0.0, c32(c));
         if resp.on_hover_text(c.to_hex()).clicked() {
             chosen = Some(*c);
@@ -176,7 +176,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         let (rr, _) = ui.allocate_exact_size(vec2(ui.available_width(), 18.0), Sense::hover());
         for (ci, v) in row.iter().enumerate() {
             let r = Rect::from_min_size(rr.min + vec2(x(ci), 0.0), vec2(x(ci + 1) - x(ci) - gap, 17.0));
-            let resp = ui.interact(r, ui.id().with(("cg-v", ri, ci)), Sense::click());
+            let resp = ui.interact(r, ui.scope_id().with(("cg-v", ri, ci)), Sense::click());
             ui.painter().rect_filled(r, 0.0, c32(v));
             if sel.contains(&(ri, ci)) {
                 ui.painter().rect_stroke(r.shrink(1.0), 0.0, egui::Stroke::new(1.0, egui::Color32::WHITE), egui::StrokeKind::Inside);
@@ -232,7 +232,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         }
         if widgets::icon_button(ui, "dc-folder", tl!("Save color group to Swatch panel"), false, 24.0).clicked() {
             let cs: Vec<_> = g.colors.iter().map(color_json).collect();
-            app.run("swatch.newGroup", json!({"name": h.label(), "colors": cs})).ok();
+            app.run("swatch.newGroup", json!({"name": h.label(), "colors": cs, "keepModel": true})).ok();
         }
     });
     if let Some(c) = chosen {
@@ -326,6 +326,23 @@ mod tests {
         assert_eq!(st.history.undo.len(), undo + 1, "one undo step");
         let g = guide(&app, &ctx);
         assert_eq!(st.doc.swatches.last().unwrap().paint.color().map(|c| c.to_hex()), Some(g.grid[0][8].to_hex()));
+    }
+
+    /// In a CMYK document the cells of an RGB guide are saved in RGB, their own model.
+    #[test]
+    fn saved_cells_keep_their_model_in_a_cmyk_document() {
+        let mut app = app();
+        app.run("file.documentColorMode", json!({"mode": "cmyk"})).unwrap();
+        app.run("paint.setFill", json!({"color": "#3366cc", "keepModel": true})).unwrap();
+        let ctx = egui::Context::default();
+        frame(&mut app, &ctx);
+        set_pstate(&ctx, "cg-sel", vec![(0usize, 0usize), (0, 6)]);
+        save_selected(&mut app, &ctx);
+        let g = guide(&app, &ctx);
+        assert!(matches!(g.grid[0][6], Color::Rgb { .. }), "{:?}", g.grid[0][6]);
+        let sw = &app.session.doc().unwrap().doc.swatches;
+        let saved: Vec<Color> = sw[sw.len() - 2..].iter().filter_map(|w| w.paint.color()).collect();
+        assert_eq!(saved, [g.grid[0][0], g.grid[0][6]]);
     }
 
     /// Every colour of the panel's guide.

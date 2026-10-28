@@ -40,8 +40,8 @@ pub(super) fn body(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
                 m.iter().any(|(k, v)| v.as_f64().map_or_else(|| d.fields.get(k) != Some(v), |default| (d.f64(k, default) - default).abs() > 1e-6))
             });
             let (r, _) = ui.allocate_exact_size(vec2(88.0, 24.0), Sense::hover());
-            let response = ui.interact(r, Id::new("revolve-reset-all"), Sense::click());
-            response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tl!("Reset all")));
+            let response = ui.interact(r, Id::unique("revolve-reset-all"), Sense::click());
+            response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), tl!("Reset all")));
             if response.hovered() {
                 ui.painter().rect_filled(r, 3.0, t.hover);
             }
@@ -82,10 +82,12 @@ fn controls(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
         ui.spacing_mut().item_spacing.x = 6.0;
         label(ui, tl!("Axis side"));
         let edge = d.str("edge");
-        let current = if edge == "right" { tl!("Right") } else { tl!("Left") };
+        let sides = super::effect::own_choices(REVOLVE, "edge", false).unwrap_or_default();
+        let current = sides.iter().find(|(_, v)| *v == edge).or(sides.first()).map_or("", |(l, _)| *l);
+        let labels: Vec<&str> = sides.iter().map(|(l, _)| *l).collect();
         let width = VALUE_W + rail_width(ui) + 6.0;
-        if let Some(k) = widgets::dropdown(ui, "revolve-edge", current, &[tl!("Left"), tl!("Right")], width) {
-            d.fields.insert("edge".into(), json!(if k == 0 { "left" } else { "right" }));
+        if let Some((_, v)) = widgets::dropdown(ui, "revolve-edge", current, &labels, width).and_then(|k| sides.get(k)) {
+            d.fields.insert("edge".into(), json!(v));
         }
         if reset_dot(ui, "edge", edge != "left", tl!("Left")) {
             d.fields.insert("edge".into(), json!("left"));
@@ -189,14 +191,8 @@ fn extrude_controls(ui: &mut egui::Ui, d: &mut Dialog, unit: Unit) {
     choice(ui, d, "cap", c3("Cap"), &[(json!(true), c3("Solid")), (json!(false), c3("Hollow"))]);
     ui.add_space(10.0);
     heading(ui, c3("Bevel"));
-    let shapes = [
-        (json!("none"), tl!("None")),
-        (json!("classic"), tl!("Classic")),
-        (json!("rounded"), c3("Rounded")),
-        (json!("cove"), tl!("Cove")),
-        (json!("step"), tl!("Step")),
-        (json!("ogee"), tl!("Ogee")),
-    ];
+    let shapes: Vec<(Value, &str)> =
+        super::effect::own_choices(EXTRUDE, "bevel", false).unwrap_or_default().into_iter().map(|(label, value)| (json!(value), label)).collect();
     choice(ui, d, "bevel", tl!("Bevel Shape"), &shapes);
     ui.add_enabled_ui(d.str("bevel") != "none", |ui| {
         number(ui, d, "bevelWidth", tl!("Width"), (0.0, 1000.0), "", 1, Some(unit));
@@ -297,6 +293,7 @@ fn lighting_controls(ui: &mut egui::Ui, d: &mut Dialog) {
         }
     });
     ui.add_enabled_ui(d.bool("shade"), |ui| {
+        lighting_presets(ui, d);
         light_list(ui, d);
         let mut selected = selected_light(d);
         let before = light_record(&selected);
@@ -312,6 +309,26 @@ fn lighting_controls(ui: &mut egui::Ui, d: &mut Dialog) {
             store_selected(d, &selected);
         }
     });
+}
+
+fn lighting_presets(ui: &mut egui::Ui, d: &mut Dialog) {
+    let names = [tl!("Standard"), tl!("Diffuse"), tl!("Top Left"), tl!("Right")];
+    let current = vectorcraft_effects::matching_lighting_preset(&super::form::params(d));
+    ui.horizontal(|ui| {
+        ui.spacing_mut().item_spacing.x = 6.0;
+        label(ui, tl!("Presets"));
+        let shown = current.and_then(|i| names.get(i).copied()).unwrap_or(tl!("Custom"));
+        if let Some(preset) = widgets::dropdown(ui, "three-d-lighting-presets", shown, &names, VALUE_W + rail_width(ui) + 6.0)
+            .and_then(|i| vectorcraft_effects::LIGHTING_PRESETS.get(i))
+            && let Some(patch) = preset.params().as_object()
+        {
+            d.fields.extend(patch.clone());
+            d.fields.insert("__light".into(), json!(0));
+            ui.memory_mut(|m| m.stop_text_input());
+            super::revolve_gizmo::clear(ui.ctx());
+        }
+    });
+    ui.add_space(4.0);
 }
 
 const LIGHT_KEYS: [(&str, &str); 6] = [
@@ -472,6 +489,7 @@ fn number(ui: &mut egui::Ui, d: &mut Dialog, key: &str, name: &str, range: (f64,
     let typed = unit.map(|u| widgets::typed_unit(ui.ctx(), u));
     let mut value = from(d.f64(key, default)).clamp(from(range.0), from(range.1));
     let suffix = unit.map_or_else(|| suffix.to_string(), |u| format!(" {}", u.suffix()));
+    let speed = if decimals == 0 { 1.0 } else { 0.25 };
     let mut next = None;
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 6.0;
@@ -485,7 +503,7 @@ fn number(ui: &mut egui::Ui, d: &mut Dialog, key: &str, name: &str, range: (f64,
                     [VALUE_W, 24.0],
                     egui::DragValue::new(&mut value)
                         .range(from(range.0)..=from(range.1))
-                        .speed(if decimals == 0 { 1.0 } else { 0.25 })
+                        .speed(speed)
                         .max_decimals(decimals)
                         .suffix(&suffix)
                         .update_while_editing(false)
@@ -502,7 +520,9 @@ fn number(ui: &mut egui::Ui, d: &mut Dialog, key: &str, name: &str, range: (f64,
         if response.changed() {
             next = Some(value);
         }
-        if let Some(n) = scrub::field(ui, response.id, response.rect, &value.to_string(), Some(value), decimals as i32) {
+        if let Some(n) =
+            scrub::field(ui, response.id, response.rect, &value.to_string(), Some(value), decimals as i32, &(from(range.0)..=from(range.1)))
+        {
             next = Some(n);
         }
         // Lengths' rails cover a useful working range; larger values can still be typed.
@@ -513,16 +533,22 @@ fn number(ui: &mut egui::Ui, d: &mut Dialog, key: &str, name: &str, range: (f64,
         };
         let rail_min = from(range.0);
         let rail = rail_width(ui) + VALUE_W;
-        let slider = widgets::color_slider_named(
+        // The text the DragValue shows: at least the places its speed gives (one for 0.25 at 1x to
+        // 3x scaling, as egui computes them), at most `decimals`.
+        let places = ((f64::from(ui.input(|i| i.aim_radius())) / speed).log10().ceil().clamp(0.0, 15.0) as usize).min(decimals);
+        let number = ui.style().number_formatter.format(value, places..=decimals);
+        let shown = widgets::SliderValue::text(number.parse().unwrap_or(value), rail_min..=rail_max, format!("{number}{suffix}"));
+        let slider = widgets::color_slider_stepped(
             ui,
             ("revolve-slider", key),
             name,
+            Some(shown),
             ((value - rail_min) / (rail_max - rail_min)).clamp(0.0, 1.0) as f32,
             rail,
             &|_| t.input_border,
         );
-        if let (Some(n), _) = slider {
-            next = Some(rail_min + f64::from(n) * (rail_max - rail_min));
+        if let Some(n) = slider.0.map(|n| rail_min + f64::from(n) * (rail_max - rail_min)).or(slider.2) {
+            next = Some(n);
         }
         if reset_dot(ui, key, (to(value) - default).abs() > 1e-6, &format!("{}{}", from(default), suffix)) {
             next = Some(from(default));
@@ -546,8 +572,8 @@ fn dot(ui: &egui::Ui, p: Pos2, changed: bool) {
 
 fn reset_dot(ui: &mut egui::Ui, key: &str, changed: bool, default: &str) -> bool {
     let (r, _) = ui.allocate_exact_size(vec2(24.0, 24.0), Sense::hover());
-    let response = ui.interact(r, Id::new(("revolve-reset", key)), Sense::click());
-    response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tl!("Reset to default")));
+    let response = ui.interact(r, Id::unique(("revolve-reset", key)), Sense::click());
+    response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), tl!("Reset to default")));
     if response.hovered() {
         ui.painter().rect_filled(r, 3.0, Tokens::get(ui.ctx()).hover);
     }
@@ -556,5 +582,4 @@ fn reset_dot(ui: &mut egui::Ui, key: &str, changed: bool, default: &str) -> bool
 }
 
 #[cfg(test)]
-#[path = "tests_revolve.rs"]
 mod tests;

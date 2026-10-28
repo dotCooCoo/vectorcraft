@@ -9,7 +9,7 @@ use vectorcraft_geom::{Point, Rect};
 
 use crate::merged_params;
 use crate::pixel::{self, PixelFx, PixelSpace};
-use crate::util::*;
+use crate::util::{flag, num, text};
 
 /// Effect › Rasterize's id.
 pub const RASTERIZE: &str = "rasterize";
@@ -29,6 +29,8 @@ pub enum RasterFx {
         /// instead of `color`; `None` when it is `color`.
         darkness: Option<f32>,
     },
+    /// Blurs the art's solid silhouette grown by a quarter of a pixel of the document's raster grid,
+    /// as the glows AI files export measure.
     OuterGlow {
         mode: BlendMode,
         opacity: f32,
@@ -93,6 +95,10 @@ impl RasterFx {
     pub fn spread(&self, bounds: Rect, line: f64) -> Rect {
         match self {
             RasterFx::Rasterize(r) => r.image(bounds, line),
+            RasterFx::OuterGlow { .. } => {
+                let o = self.outset(bounds) + 0.25 * line;
+                bounds.inflate(o, o)
+            }
             fx => {
                 let o = fx.outset(bounds);
                 bounds.inflate(o, o)
