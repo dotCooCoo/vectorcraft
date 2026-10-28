@@ -1524,8 +1524,8 @@ already walks Image Trace. Short agent entry points:
   own, named by the global swatch the color links to (a tint with its percentage, as `Sky 50%`) or as `#rrggbb`;
   gradient fills share a group named `Gradients`. The groups stack in the order of the lowest path in each, and each
   keeps its paths' order. With `imageTrace.expand`, and with `imageTrace.makeAndExpand` when the trace's paths can
-  overlap (Overlapping, Flat Logo, Create Strokes), a path that would move under an overlapping path of another color
-  (by the bounding boxes of what they paint, effects and shadows included) if it joined its color's group starts
+  overlap (Overlapping, Flat Logo, Create Strokes) or more than one path has a gradient fill, a path that would move
+  under an overlapping path of another color (by the bounding boxes of what they paint, effects and shadows included) if it joined its color's group starts
   another group of its color instead, and the renderer draws the art unchanged. In a Flat Logo trace of a black ring
   around a white disc around a black dot, black gets two groups. `layer.releaseToLayers` on the expanded group then
   gives each group a sublayer. A trace made with `autoGrouping` is refused.
