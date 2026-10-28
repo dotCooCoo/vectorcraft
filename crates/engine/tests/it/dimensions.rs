@@ -452,6 +452,38 @@ fn both_points_snap_onto_anchors_with_a_visible_indicator() {
     assert_eq!(text(&s, id), "144.00 pt", "linked to both anchors");
 }
 
+/// Smart Guides for the Linear picks: hovering away from any line, the first point slides into
+/// line with another object's corner and its guides show before the click; the second slides onto
+/// the construction guide through the first. The dimension measures between the snapped points.
+#[test]
+fn linear_picks_show_and_snap_to_smart_guides() {
+    use vectorcraft_engine::tools::Overlay;
+    let mut s = session();
+    run(&mut s, "shape.rectangle", json!({"x":300,"y":200,"width":80,"height":60}));
+    run(&mut s, "select.none", json!({}));
+    s.select_tool("dimension", ViewInfo::default()).unwrap();
+    let overlays = |s: &mut Session| s.overlays(ViewInfo::default());
+    // In line with the rectangle's top edge, 2.5 pt off it: the pick lands on its level.
+    ev(&mut s, PointerKind::Move, 250.0, 202.5);
+    let o = overlays(&mut s);
+    assert!(o.iter().any(|o| matches!(o, Overlay::Anchor { p, .. } if p.x == 250.0 && p.y == 200.0)), "the pick shows on the guide: {o:?}");
+    assert!(o.iter().any(|o| matches!(o, Overlay::Line { .. } | Overlay::Label { .. })), "its guides show before the click: {o:?}");
+    ev(&mut s, PointerKind::Down, 250.0, 202.5);
+    ev(&mut s, PointerKind::Up, 250.0, 202.5);
+    // Straight below the first point, 1.5 pt off: the rubber band ends on the vertical through it.
+    ev(&mut s, PointerKind::Move, 251.5, 260.0);
+    let end = overlays(&mut s).into_iter().find_map(|o| if let Overlay::Line { b, dashed: true, .. } = o { Some(b) } else { None }).unwrap();
+    assert_eq!((end.x, end.y), (250.0, 260.0), "on the construction guide");
+    ev(&mut s, PointerKind::Down, 251.5, 260.0);
+    ev(&mut s, PointerKind::Up, 251.5, 260.0);
+    ev(&mut s, PointerKind::Move, 220.0, 230.0);
+    assert!(!overlays(&mut s).iter().any(|o| matches!(o, Overlay::Label { .. })), "placing: the guides are gone");
+    ev(&mut s, PointerKind::Down, 220.0, 230.0);
+    ev(&mut s, PointerKind::Up, 220.0, 230.0);
+    let id = s.doc().unwrap().selection.objects[0].0;
+    assert_eq!(text(&s, id), "60.00 pt");
+}
+
 /// The page content streams of exported PDF `v`, inflated.
 fn pdf_content(v: &Value) -> String {
     let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();

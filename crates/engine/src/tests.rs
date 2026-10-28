@@ -4,6 +4,175 @@ use super::*;
 use vectorcraft_geom::Point;
 use vectorcraft_tools::{PointerEvent, PointerKind, ToolKey};
 
+pub(super) mod adjust;
+mod appearance;
+mod areafit;
+mod assets;
+mod attributes;
+mod bboxrotate;
+mod blendfidelity;
+mod blendopts;
+mod blendspine;
+mod brushlib;
+mod brushsym;
+mod build;
+mod cancel;
+mod charstroke;
+pub(super) mod clip;
+mod clipboard;
+mod clipflavours;
+mod clippaint;
+mod cmdsplit;
+mod cmykflatten;
+mod colorguide;
+mod colorguidelib;
+pub(super) mod colormgmt;
+mod colorthemes;
+mod colourfonts;
+mod compoundpaint;
+mod constrain_new;
+mod constrain_tools;
+mod containers;
+mod css;
+mod cut;
+mod dashalign;
+mod distort;
+mod docsetup;
+mod draw2;
+mod editcolors;
+mod effectedit;
+mod emptytype;
+mod envelope;
+mod envelope_distort;
+mod envelope_edit;
+pub(super) mod expand;
+mod eyedropper;
+mod file;
+mod fileinfo;
+mod flatpresets;
+mod flatpreview;
+mod flatten;
+mod focal;
+mod fontfiles;
+mod fontlist;
+mod freeform;
+mod globaledit;
+mod gradient;
+mod gradpanel;
+mod gradspan;
+mod halftone;
+mod history_mem;
+mod ids_without_selection;
+mod inline;
+mod interactivity;
+mod intertwine;
+mod journal;
+mod keyguide;
+mod knockout;
+mod labspots;
+pub(super) mod large_edits;
+mod layerclip;
+mod layers;
+mod legacy_ai;
+mod library;
+mod link_paths;
+mod linked_stops;
+mod linkfiles;
+pub(super) mod links;
+pub(super) mod linkspanel;
+mod linkwatch;
+mod liquify;
+mod live;
+mod livecorners;
+mod maskview;
+pub(super) mod menucmds;
+mod nativefile;
+mod newart;
+mod newdoc;
+mod objects_on_path;
+mod objexpand;
+mod opacitymask;
+mod outlineobject;
+pub(super) mod outlinestroke;
+mod overprint;
+mod package;
+mod paintproxy;
+mod panelcmds;
+mod paragraphs;
+mod params;
+mod pathops;
+mod pathtype;
+mod pattern;
+mod pdffidelity;
+mod pdfmarks;
+mod pdfpresets;
+mod pdfraster;
+mod persp_planes;
+pub(super) mod persp_select;
+mod persp_text;
+mod perspgrid;
+mod place;
+mod placed_document;
+mod plugins;
+mod prefs;
+mod previewbounds;
+mod print;
+mod printadvanced;
+mod printpresets;
+mod printpreview;
+mod printps;
+mod printtiling;
+mod proxyitems;
+mod puppetwarp;
+mod rasterfilters;
+mod rastersettings;
+mod recolor;
+mod recovery;
+mod reflecthit;
+mod registration;
+mod save;
+mod saveoptions;
+mod scalestrokes;
+mod scripts;
+mod select_ids_first;
+mod shaper;
+mod shortcutset;
+mod simplify_part;
+mod slices;
+mod smartguides;
+mod store;
+mod strokegeom;
+mod strokegradient;
+mod strokereach;
+mod strokeux;
+mod stylelib;
+mod stylepanel;
+mod styles;
+mod swatchcmds;
+mod swatches;
+mod swatchlib;
+mod symbolbounds;
+mod symbollib;
+mod targeting;
+mod textcombos;
+mod textedit;
+pub(super) mod textimport;
+mod tileedge;
+mod tints;
+mod toolsettings;
+mod transformfx;
+mod transparencygrid;
+mod trap;
+mod typearea;
+mod typescale;
+mod units;
+mod variables;
+mod webexport;
+mod widthpoints;
+mod widthprofiles;
+mod widthtool;
+mod xform;
+
 fn session() -> Session {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 800, "height": 600})).unwrap();
@@ -88,6 +257,42 @@ fn unknown_and_disabled() {
     let mut s = Session::new();
     assert!(matches!(s.execute("nope", &json!({})), Err(EngineError::UnknownCommand(_))));
     assert!(matches!(s.execute("object.group", &json!({})), Err(EngineError::Disabled(..))));
+}
+
+#[test]
+fn unknown_command_names_the_nearest_id() {
+    let mut s = session();
+    for typo in ["select.al", "Select.All", "selcet.all"] {
+        let e = s.execute(typo, &json!({})).unwrap_err();
+        assert!(matches!(&e, EngineError::UnknownCommandNear(id, near) if id == typo && near == "select.all"), "{typo}: {e:?}");
+        assert_eq!(e.to_string(), format!("unknown command `{typo}`; did you mean `select.all`?"));
+    }
+    let e = s.execute("nope", &json!({})).unwrap_err();
+    assert!(matches!(&e, EngineError::UnknownCommand(id) if id == "nope"), "{e:?}");
+    assert_eq!(e.to_string(), "unknown command `nope`");
+    let e = s.execute("command.batch", &json!({"commands": [{"command": "select.al", "params": {}}]})).unwrap_err();
+    assert!(e.to_string().contains("did you mean `select.all`?"), "{e}");
+}
+
+#[test]
+fn a_long_unknown_command_id_is_answered_at_once() {
+    let mut s = session();
+    let long = "x".repeat(200_000);
+    let start = std::time::Instant::now();
+    assert!(matches!(s.execute(&long, &json!({})), Err(EngineError::UnknownCommand(_))));
+    let e = crate::check_params("file.new", &json!({ long.as_str(): 1 })).unwrap_err();
+    assert!(e.to_string().contains("the command takes:"), "{e}");
+    assert!(start.elapsed() < std::time::Duration::from_secs(2), "{:?}", start.elapsed());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn action_batch_names_the_nearest_command_id() {
+    let mut s = session();
+    let e = s.execute("action.batch", &json!({"source": "dataSets", "commands": [{"command": "select.al"}]})).unwrap_err();
+    assert_eq!(e.to_string(), "invalid parameters for `action.batch`: commands[0]: unknown command `select.al`; did you mean `select.all`?");
+    let e = s.execute("action.batch", &json!({"source": "dataSets", "commands": [{"command": "nope"}]})).unwrap_err();
+    assert_eq!(e.to_string(), "invalid parameters for `action.batch`: commands[0]: unknown command `nope`");
 }
 
 #[test]
@@ -2535,6 +2740,34 @@ fn an_isolated_compound_paths_member_moves_alone() {
     assert_eq!((x0(&s, outer), x0(&s, hole)), (5.0, 55.0), "the compound path selected: the whole ring");
 }
 
+/// The X, Y, W and H of the Properties and Transform panels run `object.setBounds`, which takes the
+/// same objects as the other transforms: a path of a compound path selected alone sets its own
+/// box and leaves the ring around it (#4046). The hole is off-centre, and a plain rectangle
+/// outside the ring keeps "everything moved" from passing.
+#[test]
+fn set_bounds_of_a_compound_paths_member_sets_only_that_path() {
+    let x = |s: &Session, id: NodeId| {
+        let b = s.doc().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap();
+        (b.x0, b.x1)
+    };
+    let mut s = session();
+    let (c, outer, hole) = isolated_ring(&mut s);
+    let other = rect(&mut s, 100.0, 0.0, 10.0, 10.0);
+    s.execute("select.set", &json!({"ids": [hole.0]})).unwrap();
+    s.execute("object.setBounds", &json!({"width": 20, "reference": 0})).unwrap();
+    assert_eq!((x(&s, outer), x(&s, hole)), ((0.0, 40.0), (10.0, 30.0)), "isolated: only the hole is wider");
+    s.execute("object.setBounds", &json!({"x": 25, "reference": 0})).unwrap();
+    assert_eq!((x(&s, outer), x(&s, hole)), ((0.0, 40.0), (25.0, 45.0)), "isolated: only the hole moved");
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    s.execute("select.set", &json!({"ids": [hole.0]})).unwrap();
+    s.execute("object.setBounds", &json!({"x": 12, "reference": 0})).unwrap();
+    assert_eq!((x(&s, outer), x(&s, hole)), ((0.0, 40.0), (12.0, 32.0)), "not isolated: still only the hole");
+    s.execute("select.set", &json!({"ids": [c.0]})).unwrap();
+    s.execute("object.setBounds", &json!({"x": 5, "reference": 0})).unwrap();
+    assert_eq!((x(&s, outer), x(&s, hole)), ((5.0, 45.0), (17.0, 37.0)), "the compound path selected: the whole ring");
+    assert_eq!(x(&s, other), (100.0, 110.0), "the rectangle outside never moves");
+}
+
 /// `depth` and `childLimit` slice a summary read; a level that shows fewer children
 /// than it has reports `childCount`, and invalid values are rejected, not reinterpreted.
 #[test]
@@ -2698,6 +2931,156 @@ fn document_find_searches_names_kinds_and_text() {
     // A filter of the wrong type is rejected, not dropped (dropping it would widen the search).
     assert!(s.execute("document.find", &json!({"kind": "group", "name": 5})).is_err());
     assert_eq!(s.execute("document.find", &json!({"kind": "nope"})).unwrap()["total"], 0);
+}
+
+/// `document.find` filters by geometric bounds (inside or touching a rectangle, width, height,
+/// thickness and area) and by anchor count, and `select: true` selects the matches that can be
+/// selected.
+#[test]
+fn document_find_filters_by_geometry_and_selects() {
+    let mut s = session();
+    let big = rect(&mut s, 0.0, 0.0, 100.0, 100.0).0;
+    let sliver = rect(&mut s, 200.0, 0.0, 95.0, 0.9).0;
+    let star = s.execute("shape.star", &json!({"cx": 400, "cy": 50, "radius1": 40, "radius2": 20, "points": 5})).unwrap()["id"].as_u64().unwrap();
+    let left = rect(&mut s, 600.0, 0.0, 10.0, 10.0).0;
+    let right = rect(&mut s, 620.0, 0.0, 10.0, 10.0).0;
+    let compound = s.execute("object.compoundPath.make", &json!({"ids": [left, right]})).unwrap()["id"].as_u64().unwrap();
+    let hidden = rect(&mut s, 0.0, 300.0, 5.0, 5.0).0;
+    s.execute("object.hide", &json!({"ids": [hidden]})).unwrap();
+    let locked = rect(&mut s, 20.0, 300.0, 5.0, 5.0).0;
+    s.execute("object.lock", &json!({"ids": [locked]})).unwrap();
+    let dot = rect(&mut s, 40.0, 300.0, 5.0, 5.0).0;
+    let found = |s: &mut Session, p: Value| {
+        let v = s.execute("document.find", &p).unwrap();
+        let mut ids: Vec<u64> = v["matches"].as_array().unwrap().iter().map(|m| m["id"].as_u64().unwrap()).collect();
+        ids.sort_unstable();
+        assert_eq!(v["total"], ids.len(), "{p}");
+        ids
+    };
+    let sorted = |mut v: Vec<u64>| {
+        v.sort_unstable();
+        v
+    };
+
+    // Edges count as inside; a rectangle touching the bounds intersects them.
+    assert_eq!(found(&mut s, json!({"within": [0, 0, 100, 100]})), [big]);
+    assert_eq!(found(&mut s, json!({"within": [0, 0, 99, 100]})), Vec::<u64>::new());
+    assert_eq!(found(&mut s, json!({"intersects": [100, 0, 100, 0.5], "kind": "rectangle"})), sorted(vec![big, sliver]));
+    // Size: a thin sliver of either orientation, and the bounds' area.
+    assert_eq!(found(&mut s, json!({"maxThickness": 1})), [sliver]);
+    assert_eq!(found(&mut s, json!({"maxHeight": 1})), [sliver]);
+    assert_eq!(found(&mut s, json!({"minWidth": 90, "maxWidth": 96})), [sliver]);
+    assert_eq!(found(&mut s, json!({"minArea": 9000, "maxArea": 10000})), [big]);
+    assert_eq!(found(&mut s, json!({"maxArea": 30})), sorted(vec![hidden, locked, dot]));
+    // Anchors: a compound path counts its members' together; the layer never matches.
+    assert_eq!(found(&mut s, json!({"minAnchors": 10, "maxAnchors": 10})), [star]);
+    assert_eq!(found(&mut s, json!({"minAnchors": 8, "maxAnchors": 8})), [compound]);
+    let four = sorted(vec![big, sliver, left, right, hidden, locked, dot]);
+    assert_eq!(found(&mut s, json!({"maxAnchors": 4})), four);
+
+    // A find that only reads is not journaled; one that selects is, so an action replays it.
+    let journaled = s.journal.len();
+    s.execute("document.find", &json!({"maxAnchors": 4})).unwrap();
+    assert_eq!(s.journal.len(), journaled);
+    // select: every match except hidden, locked and compound members; the reply counts them.
+    let v = s.execute("document.find", &json!({"maxAnchors": 4, "select": true, "limit": 0})).unwrap();
+    assert_eq!(s.journal_for_action(journaled), [("document.find".to_string(), json!({"maxAnchors": 4, "select": true, "limit": 0}))]);
+    assert_eq!((v["total"].clone(), v["selected"].clone()), (json!(7), json!(3)));
+    let selection = |s: &Session| sorted(s.doc().unwrap().selection.objects.iter().map(|i| i.0).collect());
+    assert_eq!(selection(&s), sorted(vec![big, sliver, dot]));
+    // Without select the selection stays, and the reply has no `selected`.
+    let v = s.execute("document.find", &json!({"maxThickness": 1})).unwrap();
+    assert!(v.get("selected").is_none(), "{v}");
+    assert_eq!(selection(&s), sorted(vec![big, sliver, dot]));
+    // Select > Reselect repeats the find.
+    s.execute("select.none", &json!({})).unwrap();
+    s.execute("select.reselect", &json!({})).unwrap();
+    assert_eq!(selection(&s), sorted(vec![big, sliver, dot]));
+    // A compound path matched selects as itself.
+    s.execute("document.find", &json!({"minAnchors": 8, "maxAnchors": 8, "select": true})).unwrap();
+    assert_eq!(selection(&s), [compound]);
+    // Inside an isolated compound path its members are what selects.
+    s.execute("object.isolate", &json!({"id": compound})).unwrap();
+    let v = s.execute("document.find", &json!({"maxAnchors": 4, "select": true})).unwrap();
+    assert_eq!(v["selected"], 2);
+    assert_eq!(selection(&s), sorted(vec![left, right]));
+
+    for bad in [
+        json!({"within": [0, 0, -1, 5]}),
+        json!({"within": [0, 0, 1]}),
+        json!({"intersects": "everywhere"}),
+        json!({"minArea": -1}),
+        json!({"maxWidth": "5 pt"}),
+        json!({"minWidth": 5, "maxWidth": 1}),
+        json!({"minAnchors": 1.5}),
+        json!({"maxThickness": 1, "select": "yes"}),
+        json!({"select": true}),
+    ] {
+        assert!(s.execute("document.find", &bad).is_err(), "{bad}");
+    }
+}
+
+/// `document.find {select: true}` counts the objects it selected: a guide path that Lock Guides
+/// leaves out of the selection is a match, not a selected object.
+#[test]
+fn document_find_counts_the_objects_it_selected() {
+    let mut s = session();
+    let guide = rect(&mut s, 0.0, 0.0, 5.0, 5.0);
+    s.execute("select.set", &json!({"ids": [guide.0]})).unwrap();
+    s.execute("view.guides.make", &json!({})).unwrap();
+    rect(&mut s, 20.0, 0.0, 5.0, 5.0);
+    s.execute("view.guides.lock", &json!({"locked": true})).unwrap();
+    let v = s.execute("document.find", &json!({"maxArea": 30, "select": true})).unwrap();
+    assert_eq!((v["total"].clone(), v["selected"].clone()), (json!(2), json!(1)));
+    assert_eq!(s.doc().unwrap().selection.objects.len(), 1);
+}
+
+/// Select > Object reports the number of objects it selected: a guide path that Lock Guides
+/// leaves out is not counted.
+#[test]
+fn select_object_counts_the_objects_it_selected() {
+    let mut s = session();
+    let line = |s: &mut Session, x: f64| {
+        let id = s.execute("path.create", &json!({"anchors": [{"x": x, "y": 0}, {"x": x + 10.0, "y": 10}]})).unwrap()["id"].as_u64().unwrap();
+        s.execute("brush.apply", &json!({"name": "Charcoal", "ids": [id]})).unwrap();
+        id
+    };
+    let guide = line(&mut s, 0.0);
+    s.execute("select.set", &json!({"ids": [guide]})).unwrap();
+    s.execute("view.guides.make", &json!({})).unwrap();
+    line(&mut s, 20.0);
+    s.execute("view.guides.lock", &json!({"locked": true})).unwrap();
+    for cmd in ["select.object.openPaths", "select.object.brushStrokes"] {
+        let v = s.execute(cmd, &json!({})).unwrap();
+        assert_eq!((v["count"].clone(), s.doc().unwrap().selection.objects.len()), (json!(1), 1), "{cmd}");
+    }
+}
+
+/// The geometric filters of `document.find` match objects only: a layer or sublayer whose bounds
+/// fit is not a match, so `total` counts what `select: true` can select. The text filters still
+/// find layers.
+#[test]
+fn document_find_geometric_filters_leave_out_layers() {
+    let mut s = session();
+    let a = rect(&mut s, 0.0, 0.0, 5.0, 5.0).0;
+    let sub = s.execute("layer.newSublayer", &json!({})).unwrap()["id"].as_u64().unwrap();
+    let b = rect(&mut s, 10.0, 0.0, 5.0, 5.0).0;
+    assert_eq!(s.doc().unwrap().doc.parent_of(NodeId(b)), Some(NodeId(sub)));
+    let found = |s: &mut Session, p: Value| {
+        let v = s.execute("document.find", &p).unwrap();
+        let mut ids: Vec<u64> = v["matches"].as_array().unwrap().iter().map(|m| m["id"].as_u64().unwrap()).collect();
+        ids.sort_unstable();
+        assert_eq!(v["total"], ids.len(), "{p}");
+        ids
+    };
+    assert_eq!(found(&mut s, json!({"within": [0, 0, 15, 5]})), [a, b]);
+    assert_eq!(found(&mut s, json!({"intersects": [0, 0, 1, 1]})), [a]);
+    assert_eq!(found(&mut s, json!({"maxArea": 30})), [a, b]);
+    assert_eq!(found(&mut s, json!({"minWidth": 15})), Vec::<u64>::new());
+    assert_eq!(found(&mut s, json!({"kind": "layer", "within": [0, 0, 15, 5]})), Vec::<u64>::new());
+    assert_eq!(found(&mut s, json!({"kind": "layer"})).len(), 2);
+    let v = s.execute("document.find", &json!({"within": [0, 0, 15, 5], "select": true})).unwrap();
+    assert_eq!((v["total"].clone(), v["selected"].clone()), (json!(2), json!(2)));
 }
 
 /// Type reports the paint its characters show, and its own object-level paint apart from it.
