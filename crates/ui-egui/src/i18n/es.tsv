@@ -356,6 +356,7 @@ font-technology	Variable	Variables
 	Apply Bullets	Aplicar viñetas
 	Numbered List	Lista numerada
 	Apply Numbers	Aplicar numeración
+	Convert to Text	Convertir en texto
 	Filled Dot	Punto relleno
 	Dash	Guion
 	Hollow Circle	Círculo vacío
@@ -1862,6 +1863,7 @@ font-technology	Variable	Variables
 	Miter Limit:	Límite de inglete:
 	Mixed Appearances	Apariencias mixtas
 	Mixed Objects	Objetos mixtos
+	Mixed	Mixto
 	Mode:	Modo:
 	Model	Modelo
 	Modified	Modificado
@@ -4380,6 +4382,7 @@ axis	Both	Ambos
 @msg	{_1} is already used by {_2}	{_1} ya lo usa {_2}
 @msg	{_1} is reserved by the system	{_1} está reservado por el sistema
 @msg	{_1} linked file(s) can't be read here: their previews show	aquí no se pueden leer {_1} archivo(s) vinculado(s): se muestran sus previsualizaciones
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	no se pudieron descodificar {undecoded} imagen(es): se muestran como recuadros tachados
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} imagen(es) vinculada(s) cambiaron en el disco: Actualizar vínculos muestra las versiones nuevas
 @msg	Updated {_1} linked file(s) changed on disk	Se actualizaron {_1} archivo(s) vinculado(s) que cambiaron en el disco
 @msg	{_1}: not saved, so not closed	{_1}: no se guardó, así que no se cerró
@@ -5180,6 +5183,7 @@ mark-style	Japanese	Japonesas
 @msg	unknown parameter `{key}`; the command takes: {keys}	parámetro desconocido `{key}`; el comando acepta: {keys}
 	Load EPS into Clipboard	Cargar EPS en el portapapeles
 @msg	an image of {w} × {h} pixels is too large to draw	una imagen de {w} × {h} píxeles es demasiado grande para dibujarse
+@msg	an image of {w} × {h} pixels is shown at reduced size	una imagen de {w} × {h} píxeles se muestra a tamaño reducido
 @msg	the image can't be read as a texture	la imagen no se puede leer como textura
 	Fill and Stroke Controls	Controles de relleno y trazo
 	Coloring Controls	Controles de color

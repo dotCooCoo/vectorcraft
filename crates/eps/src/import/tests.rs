@@ -20,6 +20,84 @@ pub(super) fn read(body: &str) -> crate::Imported {
 }
 
 #[test]
+fn postscript_roll_negative_count_is_refused() {
+    let err = import(&eps("-1 1 roll")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_putinterval_negative_index_is_refused() {
+    let err = import(&eps("(abcd) -1 (x) putinterval pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_negative_string_count_is_refused() {
+    let err = import(&eps("-1 string pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_negative_repeat_count_is_refused() {
+    let err = import(&eps("-1 { } repeat pop")).unwrap_err();
+    assert!(err.contains("rangecheck"));
+}
+
+#[test]
+fn postscript_put_negative_index_is_refused() {
+    let err = import(&eps("/a [0] def a -1 1 put pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("index"));
+}
+
+#[test]
+fn postscript_negative_packedarray_count_is_refused() {
+    let err = import(&eps("-1 packedarray pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_get_negative_index_is_refused() {
+    let err = import(&eps("/a [0] def a -1 get pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("index"));
+}
+
+#[test]
+fn postscript_negative_dict_count_is_refused() {
+    let err = import(&eps("-1 dict pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_negative_array_count_is_refused() {
+    let err = import(&eps("-1 array pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_index_negative_count_is_refused() {
+    let err = import(&eps("1 -1 index pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_getinterval_negative_count_is_refused() {
+    let err = import(&eps("(a) 1 -1 getinterval pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_getinterval_negative_at_is_refused() {
+    let err = import(&eps("(a) -1 1 getinterval pop")).unwrap_err();
+    assert!(err.contains("rangecheck") && err.contains("count"));
+}
+
+#[test]
+fn postscript_copy_negative_count_is_refused() {
+    let err = import(&eps("1 -1 copy pop")).unwrap_err();
+    assert!(err.contains("rangecheck"));
+}
+
+#[test]
 fn postscript_srand_non_integer_operand_is_refused() {
     let err = import(&eps("1.5 srand")).unwrap_err();
     assert!(err.contains("typecheck") && err.contains("srand"));

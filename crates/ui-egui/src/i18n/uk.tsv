@@ -350,6 +350,7 @@ font-technology	Variable	Варіативні
 	Apply Bullets	Застосувати маркери
 	Numbered List	Нумерований список
 	Apply Numbers	Застосувати нумерацію
+	Convert to Text	Перетворити на текст
 	Filled Dot	Заповнена крапка
 	Dash	Тире
 	Hollow Circle	Порожнє коло
@@ -1883,6 +1884,7 @@ file-filter	Templates	Шаблони
 	Miter Limit:	Межа гострого з’єднання:
 	Mixed Appearances	Змішане оформлення
 	Mixed Objects	Змішані об’єкти
+	Mixed	Змішане
 	Mode:	Режим:
 	Model	Модель
 	Modified	Змінено
@@ -4404,6 +4406,7 @@ axis	Both	Обидві
 @msg	{_1} is already used by {_2}	{_1} вже використовується {_2}
 @msg	{_1} is reserved by the system	Сполучення {_1} зарезервоване системою
 @msg	{_1} linked file(s) can't be read here: their previews show	тут неможливо прочитати пов’язані файли: {_1}: відображаються їх попередні перегляди
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	не вдалося декодувати зображення ({undecoded}): вони показані як перекреслені рамки
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	пов’язаних зображень ({_1}) змінилися на диску: «Оновити зв’язки» покаже нові версії
 @msg	Updated {_1} linked file(s) changed on disk	Оновлено пов’язаних файлів, змінених на диску: {_1}
 @msg	{_1}: not saved, so not closed	{_1}: не збережено, тому не закрито
@@ -4827,6 +4830,7 @@ lighting	Light	Світло
 @msg	unknown parameter `{key}`; the command takes: {keys}	невідомий параметр `{key}`; команда приймає: {keys}
 	Load EPS into Clipboard	Завантажити EPS у буфер обміну
 @msg	an image of {w} × {h} pixels is too large to draw	зображення розміром {w} × {h} пікселів завелике для відображення
+@msg	an image of {w} × {h} pixels is shown at reduced size	зображення розміром {w} × {h} пікселів показано в зменшеному розмірі
 @msg	the image can't be read as a texture	зображення не вдається прочитати як текстуру
 	Basic	Базовий
 	Fill and Stroke Controls	Елементи керування заливкою та обведенням

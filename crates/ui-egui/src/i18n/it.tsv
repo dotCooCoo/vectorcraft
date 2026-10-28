@@ -356,6 +356,7 @@ font-technology	Variable	Variabili
 	Apply Bullets	Applica punti elenco
 	Numbered List	Elenco numerato
 	Apply Numbers	Applica numerazione
+	Convert to Text	Converti in testo
 	Filled Dot	Punto pieno
 	Dash	Trattino
 	Hollow Circle	Cerchio vuoto
@@ -1889,6 +1890,7 @@ file-filter	Templates	Modelli
 	Miter Limit:	Limite angolo vivo:
 	Mixed Appearances	Aspetti misti
 	Mixed Objects	Oggetti misti
+	Mixed	Misto
 	Mode:	Modalità:
 	Model	Modello
 	Modified	Modificato
@@ -4420,6 +4422,7 @@ axis	Both	Entrambi
 @msg	{_1} is already used by {_2}	{_1} è già usato da {_2}
 @msg	{_1} is reserved by the system	{_1} è riservato dal sistema
 @msg	{_1} linked file(s) can't be read here: their previews show	file collegati non leggibili qui: {_1}; vengono mostrate le loro anteprime
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	immagini non decodificabili: {undecoded}; vengono mostrate come riquadri barrati da una croce
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	immagini collegate modificate su disco: {_1}; Aggiorna collegamenti mostra le nuove versioni
 @msg	Updated {_1} linked file(s) changed on disk	File collegati modificati su disco aggiornati: {_1}
 @msg	{_1}: not saved, so not closed	{_1}: non salvato, quindi non chiuso
@@ -4847,6 +4850,7 @@ lighting	Light	Luce
 @msg	unknown parameter `{key}`; the command takes: {keys}	parametro sconosciuto `{key}`; il comando accetta: {keys}
 	Load EPS into Clipboard	Carica EPS negli appunti
 @msg	an image of {w} × {h} pixels is too large to draw	un'immagine di {w} × {h} pixel è troppo grande per essere disegnata
+@msg	an image of {w} × {h} pixels is shown at reduced size	un'immagine di {w} × {h} pixel viene mostrata a dimensioni ridotte
 @msg	the image can't be read as a texture	l'immagine non può essere letta come texture
 	Basic	Base
 	Fill and Stroke Controls	Controlli di riempimento e traccia

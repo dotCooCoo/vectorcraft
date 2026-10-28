@@ -303,6 +303,7 @@
 	Apply Bullets	Opsommingstekens toepassen
 	Numbered List	Genummerde lijst
 	Apply Numbers	Nummering toepassen
+	Convert to Text	Converteren naar tekst
 	Filled Dot	Gevulde stip
 	Dash	Streepje
 	Hollow Circle	Holle cirkel
@@ -1289,6 +1290,7 @@ lighting	Light	Licht
 	Hide Thumbnail	Miniatuur verbergen
 	Mixed Appearances	Gemengde vormgevingen
 	Mixed Objects	Gemengde objecten
+	Mixed	Gemengd
 	No options	Geen opties
 	No Selection	Geen selectie
 	Offset X	Verschuiving X
@@ -4892,6 +4894,7 @@ mark-style	Japanese	Japans
 @msg	unknown parameter `{key}`; the command takes: {keys}	onbekende parameter `{key}`; de opdracht accepteert: {keys}
 	Load EPS into Clipboard	EPS in het klembord laden
 @msg	an image of {w} × {h} pixels is too large to draw	een afbeelding van {w} × {h} pixels is te groot om te tekenen
+@msg	an image of {w} × {h} pixels is shown at reduced size	een afbeelding van {w} × {h} pixels wordt verkleind weergegeven
 	Fill and Stroke Controls	Besturingselementen voor vulling en lijn
 	Coloring Controls	Besturingselementen voor kleuren
 	Draw Mode Controls	Besturingselementen voor tekenmodus

@@ -410,6 +410,7 @@ font-technology	Variable	Biến thiên
 	Apply Bullets	Áp dụng dấu đầu dòng
 	Numbered List	Danh sách đánh số
 	Apply Numbers	Áp dụng đánh số
+	Convert to Text	Chuyển thành văn bản
 	Filled Dot	Chấm đặc
 	Dash	Gạch ngang
 	Hollow Circle	Hình tròn rỗng
@@ -2176,6 +2177,7 @@ file-filter	Templates	Mẫu
 	Miter Limit:	Giới hạn góc nhọn:
 	Mixed Appearances	Diện mạo hỗn hợp
 	Mixed Objects	Đối tượng hỗn hợp
+	Mixed	Hỗn hợp
 	Mode	Chế độ
 	Mode:	Chế độ:
 	Model	Mô hình
@@ -4801,6 +4803,7 @@ theme	Appearance	Giao diện
 @msg	{_1} is already used by {_2}	{_1} đã được dùng bởi {_2}
 @msg	{_1} is reserved by the system	{_1} được hệ thống dành riêng
 @msg	{_1} linked file(s) can't be read here: their previews show	{_1} tệp liên kết không thể đọc ở đây: bản xem trước được hiển thị
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	{undecoded} hình ảnh không thể giải mã: chúng hiển thị dưới dạng khung có dấu gạch chéo
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} ảnh liên kết đã thay đổi trên đĩa: Cập nhật liên kết hiển thị phiên bản mới
 @msg	{_1}: not saved, so not closed	{_1}: chưa lưu, nên không đóng
 @msg	{bpp}-bit bitmaps can't be read	bitmap {bpp}-bit không thể đọc được
@@ -4830,6 +4833,7 @@ theme	Appearance	Giao diện
 @msg	{tool} isn't in a toolbar group of several tools	{tool} không nằm trong nhóm thanh công cụ có nhiều công cụ
 	Load EPS into Clipboard	Tải EPS vào bảng tạm
 @msg	an image of {w} × {h} pixels is too large to draw	ảnh {w} × {h} điểm ảnh quá lớn nên không thể vẽ
+@msg	an image of {w} × {h} pixels is shown at reduced size	ảnh {w} × {h} điểm ảnh được hiển thị ở kích thước thu nhỏ
 	Basic	Cơ bản
 	Fill and Stroke Controls	Điều khiển tô và nét
 	Coloring Controls	Điều khiển màu

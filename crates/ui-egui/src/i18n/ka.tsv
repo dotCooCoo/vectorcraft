@@ -248,6 +248,7 @@
 	Apply Bullets	ბურთულების გამოყენება
 	Numbered List	დანომრილი სია
 	Apply Numbers	დანომრვის გამოყენება
+	Convert to Text	ტექსტად გარდაქმნა
 	Filled Dot	სავსე წერტილი
 	Dash	ტირე
 	Hollow Circle	ცარიელი წრე
@@ -1191,6 +1192,7 @@ lighting	Light	სინათლე
 	Hide Thumbnail	ესკიზის დამალვა
 	Mixed Appearances	შერეული იერსახეები
 	Mixed Objects	შერეული ობიექტები
+	Mixed	შერეული
 	No options	პარამეტრები არ არის
 	No Selection	მონიშნული არაფერია
 	Offset X	X-წანაცვლება
@@ -4136,6 +4138,7 @@ font-technology	Variable	ცვლადი
 @msg	{_1} is already used by {_2}	{_1} უკვე გამოიყენება აქ: {_2}
 @msg	{_1} is reserved by the system	{_1} დაჯავშნილია სისტემის მიერ
 @msg	{_1} linked file(s) can't be read here: their previews show	მიბმული ფაილების წაკითხვა აქ ვერ ხერხდება ({_1}): ჩანს მათი გადახედვა
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	სურათების დეკოდირება ვერ მოხერხდა ({undecoded}): ისინი ჯვრით გადახაზული ჩარჩოებით ჩანს
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	მიბმული გამოსახულებები შეიცვალა დისკზე ({_1}): ბმულების განახლება აჩვენებს ახალ ვერსიებს
 @msg	{_1}: not saved, so not closed	{_1}: არ შენახულა, ამიტომ არ დაიხურა
 @msg	{bpp}-bit bitmaps can't be read	{bpp}-ბიტიანი bitmap-ების წაკითხვა ვერ ხერხდება
@@ -4800,6 +4803,7 @@ imageTrace	Outline	კონტური
 @msg	{path}: not a file	{path}: ფაილი არ არის
 	Load EPS into Clipboard	EPS-ის ბუფერში ჩატვირთვა
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} პიქსელის გამოსახულება დასახატად ზედმეტად დიდია
+@msg	an image of {w} × {h} pixels is shown at reduced size	{w} × {h} პიქსელის გამოსახულება შემცირებული ზომით ჩანს
 	A later row takes this shortcut	ამ მალსახმობს ქვემოთა სტრიქონი იყენებს
 	Add to the Current Shortcuts	მიმდინარე მალსახმობებზე დამატება
 	Ambient Light	გარემოს სინათლე

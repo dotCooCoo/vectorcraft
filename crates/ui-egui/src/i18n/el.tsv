@@ -331,6 +331,7 @@ font-technology	Variable	Μεταβλητές
 	Apply Bullets	Εφαρμογή κουκκίδων
 	Numbered List	Αριθμημένη λίστα
 	Apply Numbers	Εφαρμογή αρίθμησης
+	Convert to Text	Μετατροπή σε κείμενο
 	Filled Dot	Γεμάτη κουκκίδα
 	Dash	Παύλα
 	Hollow Circle	Κενός κύκλος
@@ -2615,6 +2616,7 @@ theme	Appearance	Εμφάνιση
 	Miter Limit:	Όριο οξείας σύνδεσης:
 	Mixed Appearances	Μεικτές εμφανίσεις
 	Mixed Objects	Μεικτά αντικείμενα
+	Mixed	Μικτό
 	Modified	Τροποποιήθηκε
 	Modified since it was read: {path}	Τροποποιήθηκε μετά την ανάγνωση: {path}
 	Modified:	Τροποποιήθηκε:
@@ -4338,6 +4340,7 @@ theme	Appearance	Εμφάνιση
 @msg	{_1} is already used by {_2}	το {_1} χρησιμοποιείται ήδη από το {_2}
 @msg	{_1} is reserved by the system	Το {_1} είναι δεσμευμένο από το σύστημα
 @msg	{_1} linked file(s) can't be read here: their previews show	{_1} συνδεδεμένα αρχεία δεν μπορούν να διαβαστούν εδώ: εμφανίζονται οι προεπισκοπήσεις τους
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	{undecoded} εικόνες δεν ήταν δυνατό να αποκωδικοποιηθούν: εμφανίζονται ως πλαίσια με σταυρό
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} συνδεδεμένες εικόνες άλλαξαν στον δίσκο: η Ενημέρωση συνδέσμων εμφανίζει τις νέες εκδόσεις
 @msg	Updated {_1} linked file(s) changed on disk	Ενημερώθηκαν {_1} συνδεδεμένα αρχεία που άλλαξαν στον δίσκο
 @msg	{_1}: not saved, so not closed	{_1}: δεν αποθηκεύτηκε και επομένως δεν έκλεισε
@@ -4988,6 +4991,7 @@ effect	Points	Σημεία
 	Load EPS into Clipboard	Φόρτωση EPS στο πρόχειρο
 @msg	unknown control `{name}`: fillStroke, coloring, drawMode or screenMode	Άγνωστο στοιχείο ελέγχου `{name}`: fillStroke, coloring, drawMode ή screenMode
 @msg	an image of {w} × {h} pixels is too large to draw	Η εικόνα {w} × {h} εικονοστοιχείων είναι υπερβολικά μεγάλη για σχεδίαση
+@msg	an image of {w} × {h} pixels is shown at reduced size	Η εικόνα {w} × {h} εικονοστοιχείων εμφανίζεται σε μειωμένο μέγεθος
 	Open Recent File 1	Άνοιγμα πρόσφατου αρχείου 1
 	Open Recent File 2	Άνοιγμα πρόσφατου αρχείου 2
 	Open Recent File 3	Άνοιγμα πρόσφατου αρχείου 3

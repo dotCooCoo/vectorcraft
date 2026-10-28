@@ -327,6 +327,7 @@
 	Apply Bullets	Použít odrážky
 	Numbered List	Číslovaný seznam
 	Apply Numbers	Použít číslování
+	Convert to Text	Převést na text
 	Filled Dot	Plná tečka
 	Dash	Pomlčka
 	Hollow Circle	Prázdný kruh
@@ -1358,6 +1359,7 @@ lighting	Light	Světlo
 	Hide Thumbnail	Skrýt miniaturu
 	Mixed Appearances	Smíšené vzhledy
 	Mixed Objects	Smíšené objekty
+	Mixed	Smíšené
 	No options	Žádné možnosti
 	No Selection	Nic není vybráno
 	Offset X	Posun X
@@ -4682,6 +4684,7 @@ imageTrace	Outline	Obrys
 @msg	{_1} is already used by {_2}	{_1} už používá {_2}
 @msg	{_1} is reserved by the system	Zkratku {_1} si vyhrazuje systém
 @msg	{_1} linked file(s) can't be read here: their previews show	propojené soubory ({_1}) zde nelze přečíst: zobrazují se jejich náhledy
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	obrázky ({undecoded}) nelze dekódovat: zobrazují se jako přeškrtnuté rámečky
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	propojené obrázky ({_1}) se na disku změnily: nové verze zobrazí Aktualizovat propojení
 @msg	{_1}: not saved, so not closed	{_1}: neuloženo, proto nezavřeno
 @msg	{bpp}-bit bitmaps can't be read	{bpp}bitové bitmapy nelze přečíst
@@ -5239,6 +5242,7 @@ mark-style	Japanese	Japonské
 @msg	unknown parameter `{key}`; the command takes: {keys}	neznámý parametr `{key}`; příkaz přijímá: {keys}
 	Load EPS into Clipboard	Načíst EPS do schránky
 @msg	an image of {w} × {h} pixels is too large to draw	obraz o velikosti {w} × {h} obrazových bodů je příliš velký na vykreslení
+@msg	an image of {w} × {h} pixels is shown at reduced size	obraz o velikosti {w} × {h} obrazových bodů se zobrazuje ve zmenšené velikosti
 @msg	the image can't be read as a texture	obraz nelze načíst jako texturu
 	Fill and Stroke Controls	Ovládací prvky výplně a tahu
 	Coloring Controls	Ovládací prvky barev

@@ -289,6 +289,7 @@
 	Apply Bullets	Terapkan poin
 	Numbered List	Daftar bernomor
 	Apply Numbers	Terapkan penomoran
+	Convert to Text	Konversi ke teks
 	Filled Dot	Titik penuh
 	Dash	Tanda pisah
 	Hollow Circle	Lingkaran kosong
@@ -1275,6 +1276,7 @@ lighting	Light	Cahaya
 	Hide Thumbnail	Sembunyikan thumbnail
 	Mixed Appearances	Penampilan campuran
 	Mixed Objects	Objek campuran
+	Mixed	Campuran
 	No options	Tidak ada opsi
 	No Selection	Tidak ada seleksi
 	Offset X	Offset X
@@ -4880,6 +4882,7 @@ mark-style	Japanese	Jepang
 @msg	unknown parameter `{key}`; the command takes: {keys}	parameter `{key}` tidak dikenal; perintah menerima: {keys}
 	Load EPS into Clipboard	Muat EPS ke papan klip
 @msg	an image of {w} × {h} pixels is too large to draw	gambar {w} × {h} piksel terlalu besar untuk digambar
+@msg	an image of {w} × {h} pixels is shown at reduced size	gambar {w} × {h} piksel ditampilkan dalam ukuran yang diperkecil
 	Fill and Stroke Controls	Kontrol isian dan goresan
 	Coloring Controls	Kontrol pewarnaan
 	Draw Mode Controls	Kontrol mode menggambar

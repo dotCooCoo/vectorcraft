@@ -492,6 +492,7 @@ font-technology	Variable	Változó
 	Apply Bullets	Felsorolásjelek alkalmazása
 	Numbered List	Számozott lista
 	Apply Numbers	Számozás alkalmazása
+	Convert to Text	Átalakítás szöveggé
 	Filled Dot	Kitöltött pont
 	Dash	Gondolatjel
 	Hollow Circle	Üres kör
@@ -2364,6 +2365,7 @@ file-filter	Templates	Sablonok
 	Miter Limit:	Hegyesszög-határ:
 	Mixed Appearances	Vegyes megjelenések
 	Mixed Objects	Vegyes objektumok
+	Mixed	Vegyes
 	Mobile	Mobil
 	Mode	Mód
 	Mode:	Mód:
@@ -5143,6 +5145,7 @@ imageTrace	Outline	Körvonal
 @msg	{_1} is already used by {_2}	már foglalt: {_1} (használja: {_2})
 @msg	{_1} is reserved by the system	A(z) {_1} a rendszer számára foglalt
 @msg	{_1} linked file(s) can't be read here: their previews show	Itt nem olvasható csatolt fájlok: {_1}; az előnézetük látszik
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	Nem dekódolható képek: {undecoded}; áthúzott keretként látszanak
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	A lemezen módosult csatolt képek: {_1}; a Csatolások frissítése az új változatokat mutatja
 @msg	{_1}: not saved, so not closed	{_1}: nincs mentve, ezért nem záródott be
 @msg	{bpp}-bit bitmaps can't be read	ilyen bitmélységű bitkép nem olvasható: {bpp}
@@ -5225,6 +5228,7 @@ imageTrace	Outline	Körvonal
 @msg	unknown parameter `{key}`; the command takes: {keys}	ismeretlen paraméter: `{key}`; a parancs ezeket fogadja el: {keys}
 	Load EPS into Clipboard	EPS betöltése a vágólapra
 @msg	an image of {w} × {h} pixels is too large to draw	egy {w} × {h} pixeles kép túl nagy a kirajzoláshoz
+@msg	an image of {w} × {h} pixels is shown at reduced size	egy {w} × {h} pixeles kép csökkentett méretben jelenik meg
 @msg	the image can't be read as a texture	a kép nem olvasható be textúraként
 	Fill and Stroke Controls	Kitöltés és körvonal vezérlői
 	Coloring Controls	Színezés vezérlői
