@@ -13,8 +13,6 @@ workspace = true
 default = ["wgpu", "accessibility"]
 wgpu = ["eframe/wgpu", "dep:winsafe"]
 accessibility = ["eframe/accesskit"]
-# Build with --no-default-features --features windows7 and the win7 Rust target.
-windows7 = ["eframe/glow"]
 
 [dependencies]
 vectorcraft-engine = { workspace = true, features = ["bundled-fonts"] }
@@ -37,9 +35,6 @@ image = { workspace = true }
 webbrowser = { workspace = true }
 # The window's monitors, size and position (the same winit eframe runs on).
 winit = { version = "0.30", default-features = false }
-
-# The win7 target retains the viewer fallback; craft-print's WinRT PDF renderer needs newer Windows.
-[target.'cfg(all(not(target_arch = "wasm32"), not(target_vendor = "win7")))'.dependencies]
 craft-print = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
@@ -56,7 +51,6 @@ winsafe = { version = "0.0.29", default-features = false, features = ["user"], o
 # Win32_UI_WindowsAndMessaging has `MSG` and `WM_POINTERDOWN`, which src/windows_stylus.rs uses to
 # read a pen's barrel button from its pointer messages. Win32_UI_Input_Pointer has
 # `GetPointerPenInfo`, which it uses to read the pen's pressure and which end of the pen is down.
-[target.'cfg(all(windows, not(target_vendor = "win7")))'.dependencies]
 windows = { version = "0.62", features = ["Win32_Graphics_DirectWrite", "Win32_Graphics_Gdi", "Win32_UI_Input_Pointer", "Win32_UI_WindowsAndMessaging"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]

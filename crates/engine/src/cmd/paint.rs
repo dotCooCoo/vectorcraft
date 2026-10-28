@@ -6,7 +6,10 @@ use vectorcraft_doc::{Appearance, CharStyle, Document, Node, NodeId, NodeKind};
 
 use super::appearance::{ItemTarget, appearance_targets, edit_items, edit_items_then, item_target};
 use super::gradient::{item_paint_bounds, place_paint, place_run_paint, run_paint_mut, run_stroke_weight, unplaced};
-use super::*;
+use super::{
+    Affine, CommandSpec, Result, Session, always, bad, bool_or, check_numbers, check_switches, cmd, color_value, has_doc, leaf_targets, ok,
+    paint_targets, str_param, switch_or,
+};
 use crate::{DocState, EngineError};
 
 pub fn specs() -> Vec<CommandSpec> {

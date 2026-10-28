@@ -1,6 +1,6 @@
 use super::build::{Page, build};
 use super::slots::LAYERS_UNREAD;
-use super::*;
+use super::{Affine, Arc, Cow, Document, Imported, Node, NodeKind, PathData, Rect, Vec2, ai};
 
 /// The EPS `visible` (read as its page) read through its editing copy instead (its private data, or
 /// its program in the legacy format, see [`editing_copy`]): its layers (the
@@ -217,7 +217,8 @@ pub(super) fn closed_where_ends_meet(mut path: PathData) -> PathData {
 
 #[cfg(test)]
 mod closed_ends_tests {
-    use super::*;
+    use super::{PathData, closed_where_ends_meet};
+    use vectorcraft_geom::Point;
 
     /// A path drawn round to its start (the last anchor on the first) is closed there, its first
     /// anchor taking the last one's incoming handle; one whose ends are apart stays open.

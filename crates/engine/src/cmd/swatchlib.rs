@@ -18,7 +18,7 @@ use super::fileio::{create_dir, extension, read_file, write_file, write_new_file
 use super::menucmds::squash;
 use super::package::free_name;
 use super::swatch::{map_default_paints, str_list, swatch_json};
-use super::*;
+use super::{Color, CommandSpec, Result, Session, always, bad, bool_or, cmd, has_doc, str_param};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![

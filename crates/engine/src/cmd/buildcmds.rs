@@ -27,7 +27,10 @@ use super::draw2::replace_with_pieces;
 use super::edit::{outermost, selected_roots};
 use super::paint::paint_from;
 use super::pathops::{Beside, shape_node};
-use super::*;
+use super::{
+    CommandSpec, EngineError, Result, Session, always, bad, check_numbers, cmd, color_value, f64_or, finite_numbers, has_doc, id_param, ids_param,
+    number_or, point_param, str_param, switch_or,
+};
 
 mod live_paint;
 mod shape_builder;

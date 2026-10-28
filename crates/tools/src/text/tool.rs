@@ -3,7 +3,10 @@ use super::plain::{
     plain_len, step_key,
 };
 use super::ports::{ported, ports, ports_shown};
-use super::*;
+use super::{
+    Action, BezPath, Cursor, ImeSurrounding, Mode, Mods, NodeId, Overlay, Point, PointerEvent, PointerKind, Preedit, Range, Rect, Shape,
+    SurroundingUnit, TextKind, TextRun, Tool, ToolContext, ToolKey, TypeTool, Value, edit, json,
+};
 
 impl Tool for TypeTool {
     fn id(&self) -> &'static str {

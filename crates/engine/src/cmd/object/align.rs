@@ -1,5 +1,8 @@
 use super::transform::transform_patterns;
-use super::*;
+use super::{
+    Affine, Document, EngineError, NodeId, OrientedBox, Point, Rect, Result, Scaling, Session, Value, Vec2, bad, check_numbers, check_switches,
+    effects, has_multi, ok, selected_roots, str_param,
+};
 
 impl Session {
     /// The bounds of `ids` the Transform panel, the bounding box, Align and Distribute measure:

@@ -1,6 +1,6 @@
 use super::access::file_list;
 use super::formats::formats;
-use super::*;
+use super::{CommandSpec, action_batch, always, batch, cmd, export, has_doc, has_selection, load, pdfimport, save, screens};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![

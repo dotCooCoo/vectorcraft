@@ -1,4 +1,6 @@
-use super::*;
+use super::{Arc, Ordering, VectorcraftApp, graphics, native_menu, shortcuts, take_frame_once};
+#[cfg(not(target_arch = "wasm32"))]
+use super::{fileio, place};
 
 impl VectorcraftApp {
     /// The first UI pass of a host iteration takes the host's input, once per context, viewport and
