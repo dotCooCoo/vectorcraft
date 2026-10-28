@@ -354,6 +354,7 @@ font-technology	Variable	Вариативные
 	Apply Bullets	Применить маркеры
 	Numbered List	Нумерованный список
 	Apply Numbers	Применить нумерацию
+	Convert to Text	Преобразовать в текст
 	Filled Dot	Закрашенная точка
 	Dash	Тире
 	Hollow Circle	Пустой круг
@@ -1894,6 +1895,7 @@ file-filter	Templates	Шаблоны
 	Miter Limit:	Предел митры:
 	Mixed Appearances	Смешанное оформление
 	Mixed Objects	Смешанные объекты
+	Mixed	Смешанное
 	Mode:	Режим:
 	Model	Модель
 	Modified	Изменено
@@ -2836,7 +2838,22 @@ mark-style	Japanese	Японский
 	Saved to User Defined: {}	Сохранено в «Пользовательский»: {}
 	Saved View 1	Сохранённый вид 1
 	Saved View 10	Сохранённый вид 10
+	Saved View 11	Сохранённый вид 11
+	Saved View 12	Сохранённый вид 12
+	Saved View 13	Сохранённый вид 13
+	Saved View 14	Сохранённый вид 14
+	Saved View 15	Сохранённый вид 15
+	Saved View 16	Сохранённый вид 16
+	Saved View 17	Сохранённый вид 17
+	Saved View 18	Сохранённый вид 18
+	Saved View 19	Сохранённый вид 19
 	Saved View 2	Сохранённый вид 2
+	Saved View 20	Сохранённый вид 20
+	Saved View 21	Сохранённый вид 21
+	Saved View 22	Сохранённый вид 22
+	Saved View 23	Сохранённый вид 23
+	Saved View 24	Сохранённый вид 24
+	Saved View 25	Сохранённый вид 25
 	Saved View 3	Сохранённый вид 3
 	Saved View 4	Сохранённый вид 4
 	Saved View 5	Сохранённый вид 5
@@ -4409,6 +4426,7 @@ axis	Both	Оба
 @msg	{_1} is already used by {_2}	{_1} уже используется {_2}
 @msg	{_1} is reserved by the system	Сочетание {_1} зарезервировано системой
 @msg	{_1} linked file(s) can't be read here: their previews show	здесь невозможно прочитать связанных файлов: {_1}: отображаются их предварительные просмотры
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	не удалось декодировать изображения ({undecoded}): они показаны как перечёркнутые рамки
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	связанных изображений ({_1}) изменились на диске: «Обновить связи» покажет новые версии
 @msg	Updated {_1} linked file(s) changed on disk	Обновлено связанных файлов, измененных на диске: {_1}
 @msg	{_1}: not saved, so not closed	{_1}: не сохранён, поэтому не закрыт
@@ -4834,6 +4852,7 @@ lighting	Light	Свет
 @msg	unknown parameter `{key}`; the command takes: {keys}	неизвестный параметр `{key}`; команда принимает: {keys}
 	Load EPS into Clipboard	Загрузить EPS в буфер обмена
 @msg	an image of {w} × {h} pixels is too large to draw	изображение размером {w} × {h} пикселей слишком велико для отрисовки
+@msg	an image of {w} × {h} pixels is shown at reduced size	изображение размером {w} × {h} пикселей показано в уменьшенном размере
 @msg	the image can't be read as a texture	изображение не удаётся прочитать как текстуру
 	Basic	Базовый
 	Fill and Stroke Controls	Элементы управления заливкой и обводкой

@@ -4,7 +4,7 @@
 #            @id                  a command id (e.g. file.saveAs): wins over the English text for
 #                                 that menu item, so one id can read differently from its twin
 #            @plural              `source` is "one|other" (English forms); Chinese has one form, so
-#                                 the translation is a single string (see `plural` in i18n/mod.rs)
+#                                 the translation is a single string (see `plural` in i18n.rs)
 #            anything else        a disambiguating context passed to `tr_ctx`
 #   escapes  \n  \t  \\  inside a column. `{name}` placeholders must appear in both columns.
 #   lines starting with # and blank lines are ignored.
@@ -318,6 +318,7 @@ font-technology	Variable	可變
 	Apply Bullets	套用項目符號
 	Numbered List	編號清單
 	Apply Numbers	套用編號
+	Convert to Text	轉換為文字
 	Filled Dot	實心圓點
 	Dash	短破折號
 	Hollow Circle	空心圓
@@ -2082,6 +2083,7 @@ file-filter	Templates	範本
 @msg	no such layer or object	沒有這個圖層或物件
 @msg	`{tool}` isn't a Liquify tool	`{tool}` 不是液化工具
 @msg	{_1} linked file(s) can't be read here: their previews show	此處無法讀取 {_1} 個連結檔案：顯示的是其預覽
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	無法解碼 {undecoded} 張影像：它們顯示為打叉的方框
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	有 {_1} 個連結影像已在磁碟上變更：「更新連結」可顯示新版本
 @msg	pick a colour, gradient or pattern to save as a swatch	請挑選要儲存為色票的顏色、漸層或圖樣
 @msg	Packaged {n} file(s) in {folder} {note}	已將 {n} 個檔案封裝到 {folder}{note}
@@ -2654,6 +2656,7 @@ file-filter	Templates	範本
 	Miter Limit:	尖角限度：
 	Mixed Appearances	混合外觀
 	Mixed Objects	混雜物件
+	Mixed	混合
 	Mode:	模式：
 	Model	模型
 	Modified	已修改
@@ -3614,7 +3617,22 @@ font-script	Japanese	漢字
 	Saved to User Defined: {}	已儲存至使用者自訂：{}
 	Saved View 1	已儲存的檢視 1
 	Saved View 10	已儲存的檢視 10
+	Saved View 11	已儲存的檢視 11
+	Saved View 12	已儲存的檢視 12
+	Saved View 13	已儲存的檢視 13
+	Saved View 14	已儲存的檢視 14
+	Saved View 15	已儲存的檢視 15
+	Saved View 16	已儲存的檢視 16
+	Saved View 17	已儲存的檢視 17
+	Saved View 18	已儲存的檢視 18
+	Saved View 19	已儲存的檢視 19
 	Saved View 2	已儲存的檢視 2
+	Saved View 20	已儲存的檢視 20
+	Saved View 21	已儲存的檢視 21
+	Saved View 22	已儲存的檢視 22
+	Saved View 23	已儲存的檢視 23
+	Saved View 24	已儲存的檢視 24
+	Saved View 25	已儲存的檢視 25
 	Saved View 3	已儲存的檢視 3
 	Saved View 4	已儲存的檢視 4
 	Saved View 5	已儲存的檢視 5
@@ -4910,6 +4928,7 @@ lighting	Light	光源
 @msg	unknown parameter `{key}`; the command takes: {keys}	未知的參數 `{key}`；此指令接受：{keys}
 	Load EPS into Clipboard	將 EPS 載入剪貼簿
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} 像素的影像過大，無法繪製
+@msg	an image of {w} × {h} pixels is shown at reduced size	{w} × {h} 像素的影像以縮小的尺寸顯示
 	Basic	基本
 	Fill and Stroke Controls	填色和筆畫控制項
 	Coloring Controls	顏色控制項

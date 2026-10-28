@@ -58,13 +58,13 @@ The release packages ship `vectorcraft-cli` alongside the desktop app, so no bui
 
 | Install | CLI |
 |---|---|
-| Windows (MSI) | `C:\Program Files\VectorCraft\vectorcraft-cli.exe` by default (wherever you installed it otherwise), not on `PATH` |
+| Windows (MSI) | `%LOCALAPPDATA%\Programs\ArtCraft\VectorCraft\vectorcraft-cli.exe` by default (`C:\Program Files\ArtCraft\VectorCraft\vectorcraft-cli.exe` for an all-users install, under `Program Files (x86)` instead for the 32-bit build, or wherever you installed it otherwise), not on `PATH` |
 | Linux (deb, rpm) | `/usr/bin/vectorcraft-cli` |
 | macOS | the separate `vectorcraft-cli-<version>-macos-<arch>.zip` release asset (the `.app` holds only the desktop app) |
 
 ```sh
-# Windows, default install folder
-claude mcp add vectorcraft -- "C:\Program Files\VectorCraft\vectorcraft-cli.exe" mcp
+# Windows (PowerShell), default install folder
+claude mcp add vectorcraft -- "$env:LOCALAPPDATA\Programs\ArtCraft\VectorCraft\vectorcraft-cli.exe" mcp
 # Linux, or macOS with the CLI unzipped onto PATH
 claude mcp add vectorcraft -- vectorcraft-cli mcp
 ```
@@ -75,7 +75,7 @@ For a live session, start the installed app with the control port before the MCP
 # macOS: quit VectorCraft first, since `open -a` passes no arguments to an app that is already running
 open -a VectorCraft --args --control 7979
 # Windows (PowerShell), default install folder
-& "C:\Program Files\VectorCraft\vectorcraft.exe" --control 7979
+& "$env:LOCALAPPDATA\Programs\ArtCraft\VectorCraft\vectorcraft.exe" --control 7979
 # Linux (deb, rpm)
 vectorcraft --control 7979
 ```
@@ -1384,6 +1384,19 @@ names must stay unique. In the desktop app the saved selections are listed at th
 (`select.recall1` … `select.recall25`) and in the Layers panel menu's Save Selection submenu
 (`select.recall {name}`). A file's saved selections are checked when it opens: past 25, blank or
 repeated names, and ids the document doesn't have are dropped.
+
+## Saved views
+
+View → New View… keeps a view under a name, in the document: `view.saved.new {name?, center: [x, y], zoom,
+rotation?}` (the desktop app fills in its current view; default the first free "View N"; at most 25 per document,
+names up to 255 characters, each name once) → `{name, index}`, one undo step. `view.saved.list` →
+`{views: [{name, center, zoom, rotation}…]}` in menu order. Edit Views… renames and deletes:
+`view.saved.edit {name, newName?, delete?}`, or several at once as `{edits: [{name, newName?, delete?}…]}` in one
+undo step (→ `{views}`), where every `name` is the name before the edit and the names must stay unique; it is
+enabled while the document has a saved view. In the desktop app the views are listed at the bottom of the View menu
+(`view.goto1` … `view.goto25`); choosing one sets the current window's zoom, centre and rotation. A file's views are
+checked when it opens: past 25, blank or repeated names, and views without a finite centre and a positive zoom are
+dropped.
 
 ## Ruler guides
 
@@ -3586,8 +3599,10 @@ listed in `warnings`. Binary DXF and DWG files answer an error saying to save th
 
 `links.list {show?: all|missing|modified|embedded, sort?: name|kind|status}` lists every image in the layers, top
 first, as the Links panel does: `{id, name, linked, status: ok|modified|missing|embedded, format, pixelWidth,
-pixelHeight, path?, found?, page?, preview?, note?}` (`note`: the image is too large to decode and isn't drawn;
-`document.open` and `file.place` say the same in their `warnings`). `links.info {id?}` is the Link Info: `image.info`'s fields plus
+pixelHeight, path?, found?, page?, preview?, note?}` (`note`: the image takes more than the decode allowance, 2 GiB
+or 512 MiB in the web app, as RGBA or as decoded, and it is drawn at the largest size within the allowance ("shown at
+reduced size"; the document keeps the whole file) or, when it can't be read that way or has more pixels than the
+allowance has bytes, drawn as a crossed gray box on the canvas and left out of exports ("too large to draw"); `document.open` and `file.place` say the same in their `warnings`). `links.info {id?}` is the Link Info: `image.info`'s fields plus
 `status`, `format`, the file's `ppi` and the `effectivePpi`, `scale` (% of 100%), `rotation` (degrees,
 counter-clockwise), `placement` and, for a linked file, `fileName`, `location`, `fileSize`, `created`, `modified`.
 `links.goTo {id}` selects an image; `links.embed {ids?}` keeps linked files' pixels in the document (an image whose
@@ -4518,16 +4533,49 @@ after Remove Threading or Release Selection, in a frame converted to point type,
 duplicated, copied in the Layers panel, or taken out of a symbol or a placed file). A symbol made of a thread keeps the
 numbers in the symbol's art.
 
-The canvas, EPS, PDF and Type › Create Outlines draw the marker; in PDF it is a path, not text. Live SVG text writes the
-marker's characters before the paragraph's text, except type on a path with a list, which it writes as outlines with a
-warning. DXF writes the marker as a TEXT entity of its own, its characters in the order they are drawn. Legacy `.ai`
-writes the paragraph's text without the marker and warns that bulleted and numbered lists are left out.
+The canvas, EPS, PDF and Type › Create Outlines draw the marker. PDF writes the marker as text of its own, where the
+canvas draws it, and a PDF viewer selects, copies and finds its characters. Each of its glyphs stands for the marker
+character that the glyph's font maps to that glyph in its character map. Glyphs that an OpenType feature such as
+oldstyle figures replaced stand for the characters left over, in order, when there are as many of those glyphs as
+characters left over. A marker glyph that stands for no character, such as the missing-glyph box when no font has a
+glyph for it, is drawn as a path. Live SVG text writes the marker's characters before the paragraph's text, except
+type on a path with a list, which it writes as outlines with a warning. DXF writes the marker as a TEXT entity of its
+own, its characters in the order they are drawn. Legacy `.ai` writes the paragraph's text without the marker and warns
+that bulleted and numbered lists are left out.
 
 Type › Bullets and Numbering › Apply Bullets and the canvas context menu's Bullets and Numbering › Apply Bullets run
 `type.applyBullets {bullet?}` on the selected type's paragraphs, or on those the Type tool's selection touches. Without
 `bullet` it runs `text.setFormat {list: "bullet"}`, and with it it runs `text.setFormat {bullet}`. Apply Numbers in the
 same menus runs `type.applyNumbers {number?}`. Without `number` it runs `text.setFormat {list: "number"}`, and with it
 it runs `text.setFormat {number}`.
+
+Type › Bullets and Numbering › Convert to Text runs `type.convertListToText` on the selected type's paragraphs, or on
+those the Type tool's selection touches, and that runs `text.convertListToText {ids?, start?, end?}`. The marker of
+each list paragraph becomes characters at the start of the paragraph: the bullet, or the number and its period as the
+paragraph showed it, then a tab. They are set in the marker's font, size and color: the style of the paragraph's first
+character without the attributes the marker leaves out. The paragraph leaves its list. When the marker's tab went to
+the left indent, the paragraph gets a left-aligned tab stop without a leader there, in place of any stop there, so that
+the text after the tab starts where it started after the marker. When the marker's tab went to a tab stop, the
+converted tab goes to the same place when that stop is left-aligned and no stop there or past it has a leader. When a
+stop there or past it has a leader or is not left-aligned, or a right, center or decimal stop lies between the marker
+and the place its tab ended, the paragraph gets a left-aligned stop without a leader where the marker's tab ended, in
+place of any stop there and of those right, center and decimal stops before it. A paragraph that holds a tab of its
+own keeps its stops past the left indent as they are. The characters are text like any other: they can be selected,
+styled, edited and deleted, and copied text includes them. In threaded type the numbers are the ones the story counted
+through its frames, and a paragraph that continues into the next frame gets its characters once, where its text
+starts. An empty list paragraph has no marker and only leaves the list. A numbered paragraph after the converted ones
+that stays in its list counts from 1 again, as after any paragraph in no list. A paragraph with no direction set runs
+the way its first strong character does; when a letter or a roman numeral put before right-to-left text would make it
+run left to right, the paragraph gets the Right to Left direction. A right-to-left paragraph that leaves its list no
+longer has its indents mirrored, and on a path the tab takes its own width, as every tab on a path does. With the
+Every-line Composer, a paragraph that holds a tab is broken line by line, so a converted paragraph of several lines
+can break at other places than its list paragraph did. The change is one undo step, and the reply gives the `ids` of
+the type it changed, how many paragraphs were `converted`, and the characters `inserted`, each with the type object's
+`id`, the byte `at` which they went in (counted in the text before the change) and their `length` in bytes. While the
+Type tool edits, `text.convertListToText` ends its typing first and moves its anchor and caret past the characters
+inserted at or before them, whether the call comes from the menu, MCP or the control channel.
+In threaded type, when the caret's character moved to another frame, the Type tool edits that frame with the caret
+next to the same character, and that frame becomes the selection when it was not selected.
 
 Typing starts a list too. When the Type tool types a space on its own (one key press, or `type_text {text: " "}`) right
 after `1.` or `1)`, `A.` or `A)`, or one of `*`, `#`, `>` and `+` at the start of a paragraph that is in no list, the
@@ -4541,10 +4589,10 @@ paste, an IME commit, or `type_text` of a longer string. From a script, `text.st
 the same with the text before `at` and returns `started` and `caret`. When the list starts, `caret` is the byte where
 the paragraph's text now starts; when the text before `at` starts no list, nothing changes, `started` is false and
 `caret` is `at`.
-
 ```json
 {"name":"run_command","arguments":{"command":"text.setFormat","params":{"bullet":"square"}}}
 {"name":"run_command","arguments":{"command":"text.setFormat","params":{"number":"upperRoman"}}}
+{"name":"run_command","arguments":{"command":"text.convertListToText","params":{}}}
 ```
 
 ## Small Caps, Superscript and Subscript

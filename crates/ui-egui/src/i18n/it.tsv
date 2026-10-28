@@ -356,6 +356,7 @@ font-technology	Variable	Variabili
 	Apply Bullets	Applica punti elenco
 	Numbered List	Elenco numerato
 	Apply Numbers	Applica numerazione
+	Convert to Text	Converti in testo
 	Filled Dot	Punto pieno
 	Dash	Trattino
 	Hollow Circle	Cerchio vuoto
@@ -1896,6 +1897,7 @@ file-filter	Templates	Modelli
 	Miter Limit:	Limite angolo vivo:
 	Mixed Appearances	Aspetti misti
 	Mixed Objects	Oggetti misti
+	Mixed	Misto
 	Mode:	Modalità:
 	Model	Modello
 	Modified	Modificato
@@ -2840,7 +2842,22 @@ mark-style	Japanese	Giapponese
 	Saved to User Defined: {}	Salvato in Definito dall'utente: {}
 	Saved View 1	Vista salvata 1
 	Saved View 10	Vista salvata 10
+	Saved View 11	Vista salvata 11
+	Saved View 12	Vista salvata 12
+	Saved View 13	Vista salvata 13
+	Saved View 14	Vista salvata 14
+	Saved View 15	Vista salvata 15
+	Saved View 16	Vista salvata 16
+	Saved View 17	Vista salvata 17
+	Saved View 18	Vista salvata 18
+	Saved View 19	Vista salvata 19
 	Saved View 2	Vista salvata 2
+	Saved View 20	Vista salvata 20
+	Saved View 21	Vista salvata 21
+	Saved View 22	Vista salvata 22
+	Saved View 23	Vista salvata 23
+	Saved View 24	Vista salvata 24
+	Saved View 25	Vista salvata 25
 	Saved View 3	Vista salvata 3
 	Saved View 4	Vista salvata 4
 	Saved View 5	Vista salvata 5
@@ -4413,6 +4430,7 @@ axis	Both	Entrambi
 @msg	{_1} is already used by {_2}	{_1} è già usato da {_2}
 @msg	{_1} is reserved by the system	{_1} è riservato dal sistema
 @msg	{_1} linked file(s) can't be read here: their previews show	file collegati non leggibili qui: {_1}; vengono mostrate le loro anteprime
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	immagini non decodificabili: {undecoded}; vengono mostrate come riquadri barrati da una croce
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	immagini collegate modificate su disco: {_1}; Aggiorna collegamenti mostra le nuove versioni
 @msg	Updated {_1} linked file(s) changed on disk	File collegati modificati su disco aggiornati: {_1}
 @msg	{_1}: not saved, so not closed	{_1}: non salvato, quindi non chiuso
@@ -4838,6 +4856,7 @@ lighting	Light	Luce
 @msg	unknown parameter `{key}`; the command takes: {keys}	parametro sconosciuto `{key}`; il comando accetta: {keys}
 	Load EPS into Clipboard	Carica EPS negli appunti
 @msg	an image of {w} × {h} pixels is too large to draw	un'immagine di {w} × {h} pixel è troppo grande per essere disegnata
+@msg	an image of {w} × {h} pixels is shown at reduced size	un'immagine di {w} × {h} pixel viene mostrata a dimensioni ridotte
 @msg	the image can't be read as a texture	l'immagine non può essere letta come texture
 	Basic	Base
 	Fill and Stroke Controls	Controlli di riempimento e traccia
