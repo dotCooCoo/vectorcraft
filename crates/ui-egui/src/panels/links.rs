@@ -123,7 +123,7 @@ pub(crate) fn relink(app: &mut VectorcraftApp, ids: Vec<u64>) {
 }
 
 fn relink_picked(app: &mut VectorcraftApp, ids: Vec<u64>) {
-    let pick = crate::FilePick { filters: vectorcraft_engine::cmd::fileio::place_filters().collect(), ..Default::default() };
+    let pick = crate::FilePick { filters: crate::FilePick::filters(vectorcraft_engine::cmd::fileio::place_filters()), ..Default::default() };
     let Some(path) = crate::picks::open(app, &pick) else { return };
     let r = app.run("links.relink", json!({ "ids": ids, "path": path }));
     report(app, r, |v| format!("Relinked {} image(s)", v["relinked"].as_array().map_or(0, Vec::len)));
@@ -134,7 +134,7 @@ fn relink_picked(app: &mut VectorcraftApp, ids: Vec<u64>) {
 /// say.
 pub(crate) fn replace(app: &mut VectorcraftApp, ids: Vec<u64>) {
     crate::picks::button(app, move |app| {
-        let pick = crate::FilePick { filters: vectorcraft_engine::cmd::fileio::place_filters().collect(), ..Default::default() };
+        let pick = crate::FilePick { filters: crate::FilePick::filters(vectorcraft_engine::cmd::fileio::place_filters()), ..Default::default() };
         let Some(path) = crate::picks::open(app, &pick) else { return };
         let r = app.run("links.relink", json!({ "ids": ids.clone(), "path": path, "preserve": "fit" }));
         report(app, r, |v| format!("Replaced {} image(s)", v["relinked"].as_array().map_or(0, Vec::len)));
@@ -207,8 +207,33 @@ pub(crate) fn open_file(app: &mut VectorcraftApp, p: &Value, reveal: bool) -> Re
         crate::dialogs::settle(app);
         return Ok(json!({ "path": path }));
     }
-    if reveal { crate::io::reveal_path(app, &path) } else { crate::io::open_in_app(app, &path) }?;
+    if reveal {
+        crate::io::reveal_path(app, &path)?;
+    } else {
+        app.refuse_automation("links.editOriginal")?;
+        openable_original(&path)?;
+        crate::io::open_in_app(app, &path)?;
+    }
     Ok(json!({ "path": path }))
+}
+
+/// Whether Edit Original may hand `path` to the system's default app: a regular file (after
+/// following links) whose name, and the name it links to, have the extension of a format
+/// VectorCraft reads. Anything else (a folder or app bundle, a script, a shortcut) is refused.
+pub(crate) fn openable_original(path: &str) -> Result<(), String> {
+    let readable = |p: &std::path::Path| {
+        let ext = p.extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
+        !ext.is_empty() && vectorcraft_engine::cmd::fileio::FORMATS.iter().any(|f| f.read && f.extensions.contains(&ext.as_str()))
+    };
+    let name = std::path::Path::new(path).file_name().map_or_else(|| path.to_string(), |n| n.to_string_lossy().into_owned());
+    let real = std::fs::canonicalize(path).map_err(|e| format!("can't open “{name}”: {e}"))?;
+    if !real.is_file() {
+        return Err(format!("“{name}” is not a file"));
+    }
+    if !readable(std::path::Path::new(path)) || !readable(&real) {
+        return Err(format!("Edit Original opens image and document files only; “{name}” is not one"));
+    }
+    Ok(())
 }
 
 /// A status badge: missing (red, ?), modified (amber, !), embedded (the image icon).
@@ -240,7 +265,7 @@ fn status_tip(r: &Value) -> String {
         "embedded" => tl!("Embedded").into(),
         _ => path.to_string(),
     };
-    // An image too large to draw (`links.list`'s note).
+    // An image shown at reduced size or too large to draw (`links.list`'s note).
     match r["note"].as_str() {
         Some(note) => format!("{tip}\n{}", crate::i18n::msg(note)),
         None => tip,
