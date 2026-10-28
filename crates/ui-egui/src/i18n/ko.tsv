@@ -311,6 +311,9 @@ font-technology	Variable	가변
 	Bullets	글머리 기호
 	Bullets and Numbering	글머리 기호 및 번호 매기기
 	Apply Bullets	글머리 기호 적용
+	Numbered List	번호 매기기 목록
+	Apply Numbers	번호 매기기 적용
+	Convert to Text	텍스트로 변환
 	Filled Dot	채운 점
 	Dash	대시
 	Hollow Circle	빈 원
@@ -357,6 +360,7 @@ font-technology	Variable	가변
 	Create	만들기
 	Release Selection	선택 해제
 	Remove Threading	연결 제거
+	Break Thread	연결 끊기
 	Fit Headline	제목에 맞추기
 	Decrease Font Size	글꼴 크기 줄이기
 	Decrease Font Size by Five Steps	글꼴 크기 5단계 줄이기
@@ -562,6 +566,7 @@ font-technology	Variable	가변
 	Save Grid as Preset…	격자를 프리셋으로 저장…
 	Snap to Pixel	픽셀에 스냅
 	Precise Cursors	정밀 커서
+	Image Trace Preview	이미지 추적 미리 보기
 	Snap to Point	포인트에 스냅
 	Snap to Glyph	글리프에 스냅
 	New View…	새 보기…
@@ -576,6 +581,21 @@ font-technology	Variable	가변
 	Saved View 8	저장된 보기 8
 	Saved View 9	저장된 보기 9
 	Saved View 10	저장된 보기 10
+	Saved View 11	저장된 보기 11
+	Saved View 12	저장된 보기 12
+	Saved View 13	저장된 보기 13
+	Saved View 14	저장된 보기 14
+	Saved View 15	저장된 보기 15
+	Saved View 16	저장된 보기 16
+	Saved View 17	저장된 보기 17
+	Saved View 18	저장된 보기 18
+	Saved View 19	저장된 보기 19
+	Saved View 20	저장된 보기 20
+	Saved View 21	저장된 보기 21
+	Saved View 22	저장된 보기 22
+	Saved View 23	저장된 보기 23
+	Saved View 24	저장된 보기 24
+	Saved View 25	저장된 보기 25
 	Window	윈도우
 	New Window	새 창
 	Cascade	계단식 배열
@@ -974,7 +994,6 @@ font-technology	Variable	가변
 	Browser	브라우저
 	Brush Affects:	브러시 적용 대상:
 	Brush Definition	브러시 정의
-	Brush Libraries (on the roadmap)	브러시 라이브러리(개발 예정)
 	Brush Options…	브러시 옵션…
 	Built-in presets are read-only: New… starts an editable copy.	기본 제공 프리셋은 읽기 전용입니다. 새로 만들기…를 누르면 편집 가능한 복사본이 만들어집니다.
 	Built-in presets don't change: New makes a copy you can edit.	기본 제공 프리셋은 변경되지 않습니다. 새로 만들기를 누르면 편집 가능한 복사본이 만들어집니다.
@@ -1505,6 +1524,7 @@ font-technology	Variable	가변
 	Fill and Stroke	칠과 선
 	Fill new strokes	새 선 칠하기
 	Alt key toggles to Smooth Tool	Alt 키로 매끄럽게 도구로 전환
+	Live curve fitting	실시간 곡선 맞춤
 	Keep selected	선택 유지
 	Merge only with selection	선택 영역과만 병합
 	Consider Open Filled Paths as Closed	칠이 있는 열린 패스를 닫힌 패스로 처리
@@ -2883,6 +2903,7 @@ mark-style	Japanese	일본식
 	Outlines	윤곽선
 	Outlines with Source Image	원본 이미지 포함 윤곽선
 	Source Image	원본 이미지
+	Press and hold to view the source image	누르고 있는 동안 원본 이미지 보기
 	Image Trace View	이미지 추적 보기
 	Snap Options	스냅 옵션
 	Snap to Unit	단위에 스냅
@@ -3482,6 +3503,7 @@ file-filter	Templates	템플릿
 	Miter Limit	모퉁이 한계
 	Miter Limit:	모퉁이 한계:
 	Mixed Objects	혼합 개체
+	Mixed	혼합
 	Model	모델
 	Move All Objects	모든 개체 이동
 	N pt per	당 N pt
@@ -3724,13 +3746,10 @@ axis	Horizontal	가로
 axis	Vertical	세로
 axis	Both	양쪽
 	Drag to move	드래그하여 이동
-	Drag to move out of the set	드래그하여 세트에서 꺼내기
 	Drag to float as a toolbar	드래그하여 도구 모음으로 분리
 	Put back in the toolbar	도구 모음으로 되돌리기
 	Float Panel	패널 분리
 	Dock Panel	패널 고정
-	Drag to float the panel group	드래그하여 패널 그룹 분리
-	Put back in the dock	독으로 되돌리기
 	Drag to float the toolbar	드래그하여 도구 모음 분리
 	Drag to the window's left edge to dock	창 왼쪽 가장자리로 드래그하여 고정
 	Float Tool Group	도구 그룹 분리
@@ -3858,6 +3877,7 @@ theme	Appearance	외관
 @msg	the art has no bounds	아트웍에 경계가 없습니다
 @msg	Image Trace: the traced image is missing	이미지 추적: 추적한 이미지가 없습니다
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	라이브 페인트 병합: 라이브 페인트 그룹과 추가할 패스를 선택하세요
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	라이브 페인트는 패스와 컴파운드 패스만 사용할 수 있습니다: 텍스트, 이미지 및 기타 개체를 먼저 패스로 변환하세요
 @msg	Live Paint: select paths or compound paths	라이브 페인트: 패스 또는 컴파운드 패스를 선택하세요
 @msg	Live Paint: these paths are too degenerate to paint	라이브 페인트: 이 패스는 퇴화되어 칠할 수 없습니다
 @msg	Shape Builder: no region under the pointer	모양 빌더: 포인터 아래에 영역이 없습니다
@@ -4118,6 +4138,7 @@ theme	Appearance	외관
 @msg	objects can't be nested more than 32 deep	개체는 32단계보다 깊게 중첩할 수 없습니다
 @msg	the SVG's elements are nested more than {0} deep	SVG 요소가 {0}단계보다 깊게 중첩되어 있습니다
 @msg	unknown command `{0}`	알 수 없는 명령 `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	알 수 없는 명령 `{0}`: `{1}`을(를) 의미하셨습니까?
 @msg	`{what}` closes nothing	`{what}`이(가) 닫는 항목이 없습니다
 @msg	`{what}` closes something it didn't open	`{what}`이(가) 열지 않은 항목을 닫습니다
 @msg	a path has too many points	패스의 점이 너무 많습니다
@@ -4197,6 +4218,7 @@ theme	Appearance	외관
 @msg	invalid image data for `{0}`	`{0}`의 이미지 데이터가 올바르지 않습니다
 @msg	not a VectorCraft file: {0}	VectorCraft 파일이 아닙니다: {0}
 @msg	the compressed file unpacks to more than {_1} MB	압축된 파일의 압축을 풀면 {_1}MB를 넘습니다
+@msg	`{key}: {top}` and `options.{key}: {inner}` disagree: give the option once	`{key}: {top}`와(과) `options.{key}: {inner}`이(가) 일치하지 않습니다: 옵션을 한 번만 지정하세요
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	버전 {0} 파일은 압축할 수 없습니다: 버전 {COMPRESSED_SINCE} 이상만 압축 파일을 엽니다
 @msg	a bitmap is empty	비트맵이 비어 있습니다
 @msg	a bitmap is too large to read	비트맵이 너무 커서 읽을 수 없습니다
@@ -4294,6 +4316,7 @@ theme	Appearance	외관
 @msg	no such layer or object	해당 레이어나 개체가 없습니다
 @msg	`{tool}` isn't a Liquify tool	`{tool}`은(는) 픽셀 유동화 도구가 아닙니다
 @msg	{_1} linked file(s) can't be read here: their previews show	링크된 파일 {_1}개를 여기서 읽을 수 없습니다: 미리 보기가 표시됩니다
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	이미지 {undecoded}개를 디코딩할 수 없습니다: X 표시가 된 상자로 표시됩니다
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	링크된 이미지 {_1}개가 디스크에서 바뀌었습니다: 링크 업데이트를 하면 새 버전이 표시됩니다
 @msg	Updated {_1} linked file(s) changed on disk	디스크에서 바뀐 링크된 파일 {_1}개를 업데이트했습니다
 @msg	pick a colour, gradient or pattern to save as a swatch	견본으로 저장할 색상, 그레이디언트 또는 패턴을 선택하세요
@@ -4369,6 +4392,12 @@ theme	Appearance	외관
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command`는 메뉴 항목이 대화상자를 여는 명령이어야 합니다(ui.menuDialog 참조)
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode`은(는) grayscale, rgb, hsb, cmyk, websafe 중 하나여야 합니다
 @msg	`{key}` must be true or false	`{key}`은(는) true 또는 false여야 합니다
+@msg	`select` must be true or false	`select`은(는) true 또는 false여야 합니다
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors`와 `maxAnchors`는 정수여야 합니다
+@msg	`{key}` must be a number not below 0	`{key}`은(는) 0 이상의 숫자여야 합니다
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}`은(는) [x, y, width, height]여야 합니다: 유한한 숫자 네 개이며 너비와 높이는 음수가 아니어야 합니다
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}`이(가) `{max_key}`보다 큽니다
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	다음 중 하나 이상을 지정하세요: `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	brightness must be dark|mediumDark|mediumLight|light	brightness는 dark|mediumDark|mediumLight|light 중 하나여야 합니다
 @msg	index must be a number or first, previous, next or last	index는 숫자이거나 first, previous, next, last 중 하나여야 합니다
 @msg	index must be a number or first, previous, next or last, not `{other}`	index는 숫자이거나 first, previous, next, last 중 하나여야 하며 `{other}`은(는) 안 됩니다
@@ -4450,6 +4479,7 @@ theme	Appearance	외관
 @msg	unknown preset (one of {_1})	알 수 없는 프리셋({_1} 중 하나)
 @msg	unknown tool or command `{key}`	알 수 없는 도구 또는 명령 `{key}`
 @msg	{_1} is already used by {_2}	{_1}은(는) 이미 {_2}에서 사용 중입니다
+@msg	{_1} is reserved by the system	{_1}은(는) 시스템에서 예약되어 있습니다
 @msg	Couldn't copy to the system clipboard: {e}	시스템 클립보드로 복사할 수 없습니다: {e}
 @msg	Couldn't paste from the clipboard: {e}	클립보드에서 붙여넣을 수 없습니다: {e}
 @msg	nothing selected	선택된 항목이 없습니다
@@ -4496,6 +4526,8 @@ theme	Appearance	외관
 @msg	{key} must be an array of non-negative integer object ids	{key}은(는) 음이 아닌 정수인 개체 id의 배열이어야 합니다
 @msg	invalid object id {value}: expected a non-negative integer	개체 id {value}이(가) 올바르지 않습니다: 음이 아닌 정수여야 합니다
 @msg	no such object id {value}	id가 {value}인 개체가 없습니다
+@msg	id {value} is a layer, not an object	id {value}은(는) 개체가 아닌 레이어입니다
+@msg	id {value} is a layer, not an object; move layers with layer.move	id {value}은(는) 개체가 아닌 레이어입니다. 레이어는 layer.move로 이동하세요
 @msg	automation filesystem access is not granted: read authority is absent: {path}	자동화 파일 시스템 접근이 허용되지 않았습니다: 읽기 권한이 없습니다: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	자동화 파일 시스템 접근이 허용되지 않았습니다: 쓰기 권한이 없습니다: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	자동화 경로가 거부되었습니다: 읽기 루트 {root} 밖입니다: {path}
@@ -4620,7 +4652,6 @@ effect	Vertical	세로
 @msg	before must name a panel	before는 패널을 지정해야 합니다
 @msg	docking action contains an unknown panel or an excessive split path	도킹 동작에 알 수 없는 패널이나 지나치게 많은 분할 경로가 있습니다
 @msg	group must be true or false	group은 true 또는 false여야 합니다
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	패널이 분리되어 있습니다. 그룹은 window.panel.float {panel, collapsed}로 접으세요
 @msg	panel is not in a dock group	패널이 도크 그룹에 없습니다
 @msg	only a dock group above or below others collapses, not one beside another	다른 그룹의 위나 아래에 있는 도크 그룹만 접을 수 있으며, 옆에 있는 그룹은 접을 수 없습니다
 @msg	icon must be true or false	icon은 true 또는 false여야 합니다
@@ -4781,6 +4812,7 @@ lighting	Light	광원
 @msg	unknown parameter `{key}`; the command takes: {keys}	알 수 없는 매개변수 `{key}`: 이 명령이 받는 매개변수: {keys}
 	Load EPS into Clipboard	EPS를 클립보드로 불러오기
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h}픽셀 이미지는 너무 커서 그릴 수 없습니다
+@msg	an image of {w} × {h} pixels is shown at reduced size	{w} × {h}픽셀 이미지는 축소된 크기로 표시됩니다
 @msg	the image can't be read as a texture	이미지를 텍스처로 읽을 수 없습니다
 	Basic	기본
 	Fill and Stroke Controls	칠 및 획 컨트롤
@@ -4953,6 +4985,7 @@ lighting	Light	광원
 @msg	Persistent libraries not found: {files}	지속 라이브러리를 찾을 수 없습니다: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}`은(는) 라이브러리 패널이 아닙니다(window.swatchLibrary 참조)
 @msg	library panel `{given}` isn't open	라이브러리 패널 `{given}`이(가) 열려 있지 않습니다
+@msg	too many changed shortcuts	변경된 단축키가 너무 많습니다
 @msg	library panel `{given}` isn't missing its library	라이브러리 패널 `{given}`의 라이브러리가 누락되지 않았습니다
 @msg	too many library panels were opened in this session	이 세션에서 라이브러리 패널을 너무 많이 열었습니다
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	이미지가 {_1} × {_2}픽셀로 한 변이 {LARGE_TRACE_SIDE}을 넘습니다. 추적은 되지만 더 느립니다. 충실도가 낮은 사전 설정이나 이미지의 작은 사본을 사용하면 더 빠릅니다.
@@ -4962,6 +4995,11 @@ lighting	Light	광원
 	Snap to Perpendicular	수직선에 스냅
 @msg	unknown snap option `{key}` (use {options})	알 수 없는 스냅 옵션 `{key}` ({options} 중에서 사용하세요)
 	Gap Length:	간격 길이:
+@msg	`colorGroup` needs `library: "document"`	`colorGroup`에는 `library: "document"`가 필요합니다
+@msg	`colorGroup` needs `palette: "documentLibrary"`	`colorGroup`에는 `palette: "documentLibrary"`가 필요합니다
+@msg	`colorGroup` needs `mode: "color"`	`colorGroup`에는 `mode: "color"`가 필요합니다
+@msg	no color group `{name}` in the document (see swatch.list)	문서에 색상 그룹 `{name}`이(가) 없습니다(swatch.list 참조)
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	단색 로고 모드에서 이미지를 {_3} × {_4}에서 평균을 내어 축소한 {_1} × {_2}픽셀로 추적했습니다.
 	Artboard {n} of {total}	아트보드 {n} / {total}
 	File {n} of {total}	파일 {n} / {total}
 	Encoding and writing the file…	파일을 인코딩하고 쓰는 중…
@@ -5022,6 +5060,12 @@ lighting	Light	광원
 	Shift:	이동:
 	Fresco…	프레스코…
 	Fresco	프레스코
+	Lock Artboards	아트보드 잠그기
+	Unlock Artboards	아트보드 잠금 해제
+	Lock Selected	선택 항목 잠그기
+	Lock All Except Selected	선택 항목 외 모두 잠그기
+	Lock All	모두 잠그기
+	Unlock Selected	선택 항목 잠금 해제
 	Effect Gallery…	효과 갤러리…
 	Effect Gallery Dialog	효과 갤러리 대화 상자
 	Arc Segment Tool Options	호 세그먼트 도구 옵션
@@ -5113,3 +5157,40 @@ axis	Y Axis	Y축
 	Rectangular Grid Tool Options	사각형 격자 도구 옵션
 	Polar Grid Tool Options	극좌표 격자 도구 옵션
 	Fill Line	선 채우기
+	Pathfinder Options	패스파인더 옵션
+	Divide and Outline Will Remove Unpainted Artwork	나누기 및 윤곽선에서 칠하지 않은 아트워크 제거
+@msg	precision must be from 0.001 to 10 pt	precision는 0.001~10pt여야 합니다
+@msg	`pathfinder` must be an object	`pathfinder`는 개체여야 합니다
+	Add to Brushes	브러시에 추가
+	Brush Library	브러시 라이브러리
+	Save Brush Library	브러시 라이브러리 저장
+	Save Brushes…	브러시 저장…
+	Open Brush Library	브러시 라이브러리 열기
+	Selected Brushes Only	선택한 브러시만
+	Brush Libraries Menu	브러시 라이브러리 메뉴
+	User Brush Library 1	사용자 브러시 라이브러리 1
+	User Brush Library 2	사용자 브러시 라이브러리 2
+	User Brush Library 3	사용자 브러시 라이브러리 3
+	User Brush Library 4	사용자 브러시 라이브러리 4
+	User Brush Library 5	사용자 브러시 라이브러리 5
+	User Brush Library 6	사용자 브러시 라이브러리 6
+	User Brush Library 7	사용자 브러시 라이브러리 7
+	User Brush Library 8	사용자 브러시 라이브러리 8
+	User Brush Library 9	사용자 브러시 라이브러리 9
+	User Brush Library 10	사용자 브러시 라이브러리 10
+	Art Ribbons	아트 리본
+	Calligraphic Nibs	서예 펜촉
+	Pattern Borders	패턴 테두리
+	Scatter Shapes	흩뿌리기 모양
+	Save Brush Library…	브러시 라이브러리 저장…
+@msg	`{_1}` has no brushes to apply	`{_1}`에 적용할 브러시가 없습니다
+@msg	missing `library` (see brush.libraries)	`library`가 없습니다(brush.libraries 참조)
+@msg	no brush `{n}`	브러시 `{n}`이(가) 없습니다
+@msg	no brush `{n}` in `{_1}`	`{_1}`에 브러시 `{n}`이(가) 없습니다
+@msg	no brush library `{key}` (see brush.libraries)	브러시 라이브러리 `{key}`이(가) 없습니다(brush.libraries 참조)
+@msg	the document has no brushes to save	문서에 저장할 브러시가 없습니다
+@msg	no empty artboards to delete	삭제할 빈 아트보드가 없습니다
+	Scale Presets	크기 조절 사전 설정
+@msg	a {width}×{height} screenshot's byte count overflows	{width}×{height} 스크린샷의 바이트 수가 넘칩니다
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	창의 {what}({points}포인트 × {scale} DPI)로는 스크린샷 크기를 정할 수 없습니다
+	Live preview	실시간 미리 보기
