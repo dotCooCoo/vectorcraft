@@ -173,14 +173,16 @@ pub(crate) fn finish(d: &mut Document, sel: &mut Selection) {
 }
 
 /// Isolate the editing layer and draw into it (`Some`), or return to the document (`None`, which
-/// also ends View Opacity Mask).
+/// also ends View Opacity Mask). With `None` while a pattern is edited, the pattern's tile layer is
+/// isolated again.
 pub(crate) fn show_editing(s: &mut Session, layer: Option<NodeId>) -> Result<()> {
     let st = s.doc_mut()?;
-    st.isolation = layer;
-    st.active_layer = layer.or_else(|| st.doc.default_layer());
     if layer.is_none() {
         st.mask_view = None;
     }
+    let layer = layer.or_else(|| st.doc.pattern_edit.as_ref().map(|pe| pe.layer));
+    st.isolation = layer;
+    st.active_layer = layer.or_else(|| st.doc.default_layer());
     st.revision += 1;
     Ok(())
 }

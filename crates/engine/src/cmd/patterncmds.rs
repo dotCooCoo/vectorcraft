@@ -257,8 +257,11 @@ fn leave_edit(d: &mut Document, sel: &mut Selection) -> Result<(PatternEdit, Vec
     Ok((pe, art))
 }
 
+/// Isolate the pattern's tile layer (`Some`), or leave pattern editing (`None`): while an opacity
+/// mask is edited, its editing layer is isolated again.
 fn after_edit_mode(s: &mut Session, layer: Option<NodeId>) -> Result<()> {
     let st = s.doc_mut()?;
+    let layer = layer.or_else(|| st.doc.mask_edit.map(|me| me.layer));
     st.isolation = layer;
     st.active_layer = layer.or_else(|| st.doc.default_layer());
     st.revision += 1;

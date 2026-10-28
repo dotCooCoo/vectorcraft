@@ -190,6 +190,52 @@ fn exit_isolation_while_editing_leaves_mask_editing() {
     assert!(layer.is_some() && st.isolation == layer, "back in mask editing");
 }
 
+/// A mask edited while a pattern is edited: Exit Isolation Mode leaves mask editing and isolates
+/// the pattern's tile layer again, so new art goes into the pattern. A second Exit Isolation Mode
+/// saves the pattern.
+#[test]
+fn exit_isolation_from_a_mask_edited_inside_a_pattern_returns_to_the_pattern() {
+    let mut s = session();
+    let r = rect(&mut s, 0.0, 10.0);
+    s.execute("select.set", &json!({"ids": [r.0]})).unwrap();
+    s.execute("object.pattern.make", &json!({"name": "P"})).unwrap();
+    let tile = doc(&s).pattern_edit.as_ref().map(|pe| pe.layer);
+    editing_mask(&mut s);
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    assert!(st.doc.mask_edit.is_none() && st.doc.pattern_edit.is_some());
+    assert_eq!((st.isolation, st.active_layer), (tile, tile));
+    let drawn = rect(&mut s, 60.0, 10.0);
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    assert!(st.doc.pattern_edit.is_none() && st.isolation.is_none());
+    assert!(st.doc.node(drawn).is_none(), "the new art went into the pattern");
+    assert_eq!(st.doc.pattern("P").unwrap().art.len(), 3);
+}
+
+/// A pattern edited while a mask is edited: Exit Isolation Mode saves the pattern and isolates the
+/// mask's editing layer again. A second Exit Isolation Mode leaves mask editing.
+#[test]
+fn exit_isolation_from_a_pattern_edited_inside_a_mask_returns_to_the_mask() {
+    let mut s = session();
+    editing_mask(&mut s);
+    let mask_layer = doc(&s).mask_edit.map(|me| me.layer);
+    let r = rect(&mut s, 0.0, 10.0);
+    s.execute("select.set", &json!({"ids": [r.0]})).unwrap();
+    s.execute("object.pattern.make", &json!({"name": "P"})).unwrap();
+    // An object in the tile isolated on its own still leaves pattern editing first.
+    let drawn = rect(&mut s, 60.0, 10.0);
+    s.execute("object.isolate", &json!({"id": drawn.0})).unwrap();
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    assert!(st.doc.pattern_edit.is_none() && st.doc.mask_edit.is_some());
+    assert_eq!(st.doc.pattern("P").unwrap().art.len(), 2);
+    assert_eq!((st.isolation, st.active_layer), (mask_layer, mask_layer));
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    assert!(st.doc.mask_edit.is_none() && st.isolation.is_none());
+}
+
 /// Releasing the masks of a group and of an object inside it puts each mask's art directly above
 /// its object, as releasing one mask at a time does.
 #[test]
