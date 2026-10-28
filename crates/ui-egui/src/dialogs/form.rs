@@ -757,10 +757,21 @@ pub(super) fn slider_ends(ui: &mut egui::Ui, label_w: f32, ends: (&str, &str)) {
     });
 }
 
+/// [`slider_ends`] under a rail `width` wide that starts at the left edge of the row, for a slider
+/// with its label on the line above.
+pub(super) fn slider_ends_below(ui: &mut egui::Ui, width: f32, ends: (&str, &str)) {
+    ui.horizontal(|ui| rail_ends_w(ui, width, ends));
+}
+
 /// The words of [`slider_ends`] under a rail that starts where the next widget does.
-fn rail_ends(ui: &mut egui::Ui, (left, right): (&str, &str)) {
+fn rail_ends(ui: &mut egui::Ui, ends: (&str, &str)) {
+    rail_ends_w(ui, SLIDER_WIDTH, ends);
+}
+
+/// [`rail_ends`] under a rail `width` wide.
+fn rail_ends_w(ui: &mut egui::Ui, width: f32, (left, right): (&str, &str)) {
     let t = Tokens::get(ui.ctx());
-    let (r, _) = ui.allocate_exact_size(egui::vec2(SLIDER_WIDTH, 14.0), egui::Sense::hover());
+    let (r, _) = ui.allocate_exact_size(egui::vec2(width, 14.0), egui::Sense::hover());
     let font = egui::FontId::proportional(11.0);
     ui.painter().text(r.left_center(), egui::Align2::LEFT_CENTER, left, font.clone(), t.text_dim);
     ui.painter().text(r.right_center(), egui::Align2::RIGHT_CENTER, right, font, t.text_dim);

@@ -703,3 +703,26 @@ fn printer_mark_labels_are_distinct_from_language_names() {
     assert_eq!(save_pdf::choice_label(cs, "language", "Japanese"), crate::i18n::tr(cs, "Japanese"));
     assert_eq!(save_pdf::choice_label(crate::i18n::Lang::EN, "marks.kind", "Japanese"), "Japanese");
 }
+
+/// In a document in millimeters, an offset typed with a decimal comma (`0,1`) is taken as 0.1 mm
+/// instead of going back to the value the field had, and Offset Path opens on it again (#3837).
+#[test]
+fn offset_path_takes_a_decimal_comma() {
+    let (ctx, mut app) = (ctx(), app_with_selection());
+    app.run("document.setUnits", json!({"units": "Millimeters"})).unwrap();
+    app.run("select.all", json!({})).unwrap();
+    crate::menus::invoke(&mut app, "object.path.offsetPath", json!({}));
+    settle(&ctx, &mut app);
+    // The dialog focuses its first field, the offset: type as a user does, then Tab commits it.
+    frame(&ctx, &mut app, vec![Event::Text("0,1".into())]);
+    frame(&ctx, &mut app, vec![Event::Key { key: egui::Key::Tab, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() }]);
+    let texts = frame(&ctx, &mut app, vec![]);
+    let mm = vectorcraft_doc::Unit::Millimeters.to_pt(0.1);
+    let offset = app.ui.dialog.as_ref().unwrap().f64("offset", 0.0);
+    assert!((offset - mm).abs() < 1e-9, "0.1 mm: {offset} pt");
+    assert!(texts.iter().any(|(t, _)| t == "0.1 mm"), "the field shows 0.1 mm: {texts:?}");
+    confirm(&mut app).unwrap();
+    crate::menus::invoke(&mut app, "object.path.offsetPath", json!({}));
+    let offset = app.ui.dialog.as_ref().unwrap().f64("offset", 0.0);
+    assert!((offset - mm).abs() < 1e-9, "reopened on 0.1 mm: {offset} pt");
+}

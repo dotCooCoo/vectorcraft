@@ -46,6 +46,7 @@ pub(crate) struct Publishing {
 }
 
 impl Publishing {
+    /// Whether the latest Copy or Cut still has formats waiting to be written to the system clipboard.
     pub(crate) fn is_pending(&self) -> bool {
         self.pending
     }
