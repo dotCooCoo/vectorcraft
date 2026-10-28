@@ -263,9 +263,11 @@ pub(super) fn exit_isolation(s: &mut Session, p: &Value) -> Result<Value> {
     // then leaves that mode, as Stop Editing Opacity Mask and the isolation bar's Done do. When one
     // mode was entered inside the other, the one whose layer holds the isolated object is left.
     let st = s.doc()?;
-    let pattern_isolated = st.doc.pattern_edit.as_ref().is_some_and(|pe| {
-        st.isolation.is_some_and(|i| i == pe.layer || st.doc.ancestry(i).is_some_and(|a| a.contains(&pe.layer)))
-    });
+    let pattern_isolated = st
+        .doc
+        .pattern_edit
+        .as_ref()
+        .is_some_and(|pe| st.isolation.is_some_and(|i| i == pe.layer || st.doc.ancestry(i).is_some_and(|a| a.contains(&pe.layer))));
     let leave_mode: Option<fn(&mut Session, &Value) -> Result<Value>> = if st.doc.mask_edit.is_some() && !pattern_isolated {
         Some(crate::cmd::maskedit::leave)
     } else if st.doc.pattern_edit.is_some() {
