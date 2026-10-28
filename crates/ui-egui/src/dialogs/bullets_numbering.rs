@@ -329,8 +329,8 @@ fn position(ui: &mut egui::Ui, d: &mut Dialog, unit: vectorcraft_doc::Unit) {
 /// `text.setFormat` parameters: the fields that differ from the values the dialog opened with,
 /// on the dialog's type and range. With a preset that puts the paragraphs in a list, the indents
 /// the dialog shows go too, so that the hanging indent `text.setFormat` gives a paragraph joining a
-/// list does not replace them. Alignment goes only when the paragraphs are in a list or the
-/// preset puts them in one.
+/// list does not replace them. Alignment and Level go only when the paragraphs are in a list or
+/// the preset puts them in one.
 fn params(d: &Dialog) -> Map<String, Value> {
     let initial = d.fields.get(INITIAL).and_then(Value::as_object);
     let was = |key: &str| initial.and_then(|m| m.get(key)).and_then(Value::as_str);
@@ -359,8 +359,10 @@ fn params(d: &Dialog) -> Map<String, Value> {
     {
         p.insert("listAlign".into(), json!(a));
     }
+    // …and `listLevel` too.
     if let Some(l) = d.fields.get("listLevel").and_then(Value::as_f64)
         && initial.and_then(|m| m.get("listLevel")).and_then(Value::as_f64) != Some(l)
+        && (listing || was("list") != Some("none"))
     {
         p.insert("listLevel".into(), json!(l));
     }
@@ -651,6 +653,28 @@ mod tests {
         assert_eq!(params(app.ui.dialog.as_ref().unwrap()).get("listLevel"), Some(&json!(2.0)));
         super::super::confirm(&mut app).unwrap();
         assert_eq!((first(&app, id).0.map(|l| l.level), paras(&app, id).1.list.map(|l| l.level)), (Some(2), Some(2)));
+    }
+
+    /// `text.setFormat` sets `listLevel` only on paragraphs in a list, so a Level change alone on
+    /// paragraphs in no list sends nothing and adds no undo step; with a preset it applies.
+    #[test]
+    fn level_alone_on_paragraphs_in_no_list_adds_no_undo_step() {
+        let (mut app, id) = app();
+        let undo = app.session.active().unwrap().history.undo.len();
+        app.run("ui.bulletsAndNumbering", json!({})).unwrap();
+        set(&mut app, "listLevel", json!(3));
+        assert!(!changes(&params(app.ui.dialog.as_ref().unwrap())));
+        frame(&mut app);
+        assert!(!app.session.in_interaction(), "no preview");
+        super::super::confirm(&mut app).unwrap();
+        assert!(app.ui.dialog.is_none());
+        assert_eq!(app.session.active().unwrap().history.undo.len(), undo, "no undo step");
+        assert_eq!(first(&app, id), (None, 0.0, 0.0));
+        app.run("ui.bulletsAndNumbering", json!({})).unwrap();
+        set(&mut app, "listLevel", json!(3));
+        pick_preset(&mut app, "bullet", Some("dot"));
+        super::super::confirm(&mut app).unwrap();
+        assert_eq!(first(&app, id).0, Some(ParaList::bulleted(Bullet::Dot).at_level(3)));
     }
 
     /// The presets are radio buttons named for screen readers, the one the dialog applies chosen;
