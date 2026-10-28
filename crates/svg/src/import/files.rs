@@ -79,7 +79,11 @@ fn percent_decoded(s: &str) -> String {
     let mut out = Vec::with_capacity(s.len());
     let mut rest = s.as_bytes();
     while let Some((&b, tail)) = rest.split_first() {
-        let hex = tail.get(..2).and_then(|h| std::str::from_utf8(h).ok()).and_then(|h| u8::from_str_radix(h, 16).ok());
+        let hex = tail
+            .get(..2)
+            .filter(|h| h.iter().all(u8::is_ascii_hexdigit))
+            .and_then(|h| std::str::from_utf8(h).ok())
+            .and_then(|h| u8::from_str_radix(h, 16).ok());
         match hex {
             Some(v) if b == b'%' => {
                 out.push(v);
@@ -303,6 +307,13 @@ fn leave_out(why: &AtomicBool, noted: bool) -> Option<ImageKind> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn percent_decoding_needs_two_hex_digits() {
+        assert_eq!(percent_decoded("a%41b"), "aAb");
+        assert_eq!(percent_decoded("a%+1b"), "a%+1b");
+        assert_eq!(percent_decoded("a%-1b"), "a%-1b");
+    }
 
     #[test]
     fn hrefs_resolve_against_the_folder() {

@@ -8,6 +8,7 @@ use vectorcraft_doc::{Document, Node, NodeId, NodeKind};
 
 use super::wand::{fill_of, stroke_of};
 use super::*;
+use crate::DocState;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -103,7 +104,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Fill Color",
             ["Select", "Same"],
             None,
-            "{} the objects filled with the first selected object's fill colour (any tint of its global or spot swatch, the same tint with prefs selectSameTintPercent)",
+            "{} the objects filled with the first selected object's fill colour (any tint of its global or spot swatch, the same tint with prefs selectSameTintPercent); a member path of a compound path selected first compares as its compound path, except in isolation mode inside that compound path",
             has_selection,
             |s, _| {
                 let tint = s.prefs.select_same_tint_percent;
@@ -115,7 +116,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Stroke Color",
             ["Select", "Same"],
             None,
-            "{} the objects stroked with the first selected object's stroke colour (tints as select.same.fillColor)",
+            "{} the objects stroked with the first selected object's stroke colour (tints and compound paths as select.same.fillColor)",
             has_selection,
             |s, _| {
                 let tint = s.prefs.select_same_tint_percent;
@@ -132,7 +133,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Fill & Stroke",
             ["Select", "Same"],
             None,
-            "{} the objects with the first selected object's fill and stroke colours (tints as select.same.fillColor)",
+            "{} the objects with the first selected object's fill and stroke colours (tints and compound paths as select.same.fillColor)",
             has_selection,
             |s, _| {
                 let tint = s.prefs.select_same_tint_percent;
@@ -179,7 +180,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Graphic Style",
             ["Select", "Same"],
             None,
-            "{} the objects linked to the graphic style the first selected object is linked to",
+            "{} the objects linked to the graphic style the first selected object is linked to (compound paths as select.same.fillColor)",
             has_selection,
             same_graphic_style
         ),
@@ -188,7 +189,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Appearance Attribute",
             ["Select", "Same"],
             None,
-            "{item?: appearance item index} the objects sharing an appearance attribute of the first selected object: its fill or stroke `item` (default: the Appearance panel's active item), else its first effect, else its topmost fill",
+            "{item?: appearance item index} the objects sharing an appearance attribute of the first selected object: its fill or stroke `item` (default: the Appearance panel's active item), else its first effect, else its topmost fill (compound paths as select.same.fillColor)",
             has_selection,
             same_attribute
         ),
@@ -199,7 +200,7 @@ pub fn specs() -> Vec<CommandSpec> {
 /// The objects Select All takes: those of the isolated container, else of every layer (looking
 /// through sublayers, which are not objects). In isolation mode there are none while the isolated
 /// container, or a group or layer it is in, is hidden, locked or a template layer.
-fn selectable(d: &Document, iso: Option<NodeId>) -> Vec<NodeId> {
+pub(crate) fn selectable(d: &Document, iso: Option<NodeId>) -> Vec<NodeId> {
     match iso.and_then(|i| d.node(i)) {
         Some(c) if d.ancestry(c.id).is_some_and(|a| a.iter().all(|i| d.node(*i).is_some_and(|n| n.visible && !n.locked && !n.is_template()))) => {
             // A single object isolated is all there is to select.
@@ -663,15 +664,32 @@ fn paint_reported(d: &Document, n: &Node) -> bool {
     compound(n) || (!n.is_container() && !d.parent_of(n.id).and_then(|p| d.node(p)).is_some_and(compound))
 }
 
+/// The object Select > Same compares the others with, and whether isolation mode is inside a
+/// compound path. The object is the first selected one, or its compound path when it is a member
+/// of one; in isolation mode inside a compound path it is the member path itself.
+fn same_reference<'a>(st: &'a DocState, cmd: &str) -> Result<(&'a Node, bool)> {
+    let compound = |n: &Node| matches!(n.kind, NodeKind::Compound { .. });
+    let members = st.isolation.and_then(|i| st.doc.ancestry(i)).is_some_and(|a| a.iter().any(|i| st.doc.node(*i).is_some_and(compound)));
+    let first = st.selection.objects.first().and_then(|id| st.doc.node(*id)).ok_or_else(|| bad(cmd, "nothing selected"))?;
+    let refn = match st.doc.parent_of(first.id).and_then(|p| st.doc.node(p)) {
+        Some(p) if !members && compound(p) => p,
+        _ => first,
+    };
+    Ok((refn, members))
+}
+
+/// Select > Same: the objects `eq` matches with the object [`same_reference`] returns, among those
+/// [`paint_reported`] accepts. A compound path matches as a whole. In isolation mode inside a
+/// compound path, its member paths are matched instead.
 fn same(s: &mut Session, cmd: &str, eq: impl Fn(&Node, &Node) -> bool) -> Result<Value> {
-    let st = s.doc()?;
-    let refn = st.selection.objects.first().and_then(|id| st.doc.node(*id)).cloned().ok_or_else(|| bad(cmd, "nothing selected"))?;
-    select_where(s, cmd, &json!({}), |_, n| !n.is_container() && eq(n, &refn))
+    let (refn, members) = same_reference(s.doc()?, cmd)?;
+    let refn = refn.clone();
+    select_where(s, cmd, &json!({}), |d, n| (if members { !n.is_container() } else { paint_reported(d, n) }) && eq(n, &refn))
 }
 
 /// Select the objects [`walk_selectable`] visits that `f` accepts (not looking inside accepted
 /// ones); Select > Reselect repeats `cmd` with `p`.
-fn select_where(s: &mut Session, cmd: &str, p: &Value, f: impl Fn(&Document, &Node) -> bool) -> Result<Value> {
+pub(crate) fn select_where(s: &mut Session, cmd: &str, p: &Value, f: impl Fn(&Document, &Node) -> bool) -> Result<Value> {
     let st = s.doc()?;
     let mut ids = vec![];
     walk_selectable(&st.doc, st.isolation, |n| {
@@ -683,20 +701,17 @@ fn select_where(s: &mut Session, cmd: &str, p: &Value, f: impl Fn(&Document, &No
     });
     let from = st.selection.objects.clone();
     s.select(|_, sel| sel.set(ids.iter().copied()))?;
-    s.doc_mut()?.last_selection_cmd = Some((cmd.to_string(), p.clone(), from));
-    Ok(json!({ "count": ids.len() }))
+    let st = s.doc_mut()?;
+    st.last_selection_cmd = Some((cmd.to_string(), p.clone(), from));
+    // The objects selected, after Lock Guides has left out guide paths.
+    Ok(json!({ "count": st.selection.objects.len() }))
 }
 
 fn same_graphic_style(s: &mut Session, _: &Value) -> Result<Value> {
     let cmd = "select.same.graphicStyle";
     let st = s.doc()?;
-    let id = st
-        .selection
-        .objects
-        .first()
-        .and_then(|id| super::style::linked_style(&st.doc, st.doc.node(*id)?))
-        .map(|g| g.id)
-        .ok_or_else(|| bad(cmd, "the selection has no graphic style"))?;
+    let (refn, _) = same_reference(st, cmd)?;
+    let id = super::style::linked_style(&st.doc, refn).map(|g| g.id).ok_or_else(|| bad(cmd, "the selection has no graphic style"))?;
     select_where(s, cmd, &json!({}), |d, n| n.extras().graphic_style == Some(id) && super::style::linked_style(d, n).is_some())
 }
 
@@ -709,7 +724,7 @@ enum Attribute {
 fn same_attribute(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "select.same.appearanceAttribute";
     let st = s.doc()?;
-    let refn = st.selection.objects.first().and_then(|id| st.doc.node(*id)).ok_or_else(|| bad(cmd, "nothing selected"))?;
+    let (refn, _) = same_reference(st, cmd)?;
     let ap = &refn.appearance;
     let item = p.get("item").and_then(Value::as_u64).map(index).or(s.appearance_item());
     let attr = match (item.and_then(|i| ap.items.get(i)), ap.effects.first()) {
@@ -750,6 +765,7 @@ fn by_kind(s: &mut Session, f: fn(&Node) -> bool) -> Result<Value> {
         }
         true
     });
-    s.select(|_, sel| sel.set(ids.iter().copied()))?;
-    Ok(json!({ "count": ids.len() }))
+    s.select(|_, sel| sel.set(ids))?;
+    // The objects selected, after Lock Guides has left out guide paths.
+    Ok(json!({ "count": s.doc()?.selection.objects.len() }))
 }

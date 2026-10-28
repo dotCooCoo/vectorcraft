@@ -830,6 +830,11 @@ impl GroupEdit {
     pub(super) fn defaults(&self, s: &mut Session) {
         self.relinks.iter().for_each(|r| r.defaults(s));
     }
+
+    /// How many paints linked to the group's swatches the rewrite changed.
+    pub(super) fn relinked(&self) -> usize {
+        self.relinked
+    }
 }
 
 /// Rewrite colour group `group` with `colors`: its swatches take them in order (keeping their

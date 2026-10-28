@@ -340,7 +340,6 @@ font-technology	Variable	Вариативные
 	Brush Affects:	Кисть влияет на:
 	Brush Definition	Определение кисти
 	Brush Libraries	Библиотеки кистей
-	Brush Libraries (on the roadmap)	Библиотеки кистей (в плане развития)
 	Brush Options…	Параметры кисти…
 	Brush Strokes	Мазки кисти
 	Brushes	Кисти
@@ -353,6 +352,9 @@ font-technology	Variable	Вариативные
 	Bullets	Маркеры
 	Bullets and Numbering	Маркеры и нумерация
 	Apply Bullets	Применить маркеры
+	Numbered List	Нумерованный список
+	Apply Numbers	Применить нумерацию
+	Convert to Text	Преобразовать в текст
 	Filled Dot	Закрашенная точка
 	Dash	Тире
 	Hollow Circle	Пустой круг
@@ -1105,6 +1107,7 @@ font-technology	Variable	Вариативные
 	Fill and Stroke	Заливка и обводка
 	Fill new strokes	Заполнять новые обводки
 	Alt key toggles to Smooth Tool	Клавиша Alt переключает на инструмент «Сглаживание»
+	Live curve fitting	Подгонка кривой во время рисования
 	Keep selected	Оставлять выбранным
 	Merge only with selection	Объединять только с выделенным
 	Consider Open Filled Paths as Closed	Считать открытые контуры с заливкой замкнутыми
@@ -1885,6 +1888,7 @@ file-filter	Templates	Шаблоны
 	Miter Limit:	Предел митры:
 	Mixed Appearances	Смешанное оформление
 	Mixed Objects	Смешанные объекты
+	Mixed	Смешанное
 	Mode:	Режим:
 	Model	Модель
 	Modified	Изменено
@@ -2625,6 +2629,7 @@ mark-style	Japanese	Японский
 	Remove Plug-in	Убрать модуль
 	Remove Selected Assets	Убрать выбранные ресурсы
 	Remove Threading	Убрать связывание
+	Break Thread	Разорвать связывание
 	Remove “{keyword}”	Убрать «{keyword}»
 	Rename	Переименовать
 	Rename Asset	Переименовать ресурс
@@ -2826,7 +2831,22 @@ mark-style	Japanese	Японский
 	Saved to User Defined: {}	Сохранено в «Пользовательский»: {}
 	Saved View 1	Сохранённый вид 1
 	Saved View 10	Сохранённый вид 10
+	Saved View 11	Сохранённый вид 11
+	Saved View 12	Сохранённый вид 12
+	Saved View 13	Сохранённый вид 13
+	Saved View 14	Сохранённый вид 14
+	Saved View 15	Сохранённый вид 15
+	Saved View 16	Сохранённый вид 16
+	Saved View 17	Сохранённый вид 17
+	Saved View 18	Сохранённый вид 18
+	Saved View 19	Сохранённый вид 19
 	Saved View 2	Сохранённый вид 2
+	Saved View 20	Сохранённый вид 20
+	Saved View 21	Сохранённый вид 21
+	Saved View 22	Сохранённый вид 22
+	Saved View 23	Сохранённый вид 23
+	Saved View 24	Сохранённый вид 24
+	Saved View 25	Сохранённый вид 25
 	Saved View 3	Сохранённый вид 3
 	Saved View 4	Сохранённый вид 4
 	Saved View 5	Сохранённый вид 5
@@ -3111,12 +3131,14 @@ mark-style	Japanese	Японский
 	Outlines	Контуры
 	Outlines with Source Image	Контуры с исходным изображением
 	Source Image	Исходное изображение
+	Press and hold to view the source image	Удерживайте, чтобы увидеть исходное изображение
 	Image Trace View	Просмотр трассировки изображения
 	Snap Options	Параметры привязки
 	Snap to Glyph	Привязать к глифу
 	Snap to Grid	Привязать к сетке
 	Snap to Pixel	Привязать к пикселю
 	Precise Cursors	Точные курсоры
+	Image Trace Preview	Просмотр трассировки изображения
 	Snap to Point	Привязать к точке
 	Snap to Unit	Привязать к единицам
 	Snapping Tolerance	Допуск привязки
@@ -3794,13 +3816,10 @@ axis	Horizontal	Горизонтально
 axis	Vertical	Вертикально
 axis	Both	Оба
 	Drag to move	Перетащите для перемещения
-	Drag to move out of the set	Перетащите, чтобы вынести из набора
 	Drag to float as a toolbar	Перетащите, чтобы сделать плавающей панелью инструментов
 	Put back in the toolbar	Вернуть на панель инструментов
 	Float Panel	Сделать панель плавающей
 	Dock Panel	Прикрепить панель
-	Drag to float the panel group	Перетащите, чтобы сделать группу панелей плавающей
-	Put back in the dock	Вернуть в док
 	Drag to float the toolbar	Перетащите, чтобы сделать панель инструментов плавающей
 	Drag to the window's left edge to dock	Перетащите к левому краю окна для прикрепления
 	Float Tool Group	Сделать группу инструментов плавающей
@@ -3871,6 +3890,7 @@ axis	Both	Оба
 @msg	Installed plug-in {_1}	Установлен модуль {_1}
 @msg	Internal error: {msg} (please report this bug)	Внутренняя ошибка: {msg} (пожалуйста, сообщите об этой ошибке)
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Объединение быстрой заливки: выделите группу быстрой заливки и контуры для добавления
+@msg	Live Paint takes paths and compound paths: convert type, images and other objects to paths first	Быстрая заливка принимает контуры и составные контуры: сначала преобразуйте текст, изображения и другие объекты в контуры
 @msg	Live Paint: select paths or compound paths	Быстрая заливка: выделите контуры или составные контуры
 @msg	Live Paint: these paths are too degenerate to paint	Быстрая заливка: эти контуры слишком вырождены для заливки
 @msg	Make Guides: select paths	Создание направляющих: выделите контуры
@@ -3937,6 +3957,12 @@ axis	Both	Оба
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` должно быть от {min} до {max} (получено {x})
 @msg	`{key}` must be one of {_1}	`{key}` должно быть одним из: {_1}
 @msg	`{key}` must be true or false	`{key}` должно быть true или false
+@msg	`select` must be true or false	`select` должно быть true или false
+@msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` и `maxAnchors` должны быть целыми числами
+@msg	`{key}` must be a number not below 0	`{key}` должно быть числом не меньше 0
+@msg	`{key}` must be [x, y, width, height]: four finite numbers, width and height not negative	`{key}` должно быть [x, y, width, height]: четыре конечных числа, ширина и высота не отрицательные
+@msg	`{min_key}` is greater than `{max_key}`	`{min_key}` больше, чем `{max_key}`
+@msg	give at least one of `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`	укажите хотя бы один из параметров `name`, `kind`, `text`, `within`, `intersects`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `minThickness`, `maxThickness`, `minArea`, `maxArea`, `minAnchors`, `maxAnchors`
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` должно быть grayscale, rgb, hsb, cmyk или websafe
 @msg	`{k}` must be [x, y]	`{k}` должно быть [x, y]
 @msg	`{name}` has no options	`{name}` не имеет параметров
@@ -4353,6 +4379,7 @@ axis	Both	Оба
 @msg	tool shortcuts must be a single key (optionally with Shift)	сочетания инструментов должны быть одной клавишей (необязательно с Shift)
 @msg	truncated	усечено
 @msg	unknown command `{0}`	неизвестная команда `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	неизвестная команда `{0}`; возможно, имелась в виду `{1}`?
 @msg	unknown effect `{id}`	неизвестный эффект `{id}`
 @msg	unknown format	неизвестный формат
 @msg	unknown format `{f}` (Save writes {_1})	неизвестный формат `{f}` (сохранение записывает {_1})
@@ -4375,6 +4402,7 @@ axis	Both	Оба
 @msg	unsupported: {0}	не поддерживается: {0}
 @msg	variables are locked	переменные заблокированы
 @msg	variables that aren't text were left out: {kinds}	переменные, которые не являются текстовыми, пропущены: {kinds}
+@msg	`{key}: {top}` and `options.{key}: {inner}` disagree: give the option once	`{key}: {top}` и `options.{key}: {inner}` противоречат друг другу: укажите параметр только один раз
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	файлы версии {0} не могут быть сжаты: только версия {COMPRESSED_SINCE} и новее открывают сжатые файлы
 @msg	width and height are at least 1 pixel	ширина и высота должны быть не менее 1 пикселя
 @msg	workspace name can't be empty	имя рабочей среды не может быть пустым
@@ -4388,7 +4416,9 @@ axis	Both	Оба
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} — модуль экспорта (Файл › Экспорт › Экспортировать как…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` занимает {size} байт (предел {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} уже используется {_2}
+@msg	{_1} is reserved by the system	Сочетание {_1} зарезервировано системой
 @msg	{_1} linked file(s) can't be read here: their previews show	здесь невозможно прочитать связанных файлов: {_1}: отображаются их предварительные просмотры
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	не удалось декодировать изображения ({undecoded}): они показаны как перечёркнутые рамки
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	связанных изображений ({_1}) изменились на диске: «Обновить связи» покажет новые версии
 @msg	Updated {_1} linked file(s) changed on disk	Обновлено связанных файлов, измененных на диске: {_1}
 @msg	{_1}: not saved, so not closed	{_1}: не сохранён, поэтому не закрыт
@@ -4523,6 +4553,8 @@ axis	Both	Оба
 @msg	{key} must be an array of non-negative integer object ids	{key} должно быть массивом идентификаторов объектов, которые являются неотрицательными целыми числами
 @msg	invalid object id {value}: expected a non-negative integer	недопустимый идентификатор объекта {value}: ожидается неотрицательное целое число
 @msg	no such object id {value}	объект с идентификатором {value} не существует
+@msg	id {value} is a layer, not an object	идентификатор {value} относится к слою, а не к объекту
+@msg	id {value} is a layer, not an object; move layers with layer.move	идентификатор {value} относится к слою, а не к объекту; перемещайте слои с помощью layer.move
 @msg	automation filesystem access is not granted: read authority is absent: {path}	у автоматизации нет доступа к файловой системе: нет права на чтение: {path}
 @msg	automation filesystem access is not granted: write authority is absent: {path}	у автоматизации нет доступа к файловой системе: нет права на запись: {path}
 @msg	automation path rejected: outside the read root {root}: {path}	путь автоматизации отклонён: вне корневой папки для чтения {root}: {path}
@@ -4645,7 +4677,6 @@ axis	Both	Оба
 @msg	before must name a panel	before должен указывать панель
 @msg	docking action contains an unknown panel or an excessive split path	Действие прикрепления содержит неизвестную панель или слишком длинный путь разделений
 @msg	group must be true or false	group должен иметь значение true или false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	панель плавающая; сверните её группу через window.panel.float {panel, collapsed}
 @msg	panel is not in a dock group	панель не находится в группе дока
 @msg	only a dock group above or below others collapses, not one beside another	свернуть можно только группу дока над или под другими, а не рядом с ними
 @msg	icon must be true or false	icon должен быть true или false
@@ -4813,6 +4844,7 @@ lighting	Light	Свет
 @msg	unknown parameter `{key}`; the command takes: {keys}	неизвестный параметр `{key}`; команда принимает: {keys}
 	Load EPS into Clipboard	Загрузить EPS в буфер обмена
 @msg	an image of {w} × {h} pixels is too large to draw	изображение размером {w} × {h} пикселей слишком велико для отрисовки
+@msg	an image of {w} × {h} pixels is shown at reduced size	изображение размером {w} × {h} пикселей показано в уменьшенном размере
 @msg	the image can't be read as a texture	изображение не удаётся прочитать как текстуру
 	Basic	Базовый
 	Fill and Stroke Controls	Элементы управления заливкой и обводкой
@@ -4985,6 +5017,7 @@ lighting	Light	Свет
 @msg	Persistent libraries not found: {files}	Постоянные библиотеки не найдены: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` — не панель библиотеки (см. window.swatchLibrary)
 @msg	library panel `{given}` isn't open	панель библиотеки `{given}` не открыта
+@msg	too many changed shortcuts	слишком много изменённых сочетаний
 @msg	library panel `{given}` isn't missing its library	библиотека панели библиотеки `{given}` не отсутствует
 @msg	too many library panels were opened in this session	в этом сеансе открыто слишком много панелей библиотек
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	Изображение {_1} × {_2} пикселей, больше {LARGE_TRACE_SIDE} по одной стороне: трассировка выполняется, но медленнее. Стиль с меньшей точностью или уменьшенная копия изображения трассируются быстрее.
@@ -4994,6 +5027,11 @@ lighting	Light	Свет
 	Snap to Perpendicular	Привязать к перпендикуляру
 @msg	unknown snap option `{key}` (use {options})	неизвестный параметр привязки `{key}` (допустимо: {options})
 	Gap Length:	Длина зазора:
+@msg	`colorGroup` needs `library: "document"`	для `colorGroup` нужен `library: "document"`
+@msg	`colorGroup` needs `palette: "documentLibrary"`	для `colorGroup` нужен `palette: "documentLibrary"`
+@msg	`colorGroup` needs `mode: "color"`	для `colorGroup` нужен `mode: "color"`
+@msg	no color group `{name}` in the document (see swatch.list)	в документе нет цветовой группы `{name}` (см. swatch.list)
+@msg	Flat Logo traced the image at {_1} × {_2} pixels, averaged down from {_3} × {_4}.	Режим «Плоский логотип» трассировал изображение в размере {_1} × {_2} пикселей, уменьшенное усреднением с {_3} × {_4}.
 	Artboard {n} of {total}	Монтажная область {n} из {total}
 	File {n} of {total}	Файл {n} из {total}
 	Encoding and writing the file…	Кодирование и запись файла…
@@ -5054,6 +5092,12 @@ lighting	Light	Свет
 	Shift:	Сдвиг:
 	Fresco…	Фреска…
 	Fresco	Фреска
+	Lock Artboards	Заблокировать монтажные области
+	Unlock Artboards	Разблокировать монтажные области
+	Lock Selected	Заблокировать выбранные
+	Lock All Except Selected	Заблокировать все, кроме выбранных
+	Lock All	Заблокировать все
+	Unlock Selected	Разблокировать выбранные
 	Effect Gallery…	Галерея эффектов…
 	Effect Gallery Dialog	Диалог «Галерея эффектов»
 	Arc Segment Tool Options	Параметры инструмента «Дуговой сегмент»
@@ -5145,3 +5189,40 @@ axis	Y Axis	Ось Y
 	Rectangular Grid Tool Options	Параметры инструмента «Прямоугольная сетка»
 	Polar Grid Tool Options	Параметры инструмента «Полярная сетка»
 	Fill Line	Заливка отрезка
+	Pathfinder Options	Параметры обработки контуров
+	Divide and Outline Will Remove Unpainted Artwork	«Разделить» и «Контур» удаляют неокрашенную графику
+@msg	precision must be from 0.001 to 10 pt	precision должно быть от 0,001 до 10 pt
+@msg	`pathfinder` must be an object	`pathfinder` должно быть объектом
+	Add to Brushes	Добавить в кисти
+	Brush Library	Библиотека кистей
+	Save Brush Library	Сохранить библиотеку кистей
+	Save Brushes…	Сохранить кисти…
+	Open Brush Library	Открыть библиотеку кистей
+	Selected Brushes Only	Только выбранные кисти
+	Brush Libraries Menu	Меню «Библиотеки кистей»
+	User Brush Library 1	Пользовательская библиотека кистей 1
+	User Brush Library 2	Пользовательская библиотека кистей 2
+	User Brush Library 3	Пользовательская библиотека кистей 3
+	User Brush Library 4	Пользовательская библиотека кистей 4
+	User Brush Library 5	Пользовательская библиотека кистей 5
+	User Brush Library 6	Пользовательская библиотека кистей 6
+	User Brush Library 7	Пользовательская библиотека кистей 7
+	User Brush Library 8	Пользовательская библиотека кистей 8
+	User Brush Library 9	Пользовательская библиотека кистей 9
+	User Brush Library 10	Пользовательская библиотека кистей 10
+	Art Ribbons	Художественные ленты
+	Calligraphic Nibs	Каллиграфические перья
+	Pattern Borders	Узорные каймы
+	Scatter Shapes	Рассеянные фигуры
+	Save Brush Library…	Сохранить библиотеку кистей…
+@msg	`{_1}` has no brushes to apply	В `{_1}` нет кистей для применения
+@msg	missing `library` (see brush.libraries)	не указан `library` (см. brush.libraries)
+@msg	no brush `{n}`	нет кисти `{n}`
+@msg	no brush `{n}` in `{_1}`	нет кисти `{n}` в `{_1}`
+@msg	no brush library `{key}` (see brush.libraries)	нет библиотеки кистей `{key}` (см. brush.libraries)
+@msg	the document has no brushes to save	в документе нет кистей для сохранения
+@msg	no empty artboards to delete	нет пустых монтажных областей для удаления
+	Scale Presets	Наборы масштаба
+@msg	a {width}×{height} screenshot's byte count overflows	количество байтов снимка {width}×{height} переполняется
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	{what} окна ({points} пунктов × {scale} DPI) не позволяет задать размер снимка
+	Live preview	Просмотр в реальном времени

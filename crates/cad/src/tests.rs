@@ -492,6 +492,30 @@ fn a_bullet_is_text_of_its_own_before_its_paragraph() {
     assert!((all(&e[1], 10)[0] - bullet_x).abs() < 1e-6, "the bullet where it is drawn: {} and {bullet_x}", all(&e[1], 10)[0]);
 }
 
+/// A numbered list paragraph's number and period are a TEXT entity of their own where they are
+/// drawn, in the order they are drawn: in a right-to-left paragraph the period comes first, at the
+/// number's left.
+#[test]
+fn a_number_is_text_of_its_own_before_its_paragraph() {
+    use vectorcraft_doc::text::{NumberStyle, ParaList};
+    let numbered = |text: &str, count: u32| {
+        let mut d = text_doc(text, 20.0);
+        let id = d.layers[0].children().unwrap()[0].id;
+        if let Some(NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) {
+            t.para.list = Some(ParaList::numbered(NumberStyle::Arabic));
+            t.para.left_indent = 30.0;
+            t.para.first_line_indent = -30.0;
+            t.list_count = count;
+        }
+        let out = export(&d, &DxfOptions { version: DxfVersion::R2018, preserve: Preserve::Editability, ..opts(&d) }).unwrap();
+        entities(&out).iter().map(|e| (get(e, 1).map(str::to_string), all(e, 10)[0])).collect::<Vec<_>>()
+    };
+    assert_eq!(numbered("Item", 11), [(Some("12.".to_string()), 10.0), (Some("Item".to_string()), 40.0)]);
+    let rtl = numbered("שלום", 11);
+    assert_eq!(rtl.iter().map(|(s, _)| s.clone().unwrap_or_default()).collect::<Vec<_>>(), ["שלום", ".12"]);
+    assert!(rtl[1].1 > rtl[0].1, "the number right of the text: {rtl:?}");
+}
+
 /// Area type that Shrink Text to Fit scales down is written at the height it draws at.
 #[test]
 fn shrunk_area_type_is_text_at_the_size_it_draws_at() {

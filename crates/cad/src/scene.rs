@@ -909,8 +909,13 @@ impl<'a> Scene<'a> {
                 let Some(&first) = run.first() else { continue };
                 let lo = run.iter().map(|g| g.byte).min().unwrap_or(first.byte);
                 let hi = run.iter().map(|g| g.byte + g.len).max().unwrap_or(lo);
-                let marker = chunk.first().and_then(|(_, _, m)| *m).map(|m| m.text.as_str());
-                let Some(s) = marker.or_else(|| plain.get(lo..hi).map(str::trim_end)).filter(|s| !s.trim().is_empty()) else { continue };
+                // A right-to-left paragraph's marker is drawn with its tab first and its number's
+                // period at the number's left; the TEXT entity holds the characters in that order.
+                let marker = chunk.first().and_then(|(_, _, m)| *m).map(|m| match m.text.strip_suffix('.') {
+                    Some(number) if m.tab == m.glyphs.start => format!(".{number}"),
+                    _ => m.text.clone(),
+                });
+                let Some(s) = marker.as_deref().or_else(|| plain.get(lo..hi).map(str::trim_end)).filter(|s| !s.trim().is_empty()) else { continue };
                 let Some(cs) = t.runs.get(first.run).map(|r| &r.style) else { continue };
                 let paint = if cs.fill.is_none() { &cs.stroke } else { &cs.fill };
                 let Some(rgb) = self.paint_rgb(paint) else { continue };
