@@ -222,7 +222,11 @@ fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>, stacked: boo
         boxes: Vec<Rect>,
         union: Option<Rect>,
     }
-    let meet = |a: &Rect, b: &Rect| a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+    // Boxes closer than a point count as overlapping: their antialiased edges can share pixels.
+    let meet = |a: &Rect, b: &Rect| {
+        let b = b.inflate(1.0, 1.0);
+        a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1
+    };
     let mut groups: Vec<Run> = vec![];
     for item in items {
         if matches!(item.kind, NodeKind::Group { .. }) {

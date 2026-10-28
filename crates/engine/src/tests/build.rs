@@ -2934,8 +2934,8 @@ fn image_trace_expand_by_color_groups_each_colors_paths() {
     }
 
     // An Abutting trace's top path, given the bottom path's color and moved onto the middle one (by
-    // a move or by a Transform effect), or moved clear of it with a drop shadow cast onto it, before
-    // Expand, still draws on top of it.
+    // a move or by a Transform effect), moved clear of it with a drop shadow cast onto it, or moved
+    // to share a pixel at its edge, before Expand, still draws on top of it.
     let stripes = vectorcraft_trace::Raster::from_fn(90, 30, |x, _| match x / 30 {
         0 => [200, 40, 40, 255],
         1 => [40, 160, 60, 255],
@@ -2953,6 +2953,11 @@ fn image_trace_expand_by_color_groups_each_colors_paths() {
         let (to, from) = (middle.visual_bounds().unwrap(), last.visual_bounds().unwrap());
         let (dx, dy) = (to.x0 - from.x0, to.y0 - from.y0);
         match how {
+            "beside" => {
+                // The middle path and the moved top path end and start inside one pixel.
+                s.execute("object.move", &json!({"ids": [middle.id.0], "dx": -0.5, "dy": 0})).unwrap();
+                s.execute("object.move", &json!({"ids": [last.id.0], "dx": -0.3, "dy": 0})).unwrap()
+            }
             "move" => s.execute("object.move", &json!({"ids": [last.id.0], "dx": dx, "dy": dy})).unwrap(),
             "transform" => {
                 s.execute("effect.apply", &json!({"ids": [last.id.0], "effect": "distort.transform", "params": {"moveH": dx, "moveV": dy}})).unwrap()
@@ -2966,7 +2971,7 @@ fn image_trace_expand_by_color_groups_each_colors_paths() {
         s.execute("imageTrace.expand", &json!({"id": g.0, "byColor": by_color})).unwrap();
         (s, g)
     };
-    for how in ["move", "transform", "shadow"] {
+    for how in ["move", "transform", "shadow", "beside"] {
         let (flat, _) = edited(false, how);
         let (s, g) = edited(true, how);
         assert_eq!(names(&node(&s, g)).len(), 3, "{how}");
