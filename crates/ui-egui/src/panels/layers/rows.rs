@@ -1,7 +1,10 @@
 use super::controls::collect_for_export_menu;
 use super::model::{Place, Row, opens, painted_name};
 use super::thumbs::{node_arc, real_thumb, thumb};
-use super::*;
+use super::{
+    Arc, COLUMN, Color32, ColumnDrag, Document, INDENT, LayersDrag, Node, NodeId, NodeKind, Out, PanelDrag, SQUARE_X, Sense, Stroke, StrokeKind,
+    TARGET_X, Tokens, Ui, Value, View, icons, json, vec2, widgets,
+};
 
 /// Stable id for the layers panel's per-name UI state.
 pub(super) fn key(name: &str) -> egui::Id {
@@ -162,6 +165,42 @@ fn guide_drop(ui: &Ui, view: &View, guides: &[usize], layer: NodeId, r: egui::Re
     }
 }
 
+/// The row's fill (selected, current or hovered), its bottom edge and the current layer's marker.
+fn row_background(ui: &Ui, view: &View, n: &Node, r: egui::Rect, resp: &egui::Response) {
+    let t = &view.t;
+    // Highlighted rows (else the current layer's).
+    let highlighted = if view.rows.is_empty() { n.is_layer() && Some(n.id) == view.current } else { view.rows.contains(&n.id) };
+    if highlighted {
+        ui.painter().rect_filled(r, 0.0, t.row_selected);
+    } else if resp.hovered() {
+        ui.painter().rect_filled(r, 0.0, t.hover.gamma_multiply(0.6));
+    }
+    ui.painter().line_segment([r.left_bottom(), r.right_bottom()], Stroke::new(1.0, t.input_border));
+    if n.is_layer() && Some(n.id) == view.current {
+        // Current-layer marker: a small triangle in the top-right corner.
+        let c = r.right_top();
+        ui.painter().add(egui::Shape::convex_polygon(vec![c, c + vec2(-6.0, 0.0), c + vec2(0.0, 6.0)], t.text, Stroke::NONE));
+    }
+}
+
+/// The disclosure triangle of a row at `(r, x)`; Alt opens or closes everything inside too.
+fn disclosure(ui: &Ui, view: &View, n: &Node, (r, x): (egui::Rect, f32), open: bool, out: &mut Out) {
+    let t = &view.t;
+    let dr = egui::Rect::from_min_size(egui::pos2(x, r.center().y - 8.0), vec2(14.0, 16.0));
+    let dresp = ui.interact(dr, ui.scope_id().with(("disc", n.id.0)), Sense::click());
+    icons::paint(ui, if open { "chevron-down" } else { "chevron-right" }, dr, t.text_dim);
+    if dresp.clicked() {
+        out.toggle.push((n.id, !open));
+        if ui.input(|i| i.modifiers.alt) {
+            n.walk(&mut |c| {
+                if c.id != n.id && opens(c, &view.opts) {
+                    out.toggle.push((c.id, !open));
+                }
+            });
+        }
+    }
+}
+
 /// The widgets of row `item`.
 pub(super) fn row(ui: &mut Ui, view: &View, item: &Row, out: &mut Out) {
     if let Some(i) = item.guide {
@@ -183,39 +222,14 @@ pub(super) fn row(ui: &mut Ui, view: &View, item: &Row, out: &mut Out) {
             n.walk(&mut |c| any |= c.id != n.id && view.sel.contains(&c.id));
             any
         });
-    // Highlighted rows (else the current layer's).
-    let highlighted = if view.rows.is_empty() { n.is_layer() && Some(n.id) == view.current } else { view.rows.contains(&n.id) };
-    if highlighted {
-        ui.painter().rect_filled(r, 0.0, t.row_selected);
-    } else if resp.hovered() {
-        ui.painter().rect_filled(r, 0.0, t.hover.gamma_multiply(0.6));
-    }
-    ui.painter().line_segment([r.left_bottom(), r.right_bottom()], Stroke::new(1.0, t.input_border));
-    if n.is_layer() && Some(n.id) == view.current {
-        // Current-layer marker: a small triangle in the top-right corner.
-        let c = r.right_top();
-        ui.painter().add(egui::Shape::convex_polygon(vec![c, c + vec2(-6.0, 0.0), c + vec2(0.0, 6.0)], t.text, Stroke::NONE));
-    }
+    row_background(ui, view, n, r, &resp);
     eye_and_lock(ui, view, n, r, out);
     // Layer colour bar (every row shows the colour of its layer).
     let mut x = r.left() + 2.0 * COLUMN + 2.0;
     colour_bar(ui, n, r, x, color);
     x += 6.0 + depth as f32 * INDENT;
-    // Disclosure triangle; Alt opens or closes everything inside too.
     if has_children {
-        let dr = egui::Rect::from_min_size(egui::pos2(x, r.center().y - 8.0), vec2(14.0, 16.0));
-        let dresp = ui.interact(dr, ui.scope_id().with(("disc", n.id.0)), Sense::click());
-        icons::paint(ui, if open { "chevron-down" } else { "chevron-right" }, dr, t.text_dim);
-        if dresp.clicked() {
-            out.toggle.push((n.id, !open));
-            if ui.input(|i| i.modifiers.alt) {
-                n.walk(&mut |c| {
-                    if c.id != n.id && opens(c, &view.opts) {
-                        out.toggle.push((c.id, !open));
-                    }
-                });
-            }
-        }
+        disclosure(ui, view, n, (r, x), open, out);
     }
     x += 16.0;
     // Thumbnail.

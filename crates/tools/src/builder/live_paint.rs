@@ -1,7 +1,9 @@
 use super::cache::RegionCache;
 use super::lookup::{is_live_paint, live_paint_at, visible_edge_near, visible_face_at};
 use super::map::{HIGHLIGHT_RED, sorted_roots};
-use super::*;
+use super::{
+    Action, Arc, BezPath, Cursor, Document, Mods, Node, NodeId, Overlay, Point, PointerEvent, PointerKind, Tool, ToolContext, Value, json, json_ids,
+};
 
 // ---------- Live Paint Bucket ----------
 

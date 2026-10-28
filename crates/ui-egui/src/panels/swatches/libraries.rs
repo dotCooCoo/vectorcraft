@@ -1,7 +1,10 @@
 use super::actions::deletable;
 use super::dnd::selection;
 use super::tiles::{describe, global_mark, list_icons};
-use super::*;
+use super::{
+    Arc, BuiltinLibrary, GRADIENT_LIBRARIES, Item, LibraryKind, LibraryRef, Rect, Row, SWATCH_LIBRARIES, Swatch, SwatchLibrary, Ui, Value,
+    VectorcraftApp, json, library_panel, menu_item, swatch_tile, swatchlib,
+};
 
 fn library_refs(libs: Vec<swatchlib::LibraryInfo>) -> Vec<LibraryRef> {
     libs.into_iter().map(|l| LibraryRef { submenu: library_panel::submenu(l.category), id: l.id, name: l.name }).collect()

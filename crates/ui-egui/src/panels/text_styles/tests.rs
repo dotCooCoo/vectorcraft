@@ -319,24 +319,79 @@ fn click_new_style_footer_range(ctx: &egui::Context, app: &mut VectorcraftApp, i
     assert_eq!(text_editing(app), Some((id, start, end)), "footer capture preserves the Type range");
 }
 
-fn capture_during_live_typing(redefine: bool, footer: bool) {
-    let (mut app, id, ctx) = capture_app();
+fn create_redefined_texts(app: &mut VectorcraftApp, ctx: &egui::Context, id: NodeId) -> (Option<NodeId>, Option<NodeId>) {
     let mut follower = None;
     let mut local_override = None;
-    if redefine {
-        app.run("charStyle.new", json!({"name": "Body", "attrs": {"size": 24}})).unwrap();
-        click_style_ui(&ctx, &mut app, id, None, false, "Body");
-        for (slot, text, y, size) in [(&mut follower, "Follower", 130, 24), (&mut local_override, "Override", 160, 48)] {
-            let user = NodeId(app.run("text.create", json!({"x": 20, "y": y, "text": text, "size": 24})).unwrap()["id"].as_u64().unwrap());
-            app.run("charStyle.apply", json!({"name": "Body", "id": user.0})).unwrap();
-            app.run("text.setRangeStyle", json!({"id": user.0, "start": 0, "end": text.len(), "size": size})).unwrap();
-            *slot = Some(user);
-        }
-        app.run("select.set", json!({"ids": [id.0]})).unwrap();
-        // This override is already the captured size, so Redefine does not alter the edited
-        // runs and accidentally make TextTool::replace restart the typing interaction.
-        app.run("text.setRangeStyle", json!({"id": id.0, "start": 0, "end": 6, "size": 18})).unwrap();
+
+    app.run("charStyle.new", json!({"name": "Body", "attrs": {"size": 24}})).unwrap();
+    click_style_ui(ctx, app, id, None, false, "Body");
+    for (slot, text, y, size) in [(&mut follower, "Follower", 130, 24), (&mut local_override, "Override", 160, 48)] {
+        let user = NodeId(app.run("text.create", json!({"x": 20, "y": y, "text": text, "size": 24})).unwrap()["id"].as_u64().unwrap());
+        app.run("charStyle.apply", json!({"name": "Body", "id": user.0})).unwrap();
+        app.run("text.setRangeStyle", json!({"id": user.0, "start": 0, "end": text.len(), "size": size})).unwrap();
+        *slot = Some(user);
     }
+    app.run("select.set", json!({"ids": [id.0]})).unwrap();
+    // This override is already the captured size, so Redefine does not alter the edited
+    // runs and accidentally make TextTool::replace restart the typing interaction.
+    app.run("text.setRangeStyle", json!({"id": id.0, "start": 0, "end": 6, "size": 18})).unwrap();
+    (follower, local_override)
+}
+
+/// Undo and Redo each commit one distinct typing or style-capture history entry.
+fn assert_typing_undo_redo(
+    app: &mut VectorcraftApp,
+    undo_states: [&std::sync::Arc<vectorcraft_doc::Document>; 3],
+    redo_states: [&std::sync::Arc<vectorcraft_doc::Document>; 3],
+    selection: &vectorcraft_doc::Selection,
+    undo: usize,
+) {
+    assert_typing_undo(app, undo_states, selection, undo);
+    assert_typing_redo(app, redo_states, selection, undo);
+}
+
+fn assert_typing_undo(
+    app: &mut VectorcraftApp,
+    states: [&std::sync::Arc<vectorcraft_doc::Document>; 3],
+    selection: &vectorcraft_doc::Selection,
+    undo: usize,
+) {
+    for (step, expected) in states.into_iter().enumerate() {
+        let result = app.run("edit.undo", json!({})).unwrap();
+        if step != 1 {
+            assert_eq!(result["undone"], json!("Typing"));
+        }
+        let st = app.session.doc().unwrap();
+        assert_eq!(st.doc.as_ref(), expected.as_ref());
+        assert_eq!(&st.selection, selection);
+        assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo + 2 - step, step + 1));
+        assert_eq!(st.is_dirty(), step != 2);
+        assert!(!app.session.in_interaction());
+        assert_eq!(app.session.tool_options()["typing"], json!(false));
+    }
+}
+
+fn assert_typing_redo(
+    app: &mut VectorcraftApp,
+    states: [&std::sync::Arc<vectorcraft_doc::Document>; 3],
+    selection: &vectorcraft_doc::Selection,
+    undo: usize,
+) {
+    for (step, expected) in states.into_iter().enumerate() {
+        let result = app.run("edit.redo", json!({})).unwrap();
+        if step != 1 {
+            assert_eq!(result["redone"], json!("Typing"));
+        }
+        let st = app.session.doc().unwrap();
+        assert_eq!(st.doc.as_ref(), expected.as_ref());
+        assert_eq!(&st.selection, selection);
+        assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo + step + 1, 2 - step));
+        assert!(st.is_dirty());
+    }
+}
+fn capture_during_live_typing(redefine: bool, footer: bool) {
+    let (mut app, id, ctx) = capture_app();
+    let (follower, local_override) = if redefine { create_redefined_texts(&mut app, &ctx, id) } else { (None, None) };
     let link = redefine.then(|| "Body".to_string());
     app.session.doc_mut().unwrap().mark_saved();
     let before = app.session.doc().unwrap().doc.clone();
@@ -366,12 +421,7 @@ fn capture_during_live_typing(redefine: bool, footer: bool) {
     assert!(app.session.in_interaction());
     assert_eq!(app.session.tool_options()["typing"], json!(true));
     assert_eq!(app.session.doc().unwrap().selection, selection);
-    let label = if redefine { "Redefine Character Style" } else { "New Character Style…" };
-    if footer {
-        click_new_style_footer(&ctx, &mut app, id);
-    } else {
-        click_style_ui(&ctx, &mut app, id, Some((0, 5)), true, label);
-    }
+    capture_style_from_typing(&mut app, &ctx, id, redefine, footer);
     let captured = app.session.doc().unwrap().doc.clone();
     let capture_history = (app.session.doc().unwrap().history.undo.len(), app.session.doc().unwrap().history.redo.len());
     let capture_settled = !app.session.in_interaction() && app.session.tool_options()["typing"] == json!(false);
@@ -386,12 +436,7 @@ fn capture_during_live_typing(redefine: bool, footer: bool) {
             assert_eq!(captured.node(node.id), Some(node));
         }
     });
-    if let Some(user) = follower {
-        assert_eq!(text_runs(&app, user), vec![("Follower".into(), 18.0, Some("Body".into()))]);
-    }
-    if let Some(user) = local_override {
-        assert_eq!(text_runs(&app, user), vec![("Override".into(), 48.0, Some("Body".into()))]);
-    }
+    assert_related_text_styles(&app, follower, local_override);
 
     // Check persistence before the history assertions: RED must expose the lost definition,
     // not merely report that typing was still live after capture.
@@ -414,29 +459,24 @@ fn capture_during_live_typing(redefine: bool, footer: bool) {
 
     // Undo itself commits the new live typing interaction. Three separate snapshots prove
     // that typing, capture and further typing can each be undone/redone independently.
-    for (step, expected) in [&captured, &typed, &before].into_iter().enumerate() {
-        let result = app.run("edit.undo", json!({})).unwrap();
-        if step != 1 {
-            assert_eq!(result["undone"], json!("Typing"));
-        }
-        let st = app.session.doc().unwrap();
-        assert_eq!(&st.doc, expected);
-        assert_eq!(st.selection, selection);
-        assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo + 2 - step, step + 1));
-        assert_eq!(st.is_dirty(), step != 2);
-        assert!(!app.session.in_interaction());
-        assert_eq!(app.session.tool_options()["typing"], json!(false));
+    assert_typing_undo_redo(&mut app, [&captured, &typed, &before], [&typed, &captured, &after], &selection, undo);
+}
+
+fn capture_style_from_typing(app: &mut VectorcraftApp, ctx: &egui::Context, id: NodeId, redefine: bool, footer: bool) {
+    let label = if redefine { "Redefine Character Style" } else { "New Character Style…" };
+    if footer {
+        click_new_style_footer(ctx, app, id);
+    } else {
+        click_style_ui(ctx, app, id, Some((0, 5)), true, label);
     }
-    for (step, expected) in [&typed, &captured, &after].into_iter().enumerate() {
-        let result = app.run("edit.redo", json!({})).unwrap();
-        if step != 1 {
-            assert_eq!(result["redone"], json!("Typing"));
-        }
-        let st = app.session.doc().unwrap();
-        assert_eq!(&st.doc, expected);
-        assert_eq!(st.selection, selection);
-        assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo + step + 1, 2 - step));
-        assert!(st.is_dirty());
+}
+
+fn assert_related_text_styles(app: &VectorcraftApp, follower: Option<NodeId>, local_override: Option<NodeId>) {
+    if let Some(user) = follower {
+        assert_eq!(text_runs(app, user), vec![("Follower".into(), 18.0, Some("Body".into()))]);
+    }
+    if let Some(user) = local_override {
+        assert_eq!(text_runs(app, user), vec![("Override".into(), 48.0, Some("Body".into()))]);
     }
 }
 

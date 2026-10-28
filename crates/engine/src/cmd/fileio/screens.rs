@@ -16,7 +16,7 @@ use serde_json::{Map, Value, json};
 use vectorcraft_doc::Document;
 use vectorcraft_geom::Rect;
 
-use super::super::*;
+use super::super::{NodeId, Result, Session, bad, str_param};
 use super::encode::single_artboard;
 use super::export::{export_crop, isolated, selected_artwork, without_artboards};
 use super::naming::{self, NameParts};

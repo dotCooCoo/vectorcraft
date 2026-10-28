@@ -1,6 +1,10 @@
 use super::nodes::{MASK, doc_path};
 use super::output::sanitize_id;
-use super::*;
+use super::{
+    Affine, BezPath, BlendMode, Color, FillLayer, FillRule, GradientKind, GradientPaint, HashMap, ImageBlob, ImageMode, LineCap, LineJoin,
+    LinkedImage, Node, NodeKind, Paint, PathData, Point, Props, Rect, StrokeAlign, StrokeLayer, Writer, Written, base64_encode, blend_css, fmt_num,
+    stroke, xml_escape,
+};
 
 /// Image `b` as SVG viewers show it: PNG, JPEG, GIF, WebP and SVG as they are, other formats (a
 /// CMYK TIFF) as PNG.

@@ -12,7 +12,7 @@ use std::sync::Arc;
 use serde_json::{Map, Value, json};
 use vectorcraft_doc::Document;
 
-use super::super::*;
+use super::super::{CommandSpec, Result, Session, always, bad, bool_or, clock_date, cmd, date_param, has_doc, str_param};
 use super::{
     ARTBOARD_PARAMS, ArtboardPick, Encoded, Format, Loaded, encode_all, file_stem, format, format_for_name, load, read_file, with_compression_pref,
     write_encoded,

@@ -14,7 +14,7 @@ use vectorcraft_doc::{Document, Knockout, Node, NodeId, OpacityMask, Selection};
 
 use super::maskedit::{begin, finish, mask_group, mask_parts, show_editing};
 use super::pathops::{Beside, separate};
-use super::*;
+use super::{CommandSpec, Result, Session, always, bad, bool_or, cmd, has_doc, ids_param, ok, targets};
 use crate::EngineError;
 
 pub fn specs() -> Vec<CommandSpec> {

@@ -26,7 +26,7 @@ use vectorcraft_geom::{Affine, FillRule, PathData, Rect};
 use vectorcraft_render::effects::{self, RasterFx};
 use vectorcraft_render::{AntiAlias, RenderOptions};
 
-use super::*;
+use super::{CommandSpec, Result, Session, bad, cmd, has_doc};
 
 mod report;
 use report::FlattenReport;

@@ -12,7 +12,10 @@ use vectorcraft_geom::Vec2;
 use super::edit::selected_roots;
 use super::pathops::Beside;
 use super::select::{selectable_ids, walk_selectable};
-use super::*;
+use super::{
+    CommandSpec, EngineError, Point, Result, Session, bad, bool_or, checked_ids_param, cmd, f64_or, f64_req, has_doc, has_selection, id_param, ok,
+    str_param,
+};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
