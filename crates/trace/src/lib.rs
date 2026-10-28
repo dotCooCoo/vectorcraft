@@ -519,11 +519,19 @@ fn drops_color(params: &TraceParams) -> bool {
 
 /// Ignore Color, background only: clears to [`TRANSPARENT`] every area of a label `ignored` leaves
 /// out that reaches the image's edge, through neighbors above, below and to either side. It fills
-/// one run of a row at a time.
+/// one run of a row at a time, and fills from one edge pixel at a time.
 fn clear_background(labels: &mut [u16], w: usize, h: usize, ignored: &[bool]) {
-    let left_out = |labels: &[u16], i: usize| labels.get(i).is_some_and(|&l| ignored.get(l as usize).copied().unwrap_or(false));
     let (last_row, last_col) = (h.saturating_sub(1) * w, w.saturating_sub(1));
-    let mut seeds: Vec<usize> = (0..w).flat_map(|x| [x, last_row + x]).chain((0..h).flat_map(|y| [y * w, y * w + last_col])).collect();
+    let mut seeds = Vec::new();
+    for edge in (0..w).flat_map(|x| [x, last_row + x]).chain((0..h).flat_map(|y| [y * w, y * w + last_col])) {
+        seeds.push(edge);
+        fill_left_out(labels, w, h, ignored, &mut seeds);
+    }
+}
+
+/// Clears to [`TRANSPARENT`] the left-out areas that `seeds` reach, and empties `seeds`.
+fn fill_left_out(labels: &mut [u16], w: usize, h: usize, ignored: &[bool], seeds: &mut Vec<usize>) {
+    let left_out = |labels: &[u16], i: usize| labels.get(i).is_some_and(|&l| ignored.get(l as usize).copied().unwrap_or(false));
     while let Some(i) = seeds.pop() {
         if !left_out(labels, i) {
             continue;

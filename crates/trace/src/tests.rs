@@ -1315,6 +1315,25 @@ fn ignore_background_traces_a_color_within_the_box_of_its_remaining_areas() {
 }
 
 #[test]
+fn ignore_background_clears_a_tall_narrow_image_from_its_edges() {
+    // A 1 × 200,000 column of color 0 with color 1 at rows 1,000 to 1,009: every pixel is on the
+    // edge, so all of color 0 is background.
+    let (w, h) = (1, 200_000);
+    let mut labels = vec![0u16; w * h];
+    for l in &mut labels[1_000..1_010] {
+        *l = 1;
+    }
+    clear_background(&mut labels, w, h, &[true, false]);
+    assert_eq!(labels.iter().filter(|&&l| l == TRANSPARENT).count(), h - 10);
+    assert!(labels[1_000..1_010].iter().all(|&l| l == 1));
+    // In a 2 × 100,000 column of color 0, every pixel is on the edge too.
+    let (w, h) = (2, 100_000);
+    let mut labels = vec![0u16; w * h];
+    clear_background(&mut labels, w, h, &[true, false]);
+    assert!(labels.iter().all(|&l| l == TRANSPARENT));
+}
+
+#[test]
 fn snap_curves_to_lines_levels_a_rectangle_a_degree_askew() {
     // 120 × 60, turned 1.5° about its centre.
     let (c, t) = (Point::new(100.3, 60.6), 1.5f64.to_radians());
