@@ -331,7 +331,6 @@ font-technology	Variable	Variabla
 	Brush Affects:	Penseln påverkar:
 	Brush Definition	Penseldefinition
 	Brush Libraries	Penselbibliotek
-	Brush Libraries (on the roadmap)	Penselbibliotek (planeras)
 	Brush Options…	Penselalternativ…
 	Brush Strokes	Penseldrag
 	Brushes	Penslar
@@ -346,6 +345,7 @@ font-technology	Variable	Variabla
 	Apply Bullets	Använd punkter
 	Numbered List	Numrerad lista
 	Apply Numbers	Använd numrering
+	Convert to Text	Konvertera till text
 	Filled Dot	Fylld punkt
 	Dash	Tankstreck
 	Hollow Circle	Tom cirkel
@@ -1823,6 +1823,7 @@ font-technology	Variable	Variabla
 	Miter Limit:	Spetsgräns:
 	Mixed Appearances	Blandade utseenden
 	Mixed Objects	Blandade objekt
+	Mixed	Blandat
 	Mode:	Läge:
 	Model	Modell
 	Modified	Ändrad
@@ -2556,6 +2557,7 @@ font-technology	Variable	Variabla
 	Remove Plug-in	Ta bort plugin
 	Remove Selected Assets	Ta bort markerade resurser
 	Remove Threading	Ta bort textlänkning
+	Break Thread	Bryt textlänkning
 	Remove “{keyword}”	Ta bort ”{keyword}”
 	Rename	Byt namn
 	Rename Asset	Byt namn på resurs
@@ -2754,7 +2756,22 @@ font-technology	Variable	Variabla
 	Saved to User Defined: {}	Sparat i Användardefinierat: {}
 	Saved View 1	Sparad vy 1
 	Saved View 10	Sparad vy 10
+	Saved View 11	Sparad vy 11
+	Saved View 12	Sparad vy 12
+	Saved View 13	Sparad vy 13
+	Saved View 14	Sparad vy 14
+	Saved View 15	Sparad vy 15
+	Saved View 16	Sparad vy 16
+	Saved View 17	Sparad vy 17
+	Saved View 18	Sparad vy 18
+	Saved View 19	Sparad vy 19
 	Saved View 2	Sparad vy 2
+	Saved View 20	Sparad vy 20
+	Saved View 21	Sparad vy 21
+	Saved View 22	Sparad vy 22
+	Saved View 23	Sparad vy 23
+	Saved View 24	Sparad vy 24
+	Saved View 25	Sparad vy 25
 	Saved View 3	Sparad vy 3
 	Saved View 4	Sparad vy 4
 	Saved View 5	Sparad vy 5
@@ -4284,6 +4301,7 @@ axis	Both	Båda
 @msg	{_1} is already used by {_2}	{_1} används redan av {_2}
 @msg	{_1} is reserved by the system	{_1} är reserverat av systemet
 @msg	{_1} linked file(s) can't be read here: their previews show	{_1} länkade fil(er) kan inte läsas här: deras förhandsgranskningar visas
+@msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	{undecoded} bild(er) kunde inte avkodas och visas som överkryssade rutor
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} länkade bild(er) har ändrats på disken: Uppdatera länkar visar de nya versionerna
 @msg	Updated {_1} linked file(s) changed on disk	Uppdaterade {_1} länkade fil(er) som ändrats på disken
 @msg	{_1}: not saved, so not closed	{_1}: inte sparat, så inte stängt
@@ -5138,6 +5156,7 @@ mark-style	Japanese	Japanska
 theme	Appearance	Utseende
 	Load EPS into Clipboard	Läs in EPS till urklipp
 @msg	an image of {w} × {h} pixels is too large to draw	en bild på {w} × {h} pixlar är för stor för att ritas
+@msg	an image of {w} × {h} pixels is shown at reduced size	en bild på {w} × {h} pixlar visas i förminskad storlek
 	Fill and Stroke Controls	Kontroller för fyllning och kontur
 	Coloring Controls	Kontroller för färgläggning
 	Draw Mode Controls	Kontroller för ritläge
@@ -5593,6 +5612,40 @@ axis	Y Axis	Y-axel
 	Rectangular Grid Tool Options	Alternativ för verktyget för rektangulärt rutnät
 	Polar Grid Tool Options	Alternativ för verktyget för polärt rutnät
 	Fill Line	Fyll linje
+	Pathfinder Options	Alternativ för banfinnare
+	Divide and Outline Will Remove Unpainted Artwork	Dela upp och Konturvy tar bort omålat bildmaterial
+@msg	precision must be from 0.001 to 10 pt	precision måste vara från 0,001 till 10 pt
+@msg	`pathfinder` must be an object	`pathfinder` måste vara ett objekt
+	Add to Brushes	Lägg till i penslar
+	Brush Library	Penselbibliotek
+	Save Brush Library	Spara penselbibliotek
+	Save Brushes…	Spara penslar…
+	Open Brush Library	Öppna penselbibliotek
+	Selected Brushes Only	Endast markerade penslar
+	Brush Libraries Menu	Meny för penselbibliotek
+	User Brush Library 1	Användarbibliotek för penslar 1
+	User Brush Library 2	Användarbibliotek för penslar 2
+	User Brush Library 3	Användarbibliotek för penslar 3
+	User Brush Library 4	Användarbibliotek för penslar 4
+	User Brush Library 5	Användarbibliotek för penslar 5
+	User Brush Library 6	Användarbibliotek för penslar 6
+	User Brush Library 7	Användarbibliotek för penslar 7
+	User Brush Library 8	Användarbibliotek för penslar 8
+	User Brush Library 9	Användarbibliotek för penslar 9
+	User Brush Library 10	Användarbibliotek för penslar 10
+	Art Ribbons	Konstband
+	Calligraphic Nibs	Kalligrafiska pennspetsar
+	Pattern Borders	Mönsterbårder
+	Scatter Shapes	Spridningsformer
+	Save Brush Library…	Spara penselbibliotek…
+@msg	`{_1}` has no brushes to apply	`{_1}` har inga penslar att använda
+@msg	missing `library` (see brush.libraries)	`library` saknas (se brush.libraries)
+@msg	no brush `{n}`	ingen pensel `{n}`
+@msg	no brush `{n}` in `{_1}`	ingen pensel `{n}` i `{_1}`
+@msg	no brush library `{key}` (see brush.libraries)	inget penselbibliotek `{key}` (se brush.libraries)
+@msg	the document has no brushes to save	dokumentet har inga penslar att spara
+@msg	no empty artboards to delete	inga tomma ritytor att radera
 	Scale Presets	Skalningsförval
 @msg	a {width}×{height} screenshot's byte count overflows	byteantalet för en skärmbild på {width}×{height} överstiger gränsen
 @msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	fönstrets {what} ({points} punkter × {scale} DPI) kan inte bestämma en skärmbilds storlek
+	Live preview	Direkt förhandsgranskning

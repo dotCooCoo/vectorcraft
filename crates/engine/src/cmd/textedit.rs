@@ -274,6 +274,20 @@ fn get_range(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({"text": text, "runs": runs, "length": len}))
 }
 
+/// Keep `st`'s font style when its family has it, else take the family's closest one: a family
+/// whose styles are numbered (W3, W6) has no Regular (#4128). A family that isn't installed keeps
+/// the style as it is.
+pub(crate) fn fit_font_style(st: &mut CharStyle) {
+    let db = vectorcraft_text::FontDb::global();
+    let styles = db.styles(&st.font_family);
+    if !styles.is_empty()
+        && !styles.iter().any(|s| s.eq_ignore_ascii_case(&st.font_style))
+        && let Some(face) = db.face(&st.font_family, &st.font_style)
+    {
+        st.font_style = face.style.clone();
+    }
+}
+
 /// Character attribute changes parsed from params (shared by range and whole-object styling).
 #[derive(Default)]
 pub(crate) struct CharChange {
@@ -540,13 +554,7 @@ impl CharChange {
             st.font_family = f.clone();
             // Keep the style when the new family has it, else its closest match.
             if self.style.is_none() {
-                let styles = vectorcraft_text::FontDb::global().styles(f);
-                if !styles.is_empty()
-                    && !styles.iter().any(|s| s.eq_ignore_ascii_case(&st.font_style))
-                    && let Some(face) = vectorcraft_text::FontDb::global().face(f, &st.font_style)
-                {
-                    st.font_style = face.style.clone();
-                }
+                fit_font_style(st);
             }
         }
         if let Some(v) = &self.style {

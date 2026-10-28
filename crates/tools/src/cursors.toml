@@ -1,4 +1,4 @@
-# The cursors VectorCraft needs: one [[cursor]] per `Cursor` value (crates/tools/src/lib.rs).
+# The cursors VectorCraft needs: one [[cursor]] per `Cursor` value (crates/tools/src/cursor.rs).
 #
 # This is the source of truth for what each cursor is for, written for whoever draws them:
 # designers never decide what a cursor is for, this file does. `cargo xtask cursors` warns about
@@ -133,7 +133,7 @@ shown_when = [
     "The Selection tool after a click on the out port or the in port of selected area type or type on a path, threaded, overflowing or not: the pointer carries that text until a click threads it into a closed path, area type or type on a path, a click on empty canvas makes a new frame of the same kind and shape there, or a drag draws the new frame; from the in port the frame placed comes before the clicked one. Escape or another tool drops it.",
 ]
 hotspot = "Where the new frame's top-left corner goes (the click), or the path clicked."
-look = "A small block of text lines: the overflow text the pointer carries. Until it is drawn it borrows the I-beam (Text)."
+look = "A small block of text lines: the overflow text the pointer carries."
 
 # ── Pen family ────────────────────────────────────────────────────────────────────────────────────
 

@@ -35,9 +35,9 @@ const ROWS: &[Row] = &[
     // Line Segment Tool Options: the Length and Angle a click's dialog opens with, Fill Line.
     (&["lineSegment"], None, &["length", "angle", "fillLine"]),
     (&["pencil", "paintbrush"], None, &["fidelity", "fill", "keepSelected", "editWithin", "closeWithin"]),
-    // Pencil Tool Options' Alt key toggles to Smooth Tool and Live curve fitting (the Paintbrush
-    // has neither option).
-    (&["pencil"], None, &["altSmooth", "liveFit"]),
+    // Pencil Tool Options' Alt key toggles to Smooth Tool, Live preview and Live curve fitting (the
+    // Paintbrush has none of them).
+    (&["pencil"], None, &["altSmooth", "livePreview", "liveFit"]),
     (&["smooth"], None, &["fidelity"]),
     (&["blobBrush", "eraser"], None, &["size"]),
     (&["blobBrush"], None, &["keepSelected", "mergeOnlySelection"]),

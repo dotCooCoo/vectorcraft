@@ -415,6 +415,12 @@ impl Session {
         self.tool.wants_ticks()
     }
 
+    /// Does the active tool build a stroke from every position the pointer passed
+    /// ([`vectorcraft_tools::Tool::wants_samples`])?
+    pub fn tool_wants_samples(&self) -> bool {
+        self.tool.wants_samples()
+    }
+
     /// Is the active tool waiting for work it runs on another thread ([`Tool::waiting`])?
     pub fn tool_waiting(&self) -> bool {
         self.tool.waiting()
@@ -459,6 +465,7 @@ impl Session {
         self.with_tool_cx(view, |t, cx| t.ime_session_matches_document(cx))
     }
 
+    /// Whether the active tool currently owns keyboard text input, as the Type tool does while editing.
     pub fn tool_wants_text(&self) -> bool {
         self.tool.wants_text()
     }

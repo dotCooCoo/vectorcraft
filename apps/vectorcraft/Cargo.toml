@@ -50,13 +50,14 @@ clipboard-win = { workspace = true }
 # Win32 (MIT); the `user` feature is User32.dll only. Only the wgpu renderer chooses an adapter.
 winsafe = { version = "0.0.29", default-features = false, features = ["user"], optional = true }
 
-# DirectWrite's system font collection (src/system_fonts.rs): fonts that font services such as
-# Adobe Fonts load in place (#579). MIT OR Apache-2.0, already in the build through accesskit.
+# DirectWrite's system font collection and GDI's font list (src/system_fonts.rs): fonts that font
+# services such as Adobe Fonts load in place (#579, #1258). MIT OR Apache-2.0, already in the build
+# through accesskit.
 # Win32_UI_WindowsAndMessaging has `MSG` and `WM_POINTERDOWN`, which src/windows_stylus.rs uses to
 # read a pen's barrel button from its pointer messages. Win32_UI_Input_Pointer has
 # `GetPointerPenInfo`, which it uses to read the pen's pressure and which end of the pen is down.
 [target.'cfg(all(windows, not(target_vendor = "win7")))'.dependencies]
-windows = { version = "0.62", features = ["Win32_Graphics_DirectWrite", "Win32_UI_Input_Pointer", "Win32_UI_WindowsAndMessaging"] }
+windows = { version = "0.62", features = ["Win32_Graphics_DirectWrite", "Win32_Graphics_Gdi", "Win32_UI_Input_Pointer", "Win32_UI_WindowsAndMessaging"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # The macOS menu bar (src/mac_menu.rs): Tauri's menu crate, AppKit menus behind a safe API (no GTK

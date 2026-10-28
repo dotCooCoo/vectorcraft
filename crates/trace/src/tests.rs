@@ -2461,13 +2461,24 @@ fn automatic_traces_an_outline_over_a_cut_edge_in_the_color_of_other_art() {
             .iter()
             .any(|&(x0, y0, x1, y1)| (x0..x1).contains(&x) && (y0..y1).contains(&y))
     };
+    // The dark paths reach the top and the bottom of the disc, which no bar comes near: the outline
+    // is traced, not only the bars.
+    use kurbo::Shape;
+    let target = quantize::tests_oklab([110, 80, 40]);
+    let dark_reaches = |res: &TraceResult, edge: &dyn Fn(kurbo::Rect) -> bool| {
+        res.paths.iter().any(|p| {
+            let o = quantize::tests_oklab(p.color);
+            (0..3).map(|k| (o[k] - target[k]).powi(2)).sum::<f64>().sqrt() <= 3.0 && edge(p.path.to_bezpath().bounding_box())
+        })
+    };
     let mut failed = vec![];
     for width in [1.5, 2.0, 2.5] {
         let outline = move |x: f64, y: f64| (r(x, y) - 140.0).abs() < width / 2.0;
         let img = cut_out_layers(&[(&disc, light, 1.0), (&block, blue, 1.0), (&bars, dark, 1.0), (&outline, dark, 0.8)]);
         for detail in [85.0, 50.0] {
             let res = trace(&img, &TraceParams { color_detail: detail, ..preset("Auto Color").unwrap() });
-            if distinct_colours(&res) != 3 || !has_colour(&res, [110, 80, 40], 3.0) || res.paths.len() > 24 {
+            let ring = dark_reaches(&res, &|b| b.y0 < 15.0) && dark_reaches(&res, &|b| b.y1 > 285.0);
+            if distinct_colours(&res) != 3 || !has_colour(&res, [110, 80, 40], 3.0) || !ring || res.paths.len() > 24 {
                 failed.push(format!("outline {width} px, color detail {detail}: {} paths, {:?}", res.paths.len(), res.palette));
             }
         }
@@ -2544,6 +2555,26 @@ fn automatic_keeps_an_opaque_line_between_two_kept_colors() {
     let res = trace(&img, &preset("Auto Color").unwrap());
     assert!(has_colour(&res, [154, 132, 82], 3.0), "{:?}", res.palette);
     assert!(has_colour(&res, [204, 190, 155], 3.0), "{:?}", res.palette);
+}
+
+#[test]
+fn a_cut_edge_blend_past_the_rare_budget_still_traces_as_its_kept_color() {
+    // Seven distinct rare colors, largest first, fill the budget of six, and then the blend of the
+    // first one along a cut edge: the blend still traces as that kept color.
+    let rare: [[f64; 3]; 7] = [
+        [200.0, 30.0, 40.0],
+        [30.0, 160.0, 60.0],
+        [240.0, 200.0, 20.0],
+        [120.0, 40.0, 160.0],
+        [20.0, 200.0, 210.0],
+        [250.0, 120.0, 180.0],
+        [90.0, 60.0, 20.0],
+    ];
+    let blend = [220.0, 120.0, 120.0];
+    let colors = rare.iter().map(|&c| (c, None, None)).chain([(blend, Some(rare[0]), None)]);
+    let (out, traced_as) = quantize::kept_rare(colors);
+    assert_eq!(out, rare[..6]);
+    assert_eq!(traced_as, [(blend, rare[0], None)]);
 }
 
 #[test]

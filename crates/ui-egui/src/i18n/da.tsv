@@ -289,6 +289,7 @@
 	Apply Bullets	Anvend kugletegn
 	Numbered List	Nummereret liste
 	Apply Numbers	Anvend nummerering
+	Convert to Text	Konvertér til tekst
 	Filled Dot	Udfyldt prik
 	Dash	Tankestreg
 	Hollow Circle	Tom cirkel
@@ -336,6 +337,7 @@
 	Create	Opret
 	Release Selection	Frigør markering
 	Remove Threading	Fjern sammenkædning
+	Break Thread	Bryd sammenkædning
 	Fit Headline	Tilpas overskrift
 	Find Font…	Find skrifttype…
 	Change Case	Ændr store/små bogstaver
@@ -551,6 +553,21 @@
 	Saved View 8	Gemt visning 8
 	Saved View 9	Gemt visning 9
 	Saved View 10	Gemt visning 10
+	Saved View 11	Gemt visning 11
+	Saved View 12	Gemt visning 12
+	Saved View 13	Gemt visning 13
+	Saved View 14	Gemt visning 14
+	Saved View 15	Gemt visning 15
+	Saved View 16	Gemt visning 16
+	Saved View 17	Gemt visning 17
+	Saved View 18	Gemt visning 18
+	Saved View 19	Gemt visning 19
+	Saved View 20	Gemt visning 20
+	Saved View 21	Gemt visning 21
+	Saved View 22	Gemt visning 22
+	Saved View 23	Gemt visning 23
+	Saved View 24	Gemt visning 24
+	Saved View 25	Gemt visning 25
 	Window	Vindue
 	New Window	Nyt vindue
 	Cascade	Kaskade
@@ -1259,6 +1276,7 @@ lighting	Light	Lys
 	Hide Thumbnail	Skjul miniatur
 	Mixed Appearances	Blandede udseender
 	Mixed Objects	Blandede objekter
+	Mixed	Blandet
 	No options	Ingen indstillinger
 	No Selection	Ingen markering
 	Offset X	Forskydning X
@@ -1302,7 +1320,6 @@ lighting	Light	Lys
 	URL:	URL:
 	Use Even-Odd Fill Rule	Brug fyldreglen lige-ulige
 	Use Non-Zero Winding Fill Rule	Brug fyldreglen ikke-nul-vikling
-	Brush Libraries (on the roadmap)	Penselbiblioteker (på vejkortet)
 	List View	Listevisning
 	New Art Brush from Selection	Ny kunstpensel fra markering
 	New Bristle Brush	Ny bustpensel
@@ -4864,6 +4881,7 @@ mark-style	Japanese	Japansk
 @msg	unknown parameter `{key}`; the command takes: {keys}	ukendt parameter `{key}`; kommandoen tager: {keys}
 	Load EPS into Clipboard	Indlæs EPS i udklipsholderen
 @msg	an image of {w} × {h} pixels is too large to draw	et billede på {w} × {h} pixels er for stort til at tegne
+@msg	an image of {w} × {h} pixels is shown at reduced size	et billede på {w} × {h} pixels vises i reduceret størrelse
 	Fill and Stroke Controls	Styring af fyld og streg
 	Coloring Controls	Styring af farvelægning
 	Draw Mode Controls	Styring af tegnetilstand
@@ -5503,4 +5521,32 @@ axis	Y Axis	Y-akse
 	Rectangular Grid Tool Options	Indstillinger for rektangulært gitterværktøj
 	Polar Grid Tool Options	Indstillinger for polært gitterværktøj
 	Fill Line	Udfyld linje
+	Pathfinder Options	Pathfinder-indstillinger
+	Divide and Outline Will Remove Unpainted Artwork	Opdel og Kontur fjerner grafik uden maling
+@msg	precision must be from 0.001 to 10 pt	precision skal være fra 0,001 til 10 pt
+@msg	`pathfinder` must be an object	`pathfinder` skal være et objekt
+	Add to Brushes	Føj til pensler
+	Brush Library	Penselbibliotek
+	Save Brush Library	Gem penselbibliotek
+	Save Brushes…	Gem pensler…
+	Open Brush Library	Åbn penselbibliotek
+	Selected Brushes Only	Kun valgte pensler
+	Brush Libraries Menu	Menu med penselbiblioteker
+	User Brush Library 1	Brugerpenselbibliotek 1
+	User Brush Library 2	Brugerpenselbibliotek 2
+	User Brush Library 3	Brugerpenselbibliotek 3
+	User Brush Library 4	Brugerpenselbibliotek 4
+	User Brush Library 5	Brugerpenselbibliotek 5
+	User Brush Library 6	Brugerpenselbibliotek 6
+	User Brush Library 7	Brugerpenselbibliotek 7
+	User Brush Library 8	Brugerpenselbibliotek 8
+	User Brush Library 9	Brugerpenselbibliotek 9
+	User Brush Library 10	Brugerpenselbibliotek 10
+	Art Ribbons	Kunstbånd
+	Calligraphic Nibs	Kalligrafiske penne
+	Pattern Borders	Mønsterborter
+	Scatter Shapes	Spredte former
+	Save Brush Library…	Gem penselbibliotek…
+@msg	no empty artboards to delete	ingen tomme tegneflader at slette
 	Scale Presets	Skaleringsforudindstillinger
+	Live preview	Direkte forhåndsvisning

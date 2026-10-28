@@ -58,13 +58,13 @@ The release packages ship `vectorcraft-cli` alongside the desktop app, so no bui
 
 | Install | CLI |
 |---|---|
-| Windows (MSI) | `C:\Program Files\VectorCraft\vectorcraft-cli.exe` by default (wherever you installed it otherwise), not on `PATH` |
+| Windows (MSI) | `%LOCALAPPDATA%\Programs\ArtCraft\VectorCraft\vectorcraft-cli.exe` by default (`C:\Program Files\ArtCraft\VectorCraft\vectorcraft-cli.exe` for an all-users install, under `Program Files (x86)` instead for the 32-bit build, or wherever you installed it otherwise), not on `PATH` |
 | Linux (deb, rpm) | `/usr/bin/vectorcraft-cli` |
 | macOS | the separate `vectorcraft-cli-<version>-macos-<arch>.zip` release asset (the `.app` holds only the desktop app) |
 
 ```sh
-# Windows, default install folder
-claude mcp add vectorcraft -- "C:\Program Files\VectorCraft\vectorcraft-cli.exe" mcp
+# Windows (PowerShell), default install folder
+claude mcp add vectorcraft -- "$env:LOCALAPPDATA\Programs\ArtCraft\VectorCraft\vectorcraft-cli.exe" mcp
 # Linux, or macOS with the CLI unzipped onto PATH
 claude mcp add vectorcraft -- vectorcraft-cli mcp
 ```
@@ -75,7 +75,7 @@ For a live session, start the installed app with the control port before the MCP
 # macOS: quit VectorCraft first, since `open -a` passes no arguments to an app that is already running
 open -a VectorCraft --args --control 7979
 # Windows (PowerShell), default install folder
-& "C:\Program Files\VectorCraft\vectorcraft.exe" --control 7979
+& "$env:LOCALAPPDATA\Programs\ArtCraft\VectorCraft\vectorcraft.exe" --control 7979
 # Linux (deb, rpm)
 vectorcraft --control 7979
 ```
@@ -105,7 +105,7 @@ The two flags (PhotoCraft and the other Craft apps take the same ones, so one cl
 the suite) keep the agent to the folders you give it:
 
 - Every file a command reads must lie inside a **read root**: `open_file`, `file.place`, relinking and
-  updating links, the images an SVG links to, swatch library, graphic style library, symbol library and colour-profile loads, plug-ins,
+  updating links, the images an SVG links to, swatch library, graphic style library, symbol library, brush library and colour-profile loads, plug-ins,
   `file.newFromTemplate`, preset imports, shortcut sets (`shortcutSet.read`), the folders `text.findFontFiles` and `links.findFiles` search, the
   scripts `script.check` reads and the files they include.
 - Every file a command writes must lie inside a **write root**: `save_file`, `export`, the save and
@@ -1385,6 +1385,19 @@ names must stay unique. In the desktop app the saved selections are listed at th
 (`select.recall {name}`). A file's saved selections are checked when it opens: past 25, blank or
 repeated names, and ids the document doesn't have are dropped.
 
+## Saved views
+
+View → New View… keeps a view under a name, in the document: `view.saved.new {name?, center: [x, y], zoom,
+rotation?}` (the desktop app fills in its current view; default the first free "View N"; at most 25 per document,
+names up to 255 characters, each name once) → `{name, index}`, one undo step. `view.saved.list` →
+`{views: [{name, center, zoom, rotation}…]}` in menu order. Edit Views… renames and deletes:
+`view.saved.edit {name, newName?, delete?}`, or several at once as `{edits: [{name, newName?, delete?}…]}` in one
+undo step (→ `{views}`), where every `name` is the name before the edit and the names must stay unique; it is
+enabled while the document has a saved view. In the desktop app the views are listed at the bottom of the View menu
+(`view.goto1` … `view.goto25`); choosing one sets the current window's zoom, centre and rotation. A file's views are
+checked when it opens: past 25, blank or repeated names, and views without a finite centre and a positive zoom are
+dropped.
+
 ## Ruler guides
 
 Ruler guides are numbered in the order they were made. `guide.add {vertical, pos, artboard?}` makes one (the x of a
@@ -1860,18 +1873,44 @@ document holding only them and what they use; without `path` it returns `{dataBa
 the user library folder (category `user`, User Defined). `symbol.loadLibrary {path? | data? | dataBase64?, name?}`
 loads the symbols of any document VectorCraft opens as a library to add from; a file it can't read is an error.
 
+## Brush libraries
+
+Brush libraries are read-only sets of brushes: four generated in code (Art Ribbons, Calligraphic Nibs, Pattern
+Borders, Scatter Shapes), the `.vectorcraft` files in the user library folder of the desktop app (User Defined) and
+the brushes of any document loaded with `brush.loadLibrary` (a document without brushes of its own has the default
+ones). `brush.libraries` lists them (`id`, `name`, `category`: `builtIn`, `user` or `loaded`, `count`) and
+`brush.library {library}` returns one's brushes (`name`, `type`; `library` is an id or a name).
+`brush.addFromLibrary {library, name? | names?}` copies brushes into the document's Brushes as one undo step (no
+names: the whole library), with the resources their art uses: patterns, symbols, swatches (`swatchConflict` as for
+`edit.paste`), graphic styles and images. Brushes the document already has (same name and definition) are reported
+under `existing`; a name another brush has gets a number, and `names` gives each one's name in the document. The
+first one becomes the current brush. `apply: true` also applies it to the paths `ids` (default: the selected ones)
+in the same step, as `brush.apply` does: what clicking a library brush with paths selected, or dragging one onto a
+path, does.
+
+```json
+{"name":"run_command","arguments":{"command":"brush.addFromLibrary","params":{"library":"art-ribbons","name":"Striped Ribbon","apply":true}}}
+```
+
+`brush.saveLibrary {path?, names?, name?, user?}` writes the document's brushes as a brush library: a `.vectorcraft`
+document holding only them and what their art uses; without `path` it returns `{dataBase64}`, and `user: true`
+saves into the user library folder (category `user`, User Defined). `brush.loadLibrary {path? | data? |
+dataBase64?, name?}` loads the brushes of any document VectorCraft opens as a library to add from; a file it can't
+read is an error.
+
 ## Library panels
 
-Each swatch, graphic style or symbol library opens in a read-only panel of its own (#2603), as in Illustrator, and
-several can be open at once. `window.swatchLibrary {library}`, `window.graphicStyleLibrary {library}` and
-`window.symbolLibrary {library}`
+Each swatch, graphic style, symbol or brush library opens in a read-only panel of its own (#2603), as in Illustrator,
+and several can be open at once. `window.swatchLibrary {library}`, `window.graphicStyleLibrary {library}`,
+`window.symbolLibrary {library}` and `window.brushLibrary {library}`
 (remote mode, `invoke_menu`) open one floating, or bring its panel forward when it is already open, and answer
 `{open, panel, name, count}`; `library: null` closes every panel of that kind. The panel id is
 `library:<kind>:<library id>` (`library:swatches:pastels`, `library:graphicStyles:hand-drawn`,
 `library:swatches:loaded/C:/Palettes/Brand.ase`), and the panel commands take it like any other panel's:
 `window.panel.float {panel, onto?, x?, y?}` groups or moves it, `window.panel.dock {panel}` docks it,
-`window.panel.close {panel}` closes it. `window.swatchLibrary.other {path}` and `window.graphicStyleLibrary.other
-{path}` load a file and open it the same way.
+`window.panel.close {panel}` closes it. `window.swatchLibrary.other {path}`, `window.graphicStyleLibrary.other
+{path}`, `window.symbolLibrary.other {path}` and `window.brushLibrary.other {path}` load a file and open it the same
+way.
 
 `ui.libraryPanel {panel, library?, view?, showFind?, persistent?}` sets one panel: `library` shows another library
 of its kind in that panel (what Previous Library and Next Library do; a library open in a panel of its own is
@@ -2023,6 +2062,20 @@ old name keeps it. A blank name gives "New Pattern N" in `object.pattern.make` a
 ```json
 {"name":"run_command","arguments":{"command":"pattern.options","params":{"showSwatchBounds":true}}}
 {"name":"run_command","arguments":{"command":"prefs.set","params":{"key":"patternTileEdgeColor","value":"#ff4f4f"}}}
+```
+
+Pathfinder Options: `object.pathfinder.options {precision?, removeRedundantPoints?, removeUnpainted?}` (or
+`prefs.get`/`prefs.set` with key `pathfinder`) reads and sets the options every later Shape Mode and Pathfinder
+operation uses: `precision` (0.001–10 pt, default 0.01; a string with a unit also reads) is how closely results follow
+the paths (they are refit to within it and pieces thinner than it are dropped), `removeRedundantPoints` takes the
+anchors that don't change a result's shape off it, and `removeUnpainted` makes Divide and Outline leave out the pieces
+of objects with no fill (or only hidden fills). Both default to false; `{}` reads the options. Each Shape Mode and
+Pathfinder command (`object.pathfinder.unite` … `minusBack`) also takes `precision`, `removeRedundantPoints` and
+`removeUnpainted` for one run; the values it used join its journal entry, so a replay or an action gives the same art
+whatever the options are then.
+
+```json
+{"name":"run_command","arguments":{"command":"object.pathfinder.options","params":{"precision":0.1,"removeUnpainted":true}}}
 ```
 
 The Eyedropper: `appearance.copyFrom {source}` copies what the Eyedropper Options pick up and apply from `source` to the
@@ -3172,6 +3225,13 @@ selected artboards keeps its size.
 {"name":"run_command","arguments":{"command":"artboard.setProps","params":{"artboards":[{"index":0,"width":300},{"index":2,"width":300}],"scaleArt":true}}}
 ```
 
+Delete Empty Artboards: `artboard.deleteEmpty {}` deletes every artboard with no artwork on it, with its guides, in
+one undo step, and returns the indices it deleted (numbered as before) as `{deleted: [index…]}`. An artboard has
+artwork when an object (hidden, locked and template art included; guides not) has visual bounds that meet or touch
+it; a group counts by its members, a clip group or clipping layer by its members inside the clip. Locked artboards stay; when every artboard is empty and none is locked, artboard 1 stays (with a locked
+artboard left, artboard 1 can go). With
+nothing to delete the command is disabled and fails with `no empty artboards to delete`.
+
 Locked artboards: `artboard.setProps {index, locked: true}` locks an artboard and `{index, locked: false}` unlocks it,
 each in one undo step. The Artboards panel's lock column, left of a row's options icon, shows a lock on a locked
 artboard, and a click there runs this command. A locked artboard keeps its place and size. `artboard.setProps` with a
@@ -3539,8 +3599,10 @@ listed in `warnings`. Binary DXF and DWG files answer an error saying to save th
 
 `links.list {show?: all|missing|modified|embedded, sort?: name|kind|status}` lists every image in the layers, top
 first, as the Links panel does: `{id, name, linked, status: ok|modified|missing|embedded, format, pixelWidth,
-pixelHeight, path?, found?, page?, preview?, note?}` (`note`: the image is too large to decode and isn't drawn;
-`document.open` and `file.place` say the same in their `warnings`). `links.info {id?}` is the Link Info: `image.info`'s fields plus
+pixelHeight, path?, found?, page?, preview?, note?}` (`note`: the image takes more than the decode allowance, 2 GiB
+or 512 MiB in the web app, as RGBA or as decoded, and it is drawn at the largest size within the allowance ("shown at
+reduced size"; the document keeps the whole file) or, when it can't be read that way or has more pixels than the
+allowance has bytes, drawn as a crossed gray box on the canvas and left out of exports ("too large to draw"); `document.open` and `file.place` say the same in their `warnings`). `links.info {id?}` is the Link Info: `image.info`'s fields plus
 `status`, `format`, the file's `ppi` and the `effectivePpi`, `scale` (% of 100%), `rotation` (degrees,
 counter-clockwise), `placement` and, for a linked file, `fileName`, `location`, `fileSize`, `created`, `modified`.
 `links.goTo {id}` selects an image; `links.embed {ids?}` keeps linked files' pixels in the document (an image whose
@@ -4243,6 +4305,13 @@ that doesn't exist, a `from` that is point type, a `to` that is an open path, `f
 or already in a thread (`from` may be threaded already: the frame goes in beside it), coordinates that aren't finite
 numbers and a `before` that isn't true or false.
 
+A double-click on a port where the frame is threaded breaks the thread there (one undo step, `text.thread.break`):
+
+`text.thread.break {id, port: "in" | "out"}` splits the thread of area type or type on a path `id` before it (`in`) or
+after it (`out`). The whole story flows into the frames before the break; the frames after it are left empty, still
+threaded with each other when two or more remain, and the first of them starts a paragraph. It refuses an `id` that
+doesn't exist, a `port` other than `in` or `out`, and a side where no frame of a thread comes before or after `id`.
+
 In every thread, a paragraph that continues from one frame into the next has its first line, first-line indent and
 bullet or number in the frame where it starts. In the next frame its first line starts where its wrapped lines start,
 and it has no bullet or number. In a frame that is no longer threaded (after `text.thread.releaseSelection` or
@@ -4475,16 +4544,49 @@ after Remove Threading or Release Selection, in a frame converted to point type,
 duplicated, copied in the Layers panel, or taken out of a symbol or a placed file). A symbol made of a thread keeps the
 numbers in the symbol's art.
 
-The canvas, EPS, PDF and Type › Create Outlines draw the marker; in PDF it is a path, not text. Live SVG text writes the
-marker's characters before the paragraph's text, except type on a path with a list, which it writes as outlines with a
-warning. DXF writes the marker as a TEXT entity of its own, its characters in the order they are drawn. Legacy `.ai`
-writes the paragraph's text without the marker and warns that bulleted and numbered lists are left out.
+The canvas, EPS, PDF and Type › Create Outlines draw the marker. PDF writes the marker as text of its own, where the
+canvas draws it, and a PDF viewer selects, copies and finds its characters. Each of its glyphs stands for the marker
+character that the glyph's font maps to that glyph in its character map. Glyphs that an OpenType feature such as
+oldstyle figures replaced stand for the characters left over, in order, when there are as many of those glyphs as
+characters left over. A marker glyph that stands for no character, such as the missing-glyph box when no font has a
+glyph for it, is drawn as a path. Live SVG text writes the marker's characters before the paragraph's text, except
+type on a path with a list, which it writes as outlines with a warning. DXF writes the marker as a TEXT entity of its
+own, its characters in the order they are drawn. Legacy `.ai` writes the paragraph's text without the marker and warns
+that bulleted and numbered lists are left out.
 
 Type › Bullets and Numbering › Apply Bullets and the canvas context menu's Bullets and Numbering › Apply Bullets run
 `type.applyBullets {bullet?}` on the selected type's paragraphs, or on those the Type tool's selection touches. Without
 `bullet` it runs `text.setFormat {list: "bullet"}`, and with it it runs `text.setFormat {bullet}`. Apply Numbers in the
 same menus runs `type.applyNumbers {number?}`. Without `number` it runs `text.setFormat {list: "number"}`, and with it
 it runs `text.setFormat {number}`.
+
+Type › Bullets and Numbering › Convert to Text runs `type.convertListToText` on the selected type's paragraphs, or on
+those the Type tool's selection touches, and that runs `text.convertListToText {ids?, start?, end?}`. The marker of
+each list paragraph becomes characters at the start of the paragraph: the bullet, or the number and its period as the
+paragraph showed it, then a tab. They are set in the marker's font, size and color: the style of the paragraph's first
+character without the attributes the marker leaves out. The paragraph leaves its list. When the marker's tab went to
+the left indent, the paragraph gets a left-aligned tab stop without a leader there, in place of any stop there, so that
+the text after the tab starts where it started after the marker. When the marker's tab went to a tab stop, the
+converted tab goes to the same place when that stop is left-aligned and no stop there or past it has a leader. When a
+stop there or past it has a leader or is not left-aligned, or a right, center or decimal stop lies between the marker
+and the place its tab ended, the paragraph gets a left-aligned stop without a leader where the marker's tab ended, in
+place of any stop there and of those right, center and decimal stops before it. A paragraph that holds a tab of its
+own keeps its stops past the left indent as they are. The characters are text like any other: they can be selected,
+styled, edited and deleted, and copied text includes them. In threaded type the numbers are the ones the story counted
+through its frames, and a paragraph that continues into the next frame gets its characters once, where its text
+starts. An empty list paragraph has no marker and only leaves the list. A numbered paragraph after the converted ones
+that stays in its list counts from 1 again, as after any paragraph in no list. A paragraph with no direction set runs
+the way its first strong character does; when a letter or a roman numeral put before right-to-left text would make it
+run left to right, the paragraph gets the Right to Left direction. A right-to-left paragraph that leaves its list no
+longer has its indents mirrored, and on a path the tab takes its own width, as every tab on a path does. With the
+Every-line Composer, a paragraph that holds a tab is broken line by line, so a converted paragraph of several lines
+can break at other places than its list paragraph did. The change is one undo step, and the reply gives the `ids` of
+the type it changed, how many paragraphs were `converted`, and the characters `inserted`, each with the type object's
+`id`, the byte `at` which they went in (counted in the text before the change) and their `length` in bytes. While the
+Type tool edits, `text.convertListToText` ends its typing first and moves its anchor and caret past the characters
+inserted at or before them, whether the call comes from the menu, MCP or the control channel.
+In threaded type, when the caret's character moved to another frame, the Type tool edits that frame with the caret
+next to the same character, and that frame becomes the selection when it was not selected.
 
 Typing starts a list too. When the Type tool types a space on its own (one key press, or `type_text {text: " "}`) right
 after `1.` or `1)`, `A.` or `A)`, or one of `*`, `#`, `>` and `+` at the start of a paragraph that is in no list, the
@@ -4498,10 +4600,10 @@ paste, an IME commit, or `type_text` of a longer string. From a script, `text.st
 the same with the text before `at` and returns `started` and `caret`. When the list starts, `caret` is the byte where
 the paragraph's text now starts; when the text before `at` starts no list, nothing changes, `started` is false and
 `caret` is `at`.
-
 ```json
 {"name":"run_command","arguments":{"command":"text.setFormat","params":{"bullet":"square"}}}
 {"name":"run_command","arguments":{"command":"text.setFormat","params":{"number":"upperRoman"}}}
+{"name":"run_command","arguments":{"command":"text.convertListToText","params":{}}}
 ```
 
 ## Small Caps, Superscript and Subscript

@@ -8,7 +8,8 @@ use linesweeper::topology::ContourIdx;
 use vectorcraft_geom::{FillRule, PathData};
 
 use crate::boolean::{
-    Arrangement, Multi, Seg, Tidy, all_contours_to_path, contours_to_path, eps_for, fill_bezpath, normalize_bez, segs_to_subpath, to_seg, unite_all,
+    Arrangement, DEFAULT_PRECISION, Multi, Seg, Tidy, all_contours_to_path, contours_to_path, eps_for, fill_bezpath, normalize_bez, segs_to_subpath,
+    to_seg, unite_all, unite_all_with,
 };
 
 /// A filled shape in a Pathfinder stack. `key` identifies its paint (e.g. a hashed fill colour);
@@ -78,9 +79,12 @@ impl Region {
     }
 }
 
-fn arrangement(shapes: &[Shape]) -> Option<Arrangement> {
+/// The arrangement of `shapes`, its faces refit to `precision` and its slivers thinner than it dropped.
+fn arrangement(shapes: &[Shape], precision: f64) -> Option<Arrangement> {
     let bps: Vec<(BezPath, FillRule)> = shapes.iter().map(|s| (fill_bezpath(&s.path), s.rule)).collect();
-    Arrangement::new(bps).ok()
+    let mut arr = Arrangement::new(bps).ok()?;
+    arr.tidy.precision = precision;
+    Some(arr)
 }
 
 /// The one item of `it`, if it has exactly one.
@@ -95,6 +99,14 @@ fn one(path: PathData, key: u64) -> Vec<Shape> {
 
 /// Run a Pathfinder operation over `shapes` (back → front).
 pub fn pathfinder(op: PathfinderOp, shapes: &[Shape]) -> Vec<Shape> {
+    pathfinder_with(op, shapes, DEFAULT_PRECISION)
+}
+
+/// [`pathfinder`] at Pathfinder Options › Precision: results are refit to within `precision`
+/// (document units) and pieces thinner than it are dropped. A smaller value follows the inputs more
+/// closely. A value that isn't positive and finite is [`DEFAULT_PRECISION`].
+pub fn pathfinder_with(op: PathfinderOp, shapes: &[Shape], precision: f64) -> Vec<Shape> {
+    let precision = if precision.is_finite() && precision > 0.0 { precision } else { DEFAULT_PRECISION };
     let n = shapes.len();
     if n == 0 {
         return Vec::new();
@@ -102,7 +114,7 @@ pub fn pathfinder(op: PathfinderOp, shapes: &[Shape]) -> Vec<Shape> {
     let front_key = shapes[n - 1].key;
     let unite = || {
         let v: Vec<(&PathData, FillRule)> = shapes.iter().map(|s| (&s.path, s.rule)).collect();
-        one(unite_all(&v), front_key)
+        one(unite_all_with(&v, precision), front_key)
     };
     // Unite doesn't need the arrangement.
     if op == PathfinderOp::Unite {
@@ -111,7 +123,7 @@ pub fn pathfinder(op: PathfinderOp, shapes: &[Shape]) -> Vec<Shape> {
     // Open paths are cutting edges for Divide; the filled-only operations keep their
     // implicit closure. Reuse Shape Builder's bounded planar map and its fallback.
     if op == PathfinderOp::Divide && crate::has_open_path(shapes) {
-        return crate::shape_builder(shapes, false)
+        return crate::planar::builder(shapes, false, 0.0, precision)
             .regions
             .into_iter()
             .filter_map(|r| {
@@ -120,7 +132,7 @@ pub fn pathfinder(op: PathfinderOp, shapes: &[Shape]) -> Vec<Shape> {
             })
             .collect();
     }
-    let Some(arr) = arrangement(shapes) else { return Vec::new() };
+    let Some(arr) = arrangement(shapes, precision) else { return Vec::new() };
     let p = &arr.tidy;
     match op {
         PathfinderOp::Unite => unite(),
@@ -307,7 +319,12 @@ fn vertex_key(p: Point) -> (u64, u64) {
 /// All faces of the planar arrangement of `shapes` (every area covered by at least one shape,
 /// split wherever coverage changes).
 pub fn regions(shapes: &[Shape]) -> Vec<Region> {
-    arrangement(shapes).map(|a| regions_of(&a)).unwrap_or_default()
+    regions_with(shapes, DEFAULT_PRECISION)
+}
+
+/// [`regions`] refit to `precision`.
+pub(crate) fn regions_with(shapes: &[Shape], precision: f64) -> Vec<Region> {
+    arrangement(shapes, precision).map(|a| regions_of(&a)).unwrap_or_default()
 }
 
 /// The face under `point`, if any (Shape Builder hover/click).
@@ -348,7 +365,12 @@ impl FaceMerger {
         // The Shape Builder's faces come from the planar map only up to its cap.
         let segments: usize = shapes.iter().flat_map(|s| &s.path.subpaths).map(|sp| sp.segment_count()).sum();
         let lines = (segments <= crate::SHAPE_BUILDER_MAX_SEGMENTS).then(|| (shapes.to_vec(), std::cell::OnceCell::new()));
-        Self { arr: if has_open { None } else { arrangement(shapes) }, shapes: shapes.len(), lines, snap: std::cell::OnceCell::new() }
+        Self {
+            arr: if has_open { None } else { arrangement(shapes, DEFAULT_PRECISION) },
+            shapes: shapes.len(),
+            lines,
+            snap: std::cell::OnceCell::new(),
+        }
     }
 
     /// Merge faces found with Gap Detection using the same temporary bridges as Live Paint.
@@ -851,12 +873,60 @@ mod tests {
     }
 
     fn same_as_one_mask_at_a_time(shapes: &[Shape]) {
-        let arr = arrangement(shapes).expect("arrangement");
+        let arr = arrangement(shapes, DEFAULT_PRECISION).expect("arrangement");
         assert_eq!(regions_of(&arr), regions_one_mask_at_a_time(&arr));
     }
 
     fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> PathData {
         shapes::rectangle(Rect::new(x0, y0, x1, y1))
+    }
+
+    /// Pathfinder Options › Precision: pieces thinner than the precision are dropped, so a 0.5 pt
+    /// strip that the default keeps goes at a precision of 1 pt, whether the Pathfinder works on
+    /// the arrangement (Divide), the planar map (Divide with an open path) or the union (Unite).
+    #[test]
+    fn precision_drops_pieces_thinner_than_it() {
+        let overlapping =
+            [Shape::new(rect(0.0, 0.0, 100.0, 100.0), FillRule::NonZero, 1), Shape::new(rect(0.0, 99.5, 100.0, 200.0), FillRule::NonZero, 2)];
+        let line = PathData::single(SubPath::polyline(&[Point::new(-10.0, 99.5), Point::new(110.0, 99.5)], false));
+        let cut = [Shape::new(rect(0.0, 0.0, 100.0, 100.0), FillRule::NonZero, 1), Shape::new(line, FillRule::NonZero, 2)];
+        let apart =
+            [Shape::new(rect(0.0, 0.0, 100.0, 100.0), FillRule::NonZero, 1), Shape::new(rect(0.0, 150.0, 100.0, 150.5), FillRule::NonZero, 2)];
+        for (what, op, shapes, kept) in [
+            ("Divide", PathfinderOp::Divide, &overlapping, 3),
+            ("Divide with an open path", PathfinderOp::Divide, &cut, 2),
+            ("Unite", PathfinderOp::Unite, &apart, 2),
+        ] {
+            let count = |r: Vec<Shape>| r.iter().map(|s| s.path.subpaths.len()).sum::<usize>();
+            assert_eq!(pathfinder_with(op, shapes, DEFAULT_PRECISION), pathfinder(op, shapes), "{what}: the default is the plain Pathfinder");
+            assert_eq!(count(pathfinder(op, shapes)), kept, "{what}: the default keeps the strip");
+            assert_eq!(count(pathfinder_with(op, shapes, 1.0)), kept - 1, "{what}: 1 pt drops it");
+            assert_eq!(pathfinder_with(op, shapes, f64::NAN), pathfinder(op, shapes), "{what}: an invalid precision is the default");
+        }
+    }
+
+    /// The planar map that Divide with an open path uses merges two edges between the same points
+    /// only when they are closer than the precision: a lens 0.005 pt thick between two curves is a
+    /// piece at a precision of 0.001 pt, and not at the default.
+    #[test]
+    fn open_path_divide_keeps_a_lens_thicker_than_the_precision() {
+        // Curves monotonic in x and y, so the sweep keeps each one whole between the shared ends;
+        // their middles are 0.005 pt apart.
+        let shift = 0.005 / 0.75 / std::f64::consts::SQRT_2;
+        let curve = |d: f64| [Point::new(0.0, 0.0), Point::new(d, 50.0 - d), Point::new(50.0 + d, 100.0 - d), Point::new(100.0, 100.0)];
+        let (top, bottom) = (curve(0.0), curve(shift));
+        let mut bp = kurbo::BezPath::new();
+        bp.move_to(top[0]);
+        bp.curve_to(top[1], top[2], top[3]);
+        bp.curve_to(bottom[2], bottom[1], bottom[0]);
+        bp.close_path();
+        let lens = Shape::new(PathData::from_bezpath(&bp), FillRule::NonZero, 1);
+        let line = PathData::single(SubPath::polyline(&[Point::new(200.0, 0.0), Point::new(300.0, 0.0)], false));
+        let shapes = [lens, Shape::new(line, FillRule::NonZero, 2)];
+        let area = |r: &[Shape]| r.iter().map(|s| crate::area(&s.path, FillRule::NonZero)).sum::<f64>();
+        let fine = pathfinder_with(PathfinderOp::Divide, &shapes, 0.001);
+        assert!(area(&fine) > 0.1, "the lens is a piece: {} pt²", area(&fine));
+        assert_eq!(area(&pathfinder(PathfinderOp::Divide, &shapes)), 0.0, "thinner than the default precision");
     }
 
     /// Shapes on a coarse grid, so that edges and corners coincide: rectangles, rectangles with

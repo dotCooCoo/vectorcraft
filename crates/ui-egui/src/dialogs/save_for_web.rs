@@ -373,6 +373,7 @@ struct Cache {
     shots: Vec<(String, Result<Shot, String>)>,
 }
 
+/// Temp-memory key for the Save for Web preview render, original image and optimised shot textures.
 fn cache_id() -> egui::Id {
     egui::Id::unique("save-for-web-previews")
 }

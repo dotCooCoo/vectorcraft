@@ -374,6 +374,8 @@ impl eframe::App for WebShell {
         app.finish_ime_logic(ctx);
     }
 
+    /// Forward host-gathered pointer events into this frame's raw input, then let the app apply its
+    /// shared input hook before egui runs.
     fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
         raw.events.extend(self.host.pointers.borrow_mut().take());
         if let Some(app) = &mut self.app {
@@ -381,6 +383,8 @@ impl eframe::App for WebShell {
         }
     }
 
+    /// Read host paste and drop input once in the UI phase, hand files to the app's drop targets, run
+    /// the app UI, then poll control replies.
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         if let Some(app) = &mut self.app {
