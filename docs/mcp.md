@@ -4585,7 +4585,8 @@ kind of the preset picked), `bullet`, `number`, `listAlign`, `listLevel`, `leftI
 and `ui.dialog.set` sets them, including those the dialog opened blank or without. The type shows the dialog's values while it is open. A preset picked for paragraphs that are in no list and have
 no indents fills in 18 pt and -18 pt, and None takes them out again while they are unchanged. OK runs `text.setFormat`
 with the values that changed, as one undo step, and Cancel puts the type back as it was. When a preset puts the
-paragraphs in a list, OK also sends the indents the dialog shows, and the paragraphs take them, 0 included. With no type selected, or
+paragraphs in a list, OK also sends the indents the dialog shows, and the paragraphs take them, 0 included. OK does not
+send an Alignment change for paragraphs that stay in no list. With no type selected, or
 with an unknown `tab`, `ui.bulletsAndNumbering` is an error.
 
 Type › Bullets and Numbering › Convert to Text runs `type.convertListToText` on the selected type's paragraphs, or on

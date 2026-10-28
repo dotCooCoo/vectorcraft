@@ -329,7 +329,8 @@ fn position(ui: &mut egui::Ui, d: &mut Dialog, unit: vectorcraft_doc::Unit) {
 /// `text.setFormat` parameters: the fields that differ from the values the dialog opened with,
 /// on the dialog's type and range. With a preset that puts the paragraphs in a list, the indents
 /// the dialog shows go too, so that the hanging indent `text.setFormat` gives a paragraph joining a
-/// list does not replace them.
+/// list does not replace them. Alignment goes only when the paragraphs are in a list or the
+/// preset puts them in one.
 fn params(d: &Dialog) -> Map<String, Value> {
     let initial = d.fields.get(INITIAL).and_then(Value::as_object);
     let was = |key: &str| initial.and_then(|m| m.get(key)).and_then(Value::as_str);
@@ -350,8 +351,11 @@ fn params(d: &Dialog) -> Map<String, Value> {
         },
         _ => {}
     }
+    let listing = ["bullet", "number"].iter().any(|k| p.contains_key(*k)) || p.get("list").is_some_and(|l| l.as_str() != Some("none"));
+    // `text.setFormat` sets `listAlign` only on paragraphs in a list.
     if let Some(a) = field("listAlign")
         && was("listAlign") != Some(a)
+        && (listing || was("list") != Some("none"))
     {
         p.insert("listAlign".into(), json!(a));
     }
@@ -360,7 +364,6 @@ fn params(d: &Dialog) -> Map<String, Value> {
     {
         p.insert("listLevel".into(), json!(l));
     }
-    let listing = ["bullet", "number"].iter().any(|k| p.contains_key(*k)) || p.get("list").is_some_and(|l| l.as_str() != Some("none"));
     for key in ["leftIndent", "firstLineIndent"] {
         if !d.fields.contains_key(key) {
             continue;
@@ -561,6 +564,28 @@ mod tests {
         let (one, two) = paras(&app, id);
         assert_eq!((one.list, one.left_indent), (Some(ParaList::bulleted(Bullet::Circle).aligned(ListAlign::Right)), 30.0));
         assert_eq!((two.list, two.left_indent), (None, 0.0), "the paragraph in no list stays out of one");
+    }
+
+    /// Alignment changed for paragraphs that stay in no list sends nothing: there is no preview,
+    /// and OK adds no undo step. A preset picked with it takes the alignment.
+    #[test]
+    fn alignment_alone_on_paragraphs_in_no_list_adds_no_undo_step() {
+        let (mut app, id) = app();
+        let undo = app.session.active().unwrap().history.undo.len();
+        app.run("ui.bulletsAndNumbering", json!({})).unwrap();
+        set(&mut app, "listAlign", json!("right"));
+        assert!(!changes(&params(app.ui.dialog.as_ref().unwrap())));
+        frame(&mut app);
+        assert!(!app.session.in_interaction(), "no preview");
+        super::super::confirm(&mut app).unwrap();
+        assert!(app.ui.dialog.is_none());
+        assert_eq!(app.session.active().unwrap().history.undo.len(), undo, "no undo step");
+        assert_eq!(first(&app, id), (None, 0.0, 0.0));
+        app.run("ui.bulletsAndNumbering", json!({})).unwrap();
+        set(&mut app, "listAlign", json!("right"));
+        pick_preset(&mut app, "bullet", Some("dot"));
+        super::super::confirm(&mut app).unwrap();
+        assert_eq!(first(&app, id).0, Some(ParaList::bulleted(Bullet::Dot).aligned(ListAlign::Right)));
     }
 
     /// `ui.dialog.set` sets the fields the dialog does not hold: a bullet or a number for type in
