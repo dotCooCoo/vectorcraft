@@ -205,8 +205,8 @@ fn stacked_trace(params: &tr::TraceParams) -> bool {
 /// stroked line counted by its stroke. A solid color's group is named by the swatch it links to (a
 /// tint with its percentage) or as `#rrggbb`, and gradient fills share one group, "Gradients". The
 /// groups stack in the order of the lowest item in each, and each keeps its items' order. When the
-/// paths can overlap (`stacked`), an item joins its paint's last group only if no item of a later
-/// group overlaps it (by the boxes of everything they paint, effects included); otherwise it starts
+/// paths can overlap (`stacked`, or more than one has a gradient fill), an item joins its paint's
+/// last group only if no item of a later group overlaps it (by the boxes of everything they paint, effects included); otherwise it starts
 /// another group of that paint, so the art draws as before. A group among `items` (Auto Grouping)
 /// is refused.
 fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>, stacked: bool) -> Result<Vec<Arc<Node>>> {
@@ -227,6 +227,9 @@ fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>, stacked: boo
         let b = b.inflate(1.0, 1.0);
         a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1
     };
+    // Gradient fills share one group, so in an Abutting trace too a second gradient could join the
+    // first one's group below a solid area that it borders.
+    let stacked = stacked || items.iter().filter(|i| matches!(i.appearance.fill_paint(), Paint::Gradient(_))).nth(1).is_some();
     let mut groups: Vec<Run> = vec![];
     for item in items {
         if matches!(item.kind, NodeKind::Group { .. }) {
@@ -503,6 +506,29 @@ pub(super) fn trace_expand(s: &mut Session, p: &Value) -> Result<Value> {
         Ok(())
     })?;
     Ok(json!({ "ids": ids_json(&targets) }))
+}
+
+#[cfg(test)]
+mod color_group_tests {
+    use super::*;
+
+    #[test]
+    fn an_abutting_gradient_stays_above_the_solid_area_it_borders() {
+        use vectorcraft_color::{Gradient, GradientKind, GradientPaint, GradientStop};
+        let stops = vec![GradientStop::new(0.0, Color::rgb(1.0, 0.0, 0.0)), GradientStop::new(1.0, Color::rgb(0.0, 0.0, 1.0))];
+        let ramp = || Paint::Gradient(Box::new(GradientPaint::new(Gradient::new(GradientKind::Linear, stops.clone()))));
+        let mut d = Document::new(100.0, 100.0);
+        let mut area = |x0: f64, x1: f64, paint: Paint| {
+            let path =
+                PathData::single(SubPath::polyline(&[Point::new(x0, 0.0), Point::new(x1, 0.0), Point::new(x1, 60.0), Point::new(x0, 60.0)], true));
+            Arc::new(Node::path(d.alloc_id(), path, fill_only(paint)))
+        };
+        // A gradient, a solid area beside it and a second gradient beside that, bottom to top.
+        let items = vec![area(0.0, 50.0, ramp()), area(50.0, 80.0, Paint::solid(Color::rgb(0.2, 0.6, 0.2))), area(80.0, 100.0, ramp())];
+        let groups = color_groups("imageTrace.makeAndExpand", &mut d, items, false).unwrap();
+        let names: Vec<_> = groups.iter().map(|g| g.name.clone().unwrap_or_default()).collect();
+        assert_eq!(names, ["Gradients", "#339933", "Gradients"]);
+    }
 }
 
 #[cfg(test)]
