@@ -1,4 +1,4 @@
-use super::*;
+use super::{CROP_MARKS, EXTRUDE, INFLATE, PATHFINDER_EFFECTS, RASTERIZE, REVOLVE, ROTATE, TRAP, Value, json, trap};
 
 /// Catalogue entry for one effect.
 #[derive(Clone, Debug, PartialEq)]

@@ -14,7 +14,7 @@ use vectorcraft_render::encode::quantize::{Dither, PaletteOptions, Reduction};
 use vectorcraft_render::encode::tiff::{ByteOrder, TiffOptions};
 use vectorcraft_render::encode::{RasterExportOptions, RasterFormat, bmp, psd, tga};
 
-use super::super::*;
+use super::super::{EngineError, Result, bad, color_value, parse_range};
 use super::Format;
 use super::imagemap::{self, MapKind};
 

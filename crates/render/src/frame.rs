@@ -1,6 +1,6 @@
 use super::options::{AntiAlias, RenderOptions};
 use super::threads::single_threaded_context;
-use super::*;
+use super::{Affine, Arc, BezPath, Document, FillRule, HashMap, Ink, Node, Rect, RenderContext, SymbolBoxes, TextObject, live};
 
 /// Hasher for pointer-keyed caches: a multiply-xorshift (SipHash showed up in frame profiles).
 #[derive(Default, Clone, Copy)]

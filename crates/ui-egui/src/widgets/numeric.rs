@@ -1,7 +1,7 @@
 use super::labels::{PreviousLabel, label_field, name_field, take_previous_label};
 use super::panel_chrome::chevron_cell;
 use super::text::{after_shift_enter, recessed_text, select_all, select_all_on_focus, shift_enter_keeps_focus, take_dialog_focus};
-use super::*;
+use super::{CornerRadius, RangeInclusive, Rect, Response, Sense, Stroke, StrokeKind, Tokens, Ui, Unit, id_with, pos2, scrub, vec2};
 
 /// Preferences › Units › Numbers Without Units Are Points (#394; on until set): the app sets it
 /// when the preference changes (`prefs_dialog::apply_runtime`), the length fields read it.
