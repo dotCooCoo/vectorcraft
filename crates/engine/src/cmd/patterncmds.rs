@@ -352,7 +352,9 @@ fn pattern_name(p: &Paint) -> Option<String> {
     }
 }
 
-fn pattern_done(s: &mut Session, _: &Value) -> Result<Value> {
+/// Save the edited tile art into the pattern and leave pattern editing mode (`object.pattern.done`).
+/// `object.exitIsolation` runs it too while a pattern is edited.
+pub(crate) fn pattern_done(s: &mut Session, _: &Value) -> Result<Value> {
     let name = s.edit("Done Editing Pattern", |d, sel| {
         let (pe, art) = leave_edit(d, sel)?;
         if let Some(def) = d.pattern_mut(&pe.pattern) {

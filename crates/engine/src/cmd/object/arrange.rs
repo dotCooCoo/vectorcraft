@@ -258,7 +258,24 @@ pub(super) fn isolate(s: &mut Session, p: &Value) -> Result<Value> {
     ok()
 }
 
-pub(super) fn exit_isolation(s: &mut Session, _: &Value) -> Result<Value> {
+pub(super) fn exit_isolation(s: &mut Session, p: &Value) -> Result<Value> {
+    // Opacity mask editing and pattern editing isolate their editing layer. Leaving isolation mode
+    // then leaves that mode, as Stop Editing Opacity Mask and the isolation bar's Done do.
+    let st = s.doc()?;
+    let leave_mode: Option<fn(&mut Session, &Value) -> Result<Value>> = if st.doc.mask_edit.is_some() {
+        Some(crate::cmd::maskedit::leave)
+    } else if st.doc.pattern_edit.is_some() {
+        Some(crate::cmd::patterncmds::pattern_done)
+    } else {
+        None
+    };
+    if let Some(leave_mode) = leave_mode {
+        if let Some(i) = st.isolation {
+            crate::cmd::distortcmds::finish_edit_text(s.doc_mut()?, i);
+        }
+        leave_mode(s, p)?;
+        return ok();
+    }
     let menu = s.menu.clone();
     let st = s.doc_mut()?;
     if let Some(i) = st.isolation.take() {

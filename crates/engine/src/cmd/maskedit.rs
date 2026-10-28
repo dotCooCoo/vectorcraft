@@ -147,7 +147,9 @@ pub(crate) fn begin(d: &mut Document, sel: &mut Selection, id: NodeId) -> Result
     Ok(layer)
 }
 
-fn leave(s: &mut Session, _: &Value) -> Result<Value> {
+/// Leave mask editing in one undo step (`transparency.stopEditingOpacityMask`). `object.exitIsolation` runs it too
+/// while a mask is edited.
+pub(crate) fn leave(s: &mut Session, _: &Value) -> Result<Value> {
     let Some(me) = s.doc()?.doc.mask_edit else { return Err(bad("transparency.stopEditingOpacityMask", "not editing an opacity mask")) };
     s.edit("Stop Editing Opacity Mask", |d, sel| {
         finish(d, sel);

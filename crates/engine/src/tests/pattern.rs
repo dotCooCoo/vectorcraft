@@ -87,6 +87,25 @@ fn done_saves_edited_art_and_leaves_mode() {
     assert!(s.doc().unwrap().isolation.is_none());
 }
 
+/// Exit Isolation Mode while a pattern is edited (the canvas context menu and the Layers panel
+/// menu offer it) leaves pattern editing as Done does, with the drawn art saved into the pattern.
+#[test]
+fn exit_isolation_while_editing_a_pattern_saves_it_and_leaves_the_mode() {
+    let mut s = session();
+    let r = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
+    sel(&mut s, &[r]);
+    s.execute("object.pattern.make", &json!({"name": "P"})).unwrap();
+    rect(&mut s, 2.0, 2.0, 3.0, 3.0);
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    let d = doc(&s);
+    assert!(d.pattern_edit.is_none());
+    assert_eq!(d.pattern("P").unwrap().art.len(), 2);
+    assert!(d.layers.iter().all(|l| l.name.as_deref() != Some(PATTERN_EDIT_LAYER)));
+    let st = s.doc().unwrap();
+    assert_eq!((st.isolation, st.active_layer), (None, st.doc.default_layer()));
+    assert_eq!(st.history.undo.last().unwrap().label, "Done Editing Pattern");
+}
+
 #[test]
 fn cancel_new_pattern_removes_it() {
     let mut s = session();

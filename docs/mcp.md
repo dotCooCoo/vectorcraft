@@ -1220,7 +1220,9 @@ Transparency and opacity-mask commands take `ids` (or `id`), so they need no sel
 (0..100) in every command (`transparency.set`, `object.setProps`, `appearance.setItem`). `transparency.info` returns
 the Transparency panel's values, with `null` where the objects differ. Making a mask from one object gives it an
 empty mask and enters mask editing: art drawn then becomes the mask, and the mask commands act on the masked object
-until `transparency.stopEditingOpacityMask`. Saves and exports never include the editing layer.
+until `transparency.stopEditingOpacityMask`. While a mask is edited, `object.exitIsolation` (Esc, the isolation bar's
+back arrow, Exit Isolation Mode) leaves mask editing the same way, in one undo step. Saves and exports never include
+the editing layer.
 
 ```json
 {"name":"run_command","arguments":{"command":"transparency.set","params":{"ids":[12],"opacity":40,"blend":"Multiply"}}}
@@ -2049,7 +2051,8 @@ couldn't be decoded and is missing from the picture", the note raster exports gi
 
 In pattern editing mode the tile edge (`pattern.options {showTileEdge}`) and the swatch bounds (`pattern.options
 {showSwatchBounds}`: the part of the tiling the swatch repeats, dashed) are drawn in the preference
-`patternTileEdgeColor`.
+`patternTileEdgeColor`. There `object.exitIsolation` (the Exit Isolation Mode item of the canvas context menu and of the
+Layers panel menu) saves the tile art into the pattern and leaves the mode, as `object.pattern.done` does.
 
 `object.pattern.make {name?}`, `object.pattern.saveCopy {name?}` and `pattern.options {newName?}` trim the white space
 around the name they are given. The first two number a name that a pattern, a swatch or a color group has ("Dots 2"),

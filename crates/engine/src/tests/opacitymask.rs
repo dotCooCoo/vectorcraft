@@ -169,6 +169,27 @@ fn release_while_editing_leaves_editing_first() {
     assert!(mask(&s, obj).is_some() && doc(&s).mask_edit.is_some());
 }
 
+/// Exit Isolation Mode while a mask is edited leaves mask editing as Stop Editing Opacity Mask
+/// does: the mask keeps the edit, the editing layer is removed, nothing is isolated, the masked
+/// object is selected on its layer, and one undo step returns to mask editing.
+#[test]
+fn exit_isolation_while_editing_leaves_mask_editing() {
+    let mut s = session();
+    let obj = editing_mask(&mut s);
+    s.execute("object.move", &json!({"dx": 50, "dy": 0})).unwrap();
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    assert!(st.doc.mask_edit.is_none() && st.isolation.is_none() && !has_edit_layer(&st.doc));
+    assert_eq!(st.selection.objects, vec![obj]);
+    assert_eq!(st.active_layer, Some(st.doc.layers[0].id));
+    assert_eq!(st.history.undo.last().unwrap().label, "Stop Editing Opacity Mask");
+    assert_eq!(mask(&s, obj).unwrap().art.geometric_bounds().unwrap().x0, 50.0);
+    s.execute("edit.undo", &json!({})).unwrap();
+    let st = s.doc().unwrap();
+    let layer = st.doc.mask_edit.map(|m| m.layer);
+    assert!(layer.is_some() && st.isolation == layer, "back in mask editing");
+}
+
 /// Releasing the masks of a group and of an object inside it puts each mask's art directly above
 /// its object, as releasing one mask at a time does.
 #[test]

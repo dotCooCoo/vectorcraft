@@ -692,6 +692,25 @@ fn a_command_on_cmd_escape_runs_without_the_tools_escape() {
     assert_eq!(click_at(&mut app, 350.0), objects + 1, "nothing bound: Cmd+Escape ends the path as Escape does");
 }
 
+/// Escape while an opacity mask is edited leaves mask editing, as Stop Editing Opacity Mask does:
+/// the editing layer is removed, nothing is isolated, and the masked object is selected.
+#[test]
+fn escape_while_an_opacity_mask_is_edited_leaves_mask_editing() {
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    let obj = app.session.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 200, "height": 100})).unwrap()["id"].as_u64().unwrap();
+    let m = app.session.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 100, "height": 100})).unwrap()["id"].clone();
+    app.session.execute("select.set", &json!({"ids": [obj, m]})).unwrap();
+    app.session.execute("transparency.makeOpacityMask", &json!({})).unwrap();
+    app.session.execute("transparency.editOpacityMask", &json!({})).unwrap();
+    app.select_tool("selection");
+    frame(&mut app, press(Key::Escape, Modifiers::NONE));
+    let st = app.session.active().unwrap();
+    assert!(st.doc.mask_edit.is_none() && st.isolation.is_none(), "Escape leaves mask editing");
+    assert_eq!(st.doc.layers.len(), 1, "the editing layer is removed");
+    assert_eq!(st.selection.objects, vec![vectorcraft_doc::NodeId(obj)]);
+}
+
 /// Enter opens the tool's dialog: the Move dialog for the selection tools, the tool's own for
 /// Rotate, Scale, Reflect and Shear. The Enter that opens it isn't also its OK.
 #[test]
