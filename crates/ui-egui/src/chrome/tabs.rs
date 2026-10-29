@@ -136,12 +136,20 @@ pub fn isolation_bar(app: &mut VectorcraftApp, ui: &mut Ui, area: egui::Rect) {
     if let Some(st) = app.session.active()
         && let Some(iso) = st.isolation
     {
-        let mut crumbs: Vec<String> =
-            st.doc.ancestry(iso).unwrap_or_default().iter().filter_map(|id| st.doc.node(*id)).map(|n| n.display_name()).collect();
+        let ancestry = st.doc.ancestry(iso).unwrap_or_default();
+        struct Crumb {
+            id: Option<vectorcraft_doc::NodeId>,
+            is_layer: bool,
+            name: String,
+        }
+        let mut crumbs: Vec<Crumb> = ancestry
+            .iter()
+            .filter_map(|id| st.doc.node(*id).map(|n| Crumb { id: Some(*id), is_layer: n.is_layer(), name: n.display_name() }))
+            .collect();
         // Pattern editing mode: the pattern's name, and Save a Copy / Done / Cancel at the right.
         let pattern_edit = st.doc.pattern_edit.as_ref().map(|e| e.pattern.clone());
         if let Some(pn) = &pattern_edit {
-            crumbs.push(pn.clone());
+            crumbs.push(Crumb { id: None, is_layer: false, name: pn.clone() });
         }
         let bar = egui::Rect::from_min_size(area.min, vec2(area.width(), 24.0));
         ui.interact(bar, ui.scope_id().with("iso-bar"), Sense::click_and_drag());
@@ -149,13 +157,41 @@ pub fn isolation_bar(app: &mut VectorcraftApp, ui: &mut Ui, area: egui::Rect) {
         let back = egui::Rect::from_min_size(bar.min + vec2(6.0, 3.0), vec2(18.0, 18.0));
         let bresp = ui.interact(back, ui.scope_id().with("iso-back"), Sense::click());
         icons::paint(ui, "chevron-left", back, if bresp.hovered() { t.text } else { t.icon });
-        ui.painter().text(
-            bar.left_center() + vec2(30.0, 0.0),
-            egui::Align2::LEFT_CENTER,
-            crumbs.join("  ›  "),
-            egui::FontId::proportional(12.0),
-            t.text,
-        );
+
+        let mut x = bar.left() + 30.0;
+        let y_center = bar.center().y;
+        let font_id = egui::FontId::proportional(12.0);
+        let mut nav_cmd = None;
+        let total = crumbs.len();
+        for (i, crumb) in crumbs.iter().enumerate() {
+            let is_leaf = i + 1 == total;
+            let galley = ui.painter().layout_no_wrap(crumb.name.clone(), font_id.clone(), t.text);
+            let w = galley.size().x;
+            let text_pos = egui::pos2(x, y_center - galley.size().y * 0.5);
+            if !is_leaf {
+                let crumb_rect = egui::Rect::from_min_max(egui::pos2(x - 3.0, bar.top() + 3.0), egui::pos2(x + w + 3.0, bar.bottom() - 3.0));
+                let resp = ui.interact(crumb_rect, ui.scope_id().with(("iso-crumb", i)), Sense::click());
+                if resp.hovered() {
+                    ui.painter().rect_filled(crumb_rect, 3.0, t.hover);
+                }
+                if resp.clicked() {
+                    if crumb.is_layer {
+                        nav_cmd = Some(("object.exitIsolation", json!({})));
+                    } else if let Some(target) = crumb.id {
+                        nav_cmd = Some(("object.isolate", json!({ "id": target.0 })));
+                    }
+                }
+                ui.painter().galley(text_pos, galley, if resp.hovered() { t.text } else { t.text_dim });
+                x += w + 6.0;
+                let sep = ui.painter().layout_no_wrap("›".to_string(), font_id.clone(), t.text_dim);
+                let sw = sep.size().x;
+                ui.painter().galley(egui::pos2(x, y_center - sep.size().y * 0.5), sep, t.text_dim);
+                x += sw + 6.0;
+            } else {
+                ui.painter().galley(text_pos, galley, t.text);
+                x += w;
+            }
+        }
         let mut pattern_cmd = None;
         if pattern_edit.is_some() {
             let mut x = bar.right() - 6.0;
@@ -176,8 +212,15 @@ pub fn isolation_bar(app: &mut VectorcraftApp, ui: &mut Ui, area: egui::Rect) {
         if bresp.clicked() {
             pattern_cmd = pattern_cmd.or(pattern_edit.as_ref().map(|_| "object.pattern.done"));
             if pattern_cmd.is_none() {
-                app.run("object.exitIsolation", json!({})).ok();
+                // Up one level: the isolated object's parent, or out of isolation mode from a layer.
+                nav_cmd = Some(match ancestry.iter().rev().nth(1).filter(|p| st.doc.node(**p).is_some_and(|n| !n.is_layer())) {
+                    Some(parent) => ("object.isolate", json!({ "id": parent.0 })),
+                    None => ("object.exitIsolation", json!({})),
+                });
             }
+        }
+        if let Some((cmd, params)) = nav_cmd {
+            app.run(cmd, params).ok();
         }
         if let Some(cmd) = pattern_cmd {
             app.run(cmd, json!({})).ok();

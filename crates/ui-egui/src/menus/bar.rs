@@ -152,9 +152,21 @@ fn render_row(app: &VectorcraftApp, ui: &mut egui::Ui, row: &Row, checks: bool, 
         }
         None => ui.add_enabled(row.enabled, egui::Button::new(text).shortcut_text(sc)),
     };
+    let r = match (row.enabled, disabled_hint(app, id)) {
+        (false, Some(why)) => r.on_disabled_hover_text(why),
+        _ => r,
+    };
     if r.clicked() {
         *clicked = row.target().map(|target| with_held_keys(target, ui.input(|i| i.modifiers)));
         ui.close();
+    }
+}
+
+/// Why a dimmed menu item is dimmed, for the ones that say.
+fn disabled_hint(app: &VectorcraftApp, id: &str) -> Option<&'static str> {
+    match id {
+        "ui.expandDialog" if vectorcraft_engine::cmd::expand::has_appearance(&app.session) => Some(crate::dialogs::expand::appearance_first()),
+        _ => None,
     }
 }
 
