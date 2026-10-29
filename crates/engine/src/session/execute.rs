@@ -1,5 +1,6 @@
 use super::{
     CommandSpec, EngineError, NodeId, Result, SELECTS_GIVEN_IDS, Selection, Session, Value, cmd, find_command, given_ids, guard, strip_replay_only,
+    waits_for_tool_edit,
 };
 
 impl Session {
