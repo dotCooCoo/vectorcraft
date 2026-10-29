@@ -1,6 +1,7 @@
 //! The document canvas: rendering, rulers, navigation, pointer routing to tools and on-canvas
 //! selection visuals (bounding box, anchors, handles, smart-guide style labels).
 
+use egui::emath::GuiRounding as _;
 use egui::{Color32, CornerRadius, Pos2, Sense, Shape, Stroke, StrokeKind, Ui, Vec2, pos2, vec2};
 use serde_json::json;
 use vectorcraft_doc::text::TextKind;
@@ -18,6 +19,7 @@ mod artboards;
 mod context;
 mod cursor;
 mod drag;
+mod fill;
 mod grid;
 mod home;
 mod input;
@@ -39,6 +41,10 @@ pub use drag::{apply_requests, dispatch, mods};
 pub(crate) use drag::{end_document_drag, release_art_in_window, release_over_panel};
 #[cfg(test)]
 use drag::{frame_moves, tool_drag_doc_id, tool_drag_moved, tool_frame_moves, tool_press_doc_id};
+pub use fill::Fill;
+use fill::fill_uncovered;
+#[cfg(test)]
+use fill::{fill_view, polygon_area};
 #[cfg(test)]
 use grid::ruler_rects;
 use grid::{LineLook, PIXEL_GRID, PIXEL_GRID_ZOOM, checker, clip_segment, grid, ruler_input, rulers, textured_quad, view_bounds};
@@ -196,6 +202,9 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     let bars = app.ui.screen_mode < 2;
     let full = if bars { egui::Rect::from_min_max(full.min, full.max - vec2(SCROLL_BAR, SCROLL_BAR)) } else { full };
     let rect = if app.ui.view.rulers && app.ui.screen_mode < 3 { egui::Rect::from_min_max(full.min + vec2(RULER, RULER), full.max) } else { full };
+    // Dock layout can differ by fractions of a device pixel between fresh windows.
+    // Use one pixel-aligned rectangle for drawing, inspection and pointer transforms.
+    let rect = rect.round_to_pixels(ui.ctx().pixels_per_point());
     app.canvas_rect = Some(rect);
     let fitted = app.view().is_some_and(|v| v.fitted);
     if !fitted {
@@ -277,6 +286,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     if undecoded > 0 {
         app.status(format!("{undecoded} image(s) couldn't be decoded and show as crossed boxes"));
     }
+    fill_uncovered(app, ui.ctx(), &painter, &key, &doc, rect, &xf);
     reproject_frame(app, &painter, &xf, rect, (key.doc, v.rotation));
     if let Some(look) = grid_look.filter(|_| !grids_in_back) {
         grid(&painter, &xf, doc.grid.spacing, doc.grid.subdivisions, look);
@@ -317,8 +327,9 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     if app.ui.view.rulers && app.ui.screen_mode < 3 {
         ruler_bands(app, ui, &xf, (full, rect), origin_preview, &t);
     }
-    // The task bar is not drawn while the Simplify slider shows.
-    if app.ui.task_bar && !revolve_edit && !app.session.tool_busy() && app.ui.screen_mode < 3 && !crate::dialogs::simplify_slider::showing(app) {
+    // The task bar is not drawn while the Simplify or Smooth slider shows.
+    let strip = crate::dialogs::simplify_slider::showing(app) || crate::dialogs::smooth_slider::showing(app);
+    if app.ui.task_bar && !revolve_edit && !app.session.tool_busy() && app.ui.screen_mode < 3 && !strip {
         task_bar(app, ui, &xf);
     }
     if app.ui.screen_mode < 3 {
@@ -485,6 +496,7 @@ fn poll_worker(app: &mut VectorcraftApp, ui: &Ui, key_doc: usize) {
         app.canvas.worker_started = true;
         if std::env::var_os("VECTORCRAFT_SYNC_RENDER").is_none() {
             app.canvas.worker = crate::render_worker::Worker::spawn(ui.ctx().clone());
+            app.canvas.fill_worker = crate::render_worker::Worker::spawn(ui.ctx().clone());
         }
     }
     // Upload finished background renders.
