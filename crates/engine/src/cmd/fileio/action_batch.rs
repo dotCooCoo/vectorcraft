@@ -99,7 +99,7 @@ pub(super) fn action_batch(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(not(target_arch = "wasm32"))]
 fn batch_folder(s: &mut Session, cmd: &str, p: &Value, override_open: bool, run: &Run<'_>) -> Result<Value> {
     use super::screens::safe_file_name;
-    use super::{absolute_path, distinct_names, may_read};
+    use super::{absolute_path, may_read};
 
     let folder = str_param(p, "folder").map(absolute_path).ok_or_else(|| bad(cmd, "missing `folder`"))?;
     may_read(&folder)?;
@@ -113,13 +113,15 @@ fn batch_folder(s: &mut Session, cmd: &str, p: &Value, override_open: bool, run:
     }
     // Each file's name without its extension, through `safe_file_name` (`a..svg` gives `a`, the
     // folder Windows makes for `a.`), with `-2`, `-3`… after a name an earlier file used (`a.svg` and
-    // `sub/a.svg`, or `a.svg` and `a.ai`), as data set names are numbered.
-    let stems = distinct_names(files.iter().map(|path| {
-        let stem = safe_file_name(std::path::Path::new(path).file_stem().and_then(|s| s.to_str()).unwrap_or(""));
-        if stem.is_empty() { "file".to_string() } else { stem }
-    }));
+    // `sub/a.svg`, or `a.svg` and `a.ai`) or after a name whose files or folder an earlier file
+    // wrote ([`distinct_stems`]), as data set names are numbered.
     let steps = filter_steps(run.steps, override_open, false);
     let run = Run { steps: &steps, ..*run };
+    let stems = distinct_stems(files.iter().map(|path| {
+        let stem = safe_file_name(std::path::Path::new(path).file_stem().and_then(|s| s.to_str()).unwrap_or(""));
+        let (exts, folder) = outputs(&run, &super::extension(path));
+        (if stem.is_empty() { "file".to_string() } else { stem }, exts, folder)
+    }));
     let mut processed = Vec::new();
     let mut failed = 0usize;
     for (path, stem) in files.iter().zip(&stems) {
@@ -140,7 +142,6 @@ fn batch_folder(s: &mut Session, cmd: &str, p: &Value, override_open: bool, run:
 
 #[cfg(not(target_arch = "wasm32"))]
 fn batch_datasets(s: &mut Session, cmd: &str, run: &Run<'_>) -> Result<Value> {
-    use super::distinct_names;
     use super::screens::safe_file_name;
 
     let st = s.doc()?;
@@ -156,10 +157,11 @@ fn batch_datasets(s: &mut Session, cmd: &str, run: &Run<'_>) -> Result<Value> {
     // destination uses the same name). `safe_file_name` writes the characters Windows does not allow
     // in a file name (`/`, `\`, `:`, `<`, `>`, `"`, `|`, `?`, `*` and control characters) as `-` and
     // drops trailing periods and spaces, which Windows drops from a folder name (`a.` and `a` give
-    // one folder), and `distinct_names` adds `-2`, `-3`… to a name an earlier data set used.
-    let stems = distinct_names(names.iter().map(|name| safe_file_name(&format!("{doc_stem}_{name}"))));
+    // one folder), and `distinct_stems` adds `-2`, `-3`… to a name an earlier data set used.
     let steps = filter_steps(run.steps, true, false);
     let run = Run { steps: &steps, ..*run };
+    let (exts, folder) = outputs(&run, "vectorcraft");
+    let stems = distinct_stems(names.iter().map(|name| (safe_file_name(&format!("{doc_stem}_{name}")), exts.clone(), folder)));
     let mut processed = Vec::new();
     let mut failed = 0usize;
     for (name, stem) in names.iter().zip(&stems) {
@@ -175,6 +177,62 @@ fn batch_datasets(s: &mut Session, cmd: &str, run: &Run<'_>) -> Result<Value> {
         }
     }
     Ok(json!({"processed": processed, "count": processed.len(), "failed": failed, "stopped": false}))
+}
+
+/// What one source writes into the destination folder: the extension of each file a Save or
+/// Export step or the Folder destination writes there as `{stem}.{ext}`, and whether an Export for
+/// Screens or Export Assets step makes the folder `{stem}` there. Follows [`rewrite_paths`] and
+/// [`finish_destination`].
+#[cfg(not(target_arch = "wasm32"))]
+fn outputs(run: &Run<'_>, default_ext: &str) -> (Vec<String>, bool) {
+    let mut exts = Vec::new();
+    let mut folder = false;
+    if run.dest_folder.is_some() {
+        for c in run.steps {
+            let id = c.get("command").and_then(Value::as_str).unwrap_or("");
+            if run.override_export && matches!(id, "document.exportForScreens" | "assets.export") {
+                folder = true;
+            } else if (run.override_save && matches!(id, "document.save" | "file.save" | "file.saveAs"))
+                || (run.override_export && matches!(id, "document.export" | "document.exportSelection"))
+            {
+                let format = c.get("params").and_then(|p| p.get("format")).and_then(Value::as_str).filter(|f| !f.is_empty());
+                exts.push(format.map_or_else(|| default_ext.to_string(), format_extension));
+            }
+        }
+    }
+    if run.destination == "folder" {
+        exts.push(if default_ext.is_empty() { "vectorcraft".to_string() } else { default_ext.to_string() });
+    }
+    (exts, folder)
+}
+
+/// The stem of each source, given as (name, extensions, folder) by [`outputs`]: the name, with
+/// `-2`, `-3`… after it when an earlier source used it or when one of the files or the folder it
+/// writes has the name of a file or folder an earlier source wrote (`a.svg` writes the file
+/// `a.svg`, so the Export for Screens folder of `a.svg.svg` is `a.svg-2`). Names are compared
+/// without case.
+#[cfg(not(target_arch = "wasm32"))]
+fn distinct_stems(sources: impl IntoIterator<Item = (String, Vec<String>, bool)>) -> Vec<String> {
+    let mut stems = std::collections::HashSet::new();
+    let mut written = std::collections::HashSet::new();
+    sources
+        .into_iter()
+        .map(|(base, exts, folder)| {
+            let mut name = base.clone();
+            let mut n = 1usize;
+            loop {
+                let lower = name.to_lowercase();
+                let names: Vec<String> = exts.iter().map(|e| format!("{lower}.{}", e.to_lowercase())).chain(folder.then(|| lower.clone())).collect();
+                if !stems.contains(&lower) && names.iter().all(|f| !written.contains(f)) {
+                    stems.insert(lower);
+                    written.extend(names);
+                    return name;
+                }
+                n += 1;
+                name = format!("{base}-{n}");
+            }
+        })
+        .collect()
 }
 
 /// Drop Open (and optionally Close) steps when the batch supplies the file itself.
@@ -598,6 +656,34 @@ mod tests {
         assert_eq!(r["failed"], 0, "{r}");
         assert_eq!(file_names(&dest), ["a", "a-2"], "{r}");
         for folder in ["a", "a-2"] {
+            assert_eq!(file_names(&dest.join(folder)), ["Artboard-1.svg"], "{r}");
+        }
+    }
+
+    /// A source file's Export for Screens folder does not take the name of a file the Folder
+    /// destination saved for an earlier source: `a.svg` is saved as `a.svg`, so the folder of
+    /// `a.svg.svg` is numbered.
+    #[test]
+    fn batch_override_export_numbers_folders_named_like_a_saved_file() {
+        let src = tmp("screens-file-src");
+        write_svg(&src, "a.svg", "#f00");
+        write_svg(&src, "a.svg.svg", "#0f0");
+        let dest = tmp("screens-file-out");
+        let mut s = Session::new();
+        let r = s
+            .execute(
+                "action.batch",
+                &json!({
+                    "folder": src.to_string_lossy(),
+                    "destination": "folder",
+                    "destinationFolder": dest.to_string_lossy(),
+                    "commands": [{"command": "document.exportForScreens", "params": {"formats": [{"format": "svg"}]}}]
+                }),
+            )
+            .unwrap();
+        assert_eq!(r["failed"], 0, "{r}");
+        assert_eq!(file_names(&dest), ["a", "a.svg", "a.svg-2", "a.svg-2.svg"], "{r}");
+        for folder in ["a", "a.svg-2"] {
             assert_eq!(file_names(&dest.join(folder)), ["Artboard-1.svg"], "{r}");
         }
     }
