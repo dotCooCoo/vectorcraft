@@ -57,6 +57,7 @@
 	Check Script	Script controleren
 	Other Script…	Ander script…
 	Document Setup…	Documentinstellingen…
+	Switch Units	Eenheden wisselen
 	Document Color Mode	Documentkleurmodus
 	CMYK Color	CMYK-kleur
 	RGB Color	RGB-kleur
@@ -1529,7 +1530,7 @@ lighting	Light	Licht
 	Threshold	Drempel
 	Trace	Traceren
 	Trace the image with the Default preset	De afbeelding traceren met de standaardvoorinstelling
-	Size: {size}  Tracking: {tracking}	Grootte: {size}  Spatiëring: {tracking}
+	Size: {size}  Tracking: {tracking}	Grootte: {size}  Tracking: {tracking}
 	<Opacity Mask>	<Dekkingsmasker>
 	Create New Layer	Nieuwe laag maken
 	Create New Sublayer	Nieuwe sublaag maken
@@ -4275,6 +4276,7 @@ imageTrace	Outline	Contour
 @msg	select an object in perspective	selecteer een object in perspectief
 @msg	select artwork (or a colour group) to recolor	selecteer een illustratie (of een kleurgroep) om te herkleuren
 @msg	select at least two objects	selecteer minstens twee objecten
+@msg	exit isolation mode first	verlaat eerst de isolatiemodus
 @msg	select objects, not layers	selecteer objecten, geen lagen
 @msg	select one path, or give its `id`	selecteer één pad, of geef het `id`
 @msg	select paths to join	selecteer paden om te verbinden
@@ -5050,7 +5052,7 @@ mark-style	Japanese	Japans
 	This system has no screen color sampler	Dit systeem heeft geen schermkleurkiezer
 	Color blindness – Tritanopia-type	Kleurenblindheid – type tritanopie
 	Panels Except Tools and Control	Alle panelen behalve Gereedschap en Bediening
-	Reset Tracking and Kerning	Spatiëring en kerning herstellen
+	Reset Tracking and Kerning	Tracking en kerning herstellen
 	Reset Horizontal Scale	Horizontale schaal herstellen
 @msg	span must be "object" or "selection", got {v}	span moet "object" of "selection" zijn, maar is {v}
 @msg	span: "selection" places a `gradient`, not a swatch	span: "selection" plaatst een `gradient`, geen staal

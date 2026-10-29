@@ -1,6 +1,6 @@
 use super::slots::{PERSPECTIVE_SLOTS, RECENT_FONT_IDS, RECENT_IDS, SAVED_SELECTION_IDS, SAVED_VIEW_IDS};
 use super::submenus::{INSERT_BREAK, INSERT_SPECIAL, INSERT_WHITESPACE, PATH_EFFECTS, TYPE_SIZES, effect_menu, font_items, insert_items};
-use super::*;
+use super::{Item, Sep, c, cp, json, sub, todo, todos};
 
 /// The in-window and native menu tree. The in-window bar skips the VectorCraft menu (see
 /// `menu_bar`); the native Mac bar is composed from the whole tree (see `native_menu`).
@@ -598,9 +598,8 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
             v.extend(SAVED_VIEW_IDS.iter().map(|id| c("Saved View", id)));
             v
         }),
-        (
-            "Window",
-            vec![
+        ("Window", {
+            let mut window_items = vec![
                 c("New Window", "window.newWindow"),
                 sub("Arrange", vec![todo("Cascade"), todo("Tile"), todo("Float in Window"), todo("Consolidate All Windows")]),
                 sub("Workspace", crate::workspaces::menu_items()),
@@ -610,6 +609,9 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                 c("Tools", "window.toolbar"),
                 sub("Toolbars", vec![c("Advanced", "window.toolbarAdvanced"), c("Double Column", "window.toolbarColumns")]),
                 Sep,
+            ];
+            let lang = crate::i18n::current();
+            let mut panels = vec![
                 panel("Actions", "actions"),
                 panel("Align", "align"),
                 panel("Appearance", "appearance"),
@@ -644,9 +646,8 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                 panel("Symbols", "symbols"),
                 panel("Transform", "transform"),
                 panel("Transparency", "transparency"),
-                sub(
-                    "Type",
-                    vec![
+                sub("Type", {
+                    let mut type_items = vec![
                         panel("Character", "character"),
                         panel("Character Styles", "charStyles"),
                         panel("Glyphs", "glyphs"),
@@ -654,16 +655,25 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                         panel("Paragraph", "paragraph"),
                         panel("Paragraph Styles", "paraStyles"),
                         panel("Tabs", "tabs"),
-                    ],
-                ),
+                    ];
+                    sort_by_localized_label(&mut type_items, lang);
+                    type_items
+                }),
                 panel("Variables", crate::panels::variables::ID),
-                Sep,
+            ];
+            sort_by_localized_label(&mut panels, lang);
+            window_items.extend(panels);
+            window_items.push(Sep);
+            let mut lib_items = vec![
                 sub("Brush Libraries", crate::panels::brushes::window_menu()),
                 sub("Graphic Style Libraries", crate::panels::graphic_styles::window_menu()),
                 sub("Swatch Libraries", crate::panels::swatches::window_menu()),
                 sub("Symbol Libraries", crate::panels::symbols::window_menu()),
-            ],
-        ),
+            ];
+            sort_by_localized_label(&mut lib_items, lang);
+            window_items.extend(lib_items);
+            window_items
+        }),
         (
             "Help",
             vec![
@@ -709,4 +719,23 @@ pub(super) fn arrange_items() -> Vec<Item> {
         Sep,
         c("Send to Current Layer", "object.arrange.sendToCurrentLayer"),
     ]
+}
+
+/// Sort menu items alphabetically by their display label in `lang`, folding Latin accents so
+/// panels and submenus appear in the expected alphabetical order in every interface language (#4143).
+fn sort_by_localized_label(items: &mut [Item], lang: crate::i18n::Lang) {
+    items.sort_by_cached_key(|it| {
+        let label = match it {
+            Item::Cmd(l, id, _) => crate::i18n::tr_id(lang, id, l),
+            Item::Sub(l, _) | Item::Todo(l, _) | Item::Header(l) => crate::i18n::tr(lang, l),
+            Item::Sep => "",
+        };
+        (
+            crate::i18n::name_sort_key(label),
+            match it {
+                Item::Cmd(l, ..) | Item::Sub(l, ..) | Item::Todo(l, ..) | Item::Header(l) => *l,
+                Item::Sep => "",
+            },
+        )
+    });
 }

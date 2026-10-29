@@ -1,4 +1,6 @@
-use super::*;
+use super::{
+    Color32, CornerRadius, NodeKind, Pos2, Rect, Sense, Stroke, StrokeKind, TextKind, Tokens, Ui, Vec2, VectorcraftApp, Xf, json, pos2, vec2, widgets,
+};
 
 /// The Contextual Task Bar's area.
 fn task_bar_id() -> egui::Id {
@@ -223,7 +225,9 @@ pub(super) fn task_bar(app: &mut VectorcraftApp, ui: &mut Ui, xf: &Xf) {
                         if colored && widgets::icon_button(ui, "palette", tl!("Recolor Artwork"), false, 30.0).clicked() {
                             run = Some(("ui.recolorDialog", json!({})));
                         }
-                        if widgets::icon_button(ui, "lock", tl!("Lock (⌘2)"), false, 30.0).clicked() {
+                        // The Lock button is off in isolation mode, as Object › Lock › Selection is.
+                        let lockable = crate::menus::enabled(app, "object.lock");
+                        if widgets::icon_button_enabled(ui, "lock", tl!("Lock (⌘2)"), false, lockable, 30.0).clicked() {
                             run = Some(("object.lock", json!({})));
                         }
                     }

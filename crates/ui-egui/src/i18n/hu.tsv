@@ -3903,6 +3903,7 @@ mark-style	Japanese	Japán
 	Swatch Options…	Színminta beállításai…
 	Swatch Tiles	Színmintacsempék
 	Swatches	Színminták
+	Switch Units	Mértékegységek váltása
 	Switch workspace	Munkaterület váltása
 	Symbol	Szimbólum
 	Symbol Instance	Szimbólumpéldány
@@ -4459,6 +4460,7 @@ imageTrace	Outline	Körvonal
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}`: {min} és {max} közötti érték kell (kapott érték: {x})
 @msg	`{key}` must be one of {_1}	`{key}`: ezek egyike kell: {_1}
 @msg	`{key}` must be true or false	`{key}`: true vagy false kell
+@msg	`top` and `below` can't both be true	`top` és `below` nem lehet egyszerre true
 @msg	`select` must be true or false	`select`: true vagy false kell
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` és `maxAnchors`: egész szám kell
 @msg	`{key}` must be a number not below 0	`{key}`: legalább 0 értékű szám kell
@@ -4973,6 +4975,7 @@ imageTrace	Outline	Körvonal
 @msg	select an object in perspective	jelölj ki egy perspektivikus objektumot
 @msg	select artwork (or a colour group) to recolor	jelölj ki átszínezendő grafikát (vagy színcsoportot)
 @msg	select at least two objects	jelölj ki legalább két objektumot
+@msg	exit isolation mode first	előbb lépj ki az elkülönítési módból
 @msg	select objects, not layers	objektumokat jelölj ki, rétegeket ne
 @msg	select one path, or give its `id`	jelölj ki egy útvonalat, vagy add meg az `id` értékét
 @msg	select paths or anchor points	jelölj ki útvonalakat vagy horgonypontokat

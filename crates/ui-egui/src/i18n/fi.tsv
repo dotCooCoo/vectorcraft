@@ -79,6 +79,7 @@
 	Check Script	Tarkista komentosarja
 	Other Script…	Muu komentosarja…
 	Document Setup…	Asiakirjan asetukset…
+	Switch Units	Vaihda yksiköitä
 	Document Color Mode	Asiakirjan väritila
 	CMYK Color	CMYK-väri
 	RGB Color	RGB-väri
@@ -4148,6 +4149,7 @@ imageTrace	Outline	Ääriviiva
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` on oltava väliltä {min}–{max} (saatiin {x})
 @msg	`{key}` must be one of {_1}	`{key}` on oltava jokin seuraavista: {_1}
 @msg	`{key}` must be true or false	`{key}` on oltava true tai false
+@msg	`top` and `below` can't both be true	`top` ja `below` eivät voi olla molemmat true
 @msg	`select` must be true or false	`select` on oltava true tai false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` ja `maxAnchors` on oltava kokonaislukuja
 @msg	`{key}` must be a number not below 0	`{key}` on oltava luku, joka on vähintään 0
@@ -4472,6 +4474,7 @@ imageTrace	Outline	Ääriviiva
 @msg	select an object in perspective	valitse perspektiivissä oleva objekti
 @msg	select artwork (or a colour group) to recolor	valitse uudelleenväritettävä kuvitus (tai väriryhmä)
 @msg	select at least two objects	valitse vähintään kaksi objektia
+@msg	exit isolation mode first	poistu ensin eristystilasta
 @msg	select objects, not layers	valitse objekteja, ei tasoja
 @msg	select one path, or give its `id`	valitse yksi polku tai anna sen `id`
 @msg	select paths to join	valitse liitettävät polut

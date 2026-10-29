@@ -74,6 +74,7 @@
 	Check Script	Sprawdź skrypt
 	Other Script…	Inny skrypt…
 	Document Setup…	Ustawienia dokumentu…
+	Switch Units	Przełącz jednostki
 	Document Color Mode	Tryb koloru dokumentu
 	CMYK Color	Kolor CMYK
 	RGB Color	Kolor RGB
@@ -1890,6 +1891,8 @@ lighting	Light	Światło
 	Repeat Tab	Powtórz tabulator
 	Right-Justified Tab	Tabulator prawy
 	Top-Justified Tab	Tabulator górny
+	X:	X:
+	Y:	Y:
 	Select a text object to set its tab stops.	Zaznacz obiekt tekstowy, aby ustawić jego tabulatory.
 	Select text	Zaznacz tekst
 	Snap to Unit	Przyciągaj do jednostek
@@ -4052,6 +4055,7 @@ imageTrace	Outline	Kontur
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` musi mieścić się w zakresie od {min} do {max} (podano {x})
 @msg	`{key}` must be one of {_1}	`{key}` musi mieć jedną z wartości: {_1}
 @msg	`{key}` must be true or false	`{key}` musi mieć wartość true lub false
+@msg	`top` and `below` can't both be true	`top` i `below` nie mogą mieć jednocześnie wartości true
 @msg	`select` must be true or false	`select` musi mieć wartość true lub false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` i `maxAnchors` muszą być liczbami całkowitymi
 @msg	`{key}` must be a number not below 0	`{key}` musi być liczbą nie mniejszą niż 0
@@ -4390,6 +4394,7 @@ imageTrace	Outline	Kontur
 @msg	select an object in perspective	zaznacz obiekt w perspektywie
 @msg	select artwork (or a colour group) to recolor	zaznacz kompozycję (lub grupę kolorów), aby zmienić kolory
 @msg	select at least two objects	zaznacz co najmniej dwa obiekty
+@msg	exit isolation mode first	najpierw wyjdź z trybu izolacji
 @msg	select objects, not layers	zaznacz obiekty, nie warstwy
 @msg	select one path, or give its `id`	zaznacz jedną ścieżkę lub podaj jej `id`
 @msg	select paths to join	zaznacz ścieżki do połączenia

@@ -2,7 +2,7 @@
 //! art retained underneath. Recipes select topology regions; source edits re-evaluate them in
 //! the same undo transaction. Rendering and exporters only see ordinary groups and paths.
 use super::pathops::Beside;
-use super::*;
+use super::{CommandSpec, EngineError, Result, Session, bad, bool_or, checked_ids_param, cmd, f64_or, has_doc, id_param, point_param};
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, sync::Arc};
 use vectorcraft_doc::shaper::{EdgeEdit, FILL_PREFIX, FaceEdit, FaceSelector, SOURCES, STROKE_PREFIX, ShaperSpec};

@@ -1,6 +1,6 @@
 use super::ids::LayerColor;
 use super::live_shape::LiveShape;
-use super::*;
+use super::{Affine, Arc, BlendSpec, Deserialize, EnvelopeKind, FillRule, GradientMesh, Node, PathData, RepeatSpec, Serialize, TextObject, yes};
 
 /// Embedded or linked raster image.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

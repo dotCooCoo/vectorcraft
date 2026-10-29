@@ -2987,6 +2987,7 @@ mark-style	Japanese	日本式
 	Swatch Options	スウォッチオプション
 	Swatch Options…	スウォッチオプション…
 	Swatch Tiles	スウォッチタイル
+	Switch Units	単位を切り替え
 	Switch workspace	ワークスペースを切り替え
 	Add Content	コンテンツを追加
 	Click to apply to the selected type	クリックして選択したテキストに適用
@@ -4097,6 +4098,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	clipboard is empty	クリップボードが空です
 @msg	no anchor points selected	アンカーポイントが選択されていません
 @msg	select at least two objects	オブジェクトを 2 つ以上選択してください
+@msg	exit isolation mode first	先に分離モードを終了してください
 @msg	no saved presets	保存したプリセットはありません
 @msg	compound paths can only contain paths	複合パスに含められるのはパスだけです
 @msg	no bounds	境界がありません
@@ -4466,6 +4468,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command` には、メニュー項目がダイアログを開くコマンドを指定してください (ui.menuDialog を参照)
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` には grayscale、rgb、hsb、cmyk、websafe のいずれかを指定してください
 @msg	`{key}` must be true or false	`{key}` には true または false を指定してください
+@msg	`top` and `below` can't both be true	`top` と `below` を同時に true にすることはできません
 @msg	`select` must be true or false	`select` には true または false を指定してください
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` と `maxAnchors` は整数にしてください
 @msg	`{key}` must be a number not below 0	`{key}` には 0 以上の数値を指定してください

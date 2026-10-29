@@ -2981,6 +2981,7 @@ mark-style	Japanese	일본식
 	Swatch Options	견본 옵션
 	Swatch Options…	견본 옵션…
 	Swatch Tiles	견본 타일
+	Switch Units	단위 전환
 	Switch workspace	작업 영역 전환
 	Add Content	콘텐츠 추가
 	Click to apply to the selected type	클릭하면 선택한 문자에 적용
@@ -4029,6 +4030,7 @@ theme	Appearance	외관
 @msg	clipboard is empty	클립보드가 비어 있습니다
 @msg	no anchor points selected	선택한 앵커 포인트가 없습니다
 @msg	select at least two objects	개체를 두 개 이상 선택하세요
+@msg	exit isolation mode first	먼저 격리 모드를 종료하세요
 @msg	no saved presets	저장된 프리셋이 없습니다
 @msg	compound paths can only contain paths	컴파운드 패스에는 패스만 넣을 수 있습니다
 @msg	no bounds	경계가 없습니다
@@ -4398,6 +4400,7 @@ theme	Appearance	외관
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command`는 메뉴 항목이 대화상자를 여는 명령이어야 합니다(ui.menuDialog 참조)
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode`은(는) grayscale, rgb, hsb, cmyk, websafe 중 하나여야 합니다
 @msg	`{key}` must be true or false	`{key}`은(는) true 또는 false여야 합니다
+@msg	`top` and `below` can't both be true	`top`과 `below`를 동시에 true로 지정할 수 없습니다
 @msg	`select` must be true or false	`select`은(는) true 또는 false여야 합니다
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors`와 `maxAnchors`는 정수여야 합니다
 @msg	`{key}` must be a number not below 0	`{key}`은(는) 0 이상의 숫자여야 합니다

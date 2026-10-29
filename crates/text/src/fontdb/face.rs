@@ -1,7 +1,7 @@
 use super::build::base_values;
 use super::names::{localized, name};
 use super::traits::{FaceKeys, FontTraits};
-use super::*;
+use super::{Arc, GlyphId, HashMap, Location, LocationRef, MetadataProvider, Size, StringId};
 
 /// The family used when a requested family is unknown (Illustrator's Myriad Pro analogue).
 pub const FALLBACK_FAMILY: &str = "Source Sans 3";

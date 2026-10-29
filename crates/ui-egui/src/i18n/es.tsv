@@ -3230,6 +3230,7 @@ font-technology	Variable	Variables
 	Swatch Options…	Opciones de muestra…
 	Swatch Tiles	Mosaicos de muestras
 	Swatches	Muestras
+	Switch Units	Cambiar unidades
 	Switch workspace	Cambiar espacio de trabajo
 	Add Content	Añadir contenido
 	Click to apply to the selected type	Haz clic para aplicarlo al texto seleccionado
@@ -3927,6 +3928,7 @@ axis	Both	Ambos
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` debe estar entre {min} y {max} (se recibió {x})
 @msg	`{key}` must be one of {_1}	`{key}` debe ser uno de estos: {_1}
 @msg	`{key}` must be true or false	`{key}` debe ser true o false
+@msg	`top` and `below` can't both be true	`top` y `below` no pueden ser true a la vez
 @msg	`select` must be true or false	`select` debe ser true o false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` y `maxAnchors` deben ser números enteros
 @msg	`{key}` must be a number not below 0	`{key}` debe ser un número no inferior a 0
@@ -4263,6 +4265,7 @@ axis	Both	Ambos
 @msg	select an object in perspective	selecciona un objeto en perspectiva
 @msg	select artwork (or a colour group) to recolor	selecciona la ilustración (o un grupo de colores) que quieres volver a colorear
 @msg	select at least two objects	selecciona al menos dos objetos
+@msg	exit isolation mode first	sal primero del modo de aislamiento
 @msg	select objects, not layers	selecciona objetos, no capas
 @msg	select one path, or give its `id`	selecciona un trazado o indica su `id`
 @msg	select paths to join	selecciona los trazados que quieres unir
