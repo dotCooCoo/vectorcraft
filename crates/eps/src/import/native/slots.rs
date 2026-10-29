@@ -323,6 +323,13 @@ pub(super) fn letters(s: &str) -> String {
     s.chars().filter(char::is_ascii_alphanumeric).collect()
 }
 
+/// The [`letters`] of each word of `s`, the empty ones left out. Type is compared word by word:
+/// the page draws a right-to-left paragraph's words in the order they show (" 120.5 mm " as
+/// "mm 120.5"), its text object keeps them in the order they are typed.
+pub(super) fn words(s: &str) -> Vec<String> {
+    s.split_whitespace().map(letters).filter(|w| !w.is_empty()).collect()
+}
+
 /// Does `n` hold type that is where `story` lays one of its lines out: the line, or a piece of it
 /// (the page splits a line where its kerning or its styles change), on that line's baseline and
 /// after its start? How far from where the line starts it is, if so.

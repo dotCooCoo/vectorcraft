@@ -3048,6 +3048,124 @@ fn image_trace_document_library_uses_a_color_group() {
 }
 
 #[test]
+fn image_trace_document_library_links_fills_to_global_swatches() {
+    let mut s = session();
+    // A global color, a tint of another global color and a process color.
+    s.execute("swatch.new", &json!({"name": "Ink", "color": "#c82828", "global": true})).unwrap();
+    s.execute("swatch.new", &json!({"name": "Sky", "color": "#2846c8", "global": true})).unwrap();
+    s.execute("swatch.new", &json!({"swatch": "Sky", "tint": 50})).unwrap();
+    s.execute("swatch.new", &json!({"name": "Leaf", "color": "#28a03c"})).unwrap();
+    let hex_of = |s: &mut Session, name: &str| {
+        let list = s.execute("swatch.list", &json!({})).unwrap();
+        list["swatches"].as_array().unwrap().iter().find(|w| w["name"] == name).unwrap()["hex"].as_str().unwrap().to_lowercase()
+    };
+    let tint = hex_of(&mut s, "Sky 50%");
+    let [tr, tg, tb] = [1, 3, 5].map(|i| u8::from_str_radix(&tint[i..i + 2], 16).unwrap());
+    let r = vectorcraft_trace::Raster::from_fn(60, 60, |x, y| match (x < 30, y < 30) {
+        (true, _) => [200, 40, 40, 255],
+        (false, true) => [40, 160, 60, 255],
+        (false, false) => [tr, tg, tb, 255],
+    });
+    let img = add_image(&mut s, &r, Affine::IDENTITY);
+    let params = json!({"mode": "color", "palette": "documentLibrary", "library": "document", "colors": 3});
+    // Each fill as (its color, the swatch it links to, its tint), one per color.
+    let fills = |s: &Session, id: &Value| {
+        let mut v: Vec<(String, Option<String>, f32)> = node(s, NodeId(id.as_u64().unwrap()))
+            .children()
+            .unwrap()
+            .iter()
+            .filter_map(|n| match n.appearance.fill_paint() {
+                Paint::Solid { color, swatch, tint } => {
+                    let [r, g, b, _] = color.to_rgba8(1.0);
+                    Some((format!("#{r:02x}{g:02x}{b:02x}"), swatch, tint))
+                }
+                _ => None,
+            })
+            .collect();
+        v.sort_by(|a, b| a.0.cmp(&b.0));
+        v.dedup();
+        v
+    };
+    let fill = |hex: &str, swatch: Option<&str>, tint: f32| (hex.to_string(), swatch.map(String::from), tint);
+    let res = s.execute("imageTrace.makeAndExpand", &json!({"params": params})).unwrap();
+    let got = fills(&s, &res["id"]);
+    assert_eq!(got.len(), 3, "{got:?}");
+    assert!(got.contains(&fill("#c82828", Some("Ink"), 1.0)), "{got:?}");
+    assert!(got.contains(&fill(&tint, Some("Sky"), 0.5)), "{got:?}");
+    assert!(got.contains(&fill("#28a03c", None, 1.0)), "{got:?}");
+    // Editing the global swatches recolors the trace: the tint at its own tint.
+    s.execute("swatch.edit", &json!({"name": "Ink", "color": "#ff8800"})).unwrap();
+    s.execute("swatch.edit", &json!({"name": "Sky", "color": "#000000"})).unwrap();
+    let tint = hex_of(&mut s, "Sky 50%");
+    let got = fills(&s, &res["id"]);
+    assert!(got.contains(&fill("#ff8800", Some("Ink"), 1.0)), "{got:?}");
+    assert!(got.contains(&fill(&tint, Some("Sky"), 0.5)), "{got:?}");
+    assert!(got.contains(&fill("#28a03c", None, 1.0)), "{got:?}");
+    for _ in 0..3 {
+        s.execute("edit.undo", &json!({})).unwrap();
+    }
+    // A color group's global swatches link too.
+    s.execute("swatch.newGroup", &json!({"name": "Brand", "swatches": ["Ink", "Leaf"]})).unwrap();
+    let mut group = params.clone();
+    group["colorGroup"] = json!("Brand");
+    let res = s.execute("imageTrace.makeAndExpand", &json!({"id": img.0, "params": group})).unwrap();
+    let got = fills(&s, &res["id"]);
+    assert!(got.contains(&fill("#c82828", Some("Ink"), 1.0)) && got.contains(&fill("#28a03c", None, 1.0)), "{got:?}");
+    s.execute("edit.undo", &json!({})).unwrap();
+    // A swatch library's colors stay unlinked.
+    let mut web = params.clone();
+    web["library"] = json!("web-safe-216");
+    let res = s.execute("imageTrace.makeAndExpand", &json!({"id": img.0, "params": web})).unwrap();
+    let got = fills(&s, &res["id"]);
+    assert!(!got.is_empty() && got.iter().all(|f| f.1.is_none()), "{got:?}");
+}
+
+#[test]
+fn image_trace_document_library_matches_a_lab_spot_by_its_cmyk_equivalent() {
+    let _g = crate::tests_colormgmt::GLOBAL.lock().unwrap_or_else(|e| e.into_inner());
+    let mut s = session();
+    // A Lab color outside the CMYK gamut, whose CMYK equivalent shows another color.
+    let rgb = |c: Color| {
+        let [r, g, b, _] = c.to_rgba8(1.0);
+        [r, g, b]
+    };
+    let cms = vectorcraft_color::cms::active();
+    let off = |lab: Color| {
+        let cmyk = cms.convert(&lab, vectorcraft_color::cms::Model::Cmyk, cms.settings().intent);
+        rgb(lab).iter().zip(rgb(cmyk)).map(|(a, b)| u32::from(a.abs_diff(b))).sum::<u32>()
+    };
+    let lab = [(30.0, 60.0, -100.0), (60.0, -80.0, 60.0), (55.0, 60.0, 40.0), (90.0, -40.0, 100.0)]
+        .map(|(l, a, b)| Color::Lab { l, a, b })
+        .into_iter()
+        .max_by_key(|c| off(*c))
+        .unwrap();
+    assert!(off(lab) >= 30, "{lab:?} is off by {}", off(lab));
+    let Color::Lab { l, a, b } = lab else { panic!("{lab:?}") };
+    // A spot color of it shown by its CMYK equivalent (Spot Colors options with CMYK values).
+    s.execute("swatch.new", &json!({"name": "Lab Ink", "color": {"l": l, "a": a, "b": b}, "spot": true})).unwrap();
+    s.execute("swatch.spotOptions", &json!({"useLab": false})).unwrap();
+    let shown = s.doc().unwrap().doc.global_color("Lab Ink").unwrap();
+    let [kr, kg, kb] = rgb(shown);
+    let [lr, lg, lb] = rgb(lab);
+    // A process color between the two, nearer the color the spot shows.
+    let near = |k: u8, l: u8| (f32::from(k) + (f32::from(l) - f32::from(k)) * 0.3).round() as u8;
+    let [pr, pg, pb] = [near(kr, lr), near(kg, lg), near(kb, lb)];
+    s.execute("swatch.new", &json!({"name": "Near", "color": format!("#{pr:02x}{pg:02x}{pb:02x}")})).unwrap();
+    let process = Color::rgb8(pr, pg, pb);
+    s.execute("swatch.new", &json!({"name": "Leaf", "color": "#28a03c"})).unwrap();
+    // Art in the color the spot shows traces to the spot.
+    let r = vectorcraft_trace::Raster::from_fn(60, 60, |x, _| if x < 30 { [kr, kg, kb, 255] } else { [40, 160, 60, 255] });
+    add_image(&mut s, &r, Affine::IDENTITY);
+    let params = json!({"mode": "color", "palette": "documentLibrary", "library": "document", "colors": 3});
+    let res = s.execute("imageTrace.makeAndExpand", &json!({"params": params})).unwrap();
+    let g = node(&s, NodeId(res["id"].as_u64().unwrap()));
+    let got: Vec<Paint> = g.children().unwrap().iter().map(|n| n.appearance.fill_paint()).collect();
+    let spot = Paint::Solid { color: shown, swatch: Some("Lab Ink".into()), tint: 1.0 };
+    assert!(got.contains(&spot), "{got:?}");
+    assert!(!got.iter().any(|p| p.color() == Some(process)), "{got:?}");
+}
+
+#[test]
 fn image_trace_create_strokes_makes_stroked_centre_lines() {
     let mut s = session();
     // A 3 px wide horizontal line from x = 10 to 90 at y = 50, placed at 2× from (100, 100).
@@ -3093,6 +3211,205 @@ fn image_trace_presets_query_and_errors() {
     assert!(s.execute("imageTrace.make", &json!({"id": a.0})).is_err(), "not an image");
     assert!(find_command("imageTrace.make").unwrap().menu == ["Object", "Image Trace"]);
     assert!(find_command("livePaint.make").unwrap().menu == ["Object", "Live Paint"]);
+}
+
+/// Manage Presets: a saved preset is listed after the built-in ones, traces by name in any case,
+/// changes from its own settings, and can be renamed and deleted.
+#[test]
+fn image_trace_saved_presets_are_made_used_renamed_and_deleted() {
+    let mut s = session();
+    let img = image_doc(&mut s);
+    let r = s.execute("imageTrace.presets.save", &json!({"name": "Disc Only", "params": {"ignoreWhite": true, "paths": 70}})).unwrap();
+    assert_eq!((r["name"].as_str(), r["created"].as_bool(), r["params"]["ignoreWhite"].as_bool()), (Some("Disc Only"), Some(true), Some(true)));
+    let list = s.execute("imageTrace.presets", &json!({})).unwrap();
+    let list = list["presets"].as_array().unwrap();
+    assert_eq!(list.len(), 16);
+    assert!(list[..15].iter().all(|p| p["builtIn"] == true));
+    assert_eq!((list[15]["name"].as_str(), list[15]["builtIn"].as_bool()), (Some("Disc Only"), Some(false)));
+    assert!(list[15]["enhanced"].is_null());
+    assert_eq!(list[15]["params"]["paths"], 70.0);
+    // It traces by name, any case, and the object shows its saved name.
+    let r = s.execute("imageTrace.make", &json!({"id": img.0, "preset": "disc only"})).unwrap();
+    assert_eq!(r["paths"], 1, "the white is left out");
+    let g = NodeId(r["id"].as_u64().unwrap());
+    let t = node(&s, g).extras().trace.clone().unwrap();
+    assert_eq!((t["preset"].as_str(), t["params"]["ignoreWhite"].as_bool()), (Some("Disc Only"), Some(true)));
+    let r = s.execute("imageTrace.make", &json!({"id": g.0, "preset": "Disc Only", "params": {"paths": 20}})).unwrap();
+    let g = NodeId(r["id"].as_u64().unwrap());
+    assert_eq!(node(&s, g).extras().trace.clone().unwrap()["preset"], "Custom");
+    // Saving it again changes it from its own settings.
+    let r = s.execute("imageTrace.presets.save", &json!({"name": "disc only", "params": {"corners": 10}})).unwrap();
+    assert_eq!((r["name"].as_str(), r["created"].as_bool()), (Some("Disc Only"), Some(false)));
+    assert_eq!(
+        (r["params"]["ignoreWhite"].as_bool(), r["params"]["paths"].as_f64(), r["params"]["corners"].as_f64()),
+        (Some(true), Some(70.0), Some(10.0))
+    );
+    // Rename: the old name no longer traces.
+    s.execute("imageTrace.presets.save", &json!({"name": "Light", "preset": "6 Colors"})).unwrap();
+    let e = s.execute("imageTrace.presets.save", &json!({"name": "Disc Only", "newName": "light"})).unwrap_err().to_string();
+    assert!(e.contains("a preset named `light` exists"), "{e}");
+    assert!(s.execute("imageTrace.presets.save", &json!({"name": "Disc Only", "newName": "6 colors"})).is_err());
+    let e = s.execute("imageTrace.presets.save", &json!({"name": "Nothing", "newName": "Something"})).unwrap_err().to_string();
+    assert!(e.contains("no saved preset named `Nothing` to rename"), "{e}");
+    let r = s.execute("imageTrace.presets.save", &json!({"name": "Disc Only", "newName": "Disc"})).unwrap();
+    assert_eq!((r["name"].as_str(), r["params"]["corners"].as_f64()), (Some("Disc"), Some(10.0)));
+    let e = s.execute("imageTrace.make", &json!({"id": g.0, "preset": "Disc Only"})).unwrap_err().to_string();
+    assert!(e.contains("unknown preset `Disc Only`: not a built-in or saved preset"), "{e}");
+    assert_eq!(s.execute("imageTrace.make", &json!({"id": g.0, "preset": "Disc"})).unwrap()["paths"], 1);
+    // Delete.
+    assert_eq!(s.execute("imageTrace.presets.delete", &json!({"name": "DISC"})).unwrap()["deleted"], "Disc");
+    assert!(s.execute("imageTrace.presets.delete", &json!({"name": "Disc"})).is_err());
+    assert!(s.execute("imageTrace.make", &json!({"id": g.0, "preset": "Disc"})).is_err());
+    let names: Vec<String> = s.prefs.trace_presets.iter().map(|p| p.name.clone()).collect();
+    assert_eq!(names, ["Light"]);
+}
+
+/// The saved presets' revision grows with each save, rename and delete, and not with a refused
+/// one; the changes are recorded, and the list and the save's reply carry them.
+#[test]
+fn image_trace_saved_presets_count_their_changes() {
+    let mut s = session();
+    let revision = |s: &mut Session| s.execute("imageTrace.presets", &json!({})).unwrap()["revision"].as_u64();
+    assert_eq!((s.trace_presets_revision(), revision(&mut s)), (0, Some(0)));
+    let r = s.execute("imageTrace.presets.save", &json!({"name": "A"})).unwrap();
+    assert!(r["renamedFrom"].is_null());
+    let r = s.execute("imageTrace.presets.save", &json!({"name": "a", "newName": "B", "params": {"paths": 30}})).unwrap();
+    assert_eq!(r["renamedFrom"], "A");
+    assert!(s.execute("imageTrace.presets.save", &json!({"name": "B", "newName": "Default"})).is_err());
+    assert!(s.execute("imageTrace.presets.delete", &json!({"name": "A"})).is_err());
+    assert!(s.execute("imageTrace.presets.save", &json!({"name": "b", "newName": "B"})).unwrap()["renamedFrom"].is_null());
+    s.execute("imageTrace.presets.delete", &json!({"name": "B"})).unwrap();
+    assert_eq!((s.trace_presets_revision(), revision(&mut s)), (4, Some(4)));
+    let changes: Vec<_> = s.trace_preset_changes_since(1).map(|c| (c.revision, c.name.as_str(), c.renamed_from.as_deref(), c.deleted)).collect();
+    assert_eq!(changes, [(2, "B", Some("A"), false), (3, "B", None, false), (4, "B", None, true)]);
+    // Preferences with other saved presets give a new revision; the same ones don't.
+    let mut prefs = s.prefs.clone();
+    s.apply_prefs(prefs.clone());
+    assert_eq!(s.trace_presets_revision(), 4);
+    s.execute("imageTrace.presets.save", &json!({"name": "C"})).unwrap();
+    prefs.trace_presets.clear();
+    s.apply_prefs(prefs);
+    assert_eq!(s.trace_presets_revision(), 6);
+    assert_eq!(s.trace_preset_changes_since(4).count(), 1, "replacing the preferences records no change");
+    // A rename stays on record after many later saves.
+    s.execute("imageTrace.presets.save", &json!({"name": "C"})).unwrap();
+    let seen = s.trace_presets_revision();
+    s.execute("imageTrace.presets.save", &json!({"name": "C", "newName": "D"})).unwrap();
+    for i in 0..40 {
+        s.execute("imageTrace.presets.save", &json!({"name": format!("E{i}")})).unwrap();
+    }
+    let first = s.trace_preset_changes_since(seen).next().map(|c| (c.name.clone(), c.renamed_from.clone()));
+    assert_eq!(first, Some(("D".to_string(), Some("C".to_string()))));
+    assert_eq!(s.trace_preset_changes_since(seen).count(), 41);
+}
+
+/// Built-in presets stay as they are, and a saved preset's settings are checked as imageTrace.make
+/// checks them.
+#[test]
+fn image_trace_built_in_presets_cannot_be_saved_over_or_deleted() {
+    let mut s = session();
+    for name in ["6 Colors", "[Default]", "flat logo", "Custom"] {
+        let e = s.execute("imageTrace.presets.save", &json!({ "name": name })).unwrap_err().to_string();
+        assert!(e.contains("save it under another name") || e.contains("save the preset under another name"), "{name}: {e}");
+    }
+    for name in ["Default", "outline"] {
+        let e = s.execute("imageTrace.presets.delete", &json!({ "name": name })).unwrap_err().to_string();
+        assert!(e.contains("is a built-in preset and stays"), "{e}");
+    }
+    assert!(s.execute("imageTrace.presets.save", &json!({"name": " "})).is_err());
+    assert!(s.execute("imageTrace.presets.delete", &json!({})).is_err());
+    let e = s.execute("imageTrace.presets.save", &json!({"params": {"fills": false, "strokes": false}})).unwrap_err().to_string();
+    assert!(e.contains("`imageTrace.presets.save`") && e.contains("Create needs fills, strokes or both"), "{e}");
+    assert!(s.execute("imageTrace.presets.save", &json!({"preset": "No Such"})).is_err());
+    assert!(s.prefs.trace_presets.is_empty(), "nothing saved");
+    // Without a name, the first free "Tracing Preset N"; a preset and its enhanced version as a start.
+    let r = s.execute("imageTrace.presets.save", &json!({"preset": "16 Colors", "enhanced": true})).unwrap();
+    assert_eq!(r["name"], "Tracing Preset 1");
+    assert_eq!(r["params"], serde_json::to_value(vectorcraft_trace::enhanced_preset("16 Colors").unwrap()).unwrap());
+    assert_eq!(s.execute("imageTrace.presets.save", &json!({})).unwrap()["name"], "Tracing Preset 2");
+    // Built-in presets come first in the list and are unchanged.
+    let list = s.execute("imageTrace.presets", &json!({})).unwrap();
+    let six = list["presets"].as_array().unwrap().iter().find(|p| p["name"] == "6 Colors").unwrap().clone();
+    assert_eq!(six["params"], serde_json::to_value(vectorcraft_trace::preset("6 Colors").unwrap()).unwrap());
+}
+
+/// Saved tracing presets are kept with the preferences, are not a preference key, and survive
+/// resetting the preferences.
+#[test]
+fn image_trace_saved_presets_persist_with_the_preferences() {
+    assert!(Prefs::default().to_json().get("tracePresets").is_none(), "nothing saved while there are none");
+    assert!(serde_json::from_value::<Prefs>(json!({"keyboardIncrement": 2.0})).unwrap().trace_presets.is_empty());
+    let mut s = session();
+    s.execute("imageTrace.presets.save", &json!({"name": "Keep", "preset": "3 Colors", "params": {"noise": 40}})).unwrap();
+    let back: Prefs = serde_json::from_str(&serde_json::to_string(&s.prefs).unwrap()).unwrap();
+    assert_eq!(back.trace_presets, s.prefs.trace_presets);
+    let mut t = session();
+    t.apply_prefs(back);
+    image_doc(&mut t);
+    let r = t.execute("imageTrace.make", &json!({"preset": "keep"})).unwrap();
+    let t_node = node(&t, NodeId(r["id"].as_u64().unwrap()));
+    let stored = t_node.extras().trace.clone().unwrap();
+    assert_eq!(
+        (stored["preset"].as_str(), stored["params"]["noise"].as_u64(), stored["params"]["colors"].as_u64()),
+        (Some("Keep"), Some(40), Some(3))
+    );
+    assert!(t.execute("prefs.set", &json!({"key": "tracePresets", "value": []})).is_err());
+    t.execute("prefs.reset", &json!({})).unwrap();
+    assert_eq!(t.prefs.trace_presets.len(), 1);
+    assert_eq!(t.execute("prefs.get", &json!({})).unwrap()["prefs"]["tracePresets"][0]["name"], "Keep");
+}
+
+/// A preset or name that isn't a string is an error, and changes no saved preset.
+#[test]
+fn image_trace_presets_reject_names_that_are_not_strings() {
+    let mut s = session();
+    let img = image_doc(&mut s);
+    s.execute("imageTrace.presets.save", &json!({"name": "Keep", "preset": "3 Colors"})).unwrap();
+    let kept = s.prefs.trace_presets.clone();
+    for p in [json!({"name": "Keep", "preset": 123}), json!({"name": 7}), json!({"name": "Keep", "newName": 5}), json!({"name": ["Keep"]})] {
+        let e = s.execute("imageTrace.presets.save", &p).unwrap_err().to_string();
+        assert!(e.contains("must be a string"), "{p}: {e}");
+    }
+    assert_eq!(s.prefs.trace_presets, kept, "nothing saved or changed");
+    let e = s.execute("imageTrace.presets.delete", &json!({"name": 1})).unwrap_err().to_string();
+    assert!(e.contains("`name` must be a string"), "{e}");
+    let e = s.execute("imageTrace.make", &json!({"id": img.0, "preset": 3})).unwrap_err().to_string();
+    assert!(e.contains("`preset` must be a string"), "{e}");
+}
+
+/// The journal records a saved preset's settings, so a replay traces with them after the preset is
+/// changed or deleted.
+#[test]
+fn image_trace_replays_a_saved_preset_with_the_settings_it_had() {
+    let mut s = session();
+    let img = image_doc(&mut s);
+    s.execute("imageTrace.presets.save", &json!({"name": "Keep", "params": {"ignoreWhite": true}})).unwrap();
+    assert_eq!(s.execute("imageTrace.make", &json!({"id": img.0, "preset": "Keep"})).unwrap()["paths"], 1, "the white is left out");
+    let (cmd, p) = s.journal.last().unwrap().clone();
+    assert_eq!((cmd.as_str(), &p["savedPreset"]["ignoreWhite"]), ("imageTrace.make", &json!(true)));
+    s.execute("edit.undo", &json!({})).unwrap();
+    s.execute("imageTrace.presets.save", &json!({"name": "Keep", "params": {"ignoreWhite": false}})).unwrap();
+    assert_ne!(s.execute("imageTrace.make", &json!({"id": img.0, "preset": "Keep"})).unwrap()["paths"], 1);
+    s.execute("edit.undo", &json!({})).unwrap();
+    // Changed: the replay traces as the first run did, and the object no longer names Keep.
+    let r = s.execute(&cmd, &p).unwrap();
+    assert_eq!(r["paths"], 1);
+    assert_eq!(node(&s, NodeId(r["id"].as_u64().unwrap())).extras().trace.clone().unwrap()["preset"], "Custom");
+    s.execute("edit.undo", &json!({})).unwrap();
+    // Deleted.
+    s.execute("imageTrace.presets.delete", &json!({"name": "Keep"})).unwrap();
+    assert_eq!(s.execute(&cmd, &p).unwrap()["paths"], 1);
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert!(s.execute("imageTrace.make", &json!({"id": img.0, "preset": "Keep", "savedPreset": 5})).is_err());
+    // Recorded settings are checked as `params` are.
+    let e = s
+        .execute("imageTrace.make", &json!({"id": img.0, "preset": "Keep", "savedPreset": {"fills": false, "strokes": false}}))
+        .unwrap_err()
+        .to_string();
+    assert!(e.contains("Create needs fills, strokes or both"), "{e}");
+    // A built-in preset records nothing.
+    s.execute("imageTrace.make", &json!({"id": img.0, "preset": "6 Colors"})).unwrap();
+    assert!(s.journal.last().unwrap().1.get("savedPreset").is_none());
 }
 
 /// A soft-edged red disc (r = 30 px at (50.3, 49.6)) on transparency, placed at (50, 50) scaled ×2.

@@ -106,7 +106,15 @@ impl Session {
         {
             crate::cmd::distortcmds::silent(self, |g| g.visible = true)?;
         }
-        self.switch_tool(id, view)
+        // When the tool already active, or the tool lent a selection tool for a drag, is chosen again,
+        // `select_tool` calls its [`Tool::chosen_again`] (the Blend tool finishes its blend).
+        let again = self.lender.as_ref().unwrap_or(&self.tool).id() == id;
+        self.switch_tool(id, view)?;
+        if again {
+            let acts = self.with_tool_cx(view, |t, cx| t.chosen_again(cx));
+            self.apply_actions(acts)?;
+        }
+        Ok(())
     }
 
     /// Switch to tool `id` without choosing it afresh (back from a temporary tool: a hidden
@@ -690,6 +698,19 @@ impl Session {
         }
         let acts = self.with_tool_cx(self.last_view, |t, cx| t.after_command(cx));
         // The command itself succeeded: a failure here only leaves the edit as it was.
+        if let Err(e) = self.apply_actions(acts) {
+            log::warn!("ending the text edit: {e}");
+        }
+    }
+
+    /// End the Type tool's text editing before a command saves the art of an editing layer (pattern
+    /// editing's Done, Stop Editing Opacity Mask): point type its click placed that is still empty is
+    /// discarded first, so it is not saved into the pattern tile or the mask.
+    pub(crate) fn end_text_edit(&mut self) {
+        if self.in_tool_actions || !self.tool.wants_text() {
+            return;
+        }
+        let acts = self.with_tool_cx(self.last_view, |t, cx| t.deactivate(cx));
         if let Err(e) = self.apply_actions(acts) {
             log::warn!("ending the text edit: {e}");
         }

@@ -356,7 +356,12 @@ fn svg_darkness_uses_rendered_shadow_in_non_srgb_working_space() {
             .env(CHILD, "1")
             .output()
             .unwrap();
-        assert!(output.status.success(), "{}\n{}", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            output.status.success() && stdout.contains("test result: ok. 1 passed; 0 failed;"),
+            "isolated color profile test failed:\n{stdout}\n{}",
+            String::from_utf8_lossy(&output.stderr),
+        );
         return;
     }
     use vectorcraft_color::{Color, Paint, cms};

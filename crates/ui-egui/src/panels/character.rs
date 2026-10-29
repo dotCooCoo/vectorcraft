@@ -328,6 +328,55 @@ pub(crate) fn toggle_face(app: &mut VectorcraftApp, face: Face) -> Result<Value,
     Ok(json!({ "style": name }))
 }
 
+/// The Character panel fields that the Highlight Font Name, Highlight Kerning and Highlight
+/// Tracking commands give the keyboard focus ([`highlight`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Field {
+    /// The font family menu: it opens, and its search field takes the focus.
+    FontName,
+    Kerning,
+    Tracking,
+}
+
+impl Field {
+    /// The id the panel draws the field with ([`show`], [`metrics_grid`]).
+    fn salt(self) -> &'static str {
+        match self {
+            Field::FontName => "ch-font",
+            Field::Kerning => "ch-kern",
+            Field::Tracking => "ch-track",
+        }
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            Field::FontName => "fontName",
+            Field::Kerning => "kerning",
+            Field::Tracking => "tracking",
+        }
+    }
+}
+
+/// `type.highlightFontName`, `type.highlightKerning` and `type.highlightTracking`: show the
+/// Character panel if it is hidden (a shown one is activated, so its floating window comes
+/// forward), and give `field` the keyboard focus when the panel next draws it, a number field with
+/// its value selected (typing replaces it, Enter applies it). Without selected type or text the
+/// Type tool edits, the panel shows, nothing takes the focus and the command fails. → `{field}`.
+pub(crate) fn highlight(app: &mut VectorcraftApp, field: Field) -> Result<Value, String> {
+    // `window.panel` would hide a floating panel in front of its window, or an open flyout.
+    if crate::panel_docking::showing(&app.ui, "character") {
+        app.run("window.panel.activate", json!({"panel": "character"}))?;
+    } else {
+        app.run("window.panel", json!({"panel": "character"}))?;
+    }
+    if text_style(app).is_none() {
+        app.character_focus = None;
+        return Err("select some type first".into());
+    }
+    app.character_focus = Some(field);
+    Ok(json!({ "field": field.name() }))
+}
+
 /// `text.setRangeStyle` with `p` on the range the Type tool has selected (the whole text when
 /// nothing is selected). Does nothing unless the Type tool edits text.
 pub(crate) fn range_style(app: &mut VectorcraftApp, p: Value) {
@@ -713,15 +762,24 @@ pub(crate) fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     let Some((s, _)) = text_style(app) else {
+        app.character_focus = None;
         super::empty_state(ui, "type", tl!("No text selected"), tl!("Select a text object to edit its character attributes."));
         return;
     };
     let w = ui.available_width();
+    // The field a Highlight command asked for takes the focus as it is drawn. If no field took it
+    // (a sizing pass), the next frame tries again.
+    if let Some(f) = app.character_focus {
+        widgets::arm_field_focus(ui.ctx(), f.salt());
+    }
     font_pickers(app, ui, &s, ("ch-font", "ch-style"), (w - 4.0, w - 4.0));
     variable_font(app, ui, &s, w - 4.0);
     ui.add_space(2.0);
     let hidden = pstate::<bool>(ui.ctx(), "ch-hide-options");
     metrics_grid(app, ui, "ch-grid", &s, w, !hidden);
+    if app.character_focus.is_some() && !widgets::disarm_field_focus(ui.ctx()) {
+        app.character_focus = None;
+    }
     if hidden {
         return;
     }

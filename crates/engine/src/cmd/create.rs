@@ -29,7 +29,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Flare",
             [],
             None,
-            "{cx, cy, diameter=100, opacity=50 (%), brightness=30 (%), growth=20 (%), fuzziness=50 (%), rays=15, longest=300 (%), rayFuzziness=100 (%), x2?, y2? (ring end; else pathLength at direction), pathLength=300, rings=10, largest=50 (%), direction=45 (deg), seed?} → {id}",
+            "{cx, cy, diameter=100, opacity=50 (%), brightness=30 (%), growth=20 (%), fuzziness=50 (%), rays=15, longest=300 (%), rayFuzziness=100 (%), rotation=0 (deg, turns the rays clockwise), x2?, y2? (ring end; else pathLength at direction), pathLength=300, rings=10, largest=50 (%), direction=45 (deg), seed?} → {id}",
             has_doc,
             flare
         ),
@@ -395,6 +395,7 @@ fn flare(s: &mut Session, p: &Value) -> Result<Value> {
         "rays",
         "longest",
         "rayFuzziness",
+        "rotation",
         "rings",
         "largest",
         "x2",
@@ -413,6 +414,7 @@ fn flare(s: &mut Session, p: &Value) -> Result<Value> {
     let rays = p.get("rays").and_then(Value::as_u64).unwrap_or(15).min(50) as usize;
     let longest = pct("longest", 300.0);
     let ray_fuzz = pct("rayFuzziness", 100.0).min(1.0);
+    let ray_turn = f64_or(p, "rotation", 0.0).to_radians();
     let rings = p.get("rings").and_then(Value::as_u64).unwrap_or(10).min(50) as usize;
     let largest = pct("largest", 50.0);
     let end = match (p.get("x2").and_then(Value::as_f64), p.get("y2").and_then(Value::as_f64)) {
@@ -443,11 +445,12 @@ fn flare(s: &mut Session, p: &Value) -> Result<Value> {
     let inner = (1.0 - fuzz as f32 * 0.6).clamp(0.05, 0.95);
     parts.push(("Halo", circle(c, halo_r), radial(c, halo_r, vec![stop(0.0, 0.0), stop(inner * 0.75, 0.0), stop(inner, 0.5), stop(1.0, 0.0)]), 1.0));
     // Rays: thin spikes of random length (Longest = % of the centre radius), fading outwards.
+    // `rotation` turns them clockwise about the center.
     if rays > 0 {
         let mut bp = vectorcraft_geom::BezPath::new();
         let mut reach: f64 = 0.0;
         for i in 0..rays {
-            let a = std::f64::consts::TAU * (i as f64 + rnd() * 0.6) / rays as f64;
+            let a = std::f64::consts::TAU * (i as f64 + rnd() * 0.6) / rays as f64 + ray_turn;
             let len = r * longest * (1.0 - ray_fuzz * 0.75 * rnd()).max(0.1);
             reach = reach.max(len);
             let w = r * 0.035;
