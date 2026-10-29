@@ -651,6 +651,31 @@ fn inline_graphics_in_type_are_written_as_their_art() {
     assert!(at(&blue) < at(&red), "the stroke above the characters is over the inline graphic");
 }
 
+/// Nested symbols whose instances multiply stop at [`vectorcraft_doc::MAX_SYMBOL_NODES`] objects of
+/// symbol art in all, with a warning.
+#[test]
+fn nested_symbol_instances_stop_at_the_symbol_art_limit() {
+    let mut doc = Document::new(200.0, 100.0);
+    let layer = doc.layers[0].id;
+    // Empty paths: counted, but written as nothing, so the test stays small; and one filled square.
+    let empty = Arc::new(Node::path(doc.alloc_id(), PathData::new(vec![]), Appearance::default()));
+    let mut members = vec![empty; 4999];
+    let square = shapes::rectangle(Rect::new(0.0, 0.0, 1.0, 1.0));
+    members.push(Arc::new(Node::path(doc.alloc_id(), square, Appearance::basic(solid(Color::gray(0.5)), Paint::None, 0.0))));
+    let leaves = Node::group(doc.alloc_id(), members);
+    doc.symbols.push(Symbol { name: "Leaf".into(), art: Arc::new(leaves) });
+    let leaf = Arc::new(Node::new(doc.alloc_id(), NodeKind::SymbolInstance { symbol: "Leaf".into(), xf: Affine::IDENTITY }));
+    let trees = Node::group(doc.alloc_id(), vec![leaf; 5000]);
+    doc.symbols.push(Symbol { name: "Tree".into(), art: Arc::new(trees) });
+    let tree = Node::new(doc.alloc_id(), NodeKind::SymbolInstance { symbol: "Tree".into(), xf: Affine::IDENTITY });
+    doc.insert(Some(layer), usize::MAX, tree).unwrap();
+    let out = export_ai_editing(&doc, &opts()).unwrap();
+    assert!(out.warnings.iter().any(|w| w == writer::SYMBOL_LIMIT), "{:?}", out.warnings);
+    // 5,001 objects for the tree and each leaf: 3,198 leaves fit in 16,000,000.
+    let text = String::from_utf8(out.program).unwrap();
+    assert_eq!(text.matches("\r\nf\r\n").count(), 3198, "the squares of the leaves written");
+}
+
 #[test]
 fn a_stained_symbol_instance_is_written_in_its_stained_colors() {
     let mut doc = Document::new(200.0, 100.0);

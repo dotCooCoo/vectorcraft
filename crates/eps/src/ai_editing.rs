@@ -39,8 +39,9 @@
 //! loss a warning: type as its outlines and its inline graphics' art, gradients as their average color, pattern fills as their
 //! tiles cut to the shape, clipping groups and clipping layers as their art cut to the clipping
 //! path (the clipping path's fill cut too, its stroke not), images as their outlines filled with
-//! their average color, symbols and live objects as their art, strokes a plain line can't draw as
-//! their filled outlines, several fills or strokes as a group of a path for each, gradient and
+//! their average color, symbols and live objects as their art (symbol art past
+//! [`vectorcraft_doc::MAX_SYMBOL_NODES`] objects in all left out), strokes a plain line can't draw
+//! as their filled outlines, several fills or strokes as a group of a path for each, gradient and
 //! pattern swatches, transparency and live effects other than geometry effects left out.
 //!
 //! The data streams hold the program compressed with Zstandard after `%AI24_ZStandard_Data`, with

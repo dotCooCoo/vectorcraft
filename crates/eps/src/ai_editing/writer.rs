@@ -36,6 +36,7 @@ const STROKES: &str = "strokes a plain line can't draw (inside or outside the pa
 pub(super) const TRANSPARENCY: &str = "transparency (opacity, blending modes, opacity masks) is left out of the editing data for other apps";
 pub(super) const EFFECTS: &str = "live effects other than geometry effects are left out of the editing data for other apps";
 const SWATCHES: &str = "gradient and pattern swatches are left out of the editing data for other apps";
+pub(super) const SYMBOL_LIMIT: &str = "symbol instances past 16,000,000 objects of symbol art in all are left out of the editing data for other apps";
 const TEMPLATES: &str = "template layers are written as dimmed layers that don't print in the editing data for other apps";
 
 pub(super) struct Writer<'a> {
@@ -57,6 +58,8 @@ pub(super) struct Writer<'a> {
     next: HashMap<String, u64>,
     /// The document's brushes, read the first time a brushed stroke is written.
     brushes: Option<Vec<vectorcraft_brush::Brush>>,
+    /// The objects of the symbol art written so far, within [`vectorcraft_doc::MAX_SYMBOL_NODES`].
+    symbol_nodes: u64,
 }
 
 impl<'a> Writer<'a> {
@@ -73,7 +76,21 @@ impl<'a> Writer<'a> {
             ids: HashSet::new(),
             next: HashMap::new(),
             brushes: None,
+            symbol_nodes: 0,
         }
+    }
+
+    /// Whether the art of a symbol, `art`, may be written: the objects of the symbol art written
+    /// so far stay within [`vectorcraft_doc::MAX_SYMBOL_NODES`], as in the PDF part (instances of
+    /// symbols that hold instances multiply). Past it the art is left out, with a warning.
+    fn take_symbol(&mut self, art: &Node) -> bool {
+        let total = self.symbol_nodes.saturating_add(art.count() as u64);
+        if total > vectorcraft_doc::MAX_SYMBOL_NODES {
+            self.warn(SYMBOL_LIMIT);
+            return false;
+        }
+        self.symbol_nodes = total;
+        true
     }
 
     fn warn(&mut self, w: &str) {
@@ -234,6 +251,7 @@ impl<'a> Writer<'a> {
                 self.line("u");
                 if let Some(sym) = self.doc.symbols.iter().find(|s| &s.name == symbol)
                     && self.nest < MAX_NEST
+                    && self.take_symbol(&sym.art)
                 {
                     // Stained by the instance's fill, as the canvas draws it.
                     let mut art = vectorcraft_brush::instance_art(&sym.art, n);
@@ -540,6 +558,9 @@ impl<'a> Writer<'a> {
             for ig in &layout.inlines {
                 let Some(art) = t.runs.get(ig.run).and_then(|r| r.inline.as_ref()) else { continue };
                 let Some(sym) = doc.symbols.iter().find(|x| x.name == art.symbol) else { continue };
+                if !self.take_symbol(&sym.art) {
+                    continue;
+                }
                 self.warn(LIVE);
                 let mut art_node = (*sym.art).clone();
                 // Strokes scale with the art, as on the canvas.
