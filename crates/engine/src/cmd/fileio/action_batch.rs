@@ -114,14 +114,20 @@ fn batch_folder(s: &mut Session, cmd: &str, p: &Value, override_open: bool, run:
     // Each file's name without its extension, through `safe_file_name` (`a..svg` gives `a`, the
     // folder Windows makes for `a.`), with `-2`, `-3`… after a name an earlier file used (`a.svg` and
     // `sub/a.svg`, or `a.svg` and `a.ai`) or after a name whose files or folder an earlier file
-    // wrote ([`distinct_stems`]), as data set names are numbered.
+    // wrote ([`distinct_stems`]), as data set names are numbered. A source file in the destination
+    // folder itself keeps its name for its own output: no other file's output takes it.
     let steps = filter_steps(run.steps, override_open, false);
     let run = Run { steps: &steps, ..*run };
-    let stems = distinct_stems(files.iter().map(|path| {
-        let stem = safe_file_name(std::path::Path::new(path).file_stem().and_then(|s| s.to_str()).unwrap_or(""));
-        let (exts, folder) = outputs(&run, &super::extension(path));
-        (if stem.is_empty() { "file".to_string() } else { stem }, exts, folder)
-    }));
+    let in_dest: Vec<Option<String>> = files.iter().map(|path| name_in_folder(path, run.dest_folder)).collect();
+    let reserved = in_dest.iter().flatten().cloned().collect();
+    let stems = distinct_stems(
+        files.iter().zip(&in_dest).map(|(path, own)| {
+            let stem = safe_file_name(std::path::Path::new(path).file_stem().and_then(|s| s.to_str()).unwrap_or(""));
+            let (exts, makes_folder) = outputs(&run, &super::extension(path));
+            (if stem.is_empty() { "file".to_string() } else { stem }, exts, makes_folder, own.clone())
+        }),
+        reserved,
+    );
     let mut processed = Vec::new();
     let mut failed = 0usize;
     for (path, stem) in files.iter().zip(&stems) {
@@ -161,7 +167,10 @@ fn batch_datasets(s: &mut Session, cmd: &str, run: &Run<'_>) -> Result<Value> {
     let steps = filter_steps(run.steps, true, false);
     let run = Run { steps: &steps, ..*run };
     let (exts, folder) = outputs(&run, "vectorcraft");
-    let stems = distinct_stems(names.iter().map(|name| (safe_file_name(&format!("{doc_stem}_{name}")), exts.clone(), folder)));
+    let stems = distinct_stems(
+        names.iter().map(|name| (safe_file_name(&format!("{doc_stem}_{name}")), exts.clone(), folder, None)),
+        std::collections::HashSet::new(),
+    );
     let mut processed = Vec::new();
     let mut failed = 0usize;
     for (name, stem) in names.iter().zip(&stems) {
@@ -206,24 +215,36 @@ fn outputs(run: &Run<'_>, default_ext: &str) -> (Vec<String>, bool) {
     (exts, folder)
 }
 
-/// The stem of each source, given as (name, extensions, folder) by [`outputs`]: the name, with
-/// `-2`, `-3`… after it when an earlier source used it or when one of the files or the folder it
-/// writes has the name of a file or folder an earlier source wrote (`a.svg` writes the file
-/// `a.svg`, so the Export for Screens folder of `a.svg.svg` is `a.svg-2`). Names are compared
-/// without case.
+/// The name of the file at `path` in lower case when the file is directly inside `folder`.
 #[cfg(not(target_arch = "wasm32"))]
-fn distinct_stems(sources: impl IntoIterator<Item = (String, Vec<String>, bool)>) -> Vec<String> {
+fn name_in_folder(path: &str, folder: Option<&str>) -> Option<String> {
+    let folder = std::fs::canonicalize(folder?).ok()?;
+    let path = std::path::Path::new(path);
+    let parent = std::fs::canonicalize(path.parent()?).ok()?;
+    (parent == folder).then(|| path.file_name().and_then(|n| n.to_str()).map(str::to_lowercase)).flatten()
+}
+
+/// The stem of each source, given as (name, extensions, folder, own file) with [`outputs`]: the
+/// name, with `-2`, `-3`… after it when an earlier source used it or when one of the files or the
+/// folder it writes has the name of a file or folder an earlier source wrote (`a.svg` writes the
+/// file `a.svg`, so the Export for Screens folder of `a.svg.svg` is `a.svg-2`) or a name in
+/// `reserved` other than its own file's. Names are compared without case.
+#[cfg(not(target_arch = "wasm32"))]
+fn distinct_stems(
+    sources: impl IntoIterator<Item = (String, Vec<String>, bool, Option<String>)>,
+    reserved: std::collections::HashSet<String>,
+) -> Vec<String> {
     let mut stems = std::collections::HashSet::new();
-    let mut written = std::collections::HashSet::new();
+    let mut written = reserved;
     sources
         .into_iter()
-        .map(|(base, exts, folder)| {
+        .map(|(base, exts, folder, own)| {
             let mut name = base.clone();
             let mut n = 1usize;
             loop {
                 let lower = name.to_lowercase();
                 let names: Vec<String> = exts.iter().map(|e| format!("{lower}.{}", e.to_lowercase())).chain(folder.then(|| lower.clone())).collect();
-                if !stems.contains(&lower) && names.iter().all(|f| !written.contains(f)) {
+                if !stems.contains(&lower) && names.iter().all(|f| !written.contains(f) || own.as_ref() == Some(f)) {
                     stems.insert(lower);
                     written.extend(names);
                     return name;
@@ -685,6 +706,34 @@ mod tests {
         assert_eq!(file_names(&dest), ["a", "a.svg", "a.svg-2", "a.svg-2.svg"], "{r}");
         for folder in ["a", "a.svg-2"] {
             assert_eq!(file_names(&dest.join(folder)), ["Artboard-1.svg"], "{r}");
+        }
+    }
+
+    /// With the destination folder the same as the source folder, a file's output does not replace
+    /// another source file before Batch opens it: `a..svg` would be saved as `a.svg`, so it is saved
+    /// as `a-2.svg`, and `a.svg` is saved over itself.
+    #[test]
+    fn batch_does_not_save_over_another_source_file_in_the_destination_folder() {
+        let src = tmp("in-place");
+        write_svg(&src, "a..svg", "#f00");
+        write_svg(&src, "a.svg", "#0f0");
+        let mut s = Session::new();
+        let r = s
+            .execute(
+                "action.batch",
+                &json!({
+                    "folder": src.to_string_lossy(),
+                    "destination": "folder",
+                    "destinationFolder": src.to_string_lossy(),
+                    "commands": [{"command": "object.unlockAll", "params": {}}]
+                }),
+            )
+            .unwrap();
+        assert_eq!(r["failed"], 0, "{r}");
+        assert_eq!(file_names(&src), ["a-2.svg", "a..svg", "a.svg"], "{r}");
+        for (file, fill) in [("a-2.svg", "#ff0000"), ("a.svg", "#00ff00")] {
+            let svg = std::fs::read_to_string(src.join(file)).unwrap();
+            assert!(svg.contains(fill), "{file}: {svg}");
         }
     }
 
