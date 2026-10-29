@@ -139,6 +139,8 @@
 	Anchor Point	錨點
 	Anchor Point Tool	錨點工具
 	Anchor Points	錨點
+	"In" Control Points	「入」控制點
+	"Out" Control Points	「出」控制點
 	Anchor Points, Handle, and Bounding Box Display	錨點、控制把手與邊框顯示
 	Anchor/Path Labels	錨點/路徑標籤
 	Anchors:	錨點：
@@ -1114,6 +1116,9 @@ font-technology	Variable	可變
 	Increase Font Size by Five Steps	按五個增量放大字體大小
 	Reset Tracking and Kerning	重設字距與字距微調
 	Reset Horizontal Scale	重設水平縮放
+	Highlight Font Name	反白顯示字體名稱
+	Highlight Kerning	反白顯示字距微調
+	Highlight Tracking	反白顯示字距
 	Spacing	間距
 	Step Type	依增量調整文字
 	Fit in View	符合檢視

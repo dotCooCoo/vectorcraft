@@ -210,7 +210,19 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
             }
             // A key the tool claims (Esc with a loaded place cursor) is only the tool's.
             let claimed = app.session.tool_claims_key(tk, view);
-            let r = app.session.tool_key(tk, Mods::default(), view);
+            let mods = ctx.input(|i| {
+                let m = i
+                    .events
+                    .iter()
+                    .rev()
+                    .find_map(|e| match e {
+                        egui::Event::Key { key, pressed: true, modifiers, .. } if *key == k => Some(*modifiers),
+                        _ => None,
+                    })
+                    .unwrap_or(i.modifiers);
+                crate::canvas::mods(m, false)
+            });
+            let r = app.session.tool_key(tk, mods, view);
             // Enter also takes what the tool asks of the UI: Rotate, Scale, Reflect and Shear open
             // their dialog with it.
             if claimed || (k == Key::Enter && !busy) {
@@ -218,6 +230,7 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
             }
             if claimed {
                 ctx.input_mut(|i| i.consume_key(Modifiers::NONE, k));
+                ctx.input_mut(|i| i.consume_key(Modifiers::SHIFT, k));
             }
             if k == Key::Escape && !busy && !claimed {
                 if app.session.active().is_some_and(|d| d.doc.pattern_edit.is_some()) {

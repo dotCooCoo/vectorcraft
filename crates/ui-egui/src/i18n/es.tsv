@@ -181,6 +181,8 @@
 	Anchor Point	Punto de ancla
 	Anchor Point Tool	Herramienta Punto de ancla
 	Anchor Points	Puntos de ancla
+	"In" Control Points	Puntos de control «de entrada»
+	"Out" Control Points	Puntos de control «de salida»
 	Anchor Points, Handle, and Bounding Box Display	Visualización de puntos de ancla, manejadores y cuadro delimitador
 	Anchor/Path Labels	Etiquetas de ancla/trazado
 	Anchors:	Anclas:
@@ -1149,6 +1151,9 @@ font-technology	Variable	Variables
 	Increase Font Size by Five Steps	Aumentar tamaño de fuente en cinco incrementos
 	Reset Tracking and Kerning	Restablecer espaciado e interletraje
 	Reset Horizontal Scale	Restablecer escala horizontal
+	Highlight Font Name	Resaltar nombre de fuente
+	Highlight Kerning	Resaltar interletraje
+	Highlight Tracking	Resaltar espaciado
 	Spacing	Espaciado
 	Step Type	Ajustar texto por incrementos
 	Fit in View	Encajar en la vista

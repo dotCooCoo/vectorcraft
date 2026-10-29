@@ -2060,6 +2060,8 @@ lighting	Light	სინათლე
 	Locate Selected Objects	მონიშნული ობიექტების მოძებნა
 	Thumbnails:	ესკიზები:
 	Anchor Points	საყრდენი წერტილები
+	"In" Control Points	„შემავალი“ საკონტროლო წერტილები
+	"Out" Control Points	„გამავალი“ საკონტროლო წერტილები
 	Brush Affects:	ფუნჯი მოქმედებს:
 	Complexity:	სირთულე:
 	Detail:	დეტალიზაცია:
@@ -4925,6 +4927,9 @@ imageTrace	Outline	კონტური
 	The active document changed while the screen color sampler was open	აქტიური დოკუმენტი შეიცვალა, სანამ ეკრანიდან ფერის აღება ღია იყო
 	Keep selected	მონიშნულად დატოვება
 	Reset Tracking and Kerning	ტრეკინგისა და კერნინგის ჩამოყრა
+	Highlight Font Name	შრიფტის სახელის გამოკვეთა
+	Highlight Kerning	კერნინგის გამოკვეთა
+	Highlight Tracking	ტრეკინგის გამოკვეთა
 	Legacy (version 7)	ძველი (ვერსია 7)
 	Transparent Images:	გამჭვირვალე გამოსახულებები:
 	Flatten	გაბრტყელება

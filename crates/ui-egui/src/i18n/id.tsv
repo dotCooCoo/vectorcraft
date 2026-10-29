@@ -2163,6 +2163,8 @@ lighting	Light	Cahaya
 	Locate Selected Objects	Temukan objek terpilih
 	Thumbnails:	Miniatur:
 	Anchor Points	Titik jangkar
+	"In" Control Points	Titik kontrol "masuk"
+	"Out" Control Points	Titik kontrol "keluar"
 	Brush Affects:	Kuas memengaruhi:
 	Complexity:	Kompleksitas:
 	Detail:	Detail:
@@ -5062,6 +5064,9 @@ mark-style	Japanese	Jepang
 	Panels Except Tools and Control	Semua panel kecuali Alat dan Kontrol
 	Reset Tracking and Kerning	Atur ulang tracking dan kerning
 	Reset Horizontal Scale	Atur ulang skala horizontal
+	Highlight Font Name	Sorot nama font
+	Highlight Kerning	Sorot kerning
+	Highlight Tracking	Sorot tracking
 @msg	span must be "object" or "selection", got {v}	span harus "object" atau "selection", diterima {v}
 @msg	span: "selection" places a `gradient`, not a swatch	span: "selection" menempatkan `gradient`, bukan swatch
 @msg	span: "selection" places a gradient: give `gradient`	span: "selection" menempatkan gradien: berikan `gradient`

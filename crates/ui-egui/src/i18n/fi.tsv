@@ -2314,6 +2314,8 @@ lighting	Light	Valo
 	Locate Selected Objects	Paikanna valitut objektit
 	Thumbnails:	Pikkukuvat:
 	Anchor Points	Ankkuripisteet
+	"In" Control Points	”Sisään”-ohjauspisteet
+	"Out" Control Points	”Ulos”-ohjauspisteet
 	Brush Affects:	Sivellin vaikuttaa:
 	Complexity:	Monimutkaisuus:
 	Detail:	Yksityiskohdat:
@@ -5294,6 +5296,9 @@ mark-style	Japanese	Japanilainen
 	Registration:	Kohdistuspiste:
 	Reset Horizontal Scale	Palauta vaakaskaalaus
 	Reset Tracking and Kerning	Palauta merkkiväli ja parivälistys
+	Highlight Font Name	Korosta fontin nimi
+	Highlight Kerning	Korosta parivälistys
+	Highlight Tracking	Korosta merkkiväli
 	Sample Color from Screen	Poimi väri näytöltä
 	Set as Default	Aseta oletukseksi
 	Show Template	Näytä mallipohja

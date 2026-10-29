@@ -236,6 +236,9 @@ fn run_ui_part3(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
         "type.hiddenCharacters" => flag(&mut app.ui.view.hidden_chars),
         "type.bold" => crate::panels::character::toggle_face(app, Face::Bold),
         "type.italic" => crate::panels::character::toggle_face(app, Face::Italic),
+        "type.highlightFontName" => crate::panels::character::highlight(app, crate::panels::character::Field::FontName),
+        "type.highlightKerning" => crate::panels::character::highlight(app, crate::panels::character::Field::Kerning),
+        "type.highlightTracking" => crate::panels::character::highlight(app, crate::panels::character::Field::Tracking),
         id if let Some((_, justify)) = crate::panels::paragraph::ALIGN_COMMANDS.iter().find(|c| c.0 == id) => {
             crate::panels::paragraph::align(app, justify)
         }

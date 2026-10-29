@@ -161,6 +161,8 @@
 	Anchor Point	Σημείο αγκύρωσης
 	Anchor Point Tool	Σημείο αγκύρωσης (Anchor Point Tool)
 	Anchor Points	Σημεία αγκύρωσης
+	"In" Control Points	Σημεία ελέγχου «εισόδου»
+	"Out" Control Points	Σημεία ελέγχου «εξόδου»
 	Anchor Points, Handle, and Bounding Box Display	Εμφάνιση σημείων αγκύρωσης, λαβών και πλαισίου οριοθέτησης
 	Anchor/Path Labels	Ετικέτες σημείων αγκύρωσης και διαδρομών
 	Anchors:	Σημεία αγκύρωσης:
@@ -5282,6 +5284,9 @@ effect	Points	Σημεία
 	Registration:	Σημείο αναφοράς:
 	Reset Horizontal Scale	Επαναφορά οριζόντιας κλίμακας
 	Reset Tracking and Kerning	Επαναφορά απόστασης χαρακτήρων και διαγραμμάτωσης
+	Highlight Font Name	Επισήμανση ονόματος γραμματοσειράς
+	Highlight Kerning	Επισήμανση διαγραμμάτωσης
+	Highlight Tracking	Επισήμανση απόστασης χαρακτήρων
 	Sample Color from Screen	Δειγματοληψία χρώματος από την οθόνη
 	Set as Default	Ορισμός ως προεπιλογή
 	Show Template	Εμφάνιση προτύπου

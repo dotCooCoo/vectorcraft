@@ -2163,6 +2163,8 @@ lighting	Light	Lys
 	Locate Selected Objects	Lokalisér markerede objekter
 	Thumbnails:	Miniaturer:
 	Anchor Points	Ankerpunkter
+	"In" Control Points	"Ind"-kontrolpunkter
+	"Out" Control Points	"Ud"-kontrolpunkter
 	Brush Affects:	Penslen påvirker:
 	Complexity:	Kompleksitet:
 	Detail:	Detaljer:
@@ -5062,6 +5064,9 @@ mark-style	Japanese	Japansk
 	Panels Except Tools and Control	Paneler undtagen værktøjer og kontrol
 	Reset Tracking and Kerning	Nulstil sporing og kerning
 	Reset Horizontal Scale	Nulstil vandret skalering
+	Highlight Font Name	Fremhæv skrifttypenavn
+	Highlight Kerning	Fremhæv kerning
+	Highlight Tracking	Fremhæv sporing
 @msg	span must be "object" or "selection", got {v}	span skal være "object" eller "selection", fik {v}
 @msg	span: "selection" places a `gradient`, not a swatch	span: "selection" placerer en `gradient`, ikke en farveprøve
 @msg	span: "selection" places a gradient: give `gradient`	span: "selection" placerer en overgang: angiv `gradient`
