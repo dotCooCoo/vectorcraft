@@ -478,15 +478,31 @@ pub(crate) fn check_settings(s: &Session, p: &Value) -> Result<()> {
     rows_of(s, p, ScreenParams::of(p)?.preset.as_deref()).map(|_| ())
 }
 
+/// `name` the way a case-insensitive file system compares names: lower-cased, then each character
+/// upper-cased where its upper case is one character. Names with the same lower case give the
+/// same key, and so do `ΟΣ`, `ος` and `οσ` (`ΟΣ`); `ᾈ` and `ᾀ` give `ᾀ`, and `ß` stays `ß`.
+fn fold(name: &str) -> String {
+    name.to_lowercase()
+        .chars()
+        .map(|c| {
+            let mut upper = c.to_uppercase();
+            match (upper.next(), upper.next()) {
+                (Some(u), None) => u,
+                _ => c,
+            }
+        })
+        .collect()
+}
+
 /// The file names (and bytes) an export wrote, or the files it returns.
 #[derive(Default)]
 struct Output {
-    /// Lower-case relative names already used, with what wrote each (two identical rows write
-    /// one file; different files that would share a name get `-2`, `-3`…).
+    /// Relative names already used, by their [`fold`]ed spelling, with what wrote each (two
+    /// identical rows write one file; different files that would share a name get `-2`, `-3`…).
     taken: std::collections::HashMap<String, String>,
-    /// Each sub-folder as the first file in it spells it, by its lower-case name.
+    /// Each sub-folder as the first file in it spells it, by its [`fold`]ed name.
     folders: std::collections::HashMap<String, String>,
-    /// Sub-folders already made.
+    /// Sub-folders already made, by their [`fold`]ed names.
     made: HashSet<String>,
     /// `(relative name, bytes)` kept to return or zip (empty when written to a folder).
     kept: Vec<(String, Vec<u8>)>,
@@ -502,7 +518,7 @@ impl Output {
     fn claim(&mut self, name: &str, key: &str) -> Option<String> {
         let name = match name.rsplit_once('/') {
             Some((dir, file)) => {
-                let dir = self.folders.entry(dir.to_lowercase()).or_insert_with(|| dir.to_string());
+                let dir = self.folders.entry(fold(dir)).or_insert_with(|| dir.to_string());
                 format!("{dir}/{file}")
             }
             None => name.to_string(),
@@ -516,11 +532,11 @@ impl Output {
             } else {
                 format!("{base}-{n}.{ext}")
             };
-            match self.taken.get(&candidate.to_lowercase()) {
+            match self.taken.get(&fold(&candidate)) {
                 Some(k) if k == key => return None,
                 Some(_) => continue,
                 None => {
-                    self.taken.insert(candidate.to_lowercase(), key.to_string());
+                    self.taken.insert(fold(&candidate), key.to_string());
                     return Some(candidate);
                 }
             }
@@ -540,7 +556,7 @@ impl Output {
         match folder {
             Some(dir) if !keep => {
                 if let Some((sub, _)) = name.rsplit_once('/')
-                    && self.made.insert(sub.to_lowercase())
+                    && self.made.insert(fold(sub))
                 {
                     create_dir(&format!("{dir}/{sub}"))?;
                 }

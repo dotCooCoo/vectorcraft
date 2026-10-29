@@ -559,6 +559,30 @@ fn a_second_file_with_a_taken_name_is_numbered() {
     assert_eq!(size(&files(&r)[1].1), (80, 60));
 }
 
+/// Names and folders that differ only in case match when a letter's lower case depends on where
+/// it stands: Greek `ΟΣ` lower-cases to `ος`, which a case-insensitive file system treats as `οσ`.
+#[test]
+fn names_that_differ_only_in_greek_sigmas_are_numbered() {
+    let mut s = session(2);
+    s.execute("artboard.setProps", &json!({"index": 0, "name": "ΟΣ"})).unwrap();
+    s.execute("artboard.setProps", &json!({"index": 1, "name": "οσ"})).unwrap();
+    let r = export(&mut s, json!({"name": "<name>", "formats": [{"format": "svg"}]}));
+    assert_eq!(names(&r), ["ΟΣ.svg", "οσ-2.svg"]);
+    let rows = json!([{"format": "png", "folder": "ΟΣ"}, {"format": "svg", "folder": "οσ"}]);
+    let r = export(&mut s, json!({"range": "1", "subfolders": true, "formats": rows}));
+    assert_eq!(names(&r), ["ΟΣ/ΟΣ.png", "ΟΣ/ΟΣ.svg"]);
+    // Letters whose full upper case is two characters still match their other case.
+    s.execute("artboard.setProps", &json!({"index": 0, "name": "ᾀ"})).unwrap();
+    s.execute("artboard.setProps", &json!({"index": 1, "name": "ᾈ"})).unwrap();
+    let r = export(&mut s, json!({"name": "<name>", "formats": [{"format": "svg"}]}));
+    assert_eq!(names(&r), ["ᾀ.svg", "ᾈ-2.svg"]);
+    // So do names whose lower case is longer than the name: `İ` lower-cases to `i̇`.
+    s.execute("artboard.setProps", &json!({"index": 0, "name": "İ"})).unwrap();
+    s.execute("artboard.setProps", &json!({"index": 1, "name": "i\u{307}"})).unwrap();
+    let r = export(&mut s, json!({"name": "<name>", "formats": [{"format": "svg"}]}));
+    assert_eq!(names(&r), ["İ.svg", "i\u{307}-2.svg"]);
+}
+
 /// The numbered file is written beside the first one, and the reply lists both paths.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
