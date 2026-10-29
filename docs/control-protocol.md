@@ -156,6 +156,11 @@ dialog open); without `name` it names a new style made from the selection (`grap
 `ui.mergeGraphicStyles {names}` opens the same dialog to name the style `ui.dialog.confirm` merges from them
 (`graphicStyle.merge`). Deleting styles from the panel asks first with a `confirm` dialog (`graphicStyle.delete`).
 
+Text styles: `ui.newCharStyle` and `ui.newParaStyle`, what Alt-click on New in the Character Styles and Paragraph
+Styles panels runs, open the `newTextStyle` dialog (field `name`) for a style made from the text selected when it
+opened; `ui.dialog.confirm` makes it with `charStyle.new` / `paraStyle.new` (a name another style has returns an error
+and keeps the dialog open).
+
 Symbols: `ui.symbolOptions` opens the `symbolOptions` dialog (field `name`) that the Symbols panel's New Symbol asks
 first; `ui.dialog.confirm` makes the symbol from the selection with that name (`symbol.new`). F8 runs
 `ui.symbolOptions` without params.

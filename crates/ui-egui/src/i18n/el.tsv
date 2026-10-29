@@ -524,6 +524,7 @@ font-technology	Variable	Μεταβλητές
 	Complement	Συμπληρωματικό
 	Complexity:	Πολυπλοκότητα:
 	Compound Path	Σύνθετη διαδρομή
+	Compound Shape	Σύνθετο σχήμα
 	Compress (RLE)	Συμπίεση (RLE)
 	Compress text and line art	Συμπίεση κειμένου και γραμμικών γραφικών
 	Compression	Συμπίεση
@@ -1674,6 +1675,8 @@ font-technology	Variable	Μεταβλητές
 	New Layer…	Νέο επίπεδο…
 	New Swatch…	Νέο δείγμα χρώματος…
 	New Window	Νέο παράθυρο
+	Next Document	Επόμενο έγγραφο
+	Previous Document	Προηγούμενο έγγραφο
 	New Without Dialog	Νέο χωρίς παράθυρο διαλόγου
 	New Workspace	Νέος χώρος εργασίας
 	New Workspace…	Νέος χώρος εργασίας…
@@ -2172,8 +2175,10 @@ axis	Both	Και τα δύο
 @msg	`freeform.points` must be an array	Το `freeform.points` πρέπει να είναι πίνακας
 @msg	`freeform.lines` must be an array	Το `freeform.lines` πρέπει να είναι πίνακας
 @msg	`gradient` must be an object	Το `gradient` πρέπει να είναι αντικείμενο
+@msg	`groupColors` must be an array	Το `groupColors` πρέπει να είναι πίνακας
 @msg	`library` is a library id or name (see {list})	Το `library` είναι αναγνωριστικό ή όνομα βιβλιοθήκης (δείτε {list})
 @msg	`mode` applies to freeform gradients	Το `mode` ισχύει για ντεγκραντέ ελεύθερης μορφής
+@msg	`preserve` must be an object	Το `preserve` πρέπει να είναι αντικείμενο
 @msg	`sampleSize` must be 1, 3 or 5	Το `sampleSize` πρέπει να είναι 1, 3 ή 5
 @msg	`stops` must be an array	Το `stops` πρέπει να είναι πίνακας
 @msg	`svg` must be an object of SVG options (see document.formats)	Το `svg` πρέπει να είναι αντικείμενο επιλογών SVG (δείτε document.formats)
@@ -2207,6 +2212,7 @@ axis	Both	Και τα δύο
 @msg	`{name}` is a process colour: tints apply to global and spot colours	Το `{name}` είναι χρώμα τετραχρωμίας: οι αποχρώσεις εφαρμόζονται σε καθολικά και πλακάτα χρώματα
 @msg	`{name}` is no recovery entry name	Το `{name}` δεν είναι όνομα καταχώρισης ανάκτησης
 @msg	`{name}` isn't a colour swatch	Το `{name}` δεν είναι δείγμα χρώματος
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	ένα χρώμα τετραχρωμίας δεν μπορεί να χρωματίσει εικόνα κλίμακας του γκρι με διαφάνεια: χρησιμοποιήστε πλακάτο χρώμα, μαύρο ή λευκό
 @msg	`{path}` must be a bool or an object of bools	Το `{path}` πρέπει να είναι λογική τιμή ή αντικείμενο λογικών τιμών
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	Το `{s}` δεν είναι χρώμα (#rrggbb ή όνομα προεπιλογής)
 @msg	`{tool}` isn't a Liquify tool	Το `{tool}` δεν είναι εργαλείο ρευστοποίησης
@@ -2495,7 +2501,6 @@ theme	Appearance	Εμφάνιση
 	Each page prints as one image, at the document's raster effects resolution.	Κάθε σελίδα εκτυπώνεται ως μία εικόνα, στην ανάλυση εφέ ράστερ του εγγράφου.
 	English: UK	Αγγλικά: Ηνωμένο Βασίλειο
 	English: USA	Αγγλικά: ΗΠΑ
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Η ανάπτυξη εφαρμόζεται σε σύνθετα σχήματα (Alt-κλικ σε λειτουργία σχήματος) — προγραμματισμένη λειτουργία
 	French	Γαλλικά
 	Generate CSS: the whole document's CSS while nothing is selected	Δημιουργία CSS: το CSS ολόκληρου του εγγράφου όταν δεν υπάρχει επιλογή
 	German	Γερμανικά
@@ -2747,6 +2752,7 @@ theme	Appearance	Εμφάνιση
 	Flat Fan	Επίπεδη βεντάλια
 	New Calligraphic Brush	Νέο καλλιγραφικό πινέλο
 	New Character Style	Νέο στυλ χαρακτήρων
+	New Character Style…	Νέο στυλ χαρακτήρων…
 	New Color Group	Νέα ομάδα χρωμάτων
 	New Color Group…	Νέα ομάδα χρωμάτων…
 	New Document Presets	Νέες προεπιλογές εγγράφου
@@ -2761,6 +2767,7 @@ theme	Appearance	Εμφάνιση
 	New Opacity Masks Are Clipping	Οι νέες μάσκες αδιαφάνειας εφαρμόζουν αποκοπή
 	New Opacity Masks Are Inverted	Οι νέες μάσκες αδιαφάνειας είναι ανεστραμμένες
 	New Paragraph Style	Νέο στυλ παραγράφου
+	New Paragraph Style…	Νέο στυλ παραγράφου…
 	New Pattern Brush from Selection	Νέο πινέλο μοτίβου από επιλογή
 	New PDF Preset	Νέα προεπιλογή PDF
 	New Print Preset	Νέα προεπιλογή εκτύπωσης
@@ -3402,6 +3409,7 @@ theme	Appearance	Εμφάνιση
 	Shadows and Glows	Σκιές και λάμψεις
 	Shape Builder Regions	Περιοχές δημιουργίας σχημάτων
 	Shape Effects	Εφέ σχημάτων
+	Shape Mode	Λειτουργία σχήματος
 	Shape Modes:	Λειτουργίες σχημάτων:
 	Shape Properties:	Ιδιότητες σχήματος:
 	Shaper Tool	Διαμορφωτής σχημάτων (Shaper Tool)
@@ -3482,6 +3490,7 @@ theme	Appearance	Εμφάνιση
 	Single Quotes:	Μονά εισαγωγικά:
 	Single Right Quotation Mark	Μονό δεξί εισαγωγικό
 	Single-line Composer	Σύνθεση μονής γραμμής
+	Toggle Line Composer	Εναλλαγή σύνθεσης γραμμών
 	Sixth Space	Διάστημα ενός έκτου
 	Size Tile to Art	Προσαρμογή μεγέθους πλακιδίου στο σχέδιο
 	Size/Leading	Μέγεθος/διάστιχο
@@ -4546,6 +4555,9 @@ theme	Appearance	Εμφάνιση
 @msg	not a PSD file	δεν είναι αρχείο PSD
 @msg	the PSD file has an unknown colour mode ({m})	το αρχείο PSD χρησιμοποιεί άγνωστη λειτουργία χρώματος ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	τα δεδομένα εικόνας PSD χρησιμοποιούν άγνωστη συμπίεση ({m})
+@msg	the PCX file is cut short	το αρχείο PCX είναι περικομμένο
+@msg	the PCX file's header is damaged	η κεφαλίδα του αρχείου PCX είναι κατεστραμμένη
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	τα αρχεία PCX με εικονοστοιχεία {bits} bit σε {planes} επίπεδα δεν διαβάζονται
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	η εικόνα PSD είναι πολύ μεγάλη για ανάγνωση ({_1} × {_2} εικονοστοιχεία)
 @msg	zipped 32-bit PSD image data with prediction can't be read	τα συμπιεσμένα δεδομένα εικόνας PSD 32 bit με πρόβλεψη δεν διαβάζονται
 @msg	{depth}-bit PSD files in this colour mode can't be read	τα αρχεία PSD {depth} bit δεν διαβάζονται σε αυτήν τη λειτουργία χρώματος

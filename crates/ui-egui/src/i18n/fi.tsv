@@ -294,6 +294,7 @@
 	Clipping Mask	Leikkausmaski
 	Edit Clipping Path	Muokkaa leikkauspolkua
 	Compound Path	Yhdistelmäpolku
+	Compound Shape	Yhdistelmämuoto
 	Artboards	Piirtoalustat
 	Convert to Artboards	Muunna piirtoalustoiksi
 	Rearrange All Artboards…	Järjestä kaikki piirtoalustat uudelleen…
@@ -616,6 +617,8 @@
 	Saved View 25	Tallennettu näkymä 25
 	Window	Ikkuna
 	New Window	Uusi ikkuna
+	Next Document	Seuraava asiakirja
+	Previous Document	Edellinen asiakirja
 	Cascade	Porrasta
 	Tile	Vierekkäin
 	Float in Window	Kelluta ikkunassa
@@ -1785,13 +1788,13 @@ lighting	Light	Valo
 	Roman Hanging Punctuation	Latinalaiset riippuvat välimerkit
 	Select a text object to edit its paragraph attributes.	Valitse tekstiobjekti, jonka kappalemääritteitä haluat muokata.
 	Single-line Composer	Yhden rivin asettelu
+	Toggle Line Composer	Vaihda rivien asettelu
 	Space After Paragraph	Väli kappaleen jälkeen
 	Space Before Paragraph	Väli ennen kappaletta
 	Top-to-Top Leading	Riviväli yläreunasta yläreunaan
 	Bottom-to-Bottom Leading	Riviväli alareunasta alareunaan
 	Burasagari	Burasagari
 	Force	Pakota
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Laajenna koskee yhdistelmämuotoja (Alt-napsauta muototilaa) — suunnitteilla
 	Expand Compound Shape	Laajenna yhdistelmämuoto
 	Make Compound Shape	Tee yhdistelmämuoto
 	Pathfinder Options…	Polunetsimen asetukset…
@@ -3907,6 +3910,7 @@ font-technology	Variable	Muuttuvat
 	Default Fill and Stroke (D)	Oletustäyttö ja -viiva (D)
 	Fill (X), double-click for the Color Picker	Täyttö (X), kaksoisnapsauta avataksesi värinvalitsimen
 	Opacity:	Peittävyys:
+	Shape Mode	Muototila
 	Shape Modes:	Muototilat:
 	Stroke (X), double-click for the Color Picker	Viiva (X), kaksoisnapsauta avataksesi värinvalitsimen
 	Stroke:	Viiva:
@@ -3955,7 +3959,9 @@ font-technology	Variable	Muuttuvat
 	Mojikumi	Mojikumi
 	N pt per	N pt kohden
 	New Character Style	Uusi merkkityyli
+	New Character Style…	Uusi merkkityyli…
 	New Paragraph Style	Uusi kappaletyyli
+	New Paragraph Style…	Uusi kappaletyyli…
 	Paragraph Style Options	Kappaletyylin asetukset
 	Redefine Character Style	Määritä merkkityyli uudelleen
 	Redefine Paragraph Style	Määritä kappaletyyli uudelleen
@@ -4153,8 +4159,10 @@ imageTrace	Outline	Ääriviiva
 @msg	`freeform.points` must be an array	`freeform.points` on oltava taulukko
 @msg	`freeform.lines` must be an array	`freeform.lines` on oltava taulukko
 @msg	`gradient` must be an object	`gradient` on oltava objekti
+@msg	`groupColors` must be an array	`groupColors` on oltava taulukko
 @msg	`library` is a library id or name (see {list})	`library` on kirjaston tunnus tai nimi (ks. {list})
 @msg	`mode` applies to freeform gradients	`mode` koskee vapaamuotoisia liukuvärejä
+@msg	`preserve` must be an object	`preserve` on oltava objekti
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` on oltava 1, 3 tai 5
 @msg	`stops` must be an array	`stops` on oltava taulukko
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` on oltava SVG-asetusten objekti (ks. document.formats)
@@ -4188,6 +4196,7 @@ imageTrace	Outline	Ääriviiva
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` on prosessiväri: sävytteet koskevat globaaleja värejä ja spottivärejä
 @msg	`{name}` is no recovery entry name	`{name}` ei ole palautusmerkinnän nimi
 @msg	`{name}` isn't a colour swatch	`{name}` ei ole värimalli
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	prosessiväri ei voi värittää läpinäkyvyyttä sisältävää harmaasävykuvaa: käytä spottiväriä, mustaa tai valkoista
 @msg	`{path}` must be a bool or an object of bools	`{path}` on oltava totuusarvo tai totuusarvojen objekti
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` ei ole väri (#rrggbb tai esiasetuksen nimi)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` ei ole Nesteytä-työkalu
@@ -4768,6 +4777,9 @@ imageTrace	Outline	Ääriviiva
 @msg	not a PSD file	ei PSD-tiedosto
 @msg	the PSD file has an unknown colour mode ({m})	tämän PSD-tiedoston väritila on tuntematon ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	tämän PSD-tiedoston kuvadata käyttää tuntematonta pakkausta ({m})
+@msg	the PCX file is cut short	tämä PCX-tiedosto on katkennut
+@msg	the PCX file's header is damaged	PCX-tiedoston otsake on vahingoittunut
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	PCX-tiedostoja, joissa on {bits}-bittisiä pikseleitä {planes} tasossa, ei voi lukea
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	tämä PSD-kuva on liian suuri luettavaksi ({_1} × {_2} pikseliä)
 @msg	zipped 32-bit PSD image data with prediction can't be read	ennustusta käyttävää zip-pakattua 32-bittistä PSD-kuvadataa ei voi lukea
 @msg	{depth}-bit PSD files in this colour mode can't be read	tässä väritilassa olevia {depth}-bittisiä PSD-tiedostoja ei voi lukea

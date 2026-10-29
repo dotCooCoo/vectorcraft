@@ -559,6 +559,7 @@ font-technology	Variable	Варіативні
 	Complexity:	Складність:
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	Складові кольори перетворюються за цим профілем; кольороподіл також виконується за ним, якщо це профіль CMYK.
 	Compound Path	Складений контур
+	Compound Shape	Складена фігура
 	Compress (RLE)	Стиснути (RLE)
 	Compress text and line art	Стискати текст та штриховий малюнок
 	Compression	Стиснення
@@ -985,7 +986,6 @@ font-technology	Variable	Варіативні
 	Exit Isolation Mode	Вийти з режиму ізоляції
 	Expand	Розібрати
 	Expand Appearance	Розібрати оформлення
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	«Розібрати» застосовується до складених фігур (Alt+клацання за режимом фігури) — у плані розвитку
 	Expand Brush Strokes	Розібрати мазки пензля
 	Expand Compound Shape	Розібрати складену фігуру
 	Expand Gradient Mesh	Розібрати градієнтну сітку
@@ -2037,6 +2037,7 @@ file-filter	Templates	Шаблони
 	Brush Art	Малюнок пензля
 	New Calligraphic Brush	Новий каліграфічний пензель
 	New Character Style	Новий стиль символу
+	New Character Style…	Новий стиль символу…
 	New Color Group	Нова колірна група
 	New Color Group…	Нова колірна група…
 	New Document Presets	Набір нових документів
@@ -2052,6 +2053,7 @@ file-filter	Templates	Шаблони
 	New Opacity Masks Are Clipping	Нові маски непрозорості відсікають
 	New Opacity Masks Are Inverted	Нові маски непрозорості інвертуються
 	New Paragraph Style	Новий стиль абзацу
+	New Paragraph Style…	Новий стиль абзацу…
 	New Pattern Brush from Selection	Новий візерунковий пензель з виділеного
 	New PDF Preset	Новий набір PDF
 	New Print Preset	Новий набір друку
@@ -2065,6 +2067,8 @@ file-filter	Templates	Шаблони
 	New View	Новий вигляд
 	New View…	Новий вигляд…
 	New Window	Нове вікно
+	Next Document	Наступний документ
+	Previous Document	Попередній документ
 	New Without Dialog	Створити без діалогового вікна
 	New Workspace	Нове робоче середовище
 	New Workspace…	Нове робоче середовище…
@@ -2996,6 +3000,7 @@ mark-style	Japanese	Японський
 	Shape Builder Regions	Області створення фігур
 	Shape Builder Tool	Інструмент «Створення фігур»
 	Shape Effects	Ефекти форми
+	Shape Mode	Режим фігури
 	Shape Modes:	Режими фігур:
 	Shape Properties:	Властивості фігури:
 	Shaper Tool	Інструмент «Формоутворення»
@@ -3099,6 +3104,7 @@ mark-style	Japanese	Японський
 	Single Quotes:	Одинарні лапки:
 	Single Right Quotation Mark	Одинарна лапка, що закриває
 	Single-line Composer	Однорядковий компонувальник
+	Toggle Line Composer	Переключити компонувальник рядків
 	Sixth Space	Шоста шпація
 	Size	Розмір
 	Size Tile to Art	Підігнати плитку за малюнком
@@ -3955,8 +3961,10 @@ axis	Both	Обидві
 @msg	`freeform.points` must be an array	`freeform.points` має бути масивом
 @msg	`freeform.lines` must be an array	`freeform.lines` має бути масивом
 @msg	`gradient` must be an object	`gradient` має бути об’єктом
+@msg	`groupColors` must be an array	`groupColors` має бути масивом
 @msg	`library` is a library id or name (see {list})	`library` — це ідентифікатор або ім’я бібліотеки (див. {list})
 @msg	`mode` applies to freeform gradients	`mode` застосовується до довільних градієнтів
+@msg	`preserve` must be an object	`preserve` має бути об’єктом
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` має бути 1, 3 або 5
 @msg	`stops` must be an array	`stops` має бути масивом
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` має бути об’єктом параметрів SVG (див. document.formats)
@@ -3991,6 +3999,7 @@ axis	Both	Обидві
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` — складовий колір: відтінки застосовуються до глобальних та плашкових кольорів.
 @msg	`{name}` is no recovery entry name	`{name}` не є ім’ям запису відновлення
 @msg	`{name}` isn't a colour swatch	`{name}` не є колірним зразком
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	складовий колір не може розфарбувати зображення у відтінках сірого з прозорістю: використайте плашковий колір, чорний або білий
 @msg	`{path}` must be a bool or an object of bools	`{path}` має бути логічним значенням чи об’єктом логічних значень
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` не є кольором (#rrggbb або ім’ям набору)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` не є інструментом пластики
@@ -4610,6 +4619,9 @@ axis	Both	Обидві
 @msg	not a PSD file	це не документ PSD
 @msg	the PSD file has an unknown colour mode ({m})	файл PSD має невідомий колірний режим ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	дані зображення файлу PSD використовують невідоме стиснення ({m})
+@msg	the PCX file is cut short	файл PCX обрізаний
+@msg	the PCX file's header is damaged	заголовок файлу PCX пошкоджений
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	файли PCX з {bits}-бітними пікселями в {planes} площинах не читаються
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	зображення PSD завелике для читання ({_1} × {_2} пікс.)
 @msg	zipped 32-bit PSD image data with prediction can't be read	32-бітні дані зображення PSD зі стисненням ZIP із передбаченням не читаються
 @msg	{depth}-bit PSD files in this colour mode can't be read	{depth}-бітні файли PSD у цьому колірному режимі не читаються

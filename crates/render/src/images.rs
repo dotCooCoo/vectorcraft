@@ -85,6 +85,8 @@ pub(crate) struct ImageKey {
     pub adjust: Option<u64>,
     /// Greyscale (outline mode).
     pub grey: bool,
+    /// Colorized with this display color ([`colorized`]).
+    pub tint: Option<[u8; 3]>,
     /// The ink plane painted ([`Ink::Display`]: the colours themselves).
     pub ink: Ink,
     /// Generations of the colour tables the pixels were made with (0 = none): a CMYK image's
@@ -377,6 +379,21 @@ pub(crate) fn half(pm: &Pixmap) -> Pixmap {
     Pixmap::from_parts(data, ow as u16, oh as u16)
 }
 
+/// Pixels `pm` colorized with `rgb`: each pixel takes the color, as opaque as the pixel is dark
+/// (255 less its Rec. 709 luma) times its alpha, so white pixels are transparent.
+pub(crate) fn colorized(pm: &Pixmap, [r, g, b]: [u8; 3]) -> Pixmap {
+    let mut out = pm.clone();
+    for px in out.data_mut() {
+        // The luma of premultiplied components is the premultiplied luma: the alpha less it is
+        // the darkness times the alpha.
+        let luma = 0.2126 * px.r as f32 + 0.7152 * px.g as f32 + 0.0722 * px.b as f32;
+        let a = (px.a as f32 - luma).clamp(0.0, 255.0);
+        let mul = |c: u8| (c as f32 * a / 255.0).round() as u8;
+        *px = PremulRgba8 { r: mul(r), g: mul(g), b: mul(b), a: a.round() as u8 };
+    }
+    out
+}
+
 /// How many times to halve an image drawn with `m` (image pixels → device pixels): while a pixel
 /// of the halved image still covers at most one device pixel each way, at most down to one pixel.
 pub(crate) fn mip_level(m: vectorcraft_geom::Affine, w: u16, h: u16) -> u8 {
@@ -397,7 +414,7 @@ mod tests {
     use super::*;
 
     fn key(content: &str) -> ImageKey {
-        ImageKey { content: content.into(), adjust: None, grey: false, ink: Ink::Display, luts: (0, 0), mip: 0 }
+        ImageKey { content: content.into(), adjust: None, grey: false, tint: None, ink: Ink::Display, luts: (0, 0), mip: 0 }
     }
 
     #[test]

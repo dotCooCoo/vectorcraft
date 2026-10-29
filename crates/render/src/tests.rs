@@ -11,6 +11,7 @@ mod changed;
 mod charstroke;
 mod clip;
 mod cmykblend;
+mod colorize;
 mod colrglyphs;
 mod container;
 mod dither;

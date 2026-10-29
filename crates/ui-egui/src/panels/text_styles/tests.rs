@@ -537,6 +537,129 @@ fn click_new_style_footer_range(ctx: &egui::Context, app: &mut VectorcraftApp, i
     assert_eq!(text_editing(app), Some((id, start, end)), "footer capture preserves the Type range");
 }
 
+/// Alt-click the production bottom bar's New button of the `kind` panel, then draw the dialog
+/// it opened: every text the last frame drew.
+fn alt_click_new(ctx: &egui::Context, app: &mut VectorcraftApp, kind: Kind) -> Vec<String> {
+    click_new_with(ctx, app, kind, egui::Modifiers::ALT)
+}
+
+fn click_new(ctx: &egui::Context, app: &mut VectorcraftApp, kind: Kind) {
+    click_new_with(ctx, app, kind, egui::Modifiers::NONE);
+}
+
+fn click_new_with(ctx: &egui::Context, app: &mut VectorcraftApp, kind: Kind, modifiers: egui::Modifiers) -> Vec<String> {
+    let pos = std::cell::Cell::new(egui::Pos2::ZERO);
+    let mut draw = |app: &mut VectorcraftApp, ui: &mut egui::Ui| {
+        ui.set_width(280.0);
+        let right = ui.max_rect().right();
+        show(app, ui, kind);
+        pos.set(egui::pos2(right - 40.0, ui.min_rect().bottom() - 12.0));
+    };
+    frame_events(ctx, app, vec![], &mut draw);
+    frame_events(ctx, app, vec![], &mut draw);
+    let at = pos.get();
+    let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers };
+    for e in [egui::Event::PointerMoved(at), button(true), button(false)] {
+        frame_events(ctx, app, vec![egui::Event::ModifiersChanged(modifiers), e], &mut draw);
+    }
+    // A window draws its content from its second frame.
+    frame_events(ctx, app, vec![], |app, ui| crate::dialogs::show(app, ui.ctx()));
+    frame_events(ctx, app, vec![], |app, ui| crate::dialogs::show(app, ui.ctx())).into_iter().map(|(s, _)| s).collect()
+}
+
+fn set_name(app: &mut VectorcraftApp, name: &str) {
+    app.ui.dialog.as_mut().expect("the dialog is open").fields.insert("name".into(), json!(name));
+}
+
+/// Alt-click on New Character Style opens New Character Style with the name a plain click's
+/// style gets, and adds no style yet. Cancel adds none. OK makes the style with the typed name
+/// from the Type tool's selected characters, in one undo step, and a name another style has keeps
+/// the dialog open.
+#[test]
+fn alt_clicking_new_character_style_asks_for_its_name() {
+    let (mut app, id, ctx) = capture_app();
+    select_type_range(&mut app, id, 3, 5);
+    let names = |app: &VectorcraftApp| app.session.doc().unwrap().doc.char_styles.iter().map(|s| s.name.clone()).collect::<Vec<_>>();
+    let before = names(&app);
+    let shown = alt_click_new(&ctx, &mut app, Kind::Char);
+    let d = app.ui.dialog.as_ref().expect("Alt-click on New opens a dialog");
+    assert_eq!((d.kind.as_str(), d.str("name").as_str()), (crate::dialogs::new_text_style::KIND, "Character Style 1"));
+    assert!(shown.iter().any(|s| s == "New Character Style"), "the dialog's heading: {shown:?}");
+    assert_eq!(names(&app), before, "no style is added before OK");
+    crate::dialogs::cancel(&mut app);
+    assert_eq!(names(&app), before, "Cancel adds no style");
+
+    alt_click_new(&ctx, &mut app, Kind::Char);
+    set_name(&mut app, "Untouched");
+    assert!(crate::dialogs::confirm(&mut app).is_err(), "names are unique");
+    assert!(app.ui.dialog.is_some(), "a taken name keeps the dialog open");
+    set_name(&mut app, "Heading");
+    let undo = app.session.doc().unwrap().history.undo.len();
+    crate::dialogs::confirm(&mut app).unwrap();
+    assert!(app.ui.dialog.is_none());
+    let doc = &app.session.doc().unwrap().doc;
+    let heading = doc.char_styles.iter().find(|s| s.name == "Heading").expect("OK makes the style");
+    assert_eq!(heading.attrs.get("size").and_then(Value::as_f64), Some(34.0), "made from the selected characters");
+    assert_eq!(doc.char_styles.len(), before.len() + 1);
+    assert_eq!(app.session.doc().unwrap().history.undo.len(), undo + 1);
+    assert_eq!(text_editing(&app), Some((id, 3, 5)), "the Type selection stays");
+}
+
+/// OK makes the style from the text's attributes as they were when the dialog opened: a later
+/// format change of the Type selection, or a change of the selected objects, does not reach it.
+#[test]
+fn new_style_dialog_keeps_the_attributes_from_when_it_opened() {
+    let (mut app, id, ctx) = capture_app();
+    select_type_range(&mut app, id, 3, 5);
+    alt_click_new(&ctx, &mut app, Kind::Char);
+    app.run("text.setRangeStyle", json!({"id": id.0, "start": 2, "end": 6, "size": 50})).unwrap();
+    set_name(&mut app, "Range");
+    crate::dialogs::confirm(&mut app).unwrap();
+
+    app.session.select_tool("selection", Default::default()).unwrap();
+    app.run("select.set", json!({"ids": [id.0]})).unwrap();
+    assert_eq!(text_editing(&app), None);
+    alt_click_new(&ctx, &mut app, Kind::Char);
+    let count = app.session.doc().unwrap().doc.char_styles.len();
+    app.run("text.setRangeStyle", json!({"id": id.0, "start": 0, "end": 2, "size": 60})).unwrap();
+    set_name(&mut app, "Object");
+    crate::dialogs::confirm(&mut app).unwrap();
+
+    let doc = &app.session.doc().unwrap().doc;
+    assert_eq!(doc.char_styles.len(), count + 1);
+    let size = |n: &str| doc.char_styles.iter().find(|s| s.name == n).and_then(|s| s.attrs.get("size")).and_then(Value::as_f64);
+    assert_eq!((size("Range"), size("Object")), (Some(34.0), Some(18.0)));
+}
+
+/// Alt-click on New Paragraph Style opens New Paragraph Style for the selected type's paragraph;
+/// a plain click still makes the style at once.
+#[test]
+fn alt_clicking_new_paragraph_style_asks_for_its_name() {
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
+    let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "Body"})).unwrap()["id"].clone();
+    app.run("select.set", json!({"ids": [id]})).unwrap();
+    app.run("text.setFormat", json!({"composer": "singleLine"})).unwrap();
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    let shown = alt_click_new(&ctx, &mut app, Kind::Para);
+    let d = app.ui.dialog.as_ref().expect("Alt-click on New opens a dialog");
+    assert_eq!((d.kind.as_str(), d.str("name").as_str()), (crate::dialogs::new_text_style::KIND, "Paragraph Style 1"));
+    assert!(shown.iter().any(|s| s == "New Paragraph Style"), "the dialog's heading: {shown:?}");
+    assert!(app.session.doc().unwrap().doc.para_styles.is_empty(), "no style is added before OK");
+    set_name(&mut app, "Body Copy");
+    crate::dialogs::confirm(&mut app).unwrap();
+    let (_, attrs) = current(&app, Kind::Para).unwrap();
+    let doc = &app.session.doc().unwrap().doc;
+    assert_eq!(doc.para_styles.iter().map(|s| (s.name.as_str(), &s.attrs)).collect::<Vec<_>>(), [("Body Copy", &attrs)]);
+
+    // A plain click still makes "Paragraph Style 1" at once, with no dialog.
+    click_new(&ctx, &mut app, Kind::Para);
+    assert!(app.ui.dialog.is_none());
+    let names: Vec<_> = app.session.doc().unwrap().doc.para_styles.iter().map(|s| s.name.clone()).collect();
+    assert_eq!(names, ["Body Copy", "Paragraph Style 1"]);
+}
+
 fn create_redefined_texts(app: &mut VectorcraftApp, ctx: &egui::Context, id: NodeId) -> (Option<NodeId>, Option<NodeId>) {
     let mut follower = None;
     let mut local_override = None;

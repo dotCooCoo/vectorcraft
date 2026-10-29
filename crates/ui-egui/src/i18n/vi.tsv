@@ -653,6 +653,7 @@ font-technology	Variable	Biến thiên
 	Complexity:	Độ phức tạp:
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	Màu tổng hợp được chuyển sang đây; tách màu sẽ tách với nó khi là hồ sơ CMYK.
 	Compound Path	Đường dẫn phức
+	Compound Shape	Hình phức hợp
 	Compress (RLE)	Nén (RLE)
 	Compress text and line art	Nén văn bản và đường nét
 	Compression	Nén
@@ -1148,7 +1149,6 @@ font-technology	Variable	Biến thiên
 	Exit Isolation Mode	Thoát chế độ cô lập
 	Expand	Mở rộng
 	Expand Appearance	Mở rộng diện mạo
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Mở rộng áp dụng cho hình ghép (Alt-bấm chế độ hình dạng) — trong lộ trình
 	Expand Brush Strokes	Mở rộng nét cọ
 	Expand Compound Shape	Mở rộng hình ghép
 	Expand Gradient Mesh	Mở rộng lưới chuyển sắc
@@ -2263,6 +2263,7 @@ file-filter	Templates	Mẫu
 	New Brush…	Cọ mới…
 	New Calligraphic Brush	Cọ thư pháp mới
 	New Character Style	Kiểu ký tự mới
+	New Character Style…	Kiểu ký tự mới…
 	New Color Group	Nhóm màu mới
 	New Color Group…	Nhóm màu mới…
 	New Data Set	Tập dữ liệu mới
@@ -2285,6 +2286,7 @@ file-filter	Templates	Mẫu
 	New Opacity Masks Are Clipping	Mặt nạ độ mờ mới là cắt
 	New Opacity Masks Are Inverted	Mặt nạ độ mờ mới bị đảo ngược
 	New Paragraph Style	Kiểu đoạn văn mới
+	New Paragraph Style…	Kiểu đoạn văn mới…
 	New Pattern Brush from Selection	Cọ họa tiết mới từ vùng chọn
 	New PDF Preset	Thiết lập sẵn PDF mới
 	New Print Preset	Thiết lập sẵn in mới
@@ -2300,6 +2302,8 @@ file-filter	Templates	Mẫu
 	New View	Chế độ xem mới
 	New View…	Chế độ xem mới…
 	New Window	Cửa sổ mới
+	Next Document	Tài liệu tiếp theo
+	Previous Document	Tài liệu trước
 	New Without Dialog	Mới không qua hộp thoại
 	New Workspace	Không gian làm việc mới
 	New Workspace…	Không gian làm việc mới…
@@ -3324,6 +3328,7 @@ mark-style	Japanese	Kiểu Nhật
 	Shape Builder Regions	Vùng Tạo hình dạng
 	Shape Builder Tool	Công cụ Tạo hình dạng
 	Shape Effects	Hiệu ứng hình dạng
+	Shape Mode	Chế độ hình dạng
 	Shape Modes:	Chế độ hình dạng:
 	Shape Properties:	Thuộc tính hình dạng:
 	Shape:	Hình dạng:
@@ -3438,6 +3443,7 @@ mark-style	Japanese	Kiểu Nhật
 	Single Quotes:	Dấu nháy đơn:
 	Single Right Quotation Mark	Dấu nháy đơn đóng
 	Single-line Composer	Soạn thảo một dòng
+	Toggle Line Composer	Chuyển đổi cách soạn dòng
 	Sixth Space	Dấu cách 1/6
 	Size	Kích thước
 	Size Tile to Art	Kích thước ô theo đối tượng
@@ -4107,10 +4113,12 @@ theme	Appearance	Giao diện
 @msg	`freeform.lines` must be an array	`freeform.lines` phải là một mảng
 @msg	`freeform.points` must be an array	`freeform.points` phải là một mảng
 @msg	`gradient` must be an object	`gradient` phải là một đối tượng
+@msg	`groupColors` must be an array	`groupColors` phải là một mảng
 @msg	`id` is the step reference {r}, which only `run` and `command_batch` resolve	`id` là tham chiếu bước {r}, chỉ `run` và `command_batch` giải quyết
 @msg	`ids` must be an array of object ids, not {v}	`ids` phải là mảng id đối tượng, không phải {v}
 @msg	`library` is a library id or name (see {list})	`library` là id hoặc tên thư viện (xem {list})
 @msg	`mode` applies to freeform gradients	`mode` áp dụng cho chuyển sắc tự do
+@msg	`preserve` must be an object	`preserve` phải là một đối tượng
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` phải là 1, 3 hoặc 5
 @msg	`stops` must be an array	`stops` phải là một mảng
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` phải là đối tượng tùy chọn SVG (xem document.formats)
@@ -4146,6 +4154,7 @@ theme	Appearance	Giao diện
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` là màu quy trình: sắc độ áp dụng cho màu toàn cục và màu chuyên biệt
 @msg	`{name}` is no recovery entry name	`{name}` không phải là tên mục phục hồi
 @msg	`{name}` isn't a colour swatch	`{name}` không phải là mẫu màu
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	màu quy trình không thể tô màu ảnh thang xám có độ trong suốt: hãy dùng màu chuyên biệt, đen hoặc trắng
 @msg	`{path}` must be a bool or an object of bools	`{path}` phải là bool hoặc đối tượng bool
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` không phải là màu (#rrggbb hoặc tên thiết lập sẵn)
 @msg	`{text}`: step {i}'s result has no such value (write $$ for a literal $)	`{text}`: kết quả bước {i} không có giá trị này (viết $$ cho ký tự $)
@@ -4766,6 +4775,9 @@ theme	Appearance	Giao diện
 @msg	the PSD file's header is damaged	tiêu đề tệp PSD bị hỏng
 @msg	the PSD file's image data can't be read: {e}	dữ liệu ảnh tệp PSD không thể đọc được: {e}
 @msg	the PSD file's image data uses an unknown compression ({m})	dữ liệu ảnh tệp PSD dùng nén không xác định ({m})
+@msg	the PCX file is cut short	tệp PCX bị cắt ngắn
+@msg	the PCX file's header is damaged	phần đầu của tệp PCX bị hỏng
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	tệp PCX có điểm ảnh {bits}-bit trong {planes} mặt phẳng không thể đọc được
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	ảnh PSD quá lớn để đọc ({_1} × {_2} pixel)
 @msg	the Save PDF dialog didn't open	hộp thoại Lưu PDF không mở
 @msg	the scale is not a usable number	tỷ lệ không phải là số dùng được

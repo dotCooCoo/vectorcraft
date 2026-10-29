@@ -290,6 +290,7 @@ font-technology	Variable	가변
 	Clipping Mask	클리핑 마스크
 	Edit Clipping Path	클리핑 패스 편집
 	Compound Path	컴파운드 패스
+	Compound Shape	컴파운드 모양
 	Artboards	아트보드
 	Convert to Artboards	아트보드로 변환
 	Rearrange All Artboards…	모든 아트보드 재정렬…
@@ -614,6 +615,8 @@ font-technology	Variable	가변
 	Saved View 25	저장된 보기 25
 	Window	윈도우
 	New Window	새 창
+	Next Document	다음 문서
+	Previous Document	이전 문서
 	Cascade	계단식 배열
 	Tile	바둑판식 배열
 	Float in Window	창에 플로팅
@@ -1456,7 +1459,6 @@ font-technology	Variable	가변
 	Expand Layers Panel Rows	레이어 패널 행 펼치기
 	Expand Options	옵션 펼치기
 	Expand Repeat	반복 확장
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	확장은 컴파운드 모양(모양 모드를 Alt-클릭)에 적용됩니다 — 개발 예정
 	Expand:	확장:
 	Export All…	모두 내보내기…
 	Export Artboard	아트보드 내보내기
@@ -2172,6 +2174,7 @@ font-technology	Variable	가변
 	Brush Art	브러시 아트
 	New Calligraphic Brush	새 캘리그래피 브러시
 	New Character Style	새 문자 스타일
+	New Character Style…	새 문자 스타일…
 	New Color Group	새 색상 그룹
 	New Color Group…	새 색상 그룹…
 	New Document Presets	새 문서 사전 설정
@@ -2185,6 +2188,7 @@ font-technology	Variable	가변
 	New Opacity Masks Are Inverted	새 불투명 마스크를 반전으로 설정
 	New PDF Preset	새 PDF 사전 설정
 	New Paragraph Style	새 단락 스타일
+	New Paragraph Style…	새 단락 스타일…
 	New Pattern Brush from Selection	선택 항목으로 새 패턴 브러시 만들기
 	New Print Preset	새 인쇄 사전 설정
 	New Scatter Brush from Selection	선택 항목으로 새 흩뿌리기 브러시 만들기
@@ -2836,6 +2840,7 @@ mark-style	Japanese	일본식
 	Shape Builder	모양 빌더
 	Shape Builder Regions	모양 빌더 영역
 	Shape Builder Tool	모양 빌더 도구
+	Shape Mode	모양 모드
 	Shape Modes:	모양 모드:
 	Shape Properties:	모양 속성:
 	Shaper Tool	셰이퍼 도구
@@ -2897,6 +2902,7 @@ mark-style	Japanese	일본식
 	Simulate Paper	용지 시뮬레이션
 	Single Quotes:	작은따옴표:
 	Single-line Composer	한 줄 조판
+	Toggle Line Composer	줄 조판 방식 전환
 	Size Tile to Art	타일을 아트웍 크기에 맞춤
 	Size/Leading	크기/행간
 	Size:	크기:
@@ -4012,7 +4018,9 @@ theme	Appearance	외관
 @msg	unknown freeform mode `{m}` (points, lines)	알 수 없는 자유형 모드 `{m}`(points, lines)
 @msg	`aspect` must be a number (%)	`aspect`는 숫자(%)여야 합니다
 @msg	`gradient` must be an object	`gradient`는 개체여야 합니다
+@msg	`groupColors` must be an array	`groupColors`는 배열이어야 합니다
 @msg	`mode` applies to freeform gradients	`mode`는 자유형 그레이디언트에 적용됩니다
+@msg	`preserve` must be an object	`preserve`는 개체여야 합니다
 @msg	`stops` must be an array	`stops`는 배열이어야 합니다
 @msg	`{k}` must be [x, y]	`{k}`은(는) [x, y]여야 합니다
 @msg	a gradient needs at least two stops	그레이디언트에는 정지점이 두 개 이상 필요합니다
@@ -4074,6 +4082,7 @@ theme	Appearance	외관
 @msg	the object already has an opacity mask	개체에 이미 불투명 마스크가 있습니다
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}`은(는) 프로세스 색상입니다. 색조는 글로벌 색상과 별색에만 적용됩니다
 @msg	`{name}` isn't a colour swatch	`{name}`은(는) 색상 견본이 아닙니다
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	프로세스 색상으로는 투명도가 있는 그레이스케일 이미지를 색칠할 수 없습니다. 별색, 검정 또는 흰색을 사용하십시오
 @msg	a document needs at least one artboard	문서에는 아트보드가 하나 이상 있어야 합니다
 @msg	empty path	빈 패스입니다
 @msg	join needs open paths	연결하려면 열린 패스가 필요합니다
@@ -4596,6 +4605,9 @@ theme	Appearance	외관
 @msg	not a PSD file	PSD 파일이 아닙니다
 @msg	the PSD file has an unknown colour mode ({m})	PSD 파일의 색상 모드({m})를 알 수 없습니다
 @msg	the PSD file's image data uses an unknown compression ({m})	PSD 파일의 이미지 데이터가 알 수 없는 압축({m})을 사용합니다
+@msg	the PCX file is cut short	PCX 파일이 잘려 있습니다
+@msg	the PCX file's header is damaged	PCX 파일의 헤더가 손상되었습니다
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	{planes}개 평면에 {bits}비트 픽셀이 있는 PCX 파일은 읽을 수 없습니다
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	PSD 이미지가 너무 커서 읽을 수 없습니다({_1} × {_2}픽셀)
 @msg	zipped 32-bit PSD image data with prediction can't be read	예측이 적용된 ZIP 압축 32비트 PSD 이미지 데이터는 읽을 수 없습니다
 @msg	{depth}-bit PSD files in this colour mode can't be read	이 색상 모드의 {depth}비트 PSD 파일은 읽을 수 없습니다

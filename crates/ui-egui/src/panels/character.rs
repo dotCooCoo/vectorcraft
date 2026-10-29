@@ -377,6 +377,14 @@ pub(crate) fn highlight(app: &mut VectorcraftApp, field: Field) -> Result<Value,
     Ok(json!({ "field": field.name() }))
 }
 
+/// `type.underline` (Cmd+Shift+U): what the Underline button does, on the text the panels act on.
+/// Returns whether the text is now underlined.
+pub(crate) fn toggle_underline(app: &mut VectorcraftApp) -> Result<Value, String> {
+    let (s, _) = text_style(app).ok_or("select some type first")?;
+    format(app, json!({"underline": !s.underline}));
+    Ok(json!(!s.underline))
+}
+
 /// `text.setRangeStyle` with `p` on the range the Type tool has selected (the whole text when
 /// nothing is selected). Does nothing unless the Type tool edits text.
 pub(crate) fn range_style(app: &mut VectorcraftApp, p: Value) {
@@ -418,6 +426,7 @@ static CTX: OnceLock<egui::Context> = OnceLock::new();
 /// Plain text of the last text copied inside the Type tool (paste from the native menu, which
 /// can't read the system clipboard).
 static CLIP: Mutex<String> = Mutex::new(String::new());
+static CLIP_RUNS: Mutex<Option<Value>> = Mutex::new(None);
 
 fn text_copy(app: &mut VectorcraftApp) -> bool {
     let Some((id, a, b)) = text_editing(app) else { return false };
@@ -425,12 +434,22 @@ fn text_copy(app: &mut VectorcraftApp) -> bool {
         return false;
     }
     let Ok(r) = app.session.execute("text.getRange", &json!({"id": id.0, "start": a, "end": b})) else { return false };
-    app.session.set_tool_option("copy", &r["runs"]);
+    let runs = r["runs"].clone();
+    app.session.set_tool_option("copy", &runs);
+    *CLIP_RUNS.lock().unwrap_or_else(|e| e.into_inner()) = Some(runs.clone());
     let text = r["text"].as_str().unwrap_or("").to_string();
     if let Some(ctx) = CTX.get() {
         ctx.copy_text(text.clone());
     }
-    *CLIP.lock().unwrap_or_else(|e| e.into_inner()) = text;
+    *CLIP.lock().unwrap_or_else(|e| e.into_inner()) = text.clone();
+    if let Ok(parsed_runs) = serde_json::from_value::<Vec<vectorcraft_doc::TextRun>>(runs)
+        && !parsed_runs.is_empty()
+    {
+        let mut t = vectorcraft_doc::TextObject::point(vectorcraft_geom::Point::ZERO, "", vectorcraft_doc::CharStyle::default());
+        t.runs = parsed_runs;
+        let node = vectorcraft_doc::Node::new(vectorcraft_doc::NodeId(1), vectorcraft_doc::NodeKind::Text(Box::new(t)));
+        app.session.clipboard.nodes = vec![node];
+    }
     true
 }
 
@@ -449,9 +468,19 @@ fn text_key(app: &mut VectorcraftApp, k: ToolKey, m: Mods) {
     }
 }
 
-fn text_paste(app: &mut VectorcraftApp, s: Option<String>) {
-    let s = s.unwrap_or_else(|| CLIP.lock().unwrap_or_else(|e| e.into_inner()).clone());
+fn text_paste(app: &mut VectorcraftApp, s: Option<String>, plain: bool) {
+    let text_from_clip = CLIP.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    let s = s.unwrap_or(text_from_clip);
     if !s.is_empty() {
+        if plain {
+            app.session.set_tool_option("copy", &json!([]));
+        } else if let Some(runs) = CLIP_RUNS.lock().unwrap_or_else(|e| e.into_inner()).clone() {
+            let clip_text: String =
+                serde_json::from_value::<Vec<vectorcraft_doc::TextRun>>(runs.clone()).unwrap_or_default().into_iter().map(|r| r.text).collect();
+            if clip_text == s {
+                app.session.set_tool_option("copy", &runs);
+            }
+        }
         let v = app.view_info();
         let target_before = crate::ime::target(&mut app.session, v);
         let before = crate::ime::stamp(&mut app.session, v);
@@ -482,7 +511,8 @@ pub(crate) fn intercept_text_command(app: &mut VectorcraftApp, id: &str) -> Opti
                 text_key(app, ToolKey::Delete, Mods::default());
             }
         }
-        "edit.paste" | "edit.pasteWithoutFormatting" => text_paste(app, None),
+        "edit.paste" => text_paste(app, None, false),
+        "edit.pasteWithoutFormatting" => text_paste(app, None, true),
         "edit.clear" => text_key(app, ToolKey::Delete, Mods::default()),
         _ => return None,
     }
@@ -570,7 +600,7 @@ pub(crate) fn route_type_input(app: &mut VectorcraftApp, ctx: &egui::Context) {
                     text_key(app, ToolKey::Delete, Mods::default());
                 }
             }
-            TextInput::Paste(s) => text_paste(app, s),
+            TextInput::Paste(s) => text_paste(app, s, false),
             TextInput::Face(f) => {
                 if let Err(e) = toggle_face(app, f) {
                     app.status(e);

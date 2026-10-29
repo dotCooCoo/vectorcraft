@@ -273,6 +273,7 @@
 	Clipping Mask	Knipmasker
 	Edit Clipping Path	Knippad bewerken
 	Compound Path	Samengesteld pad
+	Compound Shape	Samengestelde vorm
 	Artboards	Tekengebieden
 	Convert to Artboards	Converteren naar tekengebieden
 	Rearrange All Artboards…	Alle tekengebieden herschikken…
@@ -592,6 +593,8 @@
 	Saved View 25	Opgeslagen weergave 25
 	Window	Venster
 	New Window	Nieuw venster
+	Next Document	Volgend document
+	Previous Document	Vorig document
 	Cascade	Trapsgewijs schikken
 	Tile	Naast elkaar schikken
 	Float in Window	In venster zweven
@@ -1649,13 +1652,13 @@ lighting	Light	Licht
 	Roman Hanging Punctuation	Romeinse hangende leestekens
 	Select a text object to edit its paragraph attributes.	Selecteer een tekstobject om de alineakenmerken ervan te bewerken.
 	Single-line Composer	Compositie per regel
+	Toggle Line Composer	Compositiemethode wisselen
 	Space After Paragraph	Ruimte na alinea
 	Space Before Paragraph	Ruimte voor alinea
 	Top-to-Top Leading	Regelafstand van boven naar boven
 	Bottom-to-Bottom Leading	Regelafstand van onder naar onder
 	Burasagari	Burasagari
 	Force	Forceren
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Uitvouwen is van toepassing op samengestelde vormen (Alt-klik op een vormmodus) — staat op de roadmap
 	Expand Compound Shape	Samengestelde vorm uitvouwen
 	Make Compound Shape	Samengestelde vorm maken
 	Pathfinder Options…	Pathfinder-opties…
@@ -3736,6 +3739,7 @@ font-technology	Variable	Variabel
 	Default Fill and Stroke (D)	Standaard vulling en lijn (D)
 	Fill (X), double-click for the Color Picker	Vulling (X), dubbelklik voor de kleurenkiezer
 	Opacity:	Dekking:
+	Shape Mode	Vormmodus
 	Shape Modes:	Vormmodi:
 	Stroke (X), double-click for the Color Picker	Lijn (X), dubbelklik voor de kleurenkiezer
 	Stroke:	Lijn:
@@ -3784,7 +3788,9 @@ font-technology	Variable	Variabel
 	Mojikumi	Mojikumi
 	N pt per	N pt per
 	New Character Style	Nieuwe tekenstijl
+	New Character Style…	Nieuwe tekenstijl…
 	New Paragraph Style	Nieuwe alineastijl
+	New Paragraph Style…	Nieuwe alineastijl…
 	Paragraph Style Options	Alineastijlopties
 	Redefine Character Style	Tekenstijl opnieuw definiëren
 	Redefine Paragraph Style	Alineastijl opnieuw definiëren

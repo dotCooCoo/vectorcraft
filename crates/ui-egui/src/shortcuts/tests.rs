@@ -384,6 +384,70 @@ fn cmd_shift_x_resets_horizontal_scale() {
     assert_eq!(scales(&mut app), [(json!("One "), json!(150.0)), (json!("Two"), json!(100.0))]);
 }
 
+/// Cmd+Shift+U underlines the selected type and removes the underline again, Cmd+Alt+Shift+C
+/// switches its paragraphs between the Single-line and the Every-line Composer, and
+/// Cmd+Alt+Shift+H turns their hyphenation on and off. While the Type tool edits text, they act on
+/// its selection and the paragraphs it touches. Smart Guides (Cmd+U), Copy (Cmd+C) and Hide
+/// Artboards (Cmd+Shift+H) stay as they are.
+#[test]
+fn cmd_shift_u_and_cmd_alt_shift_c_and_h_toggle_type_formats() {
+    use vectorcraft_doc::Composer;
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+    let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "One\nTwo"})).unwrap()["id"].as_u64().unwrap();
+    let underlines = |app: &mut VectorcraftApp| {
+        let r = app.session.execute("text.getRange", &json!({"id": id})).unwrap();
+        r["runs"].as_array().unwrap().iter().map(|run| (run["text"].clone(), run["style"]["underline"].clone())).collect::<Vec<_>>()
+    };
+    let paras = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().kind {
+        vectorcraft_doc::NodeKind::Text(t) => (0..t.paragraph_count()).map(|i| (t.para_at(i).composer, t.para_at(i).hyphenate)).collect::<Vec<_>>(),
+        _ => panic!("text"),
+    };
+    let chord =
+        |key, m: Modifiers| vec![egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::COMMAND | m }];
+    let (shift, alt_shift) = (Modifiers::SHIFT, Modifiers::ALT | Modifiers::SHIFT);
+    let (guides, artboards) = (app.ui.view.smart_guides, app.ui.view.artboards);
+    assert!(app.session.clipboard.is_empty());
+    app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
+    let hyphenate = paras(&app)[0].1;
+    frame(&mut app, chord(Key::U, shift));
+    assert_eq!(underlines(&mut app), [(json!("One\nTwo"), json!(true))]);
+    frame(&mut app, chord(Key::U, shift));
+    assert_eq!(underlines(&mut app), [(json!("One\nTwo"), json!(false))]);
+    frame(&mut app, chord(Key::C, alt_shift));
+    assert_eq!(paras(&app), [(Composer::SingleLine, hyphenate); 2]);
+    frame(&mut app, chord(Key::C, alt_shift));
+    assert_eq!(paras(&app), [(Composer::EveryLine, hyphenate); 2]);
+    frame(&mut app, chord(Key::H, alt_shift));
+    assert_eq!(paras(&app), [(Composer::EveryLine, !hyphenate); 2]);
+    frame(&mut app, chord(Key::H, alt_shift));
+    assert_eq!(paras(&app), [(Composer::EveryLine, hyphenate); 2]);
+    assert_eq!((app.ui.view.smart_guides, app.ui.view.artboards, app.session.clipboard.is_empty()), (guides, artboards, true));
+    // While the Type tool edits: its selected text, and the paragraph that text is in.
+    app.select_tool("type");
+    app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+    app.session.set_tool_option("select", &json!({"start": 4, "end": 7}));
+    assert!(app.session.tool_wants_text());
+    for (key, m) in [(Key::U, shift), (Key::C, alt_shift), (Key::H, alt_shift)] {
+        frame(&mut app, chord(key, m));
+    }
+    assert_eq!(underlines(&mut app), [(json!("One\n"), json!(false)), (json!("Two"), json!(true))]);
+    assert_eq!(paras(&app), [(Composer::EveryLine, hyphenate), (Composer::SingleLine, !hyphenate)]);
+    // Paragraphs with different composers and hyphenation take the Every-line Composer and
+    // hyphenation, as the Hyphenate checkbox turns it on for them.
+    app.select_tool("selection");
+    app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
+    for (key, m) in [(Key::C, alt_shift), (Key::H, alt_shift)] {
+        frame(&mut app, chord(key, m));
+    }
+    assert_eq!(paras(&app), [(Composer::EveryLine, true); 2]);
+    // Nothing selected: nothing to change.
+    app.session.execute("select.none", &json!({})).unwrap();
+    for id in ["type.underline", "type.lineComposer", "type.hyphenate"] {
+        assert!(!crate::menus::enabled(&app, id), "{id}");
+    }
+}
+
 /// Tab shows and hides the panels, and in the Type tool it types a tab, without moving the
 /// keyboard focus on to a field: the keys after it (a tool letter, the next letter typed) still
 /// work.

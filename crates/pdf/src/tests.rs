@@ -12,6 +12,7 @@ mod blend;
 mod charstroke;
 mod cmykblend;
 mod cmykimages;
+mod colorize;
 mod compression;
 mod dashalign;
 mod editing;

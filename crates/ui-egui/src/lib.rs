@@ -65,6 +65,7 @@ pub mod titlebar;
 pub mod toolbar;
 mod tools_float;
 pub mod touch;
+pub mod trace_runs;
 mod ui_fonts;
 pub mod unsaved;
 pub mod updates_ui;
@@ -215,6 +216,8 @@ pub struct VectorcraftApp {
     pub plugin_runs: plugin_runs::PluginRuns,
     /// Files being read off the UI thread for Place ([`placing`]).
     pub placing: placing::Placing,
+    /// Image Traces running off the UI thread ([`trace_runs`]).
+    pub trace_runs: trace_runs::TraceRuns,
     /// Data Recovery's timer and startup question ([`recovery`]).
     pub recovery: recovery::Timer,
     /// Modifiers the keyboard holds (from the host's input), given back after synthetic input.

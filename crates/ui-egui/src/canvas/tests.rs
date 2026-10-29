@@ -705,6 +705,57 @@ fn the_artboard_tool_names_its_active_artboard_once() {
     assert!((active[0].1 - other[0].1).abs() < 2.0, "on the artboard's top edge like the other name: {active:?} vs {other:?}");
 }
 
+#[test]
+fn shift_clicking_canvas_artboard_label_toggles_multi_selection() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
+    app.select_tool("artboard");
+    if let Some(v) = app.view_mut() {
+        v.center = Point::new(320.0, 50.0);
+        v.zoom = 0.8;
+        v.fitted = true;
+    }
+    let ctx = egui::Context::default();
+    frame(&mut app, &ctx, vec![]);
+    assert_eq!(app.session.tool_options()["selected"], json!([0]));
+
+    let drawn = shapes(&mut app, &ctx);
+    let label_pos = |name: &str| {
+        drawn
+            .iter()
+            .find_map(|s| match s {
+                Shape::Text(t) if t.galley.text() == name => Some(t.pos + vec2(10.0, 5.0)),
+                _ => None,
+            })
+            .unwrap()
+    };
+    let at1 = label_pos("02 - Artboard 2");
+
+    // Shift-click artboard 2's name label (Shift held on press, released before mouse release)
+    let shift = egui::Modifiers::SHIFT;
+    let button = |pressed| egui::Event::PointerButton { pos: at1, button: egui::PointerButton::Primary, pressed, modifiers: shift };
+    frame(&mut app, &ctx, vec![egui::Event::ModifiersChanged(shift), egui::Event::PointerMoved(at1), button(true)]);
+    frame(
+        &mut app,
+        &ctx,
+        vec![
+            egui::Event::ModifiersChanged(egui::Modifiers::NONE),
+            egui::Event::PointerButton { pos: at1, button: egui::PointerButton::Primary, pressed: false, modifiers: egui::Modifiers::NONE },
+        ],
+    );
+
+    assert_eq!(app.session.tool_options()["selected"], json!([1, 0]), "Shift-clicking artboard label adds it to selection");
+
+    // Click artboard 3's name label without Shift
+    let at2 = label_pos("03 - Artboard 3");
+    let plain_btn =
+        |pressed| egui::Event::PointerButton { pos: at2, button: egui::PointerButton::Primary, pressed, modifiers: egui::Modifiers::NONE };
+    frame(&mut app, &ctx, vec![egui::Event::ModifiersChanged(egui::Modifiers::NONE), egui::Event::PointerMoved(at2), plain_btn(true)]);
+    frame(&mut app, &ctx, vec![plain_btn(false)]);
+
+    assert_eq!(app.session.tool_options()["selected"], json!([2]), "Plain click selects that artboard alone");
+}
+
 /// Enable Touch Gestures (#585): a two-finger tap undoes and a three-finger one redoes, and the
 /// first finger's press (the pointer egui makes of it) draws nothing. Off, a tap does nothing.
 #[test]

@@ -248,6 +248,7 @@
 	Clipping Mask	Maska przycinająca
 	Edit Clipping Path	Edytuj ścieżkę przycinającą
 	Compound Path	Ścieżka złożona
+	Compound Shape	Kształt złożony
 	Artboards	Obszary kompozycji
 	Convert to Artboards	Konwertuj na obszary kompozycji
 	Rearrange All Artboards…	Przestaw wszystkie obszary kompozycji…
@@ -583,6 +584,8 @@
 	Saved View 25	Zapisany widok 25
 	Window	Okno
 	New Window	Nowe okno
+	Next Document	Następny dokument
+	Previous Document	Poprzedni dokument
 	Cascade	Kaskadowo
 	Tile	Sąsiadująco
 	Float in Window	Pływające w oknie
@@ -1743,13 +1746,13 @@ lighting	Light	Światło
 	Roman Hanging Punctuation	Wysunięta interpunkcja łacińska
 	Select a text object to edit its paragraph attributes.	Zaznacz obiekt tekstowy, aby edytować atrybuty akapitu.
 	Single-line Composer	Kompozytor jednowierszowy
+	Toggle Line Composer	Przełącz kompozytor wierszy
 	Space After Paragraph	Odstęp po akapicie
 	Space Before Paragraph	Odstęp przed akapitem
 	Top-to-Top Leading	Interlinia od góry do góry
 	Bottom-to-Bottom Leading	Interlinia od dołu do dołu
 	Burasagari	Burasagari
 	Force	Wymuś
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Rozszerzanie dotyczy kształtów złożonych (kliknij tryb kształtu z Alt) — w planach
 	Expand Compound Shape	Rozszerz kształt złożony
 	Make Compound Shape	Utwórz kształt złożony
 	Pathfinder Options…	Opcje odnajdywania ścieżek…
@@ -3828,6 +3831,7 @@ font-technology	Variable	Zmienne
 	Default Fill and Stroke (D)	Domyślne wypełnienie i obrys (D)
 	Fill (X), double-click for the Color Picker	Wypełnienie (X), kliknij dwukrotnie, aby otworzyć próbnik kolorów
 	Opacity:	Krycie:
+	Shape Mode	Tryb kształtu
 	Shape Modes:	Tryby kształtu:
 	Stroke (X), double-click for the Color Picker	Obrys (X), kliknij dwukrotnie, aby otworzyć próbnik kolorów
 	Stroke:	Obrys:
@@ -3876,7 +3880,9 @@ font-technology	Variable	Zmienne
 	Mojikumi	Mojikumi
 	N pt per	N pt na
 	New Character Style	Nowy styl znakowy
+	New Character Style…	Nowy styl znakowy…
 	New Paragraph Style	Nowy styl akapitowy
+	New Paragraph Style…	Nowy styl akapitowy…
 	Paragraph Style Options	Opcje stylu akapitowego
 	Redefine Character Style	Zdefiniuj ponownie styl znakowy
 	Redefine Paragraph Style	Zdefiniuj ponownie styl akapitowy
@@ -4062,8 +4068,10 @@ imageTrace	Outline	Kontur
 @msg	`freeform.points` must be an array	`freeform.points` musi być tablicą
 @msg	`freeform.lines` must be an array	`freeform.lines` musi być tablicą
 @msg	`gradient` must be an object	`gradient` musi być obiektem
+@msg	`groupColors` must be an array	`groupColors` musi być tablicą
 @msg	`library` is a library id or name (see {list})	`library` to identyfikator lub nazwa biblioteki (patrz {list})
 @msg	`mode` applies to freeform gradients	`mode` dotyczy gradientów dowolnych
+@msg	`preserve` must be an object	`preserve` musi być obiektem
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` musi wynosić 1, 3 lub 5
 @msg	`stops` must be an array	`stops` musi być tablicą
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` musi być obiektem opcji SVG (patrz document.formats)
@@ -4098,6 +4106,7 @@ imageTrace	Outline	Kontur
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` to kolor triadowy: tinty dotyczą kolorów globalnych i dodatkowych
 @msg	`{name}` is no recovery entry name	`{name}` nie jest nazwą wpisu odzyskiwania
 @msg	`{name}` isn't a colour swatch	`{name}` nie jest próbką koloru
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	kolor triadowy nie może zabarwić obrazu w skali szarości z przezroczystością: użyj koloru dodatkowego, czarnego lub białego
 @msg	`{path}` must be a bool or an object of bools	`{path}` musi być wartością logiczną lub obiektem wartości logicznych
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` nie jest kolorem (#rrggbb lub nazwa ustawienia)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` nie jest narzędziem upłynniania
@@ -4692,6 +4701,9 @@ imageTrace	Outline	Kontur
 @msg	not a PSD file	to nie jest plik PSD
 @msg	the PSD file has an unknown colour mode ({m})	plik PSD ma nieznany tryb koloru ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	dane obrazu pliku PSD używają nieznanej kompresji ({m})
+@msg	the PCX file is cut short	plik PCX jest ucięty
+@msg	the PCX file's header is damaged	nagłówek pliku PCX jest uszkodzony
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	nie można odczytać plików PCX z {bits}-bitowymi pikselami w {planes} płaszczyznach
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	obraz PSD jest zbyt duży, aby go odczytać ({_1} × {_2} pikseli)
 @msg	zipped 32-bit PSD image data with prediction can't be read	nie można odczytać spakowanych 32-bitowych danych obrazu PSD z predykcją
 @msg	{depth}-bit PSD files in this colour mode can't be read	nie można odczytać {depth}-bitowych plików PSD w tym trybie koloru

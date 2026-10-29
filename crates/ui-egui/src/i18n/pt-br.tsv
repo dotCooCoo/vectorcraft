@@ -514,6 +514,7 @@
 	Complexity:	Complexidade:
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	As cores compostas são convertidas para ele; as separações separam com ele quando é um perfil CMYK.
 	Compound Path	Caminho Composto
+	Compound Shape	Forma Composta
 	Compress (RLE)	Comprimir (RLE)
 	Compress text and line art	Comprimir texto e arte de linha
 	Compression:	Compressão:
@@ -884,7 +885,6 @@
 	Expand Panels	Expandir Painéis
 	Expand Repeat	Expandir Repetição
 	Expand Shape	Expandir Forma
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Expandir se aplica a formas compostas (Alt-clique em um modo de forma) — no roadmap
 	Expand:	Expandir:
 	Expand…	Expandir…
 	Export	Exportar
@@ -1632,6 +1632,7 @@
 	Brush Art	Arte do Pincel
 	New Calligraphic Brush	Novo Pincel Caligráfico
 	New Character Style	Novo Estilo de Caractere
+	New Character Style…	Novo Estilo de Caractere…
 	New Color Group	Novo Grupo de Cores
 	New Color Group…	Novo Grupo de Cores…
 	New Document Presets	Novos Predefinidos de Documento
@@ -1643,6 +1644,7 @@
 	New Opacity Masks Are Inverted	Novas Máscaras de Opacidade São Invertidas
 	New PDF Preset	Novo Predefinido de PDF
 	New Paragraph Style	Novo Estilo de Parágrafo
+	New Paragraph Style…	Novo Estilo de Parágrafo…
 	New Pattern Brush from Selection	Novo Pincel de Padrão a partir da Seleção
 	New Print Preset	Novo Predefinido de Impressão
 	New Scatter Brush from Selection	Novo Pincel de Dispersão a partir da Seleção
@@ -1653,6 +1655,8 @@
 	New Symbol…	Novo Símbolo…
 	New View…	Nova Visualização…
 	New Window	Nova Janela
+	Next Document	Próximo Documento
+	Previous Document	Documento Anterior
 	New Without Dialog	Novo sem Diálogo
 	New Workspace	Novo Espaço de Trabalho
 	New Workspace…	Novo Espaço de Trabalho…
@@ -2461,6 +2465,7 @@
 	Shape Builder Regions	Regiões do Construtor de Formas
 	Shape Builder Tool	Ferramenta Construtor de Formas
 	Shape Effects	Efeitos de Forma
+	Shape Mode	Modo de Forma
 	Shape Modes:	Modos de Forma:
 	Shape Properties:	Propriedades da Forma:
 	Shaper Tool	Ferramenta Formador
@@ -2550,6 +2555,7 @@
 	Single Quotes:	Aspas Simples:
 	Single Right Quotation Mark	Aspa Direita Única
 	Single-line Composer	Compositor de Linha Única
+	Toggle Line Composer	Alternar Compositor de Linhas
 	Sixth Space	Espaço de Sexto
 	Size	Tamanho
 	Size Tile to Art	Dimensionar Bloco para a Arte
@@ -3516,8 +3522,10 @@ axis	Both	Ambos
 @msg	`freeform.points` must be an array	`freeform.points` deve ser uma matriz
 @msg	`freeform.lines` must be an array	`freeform.lines` deve ser uma matriz
 @msg	`gradient` must be an object	`gradient` deve ser um objeto
+@msg	`groupColors` must be an array	`groupColors` deve ser uma matriz
 @msg	`library` is a library id or name (see {list})	`library` é o id ou o nome de uma biblioteca (veja {list})
 @msg	`mode` applies to freeform gradients	`mode` se aplica a gradientes de forma livre
+@msg	`preserve` must be an object	`preserve` deve ser um objeto
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` deve ser 1, 3 ou 5
 @msg	`stops` must be an array	`stops` deve ser uma matriz
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` deve ser um objeto com opções de SVG (veja document.formats)
@@ -3551,6 +3559,7 @@ axis	Both	Ambos
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` é uma cor de seleção: os matizes se aplicam a cores globais e especiais
 @msg	`{name}` is no recovery entry name	`{name}` não é o nome de uma entrada de recuperação
 @msg	`{name}` isn't a colour swatch	`{name}` não é uma amostra de cor
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	uma cor de seleção não pode colorir uma imagem em escala de cinza com transparência: use uma cor especial, preto ou branco
 @msg	`{path}` must be a bool or an object of bools	`{path}` deve ser um booleano ou um objeto de booleanos
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` não é uma cor (#rrggbb ou o nome de uma predefinição)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` não é uma ferramenta de Liquidificar
@@ -4129,6 +4138,9 @@ axis	Both	Ambos
 @msg	not a PSD file	não é um arquivo PSD
 @msg	the PSD file has an unknown colour mode ({m})	o arquivo PSD tem um modo de cor desconhecido ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	os dados de imagem do arquivo PSD usam uma compactação desconhecida ({m})
+@msg	the PCX file is cut short	o arquivo PCX está incompleto
+@msg	the PCX file's header is damaged	o cabeçalho do arquivo PCX está danificado
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	arquivos PCX com pixels de {bits} bits em {planes} planos não podem ser lidos
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	a imagem PSD é grande demais para ser lida ({_1} × {_2} pixels)
 @msg	zipped 32-bit PSD image data with prediction can't be read	dados de imagem PSD de 32 bits compactados em zip com previsão não podem ser lidos
 @msg	{depth}-bit PSD files in this colour mode can't be read	arquivos PSD de {depth} bits neste modo de cor não podem ser lidos
