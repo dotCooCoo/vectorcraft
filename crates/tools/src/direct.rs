@@ -37,7 +37,7 @@
 use std::borrow::Cow;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::hit::{HitKind, compound_part_at, hit_test};
+use vectorcraft_doc::hit::{HitKind, compound_part_at, hit_test, selected_hidden_at};
 use vectorcraft_doc::{AnchorRef, Node, NodeId, NodeKind, Selection};
 use vectorcraft_geom::{Anchor, PathData, Point, Rect, Vec2};
 
@@ -563,6 +563,9 @@ impl Tool for DirectSelectionTool {
                 if let Some(h) = hit_test(cx.doc, p, cx.selection_hit_options()) {
                     return self.press_object(cx, ev, p, tol, h);
                 }
+                if let Some(out) = self.press_hidden(cx, ev, p) {
+                    return out;
+                }
                 self.state = State::Marquee { start: p, cur: p, toggle: ev.mods.shift, enclosed: false };
                 vec![]
             }
@@ -851,12 +854,26 @@ impl DirectSelectionTool {
 mod tests;
 
 impl DirectSelectionTool {
+    /// A press where a clipping mask hides the art of a selected object (picked in the Layers
+    /// panel, say) grabs the selection by it, as a press on its visible part does; `None`
+    /// elsewhere, and with Shift (a marquee then adds to the selection).
+    fn press_hidden(&mut self, cx: &ToolContext, ev: &PointerEvent, p: Point) -> Option<Vec<Action>> {
+        if ev.mods.shift {
+            return None;
+        }
+        selected_hidden_at(cx.doc, p, cx.selection_hit_options(), &cx.selection.objects)?;
+        self.state = State::MoveObject { start: p, grab: None, hold: p, began: false, deselect: None };
+        Some(vec![])
+    }
     fn press_group(&mut self, cx: &ToolContext, ev: &PointerEvent, p: Point, tol: f64) -> Vec<Action> {
         if let Some(out) = self.guide.press(cx, ev) {
             self.state = State::Idle;
             return out;
         }
         let Some(mut h) = hit_test(cx.doc, p, cx.selection_hit_options()) else {
+            if let Some(out) = self.press_hidden(cx, ev, p) {
+                return out;
+            }
             self.state = State::Marquee { start: p, cur: p, toggle: ev.mods.shift, enclosed: false };
             return vec![];
         };

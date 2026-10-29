@@ -79,7 +79,7 @@ pub(crate) use document::{slot_frame, slot_of};
 pub use types::IMAGE_TOO_LARGE;
 use types::{BLEND_BUDGET, FLIP, Frame, GState, Kind, PatternHead, Place, Raster};
 #[cfg(test)]
-pub use types::{NON_NATIVE_ART, NON_NATIVE_ART_UNREAD};
+pub use types::{NON_NATIVE_ART, NON_NATIVE_ART_UNREAD, VERSIONED_UNENDED};
 pub(super) use types::{blend_mode, blend_name};
 
 #[path = "legacy_text.rs"]

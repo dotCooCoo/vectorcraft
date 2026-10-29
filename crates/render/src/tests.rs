@@ -903,6 +903,39 @@ fn decode_failures_counts_this_threads_images_only() {
     assert_eq!(decode_failures(), before + 1, "this thread's failure");
 }
 
+/// Pixels decoded elsewhere and kept with [`keep_decoded_image`] are the pixels a renderer decodes,
+/// premultiplied alike, and a render that draws the image uses them without decoding it. A CMYK
+/// image's pixels are not kept.
+#[test]
+fn a_kept_decoded_image_is_drawn_without_decoding_it() {
+    use vectorcraft_doc::cmyk::Inks;
+    use vectorcraft_doc::{ImageBlob, ImageObject, NodeKind};
+    // The image has pixels no other test uses, since every test shares the store, and half of
+    // them are partly transparent.
+    let img = image::RgbaImage::from_fn(37, 23, |x, y| image::Rgba([(x * 7) as u8, (y * 11) as u8, 99, if (x + y) % 2 == 0 { 255 } else { 77 }]));
+    let mut png = vec![];
+    img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+    let blob = ImageBlob::new("image/png", png.clone());
+    assert!(!image_cached(&blob));
+    assert!(keep_decoded_image(&blob, image::load_from_memory(&png).unwrap()));
+    assert!(image_cached(&blob));
+    let key = blobs::blob_key(&blob).0;
+    let kept = images::store().peek(&key).unwrap();
+    assert!(kept.data() == paint::decode_pixmap(&png).unwrap().data(), "the pixels a renderer decodes");
+    let mut d = Document::new(37.0, 23.0);
+    d.images.insert("kept".into(), blob);
+    let id = d.alloc_id();
+    let im = ImageObject { key: "kept".into(), width: 37, height: 23, xf: Affine::IDENTITY, link: None, placement: Default::default(), pixels: None };
+    d.insert(Some(d.layers[0].id), 0, Node::new(id, NodeKind::Image(Box::new(im)))).unwrap();
+    let decodes = image_decodes();
+    let r = Renderer::new().render(&d, 37, 23, Affine::IDENTITY, &RenderOptions::default());
+    assert_eq!(image_decodes(), decodes, "drawn from the kept pixels");
+    assert!(r.pixel(18, 11)[3] > 0, "the image is drawn");
+    let cmyk = ImageBlob::cmyk_tiff(&Inks::new(2, 2, [10, 20, 30, 40].repeat(4)).unwrap()).unwrap();
+    assert!(!keep_decoded_image(&cmyk, image::DynamicImage::new_rgba8(2, 2)));
+    assert!(!image_cached(&cmyk));
+}
+
 /// An image drawn larger than its pixels samples smoothly, or with `smooth_images` off each screen
 /// pixel takes its nearest image pixel (Pixel Preview with File Handling › Display Bitmaps as
 /// Anti-aliased Images off, #394).

@@ -3929,6 +3929,60 @@ fn wheel_notches_zoom_in_a_glide() {
     assert_eq!(app.view().unwrap().zoom / before, done, "and it stops");
 }
 
+/// #4283: with Performance › Animated Zoom off, or on without GPU Performance (which it needs), a
+/// wheel notch zooms the whole step on the frame it arrives, both the plain wheel with Zoom with
+/// Mouse Wheel and Alt-wheel without it.
+#[test]
+fn wheel_notches_zoom_at_once_without_animated_zoom() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    let ctx = egui::Context::default();
+    let run = |app: &mut VectorcraftApp| {
+        let mut raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), ..Default::default() };
+        app.raw_input_hook(&ctx, &mut raw);
+        let mut out = ctx.run_ui(raw, |ui| show(app, ui));
+        out.textures_delta.clear();
+    };
+    run(&mut app);
+    let at = app.canvas_rect.unwrap().center();
+    for (animated, gpu, wheel_zooms, alt) in
+        [(false, true, true, false), (false, true, false, true), (true, false, true, false), (true, false, false, true)]
+    {
+        app.session.execute("prefs.set", &json!({"key": "animatedZoom", "value": animated})).unwrap();
+        app.session.execute("prefs.set", &json!({"key": "gpuPerformance", "value": gpu})).unwrap();
+        app.session.execute("prefs.set", &json!({"key": "zoomWithMouseWheel", "value": wheel_zooms})).unwrap();
+        // Any glide or spread scroll a case before left behind dies down first.
+        for _ in 0..30 {
+            run(&mut app);
+        }
+        let before = app.view().unwrap().zoom;
+        crate::tests_synthetic::control(&mut app, &ctx, "ui.wheel", json!({"x": at.x, "y": at.y, "dy": 1, "alt": alt}));
+        // One line notch's whole zoom.
+        let expected = ctx.options(|o| f64::from(o.input_options.line_scroll_speed) * 0.01).exp();
+        // The first frame the zoom moves (the event may land a frame later).
+        let mut first = 1.0;
+        for _ in 0..3 {
+            run(&mut app);
+            first = app.view().unwrap().zoom / before;
+            if first != 1.0 {
+                break;
+            }
+        }
+        assert!(
+            (first - expected).abs() < 1e-9,
+            "the whole notch arrives at once (animated {animated}, gpu {gpu}, wheel zooms {wheel_zooms}, alt {alt}: expected {expected}, got {first})"
+        );
+        for _ in 0..30 {
+            run(&mut app);
+        }
+        let done = app.view().unwrap().zoom / before;
+        assert!(
+            (done - first).abs() < 1e-9,
+            "all of it on the first frame (animated {animated}, gpu {gpu}, wheel zooms {wheel_zooms}, alt {alt}: {first} then {done})"
+        );
+    }
+}
+
 /// In each frame where a wheel scroll moves the view, the hover point (read by the rulers'
 /// pointer marks, the Info panel, the hover highlight and the tool cursor) is the document point
 /// under the pointer in the view the canvas draws in that frame.
@@ -4257,6 +4311,168 @@ fn the_zoom_tool_zooms_a_rotated_view_to_the_area_dragged_across() {
         assert!(v.center.distance(middle) < 1e-6, "{angle}°: the marquee's center goes to the canvas's center");
         app.view_mut().unwrap().zoom = z0;
     }
+}
+
+/// Space held while the Zoom tool drags a marquee moves the marquee and keeps its size. When Space
+/// is let go, the drag sizes the marquee again from where it moved to, and the release zooms to the
+/// moved marquee.
+/// Space held since a Cmd+Space press sizes the marquee.
+#[test]
+fn space_moves_the_zoom_marquee_while_dragging() {
+    use egui::{Event, Modifiers};
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    app.run("prefs.set", json!({"key": "animatedZoom", "value": false})).unwrap();
+    app.select_tool("zoom");
+    let ctx = egui::Context::default();
+    frame(&mut app, &ctx, vec![]);
+    let rect = app.canvas_rect.unwrap();
+    let at = rect.center() - vec2(100.0, 50.0);
+    let space = |pressed, modifiers| Event::Key { key: egui::Key::Space, physical_key: None, pressed, repeat: false, modifiers };
+    let button = |pos, pressed, modifiers| Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers };
+    let drawn = |app: &mut VectorcraftApp| -> Vec<Pos2> {
+        let lines: Vec<Vec<Pos2>> = shapes(app, &ctx)
+            .into_iter()
+            .filter_map(|s| match s {
+                Shape::Path(p) if p.stroke.color == egui::epaint::ColorMode::Solid(Color32::from_white_alpha(230)) => Some(p.points),
+                _ => None,
+            })
+            .collect();
+        let [line] = &lines[..] else { panic!("one marquee: {lines:?}") };
+        line.clone()
+    };
+    let z0 = app.view().unwrap().zoom;
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at)]);
+    frame(&mut app, &ctx, vec![button(at, true, Modifiers::NONE)]);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at + vec2(100.0, 50.0))]);
+    frame(&mut app, &ctx, vec![space(true, Modifiers::NONE), Event::PointerMoved(at + vec2(140.0, 70.0))]);
+    let moved = drawn(&mut app);
+    assert_eq!(moved[0], at + vec2(40.0, 20.0), "Space moves the marquee: {moved:?}");
+    assert_eq!(moved[2], at + vec2(140.0, 70.0), "and keeps its 100 × 50 size: {moved:?}");
+    frame(&mut app, &ctx, vec![space(false, Modifiers::NONE), Event::PointerMoved(at + vec2(180.0, 95.0))]);
+    let sized = drawn(&mut app);
+    assert_eq!((sized[0], sized[2]), (at + vec2(40.0, 20.0), at + vec2(180.0, 95.0)), "let go, the drag sizes it again: {sized:?}");
+    let middle = Xf::new(rect, app.view().unwrap()).to_doc(at + vec2(110.0, 57.5));
+    frame(&mut app, &ctx, vec![button(at + vec2(180.0, 95.0), false, Modifiers::NONE)]);
+    let v = *app.view().unwrap();
+    let want = z0 * f64::from((rect.width() / 140.0).min(rect.height() / 75.0));
+    assert!((v.zoom - want).abs() < 1e-6, "the release zooms to the moved marquee: {z0} → {}, not {want}", v.zoom);
+    assert!(v.center.distance(middle) < 1e-6, "centered on it: {:?}, not {middle:?}", v.center);
+    // A Cmd+Space press: Space held from the press on sizes the marquee, also once Cmd is let go.
+    app.select_tool("selection");
+    app.view_mut().unwrap().zoom = z0;
+    frame(&mut app, &ctx, vec![Event::ModifiersChanged(Modifiers::COMMAND), space(true, Modifiers::COMMAND), Event::PointerMoved(at)]);
+    frame(&mut app, &ctx, vec![button(at, true, Modifiers::COMMAND)]);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at + vec2(50.0, 25.0))]);
+    frame(&mut app, &ctx, vec![Event::ModifiersChanged(Modifiers::NONE), Event::PointerMoved(at + vec2(100.0, 50.0))]);
+    let held = drawn(&mut app);
+    assert_eq!((held[0], held[2]), (at, at + vec2(100.0, 50.0)), "Space held since the press sizes it: {held:?}");
+    frame(&mut app, &ctx, vec![button(at + vec2(100.0, 50.0), false, Modifiers::NONE)]);
+    frame(&mut app, &ctx, vec![space(false, Modifiers::NONE)]);
+    let want = z0 * f64::from((rect.width() / 100.0).min(rect.height() / 50.0));
+    assert!((app.view().unwrap().zoom - want).abs() < 1e-6, "{z0} → {}, not {want}", app.view().unwrap().zoom);
+}
+
+/// Space pressed after the Zoom tool's press and before the drag moves: the first movement sizes
+/// the marquee, Space then moves it, and the release zooms to it instead of stepping the zoom.
+#[test]
+fn space_before_the_zoom_drag_moves_sizes_the_marquee_first() {
+    use egui::{Event, Modifiers};
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    app.run("prefs.set", json!({"key": "animatedZoom", "value": false})).unwrap();
+    app.select_tool("zoom");
+    let ctx = egui::Context::default();
+    frame(&mut app, &ctx, vec![]);
+    let rect = app.canvas_rect.unwrap();
+    let at = rect.center() - vec2(100.0, 50.0);
+    let space = |pressed| Event::Key { key: egui::Key::Space, physical_key: None, pressed, repeat: false, modifiers: Modifiers::NONE };
+    let button = |pos, pressed| Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::NONE };
+    let z0 = app.view().unwrap().zoom;
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at)]);
+    frame(&mut app, &ctx, vec![button(at, true)]);
+    frame(&mut app, &ctx, vec![space(true), Event::PointerMoved(at + vec2(120.0, 60.0))]);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at + vec2(140.0, 70.0))]);
+    let middle = Xf::new(rect, app.view().unwrap()).to_doc(at + vec2(80.0, 40.0));
+    frame(&mut app, &ctx, vec![button(at + vec2(140.0, 70.0), false)]);
+    frame(&mut app, &ctx, vec![space(false)]);
+    let v = *app.view().unwrap();
+    let want = z0 * f64::from((rect.width() / 120.0).min(rect.height() / 60.0));
+    assert!((v.zoom - want).abs() < 1e-6, "the release zooms to the 120 × 60 marquee: {z0} → {}, not {want}", v.zoom);
+    assert!(v.center.distance(middle) < 1e-6, "moved by Space and centered on it: {:?}, not {middle:?}", v.center);
+}
+
+/// Space pressed or let go between two pointer moves in one frame: the move before the change and
+/// the move after it each follow the Space state they came with.
+#[test]
+fn the_zoom_marquee_follows_space_and_the_pointer_in_the_order_they_came() {
+    use egui::{Event, Modifiers};
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    app.run("prefs.set", json!({"key": "animatedZoom", "value": false})).unwrap();
+    app.select_tool("zoom");
+    let ctx = egui::Context::default();
+    frame(&mut app, &ctx, vec![]);
+    let rect = app.canvas_rect.unwrap();
+    let at = rect.center() - vec2(100.0, 50.0);
+    let space = |pressed| Event::Key { key: egui::Key::Space, physical_key: None, pressed, repeat: false, modifiers: Modifiers::NONE };
+    let button = |pos, pressed| Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::NONE };
+    let corners = |app: &mut VectorcraftApp| -> (Pos2, Pos2) {
+        let lines: Vec<Vec<Pos2>> = shapes(app, &ctx)
+            .into_iter()
+            .filter_map(|s| match s {
+                Shape::Path(p) if p.stroke.color == egui::epaint::ColorMode::Solid(Color32::from_white_alpha(230)) => Some(p.points),
+                _ => None,
+            })
+            .collect();
+        let [line] = &lines[..] else { panic!("one marquee: {lines:?}") };
+        (line[0], line[2])
+    };
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at)]);
+    frame(&mut app, &ctx, vec![button(at, true)]);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at + vec2(100.0, 50.0))]);
+    frame(&mut app, &ctx, vec![space(true), Event::PointerMoved(at + vec2(140.0, 70.0))]);
+    // Moved with Space held, then sized after it was let go.
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at + vec2(160.0, 80.0)), space(false), Event::PointerMoved(at + vec2(200.0, 100.0))]);
+    assert_eq!(corners(&mut app), (at + vec2(60.0, 30.0), at + vec2(200.0, 100.0)), "moved, then sized");
+    // Sized before Space was pressed, then moved with it held.
+    frame(&mut app, &ctx, vec![Event::PointerMoved(at + vec2(210.0, 105.0)), space(true), Event::PointerMoved(at + vec2(230.0, 115.0))]);
+    assert_eq!(corners(&mut app), (at + vec2(80.0, 40.0), at + vec2(230.0, 115.0)), "sized, then moved");
+    frame(&mut app, &ctx, vec![button(at + vec2(230.0, 115.0), false)]);
+    frame(&mut app, &ctx, vec![space(false)]);
+}
+
+/// Space pressed while the Zoom tool drags keeps the zoom cursor: the drag does not turn into a
+/// Hand tool pan, and with Shift also held it does not show the rotate cursor.
+#[test]
+fn space_during_a_zoom_drag_keeps_the_zoom_cursor() {
+    use egui::{CursorIcon, Event, Modifiers};
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    app.run("prefs.set", json!({"key": "animatedZoom", "value": false})).unwrap();
+    app.select_tool("zoom");
+    let ctx = egui::Context::default();
+    frame(&mut app, &ctx, vec![]);
+    let c = app.canvas_rect.unwrap().center();
+    // `shown` returns the system cursor the canvas sets over a window without the focus, as in
+    // `the_rotate_cursor_shows_for_space_shift_and_the_rotate_view_tool`.
+    let shown = |app: &mut VectorcraftApp, events: Vec<Event>| {
+        let screen_rect = Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0)));
+        let mut out = ctx.run_ui(egui::RawInput { screen_rect, focused: false, events, ..Default::default() }, |ui| show(app, ui));
+        out.textures_delta.clear();
+        out.platform_output.cursor_icon
+    };
+    let space = |pressed| Event::Key { key: egui::Key::Space, physical_key: None, pressed, repeat: false, modifiers: Modifiers::NONE };
+    let button = |pos, pressed| Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::NONE };
+    assert_eq!(shown(&mut app, vec![Event::PointerMoved(c)]), CursorIcon::ZoomIn);
+    shown(&mut app, vec![button(c, true)]);
+    shown(&mut app, vec![Event::PointerMoved(c + vec2(40.0, 30.0))]);
+    assert_eq!(shown(&mut app, vec![space(true), Event::PointerMoved(c + vec2(60.0, 40.0))]), CursorIcon::ZoomIn, "Space during the drag");
+    assert_eq!(shown(&mut app, vec![Event::ModifiersChanged(Modifiers::SHIFT)]), CursorIcon::ZoomIn, "Space+Shift during the drag");
+    shown(&mut app, vec![Event::ModifiersChanged(Modifiers::NONE)]);
+    shown(&mut app, vec![button(c + vec2(60.0, 40.0), false)]);
+    assert_eq!(shown(&mut app, vec![]), CursorIcon::Grab, "after the drag, Space shows the hand");
+    shown(&mut app, vec![space(false)]);
 }
 
 /// In a rotated view the Selection tool's marquee is drawn where the tool selects: through the
@@ -7110,6 +7326,28 @@ fn distance_guides_follow_what_lies_under_a_still_pointer() {
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     run(&mut app, vec![]);
     assert_eq!(gap_label(&run(&mut app, vec![])), None, "another document");
+}
+
+/// #4518: a floating panel or a modal dialog over the canvas hides the pointer from it, so Object
+/// Highlighting, the rulers and the Info panel don't follow a pointer that is over the dialog.
+#[test]
+fn a_panel_or_dialog_over_the_canvas_hides_the_pointer_from_it() {
+    let (mut app, ctx, _, over, _) = distance_scene(true);
+    let run = |app: &mut VectorcraftApp, events, cover| distance_frame_covered(app, &ctx, events, cover);
+    run(&mut app, vec![egui::Event::PointerMoved(over)], None);
+    run(&mut app, vec![], None);
+    assert!(app.hover_doc.is_some(), "over the canvas");
+    for cover in [Cover::Panel(egui::Rect::from_center_size(over, vec2(120.0, 120.0))), Cover::Dialog] {
+        // A new window takes a sizing pass before it covers anything, as in the test above.
+        for _ in 0..3 {
+            run(&mut app, vec![], Some(cover));
+        }
+        assert_eq!(app.hover_doc, None, "under it");
+        for _ in 0..3 {
+            run(&mut app, vec![], None);
+        }
+        assert!(app.hover_doc.is_some(), "back once it closes");
+    }
 }
 
 /// The 800 × 600 window [`frame`] draws the canvas in.

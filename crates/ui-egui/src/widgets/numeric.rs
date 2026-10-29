@@ -710,6 +710,7 @@ pub fn opt_field_named(ui: &mut Ui, id: impl std::hash::Hash, name: Option<&str>
                 egui::TextEdit::singleline(&mut buf)
                     .id(id)
                     .frame(egui::Frame::NONE)
+                    .align(egui::Align2::LEFT_CENTER)
                     .desired_width(width - 10.0)
                     .font(egui::FontId::proportional(12.5))
                     .text_color(if enabled { t.text_strong } else { t.text_disabled }),

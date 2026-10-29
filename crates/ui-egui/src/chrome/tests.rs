@@ -902,6 +902,77 @@ fn the_isolation_bar_does_not_take_layout_height_from_the_canvas() {
     assert_eq!(top(&mut app), before, "isolation mode leaves the canvas where it was");
 }
 
+/// #4468: In nested isolation, clicking the back button steps up one level in the hierarchy,
+/// and clicking ancestor breadcrumbs navigates directly to that isolation level.
+#[test]
+fn isolation_bar_navigation_and_back_button_steps_up() {
+    use vectorcraft_doc::NodeId;
+    let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
+    let rect = |app: &mut crate::VectorcraftApp, x: f64| {
+        app.run("shape.rectangle", json!({"x": x, "y": 10, "width": 30, "height": 20})).unwrap()["id"].as_u64().unwrap()
+    };
+    let (a, b) = (rect(&mut app, 10.0), rect(&mut app, 50.0));
+    // Group 1 contains a and b
+    app.run("select.set", json!({"ids": [a, b]})).unwrap();
+    let g1 = app.run("object.group", json!({})).unwrap()["id"].as_u64().unwrap();
+    let c = rect(&mut app, 90.0);
+    // Group 2 contains g1 and c
+    app.run("select.set", json!({"ids": [g1, c]})).unwrap();
+    let g2 = app.run("object.group", json!({})).unwrap()["id"].as_u64().unwrap();
+
+    // Isolate path a (deepest level: Layer 1 > <Group> > <Group> > <Path>)
+    app.run("object.isolate", json!({"id": a})).unwrap();
+    assert_eq!(app.session.active().unwrap().isolation, Some(NodeId(a)));
+
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    egui_extras::install_image_loaders(&ctx);
+    let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 700.0));
+
+    let click_at = |app: &mut crate::VectorcraftApp, pos: egui::Pos2| {
+        let button = egui::PointerButton::Primary;
+        let mut run_frame = |events| {
+            let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| {
+                super::isolation_bar(app, ui, screen);
+            });
+            out.textures_delta.clear();
+        };
+        run_frame(vec![egui::Event::PointerMoved(pos)]);
+        run_frame(vec![egui::Event::PointerButton { pos, button, pressed: true, modifiers: Default::default() }]);
+        run_frame(vec![egui::Event::PointerButton { pos, button, pressed: false, modifiers: Default::default() }]);
+    };
+
+    // Clicking back from `a` steps up to parent group `g1`
+    click_at(&mut app, egui::pos2(15.0, 12.0));
+    assert_eq!(app.session.active().unwrap().isolation, Some(NodeId(g1)));
+
+    // Clicking back from `g1` steps up to grandparent group `g2`
+    click_at(&mut app, egui::pos2(15.0, 12.0));
+    assert_eq!(app.session.active().unwrap().isolation, Some(NodeId(g2)));
+
+    // Clicking back from `g2` (parent is layer) exits isolation mode completely
+    click_at(&mut app, egui::pos2(15.0, 12.0));
+    assert_eq!(app.session.active().unwrap().isolation, None);
+
+    // Deep isolate again to test clicking ancestor breadcrumb directly
+    app.run("object.isolate", json!({"id": a})).unwrap();
+    assert_eq!(app.session.active().unwrap().isolation, Some(NodeId(a)));
+
+    // First crumb is Layer 1 (at x ~ 30..80). Clicking it exits isolation directly.
+    click_at(&mut app, egui::pos2(45.0, 12.0));
+    assert_eq!(app.session.active().unwrap().isolation, None);
+
+    // Deep isolate again to test clicking an intermediate ancestor group breadcrumb directly
+    app.run("object.isolate", json!({"id": a})).unwrap();
+    assert_eq!(app.session.active().unwrap().isolation, Some(NodeId(a)));
+
+    // Second crumb is g2 ("<Group>") at x ~ 95..140.
+    // Clicking g2 isolates g2 directly.
+    click_at(&mut app, egui::pos2(115.0, 12.0));
+    assert_eq!(app.session.active().unwrap().isolation, Some(NodeId(g2)));
+}
+
 /// The Control bar's Isolate Selected Object isolates a path inside a group that Direct
 /// Selection selected, and Exit Isolation Mode leaves with the path selected. Type, symbol
 /// instances, blends, two objects and an envelope's contents get no isolate button, and pattern
