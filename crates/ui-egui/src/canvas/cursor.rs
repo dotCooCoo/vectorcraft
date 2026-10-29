@@ -66,7 +66,7 @@ pub(super) fn still_wait(still: &mut Option<(CacheKey, f64)>, shown: Option<&Cac
 
 /// Whether two cache keys differ only in the view (zoom, center, rotation, canvas size, pixel
 /// density and Pixel Preview's document pixels), with Pixel Preview on in both or off in both.
-fn only_view_differs(a: &CacheKey, b: &CacheKey) -> bool {
+pub(super) fn only_view_differs(a: &CacheKey, b: &CacheKey) -> bool {
     a.pixel.is_some() == b.pixel.is_some()
         && *a == CacheKey { zoom: a.zoom, cx: a.cx, cy: a.cy, w: a.w, h: a.h, ppp: a.ppp, rot: a.rot, pixel: a.pixel, ..b.clone() }
 }

@@ -182,7 +182,10 @@ impl Exporter<'_> {
                 self.shape(s, n, &bp, *rule, page);
             }
             NodeKind::Text(t) => self.text(s, n, t, page),
-            NodeKind::Image(im) => self.image(s, im, alpha, n.extras().pixelated),
+            NodeKind::Image(im) => {
+                let colorized = n.extras().colorize.as_deref().and_then(|p| self.colorized_image(im, p, !n.extras().pixelated));
+                self.image(s, im, colorized.or(alpha), n.extras().pixelated)
+            }
             NodeKind::SymbolInstance { symbol, xf } => {
                 // Within the objects a frame may draw of symbol instances, as on screen: nested
                 // instances multiply.

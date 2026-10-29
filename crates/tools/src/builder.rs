@@ -38,9 +38,9 @@ use live_paint::LpHover;
 use live_paint::lp_color;
 pub use live_paint::{LP_SELECT_WIDTH, LP_SELECT_WIDTH_RANGE, LivePaintBucketTool, LivePaintSelectionTool};
 pub use lookup::{
-    EDGE_NAME, FACE_NAME, Face, LIVE_PAINT_NAME, LIVE_PAINT_PREFIX, SOURCES_NAME, drawn_outlines, edge_near, edges, face_at, faces, is_live_paint,
-    leaf_shapes, live_paint_at, live_paint_takes, node_outline, outline_snap, path_contains, shape_builder_shapes, shapes_for, sources,
-    visible_edge_near, visible_face_at,
+    EDGE_NAME, FACE_NAME, Face, LIVE_PAINT_NAME, LIVE_PAINT_PREFIX, SOURCES_NAME, builder_members, drawn_outlines, edge_near, edges, face_at, faces,
+    is_live_paint, leaf_shapes, live_paint_at, live_paint_takes, node_outline, outline_snap, path_contains, shape_builder_shapes, shapes_for,
+    sources, visible_edge_near, visible_face_at,
 };
 pub use map::{BuilderMap, HATCH, HIGHLIGHT_RED, Hit, Touched, hatch, maps_built, sample_polyline, sorted_roots};
 /// Small, Medium and Large gap lengths in points.

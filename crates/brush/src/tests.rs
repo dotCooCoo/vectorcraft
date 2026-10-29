@@ -1,6 +1,6 @@
 use vectorcraft_color::{Color, Paint};
 use vectorcraft_doc::{Appearance, Document, Node, NodeId, NodeKind, StrokeLayer};
-use vectorcraft_geom::{BezPath, Point, Rect, shapes};
+use vectorcraft_geom::{Affine, BezPath, Point, Rect, shapes};
 
 use super::*;
 
@@ -27,10 +27,16 @@ fn near(a: f64, b: f64, tol: f64) -> bool {
     (a - b).abs() <= tol
 }
 
+/// Points along every outline under `n`, its anchors among them. Bent art keeps its curves and
+/// long lines since #3926, so its anchors alone no longer trace it.
 fn all_points(n: &Node, out: &mut Vec<Point>) {
     n.walk(&mut |c| {
-        if let Some(p) = c.path_data() {
-            out.extend(p.anchors().map(|(_, _, a)| a.p));
+        for sp in c.path_data().into_iter().flat_map(|p| &p.subpaths) {
+            out.extend(sp.anchors.iter().map(|a| a.p));
+            for i in 0..sp.segment_count() {
+                let seg = sp.segment(i);
+                out.extend((1..32).map(|j| kurbo::ParamCurve::eval(&seg, j as f64 / 32.0)));
+            }
         }
     });
 }
@@ -185,9 +191,12 @@ fn art_brush_follows_curves() {
         }
     }
     let out = stroke_pieces(&Document::new(1.0, 1.0), &art_brush(rect_art(10.0, 4.0), ArtScale::Stretch), &bp_open, &stroke(1.0));
+    // The long edges bend as curves (#3926), where they used to be cut into some 400 chords. The
+    // path is run along in 0.05 pt chords, which the curves follow, so a few dozen remain.
+    let (anchors, curved) = anchors_and_curved(&out[0]);
+    assert!(anchors < 100 && curved > anchors / 2, "long edges bend as curves: {curved} of {anchors} anchors with handles");
     let mut pts = vec![];
     all_points(&out[0], &mut pts);
-    assert!(pts.len() > 40, "long edges are subdivided so they bend: {}", pts.len());
     for p in pts {
         let r = p.distance(Point::new(100.0, 100.0));
         assert!((r - 100.0).abs() <= 2.0 + 0.3, "point {p:?} is {r} from the centre");
@@ -273,15 +282,21 @@ fn pattern_tile_count_by_fit() {
 fn pattern_places_corner_tiles() {
     let sq = shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)).to_bezpath();
     let out = stroke_pieces(&Document::new(1.0, 1.0), &pattern_brush(PatternFit::Stretch, true), &sq, &stroke(1.0));
-    let corners = out
-        .iter()
-        .filter(
-            |n| matches!(&n.kind, NodeKind::Path { path, .. } if path.subpaths[0].anchors.len() == 4 && n.geometric_bounds().unwrap().width() < 7.0),
-        )
-        .count();
-    assert_eq!(corners, 4);
+    // The corner tile is an ellipse and the side tile a rectangle, so a kept handle tells them
+    // apart. Anchor count no longer does: the side tiles keep their own four anchors now that a
+    // straight run is not flattened (#3926), where they used to arrive as many-anchor polylines.
+    let curved = |n: &Node| {
+        matches!(&n.kind, NodeKind::Path { path, .. }
+            if path.subpaths.iter().any(|s| s.anchors.iter().any(|a| a.h_in != a.p || a.h_out != a.p)))
+    };
+    let corners = out.iter().filter(|n| curved(n)).count();
+    assert_eq!(corners, 4, "the four corner ellipses, still curves");
     // Sides lose half a corner tile at each end: 94 pt per side → 9 tiles each.
     assert_eq!(out.len() - corners, 36);
+    for n in out.iter().filter(|n| !curved(n)) {
+        let NodeKind::Path { path, .. } = &n.kind else { continue };
+        assert_eq!(path.subpaths[0].anchors.len(), 4, "a rectangle tile on a straight run stays four anchors");
+    }
 }
 
 /// The 10 × 4 pt side tile of [`pattern_brush`] with the given corner sources and no corner art.
@@ -1141,19 +1156,22 @@ fn pattern_output_is_capped_across_subpaths_not_only_per_run() {
     let a1 = anchors(&one);
     assert!(a1 < 2_000_000, "one track stays under the total budget: {a1}");
 
-    // Sixteen tracks would be sixteen times that without a total budget.
-    // Four tracks are 4 x 320,000 anchors, still inside the budget, so nothing is cut: the
-    // budget must not bite before the per-factor caps have actually multiplied past it.
-    let four = stroke_pieces(&Document::new(1.0, 1.0), &brush, &many_long_subpaths(4), &stroke(1.0));
-    assert_eq!(four.len(), 4 * 20_000, "four tracks are under the budget and keep every piece");
-    assert_eq!(anchors(&four), 4 * a1);
+    // Two tracks are well inside the budget, so nothing is cut: it must not bite before the
+    // per-factor caps have actually multiplied past it.
+    let two = stroke_pieces(&Document::new(1.0, 1.0), &brush, &many_long_subpaths(2), &stroke(1.0));
+    assert_eq!(two.len(), 2 * 20_000, "two tracks are under the budget and keep every piece");
+    assert_eq!(anchors(&two), 2 * a1);
 
-    // Sixteen would be 5,120,000 anchors. The budget is what stops it, not the per-run caps.
-    let many = stroke_pieces(&Document::new(1.0, 1.0), &brush, &many_long_subpaths(16), &stroke(1.0));
+    // Enough tracks that the per-run caps alone would pass the budget. Derived from what one
+    // track costs rather than written down, because how many anchors a tile holds is not fixed:
+    // a tile on a straight run keeps its own anchors instead of being flattened (#3926), which
+    // moved this by a factor of four.
+    let tracks = 2_000_000 / a1 + 2;
+    let many = stroke_pieces(&Document::new(1.0, 1.0), &brush, &many_long_subpaths(tracks), &stroke(1.0));
     let an = anchors(&many);
-    assert!(an <= 2_000_000, "sixteen subpaths must not exceed the budget: {an}");
-    assert!(an > anchors(&four), "but more is drawn than four tracks' worth: {an}");
-    assert!(many.len() < 16 * 20_000, "and fewer pieces than the per-run caps alone would allow: {}", many.len());
+    assert!(an <= 2_000_000, "{tracks} subpaths must not exceed the budget: {an}");
+    assert!(an > anchors(&two), "but more is drawn than two tracks' worth: {an}");
+    assert!(many.len() < tracks * 20_000, "and fewer pieces than the per-run caps alone would allow: {}", many.len());
 }
 
 /// The same for scatter, whose per-track guard is also 20,000 copies.
@@ -1183,4 +1201,110 @@ fn an_ordinary_stroke_is_unaffected_by_the_budget() {
     let out = stroke_pieces(&Document::new(1.0, 1.0), &brush, &sq, &stroke(1.0));
     assert_eq!(out.len(), 40, "ten tiles on each of the four sides, as before the budget");
     assert!(anchors(&out) < 2_000_000);
+}
+
+/// Anchors under `n`, and how many of them keep a handle (so the segment is a curve).
+fn anchors_and_curved(n: &Node) -> (usize, usize) {
+    let NodeKind::Path { path, .. } = &n.kind else { return (0, 0) };
+    let all: Vec<_> = path.subpaths.iter().flat_map(|s| s.anchors.iter()).collect();
+    (all.len(), all.iter().filter(|a| a.h_in != a.p || a.h_out != a.p).count())
+}
+
+/// #3926: a Pattern Brush on a straight path only moves, turns and scales its tile, so the
+/// tile's curves survive. They used to be flattened into chords by the bending code, which is
+/// visible in the stroke itself and leaves no handles after Expand Brush Strokes.
+#[test]
+fn a_pattern_tile_keeps_its_curves_on_a_straight_path() {
+    let circle =
+        Node::path(NodeId(0), shapes::ellipse(Rect::new(0.0, -20.0, 40.0, 20.0)), Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0));
+    let (tile_anchors, tile_curved) = anchors_and_curved(&circle);
+    assert_eq!((tile_anchors, tile_curved), (4, 4), "the tile is a 4-anchor smooth circle");
+
+    let brush = Brush {
+        name: "p".into(),
+        kind: BrushKind::Pattern(PatternBrush { side: circle, fit: PatternFit::Stretch, colorization: Colorization::None, ..Default::default() }),
+    };
+    let out = stroke_pieces(&Document::new(1.0, 1.0), &brush, &line(0.0, 0.0, 480.0, 0.0), &stroke(1.0));
+    assert!(!out.is_empty(), "the brush drew something");
+    for n in &out {
+        assert_eq!(anchors_and_curved(n), (4, 4), "each circle is still a 4-anchor curve, not a polygon");
+    }
+    // The ink is in the same place: a circle tile still covers the path it was laid along.
+    let b = bounds(&out);
+    assert!(near(b.width(), 480.0, 1.0), "the tiles still span the path: {}", b.width());
+    assert!(near(b.height(), 40.0, 1.0), "and still stand the tile's height: {}", b.height());
+}
+
+/// The other half of the same behaviour: where the path really does bend, an affine cannot
+/// reproduce the bend, so the tile is bent, and it still comes out as curves: cubics fitted to the
+/// bent art rather than the chords it used to be flattened into (#3926). Here a 4-anchor circle
+/// tile runs round a circle of radius 200, so its outline stays in the band 20 either side of it.
+#[test]
+fn a_pattern_tile_on_a_bent_path_keeps_its_curves() {
+    let circle =
+        Node::path(NodeId(0), shapes::ellipse(Rect::new(0.0, -20.0, 40.0, 20.0)), Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0));
+    let brush = Brush {
+        name: "p".into(),
+        kind: BrushKind::Pattern(PatternBrush { side: circle, fit: PatternFit::Stretch, colorization: Colorization::None, ..Default::default() }),
+    };
+    // A circle to run along: every tile sits on a curving section.
+    let round = shapes::ellipse(Rect::new(0.0, 0.0, 400.0, 400.0)).to_bezpath();
+    let out = stroke_pieces(&Document::new(1.0, 1.0), &brush, &round, &stroke(1.0));
+    assert!(out.len() > 20, "tiles all the way round: {}", out.len());
+    let (mut lo, mut hi) = (f64::MAX, f64::MIN);
+    for n in &out {
+        let (anchors, curved) = anchors_and_curved(n);
+        assert!((4..=16).contains(&anchors), "a bent circle tile is a few curves, not a polygon: {anchors} anchors");
+        assert!(curved == anchors, "every anchor keeps a handle: {curved} of {anchors}");
+        let mut pts = vec![];
+        all_points(n, &mut pts);
+        for q in pts {
+            let r = q.distance(Point::new(200.0, 200.0));
+            (lo, hi) = (lo.min(r), hi.max(r));
+        }
+    }
+    // The path is a cubic circle (0.06 out at most) run along in chords of 0.05, and the fit holds
+    // a quarter of the 0.25 flattening tolerance, so the band holds to 0.2.
+    assert!(lo > 179.8 && hi < 220.2, "the curves stay in the tile's band round the path: {lo:.3}..{hi:.3}");
+    assert!(lo < 180.2 && hi > 219.8, "and reach both edges of it: {lo:.3}..{hi:.3}");
+}
+
+/// The kind of every node in a piece of brushed art, in paint order.
+fn kinds(n: &Node) -> Vec<&'static str> {
+    let mut out = vec![match &n.kind {
+        NodeKind::Path { .. } => "path",
+        NodeKind::Group { .. } => "group",
+        NodeKind::SymbolInstance { .. } => "symbol",
+        _ => "other",
+    }];
+    for c in n.children().into_iter().flatten() {
+        out.extend(kinds(c));
+    }
+    out
+}
+
+/// The straight-run route differs from the bending route in the tile's curves and in nothing else,
+/// which includes the node kinds it keeps. A tile holding a kind neither route can map (here a
+/// symbol instance, whose art lives in the symbol and not in the node) loses it on a straight run
+/// exactly as it does on a bend: an affine is not a way for unmappable art to arrive untouched.
+#[test]
+fn a_straight_run_keeps_the_same_node_kinds_as_a_bend() {
+    let circle =
+        Node::path(NodeId(0), shapes::ellipse(Rect::new(0.0, -20.0, 40.0, 20.0)), Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0));
+    let sym = Node::new(NodeId(1), NodeKind::SymbolInstance { symbol: "s".into(), xf: Affine::IDENTITY });
+    let tile = Node::group(NodeId(2), vec![Arc::new(circle), Arc::new(sym)]);
+    let brush = Brush {
+        name: "p".into(),
+        kind: BrushKind::Pattern(PatternBrush { side: tile, fit: PatternFit::Stretch, colorization: Colorization::None, ..Default::default() }),
+    };
+    let doc = Document::new(1.0, 1.0);
+    let straight = stroke_pieces(&doc, &brush, &line(0.0, 0.0, 480.0, 0.0), &stroke(1.0));
+    let round = shapes::ellipse(Rect::new(0.0, 0.0, 400.0, 400.0)).to_bezpath();
+    let bent = stroke_pieces(&doc, &brush, &round, &stroke(1.0));
+    assert!(!straight.is_empty() && !bent.is_empty(), "both paths drew something");
+    for (what, out) in [("a straight run", &straight), ("a bend", &bent)] {
+        for n in out {
+            assert_eq!(kinds(n), ["group", "path"], "{what} keeps the path and drops the symbol instance");
+        }
+    }
 }

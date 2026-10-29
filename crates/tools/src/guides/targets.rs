@@ -372,7 +372,11 @@ impl Targets {
         // With several anchors moving, the one under the pointer is not known here, and the
         // others' extensions don't run through it.
         let single = sel.objects.len() <= 1 && sel.anchors.values().map(|s| s.len()).sum::<usize>() == 1;
-        for (id, set) in &sel.anchors {
+        // A path inside another selected object, such as a path in a selected group, moves whole
+        // with that object, so none of its anchors or segments stay put.
+        let selected: HashSet<NodeId> = sel.objects.iter().copied().collect();
+        let inside_selected = |id: NodeId| doc.ancestry(id).is_some_and(|a| a.iter().rev().skip(1).any(|p| selected.contains(p)));
+        for (id, set) in sel.anchors.iter().filter(|(id, _)| !inside_selected(**id)) {
             let Some(path) = doc.node(*id).and_then(|n| n.path_data()) else { continue };
             for (si, sp) in path.subpaths.iter().enumerate() {
                 let moving = |ai: usize| set.contains(&(si, ai));

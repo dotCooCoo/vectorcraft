@@ -222,18 +222,27 @@ pub(crate) fn move_anchors(s: &mut Session, p: &Value) -> Result<Value> {
     let whole = s.doc()?.selection.whole();
     let sc = Scaling { patterns: super::object::transform_patterns(s, p, &whole)?, ..Scaling::default() };
     transform_anchors(s, "Move", vectorcraft_geom::Affine::translate(d), sc)?;
+    // Transform Again repeats a move that moved something; a drag records it when it commits.
+    let st = s.doc_mut()?;
+    if st.interaction.is_none() && (d.x != 0.0 || d.y != 0.0) {
+        let options = json!({ "copy": false, "patterns": sc.patterns });
+        st.last_transform = Some(crate::LastTransform::Matrix(vectorcraft_geom::Affine::translate(d), options));
+        st.last_perspective = None;
+    }
     ok()
 }
 
 /// Apply `xf` to the direct-selected anchors, their handles with them, and (with `sc`) to the
-/// objects selected whole (those with no entry in the selection's `anchors`).
+/// objects selected whole (those with no entry in the selection's `anchors`). An object inside
+/// another selected object, such as a path in a selected group, moves once, with that object.
 pub(crate) fn transform_anchors(s: &mut Session, label: &str, xf: vectorcraft_geom::Affine, sc: Scaling) -> Result<()> {
     let sel = s.doc()?.selection.clone();
+    let ids = super::edit::outermost(&s.doc()?.doc, sel.objects.clone());
     let c = xf.as_coeffs();
     let is_translation = (c[0] - 1.0).abs() < 1e-9 && c[1].abs() < 1e-9 && c[2].abs() < 1e-9 && (c[3] - 1.0).abs() < 1e-9;
     let delta = vectorcraft_geom::Vec2::new(c[4], c[5]);
     s.edit(label, |doc, _| {
-        for id in &sel.objects {
+        for id in &ids {
             match sel.anchors.get(id) {
                 Some(set) => {
                     let path = path_mut(doc, *id)?;

@@ -11,6 +11,7 @@ mod changed;
 mod charstroke;
 mod clip;
 mod cmykblend;
+mod colorize;
 mod colrglyphs;
 mod container;
 mod dither;
@@ -306,7 +307,10 @@ fn past_the_measured_placements_an_instance_is_culled_by_an_estimate_of_its_art_
 /// Symbols 0 to 29 each hold two instances of the next, sheared two ways, so that the 2^30
 /// instances drawn from the first are all placed differently. Symbol 30 holds a square with a drop
 /// shadow. An instance of symbol 0 lies far left of the view. With `effect`, every instance has
-/// that effect of its own. The renderer must cull the instance of symbol 0 within 30 s.
+/// that effect of its own. The renderer must cull the instance of symbol 0 measuring symbol art at
+/// most 20,000 times ([`FrameStats::symbol_art`]); measuring the art for every placement would take
+/// 2^30 measurements or more. The frame runs on a thread of its own, and the test fails when it
+/// has not finished after 300 s.
 fn nested_instances_are_culled_in_bounded_time(effect: Option<vectorcraft_doc::Effect>) {
     let mut d = Document::new(100.0, 100.0);
     let mut art = rect_node(&mut d, Rect::new(0.0, 0.0, 1.0, 1.0), Paint::solid(Color::BLACK), Paint::None, 0.0);
@@ -334,11 +338,13 @@ fn nested_instances_are_culled_in_bounded_time(effect: Option<vectorcraft_doc::E
     std::thread::spawn(move || {
         let mut r = Renderer::new();
         let img = r.render(&d, 100, 100, Affine::IDENTITY, &RenderOptions::default());
-        tx.send((img.pixel(50, 50), r.stats.culled)).ok();
+        tx.send((img.pixel(50, 50), r.stats.culled, r.stats.symbol_art)).ok();
     });
-    let (pixel, culled) = rx.recv_timeout(std::time::Duration::from_secs(30)).expect("the frame within 30 s");
+    let (pixel, culled, measured) = rx.recv_timeout(std::time::Duration::from_secs(300)).expect("the frame within 300 s");
     assert_eq!(pixel, [0, 0, 0, 0]);
     assert!(culled > 0);
+    assert!(measured > 0, "the frame stats report no symbol art measures");
+    assert!(measured <= 20_000, "symbol art measured {measured} times");
 }
 
 #[test]
@@ -896,6 +902,39 @@ fn decode_failures_counts_this_threads_images_only() {
     assert_eq!(decode_failures(), before, "the other thread's failure");
     assert!(undecodable());
     assert_eq!(decode_failures(), before + 1, "this thread's failure");
+}
+
+/// Pixels decoded elsewhere and kept with [`keep_decoded_image`] are the pixels a renderer decodes,
+/// premultiplied alike, and a render that draws the image uses them without decoding it. A CMYK
+/// image's pixels are not kept.
+#[test]
+fn a_kept_decoded_image_is_drawn_without_decoding_it() {
+    use vectorcraft_doc::cmyk::Inks;
+    use vectorcraft_doc::{ImageBlob, ImageObject, NodeKind};
+    // The image has pixels no other test uses, since every test shares the store, and half of
+    // them are partly transparent.
+    let img = image::RgbaImage::from_fn(37, 23, |x, y| image::Rgba([(x * 7) as u8, (y * 11) as u8, 99, if (x + y) % 2 == 0 { 255 } else { 77 }]));
+    let mut png = vec![];
+    img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+    let blob = ImageBlob::new("image/png", png.clone());
+    assert!(!image_cached(&blob));
+    assert!(keep_decoded_image(&blob, image::load_from_memory(&png).unwrap()));
+    assert!(image_cached(&blob));
+    let key = blobs::blob_key(&blob).0;
+    let kept = images::store().peek(&key).unwrap();
+    assert!(kept.data() == paint::decode_pixmap(&png).unwrap().data(), "the pixels a renderer decodes");
+    let mut d = Document::new(37.0, 23.0);
+    d.images.insert("kept".into(), blob);
+    let id = d.alloc_id();
+    let im = ImageObject { key: "kept".into(), width: 37, height: 23, xf: Affine::IDENTITY, link: None, placement: Default::default(), pixels: None };
+    d.insert(Some(d.layers[0].id), 0, Node::new(id, NodeKind::Image(Box::new(im)))).unwrap();
+    let decodes = image_decodes();
+    let r = Renderer::new().render(&d, 37, 23, Affine::IDENTITY, &RenderOptions::default());
+    assert_eq!(image_decodes(), decodes, "drawn from the kept pixels");
+    assert!(r.pixel(18, 11)[3] > 0, "the image is drawn");
+    let cmyk = ImageBlob::cmyk_tiff(&Inks::new(2, 2, [10, 20, 30, 40].repeat(4)).unwrap()).unwrap();
+    assert!(!keep_decoded_image(&cmyk, image::DynamicImage::new_rgba8(2, 2)));
+    assert!(!image_cached(&cmyk));
 }
 
 /// An image drawn larger than its pixels samples smoothly, or with `smooth_images` off each screen
