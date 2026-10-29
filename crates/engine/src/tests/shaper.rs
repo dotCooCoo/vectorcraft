@@ -356,6 +356,50 @@ fn shaper_isolate_refuses_a_locked_or_hidden_source_group() {
     }
 }
 
+/// While an opacity mask or a pattern is edited, its editing layer stays isolated: a Shaper source
+/// pick selects the original shape without isolating it, and a scribble, Release and Expand keep the
+/// layer isolated. Leaving the mode then ends isolation.
+#[test]
+fn shaper_keeps_the_mask_and_pattern_editing_layers_isolated() {
+    for mode in ["mask", "pattern"] {
+        let mut s = session();
+        let object = rectangle(&mut s, 300.0, "#000000");
+        let layer = if mode == "mask" {
+            let m = rectangle(&mut s, 300.0, "#ffffff");
+            s.execute("select.set", &json!({"ids": [object.0, m.0]})).unwrap();
+            s.execute("transparency.makeOpacityMask", &json!({})).unwrap();
+            s.execute("transparency.editOpacityMask", &json!({})).unwrap()["layer"].as_u64().map(NodeId)
+        } else {
+            s.execute("object.pattern.make", &json!({"name": "P"})).unwrap();
+            s.doc().unwrap().doc.pattern_edit.as_ref().map(|e| e.layer)
+        };
+        let isolation = |s: &Session| s.doc().unwrap().isolation;
+        assert!(layer.is_some() && isolation(&s) == layer, "{mode}");
+        let a = rectangle(&mut s, 0.0, "#ff0000");
+        let b = rectangle(&mut s, 50.0, "#0000ff");
+        let make = |s: &mut Session| {
+            let pts = [[25, 20], [75, 35], [30, 50], [125, 65]];
+            NodeId(s.execute("shaper.scribble", &json!({"points": pts, "ids": [a.0, b.0]})).unwrap()["id"].as_u64().unwrap())
+        };
+        let g = make(&mut s);
+        assert_eq!(s.doc().unwrap().doc.parent_of(g), layer, "{mode}");
+        assert_eq!(isolation(&s), layer, "{mode}: scribble");
+        let picked = s.execute("shaper.select", &json!({"point": [25, 50], "source": true})).unwrap();
+        assert_eq!(picked["id"], json!(a.0), "{mode}");
+        assert_eq!(s.doc().unwrap().selection.objects, vec![a], "{mode}");
+        assert_eq!(isolation(&s), layer, "{mode}: source pick");
+        s.execute("shaper.release", &json!({"id": g.0})).unwrap();
+        assert_eq!(isolation(&s), layer, "{mode}: release");
+        let g = make(&mut s);
+        s.execute("shaper.expand", &json!({"id": g.0})).unwrap();
+        assert_eq!(isolation(&s), layer, "{mode}: expand");
+        let leave = if mode == "mask" { "transparency.stopEditingOpacityMask" } else { "object.pattern.done" };
+        s.execute(leave, &json!({})).unwrap();
+        let st = s.doc().unwrap();
+        assert!(st.doc.mask_edit.is_none() && st.doc.pattern_edit.is_none() && st.isolation.is_none(), "{mode}");
+    }
+}
+
 #[test]
 fn shaper_lines_keep_free_angles_with_or_without_shift() {
     for shift in [false, true] {

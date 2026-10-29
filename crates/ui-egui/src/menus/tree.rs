@@ -219,6 +219,7 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                         c("Reverse Path Direction", "path.reverse"),
                         Sep,
                         c("Simplify…", "object.path.simplify"),
+                        c("Smooth…", "object.path.smooth"),
                         c("Add Anchor Points", "object.path.addAnchorPoints"),
                         c("Remove Anchor Points", "path.removeAnchors"),
                         c("Divide Objects Below", "object.path.divideObjectsBelow"),

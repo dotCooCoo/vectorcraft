@@ -1,7 +1,11 @@
+#[cfg(all(target_os = "macos", feature = "accessibility", feature = "wgpu"))]
+use super::gpu;
 use super::prefs::save_prefs;
 #[cfg(all(windows, not(target_vendor = "win7")))]
 use super::windows_stylus;
 use super::{App, VectorcraftApp, file_access, window};
+#[cfg(target_os = "macos")]
+use super::{mac_menu, mac_window, open_documents};
 
 /// The parts of [`App::raw_input_hook`] that every window needs, for the OS windows of floating
 /// panels: a click or Escape that closes the macOS menu bar's open menu, and the pen barrel
@@ -59,6 +63,9 @@ impl eframe::App for App {
             let inset = mac_window::center_buttons(frame, ui.ctx().zoom_factor(), bar);
             self.app.titlebar_inset = inset.unwrap_or(mac_window::DEFAULT_INSET);
         }
+        // macOS converts the frame from sRGB to the display's profile (#2249).
+        #[cfg(all(target_os = "macos", feature = "wgpu"))]
+        super::mac_color_space::tag(ui);
         file_access::unconfined(|| self.app.ui(ui));
         // Preferences are written when confirmed, not only at exit: a session ended any other way
         // (the system shutting down, the process ended or crashing) used to lose them (#1747).

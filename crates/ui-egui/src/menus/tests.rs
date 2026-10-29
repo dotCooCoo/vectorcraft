@@ -758,6 +758,59 @@ fn long_menus_scroll_inside_a_short_window() {
     assert!(tall.bottom() < 3000.0);
 }
 
+/// Object › Unlock All and Object › Show All clicked with Shift+Alt held run with
+/// `scope: "group"`; clicked without them, or with only one of the two, they run on the whole
+/// document as before.
+#[test]
+fn unlock_all_and_show_all_clicked_with_shift_alt_act_within_the_group() {
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    let tree = menu_tree();
+    let (_, object) = tree.iter().find(|(t, _)| *t == "Object").unwrap();
+    let id = egui::Id::unique("test-object-menu");
+    let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 3000.0));
+    let frame = |events: Vec<egui::Event>, modifiers: egui::Modifiers| {
+        let mut clicked = None;
+        let events = std::iter::once(egui::Event::ModifiersChanged(modifiers)).chain(events).collect();
+        let input = egui::RawInput { screen_rect: Some(screen), events, ..Default::default() };
+        let mut out = ctx.run_ui(input, |ui| {
+            egui::Area::new(id).fixed_pos(egui::pos2(0.0, 0.0)).show(ui.ctx(), |ui| {
+                egui::containers::menu::menu_style(ui.style_mut());
+                ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| menu_body(&app, ui, object, &mut clicked));
+            });
+        });
+        out.textures_delta.clear();
+        (clicked, out.shapes)
+    };
+    // Where the menu draws `label`.
+    fn find(s: &egui::Shape, label: &str) -> Option<egui::Pos2> {
+        match s {
+            egui::Shape::Text(t) if t.galley.text() == label => Some(t.pos + t.galley.rect.center().to_vec2()),
+            egui::Shape::Vec(v) => v.iter().find_map(|s| find(s, label)),
+            _ => None,
+        }
+    }
+    let click = |label: &str, modifiers: egui::Modifiers| {
+        let (_, shapes) = frame(vec![], Default::default());
+        let at = shapes.iter().find_map(|c| find(&c.shape, label)).unwrap_or_else(|| panic!("{label} is not in the Object menu"));
+        let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers };
+        frame(vec![egui::Event::PointerMoved(at)], modifiers);
+        frame(vec![button(true)], modifiers);
+        frame(vec![button(false)], modifiers).0
+    };
+    frame(vec![], Default::default());
+    let shift_alt = egui::Modifiers { shift: true, alt: true, ..Default::default() };
+    let group = json!({"scope": "group"});
+    for (label, command) in [("Unlock All", "object.unlockAll"), ("Show All", "object.showAll")] {
+        assert_eq!(click(label, shift_alt), Some((command.to_string(), group.clone())), "{label} with Shift+Alt");
+        for held in [egui::Modifiers::NONE, egui::Modifiers::SHIFT, egui::Modifiers::ALT] {
+            assert_eq!(click(label, held), Some((command.to_string(), json!({}))), "{label} with {held:?}");
+        }
+    }
+}
+
 /// #3724: Window › New Window is greyed out until VectorCraft can open a second window on a
 /// document, instead of being enabled and answering with an internal milestone note.
 #[test]

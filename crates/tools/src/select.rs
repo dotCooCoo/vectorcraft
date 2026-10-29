@@ -17,6 +17,8 @@
 //! scaling its type: the text reflows at its size.
 //! E pressed during a marquee drag makes the marquee take only the objects entirely inside it, and
 //! E pressed again makes it take the objects it touches.
+//! Escape during a drag (a move or an Alt-drag copy, a scale, a rotation, a marquee, a widget or
+//! bracket drag) cancels it: the art returns to its state at the press.
 //! Selected area type and type on a path show an in port and an out port. A click on the out port
 //! loads the pointer with the text ([`Cursor::LoadedText`]): the next click threads it into the
 //! closed path, area type or type on a path under the pointer, or into a new frame of the same
@@ -460,6 +462,33 @@ pub(crate) fn hold_point(cx: &ToolContext, h: &Hit, p: Point) -> Point {
     cx.doc.node(h.leaf).and_then(|n| n.path_data()).and_then(|pd| hold_on_path(pd, p, reach)).unwrap_or(p)
 }
 
+/// While an opacity mask or a pattern is edited, a Shaper double-click selects a Shaper Group's
+/// original shape without isolating the group's original shapes. A press at `p` on a selected
+/// original shape holds it for a move: the hit inside its Shaper Group's original shapes, and that
+/// container. Each selected original shape's Shaper Group is checked, front to back, and an object
+/// in front of that group at `p` keeps the press. None otherwise.
+fn selected_source_hit(cx: &ToolContext, p: Point) -> Option<(Hit, NodeId)> {
+    if cx.doc.mask_edit.is_none() && cx.doc.pattern_edit.is_none() {
+        return None;
+    }
+    let is_sources = |g: &NodeId| cx.doc.node(*g).is_some_and(|n| n.name.as_deref() == Some(vectorcraft_doc::shaper::SOURCES));
+    let mut containers = cx.doc.paint_order(cx.selection.objects.iter().filter_map(|id| cx.doc.parent_of(*id)).filter(is_sources));
+    containers.dedup();
+    let front = hit_test(cx.doc, p, cx.selection_hit_options());
+    containers.into_iter().rev().find_map(|sources| {
+        let group = cx.doc.parent_of(sources)?;
+        if let Some(f) = &front
+            && f.leaf != group
+            && !f.ancestry.contains(&group)
+            && cx.doc.paint_order([group, f.leaf]).last() == Some(&f.leaf)
+        {
+            return None;
+        }
+        let h = hit_test(cx.doc, p, vectorcraft_doc::hit::HitOptions { scope: Some(sources), ..cx.selection_hit_options() })?;
+        cx.selection.contains(h.top_object(Some(sources))).then_some((h, sources))
+    })
+}
+
 impl SelectionTool {
     fn drag_threshold(cx: &ToolContext) -> f64 {
         cx.tol(3.0)
@@ -559,7 +588,11 @@ impl Tool for SelectionTool {
     }
 
     /// E during a marquee drag switches the marquee between the objects it touches and only the
-    /// objects inside it.
+    /// objects inside it. Escape during a drag (a move or an Alt-drag copy, a bounding-box scale or
+    /// rotation, a marquee, a corner widget, a pie widget, the brackets of type on a path, a mirror
+    /// axis, a grid repeat's handles, a ruler guide) cancels it: what it changed goes back, no copy
+    /// is left, and the tool waits for the next press. With the pointer loaded with text, Escape
+    /// drops the text.
     fn key(&mut self, _cx: &ToolContext, key: ToolKey, _mods: Mods) -> Vec<Action> {
         if key == ToolKey::Letter('e')
             && let State::Marquee { enclosed, .. } = &mut self.state
@@ -582,6 +615,13 @@ impl Tool for SelectionTool {
         if key == ToolKey::Escape && matches!(self.state, State::Loaded { .. }) {
             self.state = State::Idle;
             return vec![];
+        }
+        if key == ToolKey::Escape && !matches!(self.state, State::Idle) {
+            self.state = State::Idle;
+            self.measure = None;
+            self.guides.clear();
+            (self.targets, self.moving, self.snapped) = (None, None, false);
+            return vec![Action::Cancel];
         }
         if key == ToolKey::Escape { self.guide.cancel() } else { vec![] }
     }
@@ -662,9 +702,13 @@ impl Tool for SelectionTool {
                     self.state = State::Moving { start: p, press: p, hold: p, began: false, deselect: None, key: None };
                     return vec![Action::Exec("select.set".into(), json!({ "ids": [behind.0] }))];
                 }
-                match hit_test(cx.doc, p, cx.selection_hit_options()) {
+                let (hit, scope) = match selected_source_hit(cx, p) {
+                    Some((h, sources)) => (Some(h), Some(sources)),
+                    None => (hit_test(cx.doc, p, cx.selection_hit_options()), cx.isolation),
+                };
+                match hit {
                     Some(h) => {
-                        let top = h.top_object(cx.isolation);
+                        let top = h.top_object(scope);
                         let mut out = vec![];
                         let (mut deselect, mut key) = (None, None);
                         if m.shift {
@@ -882,6 +926,9 @@ impl Tool for SelectionTool {
         // hollow.
         if cx.snap_to_point && matches!(Self::hover_point(cx, p), Some((_, "anchor"))) {
             return Cursor::ArrowHollow;
+        }
+        if selected_source_hit(cx, p).is_some() {
+            return Cursor::Move;
         }
         if let Some(h) = hit_test(cx.doc, p, cx.selection_hit_options()) {
             if cx.selection.contains(h.top_object(cx.isolation)) || m.alt {

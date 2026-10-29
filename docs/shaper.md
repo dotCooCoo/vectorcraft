@@ -17,6 +17,8 @@ Smart Guides and Snap to Point do not snap to the original shapes. The reference
 
 Object › Shaper › Release restores the original paths. Expand keeps the visible result as ordinary paths. Each scribble and source edit records one undo step. Sources in a composition must share a parent layer/group; Shaper limits a composition to 64 source paths and 4,096 segments.
 
+While an opacity mask or a pattern is edited, its editing layer stays isolated and the arrow widget does not show. A double-click with Shaper on a Shaper Group in the mask or pattern art selects the original shape under the pointer without isolating the group's original shapes, the Selection tool moves that selected shape, and a scribble, Release and Expand leave the editing layer isolated.
+
 Finer gesture heuristics remain to be implemented.
 
 Behavior reference: [public Shaper documentation](https://helpx.adobe.com/illustrator/using/building-new-shapes-using-shape.html). Rotation steps and independent fill/stroke cases follow the contributor’s supplied requirements. No reference images or product assets are included.

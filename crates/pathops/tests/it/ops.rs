@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 
 use kurbo::{ParamCurve, Point, Rect, Shape as _};
-use vectorcraft_geom::{FillRule, PathData, SubPath};
+use vectorcraft_geom::{AnchorKind, FillRule, PathData, SubPath};
 use vectorcraft_pathops::*;
 
 const NZ: FillRule = FillRule::NonZero;
@@ -428,6 +428,21 @@ fn smooth_rounds_corners() {
     assert!(s.anchors().all(|(_, _, a)| a.has_in() && a.has_out()));
     let same = smooth(&rect(0.0, 0.0, 10.0, 10.0), 0.0);
     assert_eq!(same, rect(0.0, 0.0, 10.0, 10.0));
+}
+
+/// Object › Path › Smooth: a rectangle, whose corners no curve rounds within the tolerance, stays as
+/// it is even at maximum smoothing; a polygon of 16 sides becomes a closed curve of fewer anchors once the tolerance
+/// passes its 0.96 pt sagitta, smooth all round.
+#[test]
+fn smooth_level_keeps_corners_it_cannot_round_and_curves_polygons() {
+    let r = rect(0.0, 0.0, 100.0, 50.0);
+    assert_eq!(smooth_level(&r, 100.0), r);
+    let pts: Vec<Point> = (0..16).map(|i| Point::new(50.0 * (f64::from(i) * PI / 8.0).cos(), 50.0 * (f64::from(i) * PI / 8.0).sin())).collect();
+    let polygon = PathData::single(SubPath::polyline(&pts, true));
+    let s = smooth_level(&polygon, SMOOTH_AUTO_LEVEL);
+    assert!(s.subpaths.len() == 1 && s.subpaths[0].closed && s.anchor_count() < 8, "{}", s.anchor_count());
+    assert!(s.subpaths[0].anchors.iter().all(|a| a.kind == AnchorKind::Smooth), "no kink, its start included: {s:?}");
+    assert_eq!(smooth_level(&polygon, 0.0), polygon, "0.1 pt is less than the sagitta");
 }
 
 #[test]

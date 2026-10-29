@@ -82,13 +82,7 @@ pub struct GestureTool {
     /// The straight line is Alt's: the pointer is not constrained to 45° steps, and the line's end
     /// snaps to Smart Guides as a stroke's end does.
     unconstrained: bool,
-    /// Where the pointer was for each Blob Brush point dragged since Shift went down: the last
-    /// `shift_raw.len()` of `points`.
-    shift_raw: Vec<Point>,
-    /// Where the pointer was for the Shift-constrained point the next [`Self::push`] adds.
-    shift_next: Option<Point>,
-    /// The angle of the line the dragged points were last moved onto: while it holds they are on
-    /// it, and the next drag event need not move them again.
+    /// Axis selected during the current uninterrupted Shift interval, in degrees.
     shift_line: Option<f64>,
     /// "Merge only with selection": a Blob Brush stroke merges only with selected paths.
     pub merge_only_selection: bool,
@@ -149,8 +143,6 @@ impl GestureTool {
             moved: false,
             straight: false,
             unconstrained: false,
-            shift_raw: vec![],
-            shift_next: None,
             shift_line: None,
             merge_only_selection: false,
             edit_within: 12.0,
@@ -176,12 +168,6 @@ impl GestureTool {
 
     /// Add a stroke sample.
     fn push(&mut self, p: Point, pressure: f32) {
-        let raw = self.shift_next.take();
-        if self.points.is_empty() {
-            self.shift_raw.clear();
-        } else if let Some(raw) = raw {
-            self.shift_raw.push(raw);
-        }
         self.points.push(p);
         if self.id == "paintbrush" {
             self.pressures.push(pressure);
@@ -200,14 +186,10 @@ impl GestureTool {
         self.id == "blobBrush" && m.alt && !self.moved
     }
 
-    /// Where the stroke takes a pointer at `p`. For the Blob Brush with Shift held, that is the
-    /// horizontal or vertical line through the press point that is nearer in angle to `p` (90°
-    /// steps from the Constrain Angle), at `p`'s distance from the press point. The points dragged
-    /// since Shift went down move to that line too, each at its pointer position's distance and on
-    /// that position's side of the press point; a pointer at the press point leaves them on their
-    /// line. Without Shift, or while the Blob Brush smooths, the stroke takes `p`.
+    /// Constrain the Pencil line or the current Blob Brush sample. Blob Brush chooses an
+    /// axis once per uninterrupted Shift interval; samples already drawn never move.
+    /// A smoothing drag follows the pointer without a Shift constraint.
     fn constrained(&mut self, cx: &ToolContext, p: Point, m: Mods) -> Point {
-        self.shift_next = None;
         if self.straight && self.unconstrained {
             return p;
         }
@@ -217,26 +199,26 @@ impl GestureTool {
             return start + vectorcraft_geom::constrain_angle_from(p - start, 45.0, cx.constrain_angle);
         }
         let Some(&start) = self.points.first().filter(|_| self.id == "blobBrush" && m.shift && !self.smoothing) else {
-            self.shift_raw.clear();
             self.shift_line = None;
             return p;
         };
-        self.shift_next = Some(p);
-        // The press point is on both lines: the points dragged before stay on theirs.
-        if (p - start).hypot() < vectorcraft_geom::EPS {
-            return start;
+        if self.shift_line.is_none() {
+            // Raw press-to-pointer displacement in logical screen pixels along the constraint
+            // axes. Zoom changes the document distance, not the activation tolerance.
+            let v = p - start;
+            let v = vectorcraft_geom::constrain_axes(cx.constrain_angle).map_or(Point::new(v.x, v.y), |axes| axes.inverse() * Point::new(v.x, v.y));
+            let x = v.x.abs() * cx.zoom;
+            let y = v.y.abs() * cx.zoom;
+            self.shift_line = if x >= 1.0 && y < 0.5 {
+                Some(cx.constrain_angle)
+            } else if y >= 1.0 && x < 0.5 {
+                Some(cx.constrain_angle + 90.0)
+            } else {
+                // No unconstrained trail while pending, including an initially diagonal drag.
+                return self.points.last().copied().unwrap_or(start);
+            };
         }
-        let d = vectorcraft_geom::constrain_angle_from(p - start, 90.0, cx.constrain_angle);
-        // `line` is the line's angle, measured counterclockwise on screen as the Constrain Angle is measured.
-        let line = (-d.y).atan2(d.x).to_degrees();
-        let on_line = |q: Point| start + vectorcraft_geom::constrain_angle_from(q - start, 180.0, line);
-        if self.shift_line != Some(line) {
-            for (q, raw) in self.points.iter_mut().skip(1).rev().zip(self.shift_raw.iter().rev()) {
-                *q = on_line(*raw);
-            }
-            self.shift_line = Some(line);
-        }
-        on_line(p)
+        start + vectorcraft_geom::constrain_angle_from(p - start, 180.0, self.shift_line.unwrap_or(cx.constrain_angle))
     }
 
     /// Forget the stroke.

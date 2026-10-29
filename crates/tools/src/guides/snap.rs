@@ -307,7 +307,7 @@ impl SnapKey {
             exclude: exclude.to_vec(),
             screen: cx.screen,
             view: [cx.smart_guides, cx.snap_to_point, cx.snap_to_pixel, cx.snap_to_grid, cx.guides, cx.snap_tangent, cx.snap_perpendicular],
-            snap_to_glyph: cx.snap_to_glyph && cx.alignment_guides,
+            snap_to_glyph: cx.snap_to_glyph && cx.smart_guides && cx.alignment_guides,
             style: GuideStyle::of(cx),
             tolerances: [cx.snapping_tolerance, cx.snap_tolerance],
         }

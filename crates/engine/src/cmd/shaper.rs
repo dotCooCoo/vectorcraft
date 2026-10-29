@@ -31,7 +31,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Select Shaper Face",
             [],
             None,
-            "{point: [x,y], source?: bool} click selects a group, then a face; source enters construction isolation and selects an original; while a group's originals are isolated, it selects one of that group's originals → {id}",
+            "{point: [x,y], source?: bool} click selects a group, then a face; source enters construction isolation and selects an original (while an opacity mask or a pattern is edited, it selects the original and the editing layer stays isolated); while a group's originals are isolated, it selects one of that group's originals → {id}",
             has_doc,
             select
         ),
@@ -678,7 +678,7 @@ fn scribble(s: &mut Session, p: &Value) -> Result<Value> {
         sel.set([id]);
         Ok(id)
     })?;
-    s.doc_mut()?.isolation = None;
+    end_isolation(s)?;
     Ok(json!({"id": id.0, "regions": touched.len(), "strokes": strokes}))
 }
 
@@ -730,12 +730,24 @@ fn select(s: &mut Session, p: &Value) -> Result<Value> {
     } else {
         group
     };
-    let isolation = source.then(|| source_group(node).map(|n| n.id)).flatten();
+    // While an opacity mask or a pattern is edited, the source pick leaves its editing layer isolated.
+    let isolation = source.then(|| source_group(node).map(|n| n.id)).flatten().filter(|_| editing_layer(&st.doc).is_none());
     s.select(|_, sel| sel.set([target]))?;
     if let Some(id) = isolation {
         s.doc_mut()?.isolation = Some(id);
     }
     Ok(json!({"id": target.0}))
+}
+/// The layer an opacity mask or a pattern is edited in, which stays isolated while that mode is on.
+fn editing_layer(d: &Document) -> Option<NodeId> {
+    d.mask_edit.map(|m| m.layer).or_else(|| d.pattern_edit.as_ref().map(|e| e.layer))
+}
+/// Leave isolation mode, Construction mode included. While an opacity mask or a pattern is edited,
+/// its editing layer stays isolated.
+fn end_isolation(s: &mut Session) -> Result<()> {
+    let st = s.doc_mut()?;
+    st.isolation = editing_layer(&st.doc);
+    Ok(())
 }
 fn target(s: &Session, p: &Value) -> Result<NodeId> {
     let id = id_param(p, "id")
@@ -757,7 +769,7 @@ fn release(s: &mut Session, p: &Value) -> Result<Value> {
         sel.set(ids.iter().copied());
         Ok(ids)
     })?;
-    s.doc_mut()?.isolation = None;
+    end_isolation(s)?;
     Ok(json!({"ids": ids.iter().map(|i| i.0).collect::<Vec<_>>()}))
 }
 fn expand(s: &mut Session, p: &Value) -> Result<Value> {
@@ -774,6 +786,6 @@ fn expand(s: &mut Session, p: &Value) -> Result<Value> {
         sel.set([id]);
         Ok(())
     })?;
-    s.doc_mut()?.isolation = None;
+    end_isolation(s)?;
     Ok(json!({"id": id.0}))
 }
