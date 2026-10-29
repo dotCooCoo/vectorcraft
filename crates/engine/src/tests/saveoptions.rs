@@ -404,6 +404,19 @@ fn precision_rounds_the_paths_of_that_save_only() {
 }
 
 #[test]
+fn precision_is_not_remembered_for_new_documents() {
+    let dir = Folder::new("precision-preferences");
+    let mut s = Session::new();
+    s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
+    s.execute("document.save", &json!({"path": dir.file("rounded.vectorcraft"), "precision": 3})).unwrap();
+    assert!(!s.prefs.native_save_options.contains_key("precision"));
+
+    s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
+    let options = s.execute("file.formatOptions", &json!({"format": "vectorcraft"})).unwrap();
+    assert!(options["options"]["precision"]["value"].is_null(), "{}", options["options"]["precision"]);
+}
+
+#[test]
 fn a_ai_file_ignores_precision_as_save_does() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();

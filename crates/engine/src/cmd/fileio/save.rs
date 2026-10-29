@@ -871,7 +871,7 @@ impl SaveJob {
         let saved = self.plan.retargets() && self.plan.path.is_some();
         if saved && self.plan.format.id == "vectorcraft" {
             let mut last = self.plan.options.clone();
-            last.retain(|k, _| !ARTBOARD_PARAMS.contains(&k.as_str()) && !matches!(k.as_str(), "separateArtboards" | "compress"));
+            last.retain(|k, _| !ARTBOARD_PARAMS.contains(&k.as_str()) && !matches!(k.as_str(), "separateArtboards" | "compress" | "precision"));
             s.prefs.native_save_options = last;
         }
         // The other open documents that place this one show the new version.
