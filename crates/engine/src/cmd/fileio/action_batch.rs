@@ -114,17 +114,19 @@ fn batch_folder(s: &mut Session, cmd: &str, p: &Value, override_open: bool, run:
     // Each file's name without its extension, through `safe_file_name` (`a..svg` gives `a`, the
     // folder Windows makes for `a.`), with `-2`, `-3`… after a name an earlier file used (`a.svg` and
     // `sub/a.svg`, or `a.svg` and `a.ai`) or after a name whose files or folder an earlier file
-    // wrote ([`distinct_stems`]), as data set names are numbered. A source file in the destination
-    // folder itself keeps its name for its own output: no other file's output takes it.
+    // wrote ([`distinct_stems`]), as data set names are numbered. No output takes the name of a
+    // source file in the destination folder, other than that file's own output, or of a subfolder
+    // of the destination folder that holds source files.
     let steps = filter_steps(run.steps, override_open, false);
     let run = Run { steps: &steps, ..*run };
-    let in_dest: Vec<Option<String>> = files.iter().map(|path| name_in_folder(path, run.dest_folder)).collect();
-    let reserved = in_dest.iter().flatten().cloned().collect();
+    let in_dest: Vec<Option<(String, bool)>> = files.iter().map(|path| name_in_folder(path, run.dest_folder)).collect();
+    let reserved = in_dest.iter().flatten().map(|(name, _)| name.clone()).collect();
     let stems = distinct_stems(
-        files.iter().zip(&in_dest).map(|(path, own)| {
+        files.iter().zip(&in_dest).map(|(path, place)| {
             let stem = safe_file_name(std::path::Path::new(path).file_stem().and_then(|s| s.to_str()).unwrap_or(""));
             let (exts, makes_folder) = outputs(&run, &super::extension(path));
-            (if stem.is_empty() { "file".to_string() } else { stem }, exts, makes_folder, own.clone())
+            let own = place.as_ref().filter(|(_, own)| *own).map(|(name, _)| name.clone());
+            (if stem.is_empty() { "file".to_string() } else { stem }, exts, makes_folder, own)
         }),
         reserved,
     );
@@ -215,13 +217,15 @@ fn outputs(run: &Run<'_>, default_ext: &str) -> (Vec<String>, bool) {
     (exts, folder)
 }
 
-/// The name of the file at `path` in lower case when the file is directly inside `folder`.
+/// When the file at `path` is inside `folder`: the name in lower case of the file, when it is
+/// directly inside, or of the subfolder of `folder` that holds it, and whether it is the file's own.
 #[cfg(not(target_arch = "wasm32"))]
-fn name_in_folder(path: &str, folder: Option<&str>) -> Option<String> {
+fn name_in_folder(path: &str, folder: Option<&str>) -> Option<(String, bool)> {
     let folder = std::fs::canonicalize(folder?).ok()?;
-    let path = std::path::Path::new(path);
-    let parent = std::fs::canonicalize(path.parent()?).ok()?;
-    (parent == folder).then(|| path.file_name().and_then(|n| n.to_str()).map(str::to_lowercase)).flatten()
+    let path = std::fs::canonicalize(path).ok()?;
+    let mut parts = path.strip_prefix(&folder).ok()?.components();
+    let first = parts.next()?.as_os_str().to_str()?.to_lowercase();
+    Some((first, parts.next().is_none()))
 }
 
 /// The stem of each source, given as (name, extensions, folder, own file) with [`outputs`]: the
@@ -735,6 +739,34 @@ mod tests {
             let svg = std::fs::read_to_string(src.join(file)).unwrap();
             assert!(svg.contains(fill), "{file}: {svg}");
         }
+    }
+
+    /// With the destination folder the same as the source folder and `includeSubdirs`, an Export for
+    /// Screens folder does not take the name of a subfolder that holds source files: the folder of
+    /// `a.svg` is `a-2`, so `a/Artboard-1.svg` is opened as it was.
+    #[test]
+    fn batch_does_not_export_into_a_source_subfolder() {
+        let src = tmp("in-place-sub");
+        std::fs::create_dir_all(src.join("a")).unwrap();
+        write_svg(&src, "a.svg", "#f00");
+        write_svg(&src.join("a"), "Artboard-1.svg", "#0f0");
+        let mut s = Session::new();
+        let r = s
+            .execute(
+                "action.batch",
+                &json!({
+                    "folder": src.to_string_lossy(),
+                    "includeSubdirs": true,
+                    "destinationFolder": src.to_string_lossy(),
+                    "commands": [{"command": "document.exportForScreens", "params": {"formats": [{"format": "svg"}]}}]
+                }),
+            )
+            .unwrap();
+        assert_eq!(r["failed"], 0, "{r}");
+        let source = std::fs::read_to_string(src.join("a").join("Artboard-1.svg")).unwrap();
+        assert!(source.contains("fill=\"#0f0\""), "{r}: {source}");
+        let export = std::fs::read_to_string(src.join("a-2").join("Artboard-1.svg")).unwrap();
+        assert!(export.contains("#ff0000"), "{r}: {export}");
     }
 
     /// Data sets whose names differ only by a trailing period (`a` and `a.`) get Export Assets

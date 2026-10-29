@@ -1525,8 +1525,9 @@ already walks Image Trace. Short agent entry points:
   add `-2`, `-3`… to the name for each later file (compared without case), as for data sets. They also add it when a
   later file's folder or file would have the name of a file or folder an earlier one wrote: with the folder
   destination, `a.svg` is saved as `a.svg`, so the Export for Screens folder of `a.svg.svg` is `a.svg-2`. When
-  `destinationFolder` holds source files, only a file's own output takes its name: with `a..svg` and `a.svg` saved
-  in place, `a..svg` is saved as `a-2.svg` and `a.svg` over itself.
+  `destinationFolder` holds source files, only a file's own output takes its name, and no export folder takes the
+  name of a subfolder that holds source files: with `a..svg` and `a.svg` saved in place, `a..svg` is saved as
+  `a-2.svg` and `a.svg` over itself.
 - Image Trace: `imageTrace.presets`, `imageTrace.make {id?, preset?, params?, view?}` (or `imageTrace.makeAndExpand`),
   `imageTrace.setView`, `imageTrace.expand`, `imageTrace.release`. A key inside `params` that is not one of the trace
   settings, such as `colours`, is an error that names it and the nearest setting (`colors`), as for a command's own keys.
