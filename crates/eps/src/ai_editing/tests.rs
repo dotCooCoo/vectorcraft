@@ -719,6 +719,27 @@ fn an_adjusted_image_in_a_symbol_is_written_in_its_adjusted_color() {
 }
 
 #[test]
+fn a_group_fill_in_a_pattern_tile_is_written() {
+    let mut doc = Document::new(200.0, 100.0);
+    let layer = doc.layers[0].id;
+    let dot = Node::path(doc.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)), Appearance::default());
+    let mut group = Node::group(doc.alloc_id(), vec![Arc::new(dot)]);
+    group.appearance = Appearance::basic(solid(Color::rgb(1.0, 0.0, 0.0)), Paint::None, 0.0).into();
+    doc.patterns.push(vectorcraft_doc::PatternDef::new("Dots", vec![Arc::new(group)]));
+    let filled = Node::path(
+        doc.alloc_id(),
+        shapes::rectangle(Rect::new(20.0, 20.0, 40.0, 40.0)),
+        Appearance::basic(Paint::Pattern { pattern: "Dots".into(), xf: Affine::IDENTITY }, Paint::None, 0.0),
+    );
+    doc.insert(Some(layer), usize::MAX, filled).unwrap();
+    let back = read_back(&doc);
+    let mut all = vec![];
+    paths(back.layers[0].children().unwrap(), &mut all);
+    let red = paint(&solid(Color::rgb(1.0, 0.0, 0.0)));
+    assert!(all.iter().any(|p| p.appearance.items.iter().any(|i| paint(i.paint()) == red)), "the tiles keep their group's fill");
+}
+
+#[test]
 fn effects_on_a_fill_are_reported_left_out() {
     let mut doc = Document::new(200.0, 100.0);
     let layer = doc.layers[0].id;

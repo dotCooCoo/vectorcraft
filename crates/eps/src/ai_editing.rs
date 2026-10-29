@@ -156,24 +156,33 @@ fn crlf(s: &str) -> Vec<u8> {
     s.replace('\n', "\r\n").into_bytes()
 }
 
-/// `doc` with its geometry effects baked ([`vectorcraft_effects::bake_document`]), in its symbols'
-/// art too (which instances are written as); `None` when nothing changes.
+/// `doc` with its geometry effects and group paint baked ([`vectorcraft_effects::bake_document`]),
+/// in its symbols' art and its patterns' tile art too (which instances and pattern fills are
+/// written as); `None` when nothing changes.
 fn baked(doc: &Document) -> Option<Document> {
     let baked = vectorcraft_effects::bake_document(doc);
     let d = baked.as_ref().unwrap_or(doc);
-    if !d.symbols.iter().any(|s| vectorcraft_effects::needs_bake(&s.art)) {
+    let needs = vectorcraft_effects::needs_bake;
+    if !d.symbols.iter().any(|s| needs(&s.art)) && !d.patterns.iter().any(|p| p.art.iter().any(|a| needs(a))) {
         return baked;
     }
-    // The symbols' art baked as the layers of a copy of the document.
+    // The symbols' art, then each pattern's art, baked as the layers of a copy of the document.
     let mut art = d.clone();
-    art.layers = d.symbols.iter().map(|s| Arc::new(Node::group(s.art.id, vec![s.art.clone()]))).collect();
+    let symbols = d.symbols.iter().map(|s| Arc::new(Node::group(s.art.id, vec![s.art.clone()])));
+    let patterns = d.patterns.iter().map(|p| Arc::new(Node::group(vectorcraft_doc::NodeId(0), p.art.clone())));
+    art.layers = symbols.chain(patterns).collect();
     // The copy keeps what baking adds to the document (the images color adjustments make).
     let Some(mut out) = vectorcraft_effects::bake_document(&art) else { return baked };
-    let arts: Vec<Option<Arc<Node>>> = out.layers.iter().map(|l| l.children().and_then(|c| c.first()).cloned()).collect();
-    out.layers = d.layers.clone();
-    for (s, a) in out.symbols.iter_mut().zip(arts) {
-        if let Some(a) = a {
+    let layers = std::mem::replace(&mut out.layers, d.layers.clone());
+    let mut members = layers.iter().map(|l| l.children().cloned().unwrap_or_default());
+    for s in out.symbols.iter_mut() {
+        if let Some(a) = members.next().and_then(|m| m.first().cloned()) {
             s.art = a;
+        }
+    }
+    for p in out.patterns.iter_mut() {
+        if let Some(m) = members.next() {
+            p.art = m;
         }
     }
     Some(out)
