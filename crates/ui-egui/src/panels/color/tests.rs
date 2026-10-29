@@ -318,6 +318,22 @@ fn alt_click_on_the_spectrum_paints_the_stroke() {
     assert_eq!(paints_hex(&app).0, "#ff0000");
 }
 
+/// A color picked in the panel, for either proxy, becomes the Color Guide's base color (#3137).
+#[test]
+fn a_picked_color_becomes_the_color_guides_base() {
+    let mut app = app();
+    let ctx = egui::Context::default();
+    app.run("paint.setFill", json!({"color": "#ffffff"})).unwrap();
+    app.ui.color_guide_base = Some(Color::WHITE);
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), egui::Modifiers::NONE);
+    assert_eq!(crate::panels::color_guide::base_color(&app).to_hex(), "#ff0000");
+    // Alt: the stroke takes it, and it is still the base.
+    click_spectrum(&mut app, &ctx, (0.5, 0.5), egui::Modifiers::ALT);
+    let stroke = paints_hex(&app).1;
+    assert_ne!(stroke, "#ff0000");
+    assert_eq!(crate::panels::color_guide::base_color(&app).to_hex(), stroke);
+}
+
 #[test]
 fn shift_click_on_the_spectrum_cycles_modes() {
     let mut app = app();

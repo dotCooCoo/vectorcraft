@@ -465,6 +465,65 @@ fn blob_brush_merges_only_with_the_selection_and_keep_selected_off_deselects() {
     assert!(s.doc().unwrap().doc.node(all).is_some() && s.doc().unwrap().doc.node(other).is_some());
 }
 
+/// Blob Brush Tool Options' Size set to Pressure (#4590): the brush is Size − Variation wide where
+/// the pen pressed lightest and Size + Variation where it pressed hardest. A stroke without
+/// pressure keeps the Size, and Fixed leaves the pressure out.
+#[test]
+fn blob_brush_size_follows_the_pen_pressure() {
+    let mut s = session();
+    let inside = |s: &Session, id: NodeId, x: f64, y: f64| {
+        vectorcraft_geom::hit::fill_contains(&path(s, id).to_bezpath(), FillRule::NonZero, Point::new(x, y))
+    };
+    let blob = |s: &mut Session, p: serde_json::Value| NodeId(s.execute("path.blob", &p).unwrap()["id"].as_u64().unwrap());
+    // Lightest at the left end, hardest at the right: about 2 pt wide to 18 pt wide.
+    let pressed = |y: f64| (0..=20).map(|i| json!([100.0 + f64::from(i) * 10.0, y, f64::from(i) / 20.0])).collect::<Vec<_>>();
+    let a = blob(&mut s, json!({"points": pressed(100.0), "size": 10, "sizeMode": "pressure", "sizeVariation": 8}));
+    assert!(inside(&s, a, 290.0, 107.0) && !inside(&s, a, 110.0, 103.0), "wide where pressed hard, thin where light");
+    // Fixed, and Pressure on a stroke without pressure: 10 pt wide all along.
+    let fixed = blob(&mut s, json!({"points": pressed(300.0), "size": 10, "sizeMode": "fixed", "sizeVariation": 8}));
+    let mouse = blob(&mut s, json!({"points": [[100, 500], [300, 500]], "size": 10, "sizeMode": "pressure", "sizeVariation": 8}));
+    for (id, y) in [(fixed, 300.0), (mouse, 500.0)] {
+        assert!(inside(&s, id, 110.0, y + 3.0) && !inside(&s, id, 290.0, y + 7.0), "10 pt at y {y}");
+    }
+    let err = s.execute("path.blob", &json!({"points": [[0, 0], [10, 0]], "sizeMode": "random"})).unwrap_err();
+    assert!(err.to_string().contains("sizeMode"), "{err}");
+    // The tool records the pen while its Size varies with Pressure.
+    let v = view();
+    s.select_tool("blobBrush", v).unwrap();
+    s.set_tool_option("sizeMode", &json!("pressure"));
+    s.set_tool_option("sizeVariation", &json!(8));
+    assert_eq!((s.tool_options()["sizeMode"].clone(), s.tool_options()["sizeVariation"].clone()), (json!("pressure"), json!(8.0)));
+    let ev = |kind, i: i32| PointerEvent { pressure: i as f32 / 20.0, ..PointerEvent::new(kind, 100.0 + f64::from(i) * 10.0, 700.0) };
+    s.pointer(&ev(PointerKind::Down, 0), v).unwrap();
+    for i in 1..20 {
+        s.pointer(&ev(PointerKind::Drag, i), v).unwrap();
+    }
+    s.pointer(&ev(PointerKind::Up, 20), v).unwrap();
+    let (drawn, _) = paths(&s).into_iter().find(|(_, p)| p.control_bounds().is_some_and(|b| b.y0 > 650.0)).unwrap();
+    assert!(inside(&s, drawn, 290.0, 707.0) && !inside(&s, drawn, 110.0, 703.0), "the tool's stroke follows the pen");
+}
+
+/// Eraser Tool Options' Size set to Pressure (#3961): the tip is Size − Variation across where the
+/// pen pressed lightest and Size + Variation where it pressed hardest; Fixed erases at the Size.
+#[test]
+fn eraser_size_follows_the_pen_pressure() {
+    let pressed = |y: f64| (0..=20).map(|i| json!([100.0 + f64::from(i) * 10.0, y, f64::from(i) / 20.0])).collect::<Vec<_>>();
+    // (mode, erased 3 pt off the stroke at the light end, erased 7 pt off it at the hard end).
+    for (mode, light, hard) in [("pressure", false, true), ("fixed", true, false)] {
+        let mut s = session();
+        rect(&mut s, 0.0, 0.0, 400.0, 200.0);
+        s.execute("path.eraseRegion", &json!({"points": pressed(100.0), "size": 10, "sizeMode": mode, "sizeVariation": 8})).unwrap();
+        let filled = |x: f64, y: f64| {
+            paths(&s).iter().any(|(_, pd)| vectorcraft_geom::hit::fill_contains(&pd.to_bezpath(), FillRule::NonZero, Point::new(x, y)))
+        };
+        assert_eq!((!filled(110.0, 103.0), !filled(290.0, 107.0)), (light, hard), "{mode}");
+        assert!(!filled(200.0, 100.0) && filled(110.0, 150.0), "{mode}: the stroke is erased, the rest stays");
+    }
+    let mut s = session();
+    let err = s.execute("path.eraseRegion", &json!({"points": [[0, 0], [10, 0]], "sizeMode": 5})).unwrap_err();
+    assert!(err.to_string().contains("sizeMode"), "{err}");
+}
+
 /// A Blob Brush stroke merges with the topmost matching path it touches and with the touched
 /// matching paths next to it in stacking order in the same group or layer; matching paths in other
 /// layers or groups, or below an object of another kind, are left alone.

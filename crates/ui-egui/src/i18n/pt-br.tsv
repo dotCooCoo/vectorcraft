@@ -181,6 +181,8 @@
 	Anchor Point	Ponto de Ancoragem
 	Anchor Point Tool	Ferramenta Ponto de Ancoragem
 	Anchor Points	Pontos de Ancoragem
+	"In" Control Points	Pontos de controle "de entrada"
+	"Out" Control Points	Pontos de controle "de saída"
 	Anchor Points, Handle, and Bounding Box Display	Exibição de Pontos de Ancoragem, Alça e Caixa Delimitadora
 	Anchor/Path Labels	Rótulos de Ponto/Ancoragem
 	Angle	Ângulo
@@ -516,6 +518,7 @@
 	Complexity:	Complexidade:
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	As cores compostas são convertidas para ele; as separações separam com ele quando é um perfil CMYK.
 	Compound Path	Caminho Composto
+	Compound Shape	Forma Composta
 	Compress (RLE)	Comprimir (RLE)
 	Compress text and line art	Comprimir texto e arte de linha
 	Compression:	Compressão:
@@ -886,7 +889,6 @@
 	Expand Panels	Expandir Painéis
 	Expand Repeat	Expandir Repetição
 	Expand Shape	Expandir Forma
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Expandir se aplica a formas compostas (Alt-clique em um modo de forma) — no roadmap
 	Expand:	Expandir:
 	Expand…	Expandir…
 	Export	Exportar
@@ -1024,6 +1026,9 @@
 	Increase Font Size by Five Steps	Aumentar Tamanho da Fonte em Cinco Incrementos
 	Reset Tracking and Kerning	Redefinir Rastreamento e Kerning
 	Reset Horizontal Scale	Redefinir Escala Horizontal
+	Highlight Font Name	Destacar Nome da Fonte
+	Highlight Kerning	Destacar Kerning
+	Highlight Tracking	Destacar Rastreamento
 	Step Type	Ajustar Texto em Incrementos
 	Fit dashes to corners and ends	Ajustar tracejados aos cantos e extremidades
 	Fit in Window	Ajustar na Janela
@@ -1631,6 +1636,7 @@
 	Brush Art	Arte do Pincel
 	New Calligraphic Brush	Novo Pincel Caligráfico
 	New Character Style	Novo Estilo de Caractere
+	New Character Style…	Novo Estilo de Caractere…
 	New Color Group	Novo Grupo de Cores
 	New Color Group…	Novo Grupo de Cores…
 	New Document Presets	Novos Predefinidos de Documento
@@ -1642,6 +1648,7 @@
 	New Opacity Masks Are Inverted	Novas Máscaras de Opacidade São Invertidas
 	New PDF Preset	Novo Predefinido de PDF
 	New Paragraph Style	Novo Estilo de Parágrafo
+	New Paragraph Style…	Novo Estilo de Parágrafo…
 	New Pattern Brush from Selection	Novo Pincel de Padrão a partir da Seleção
 	New Print Preset	Novo Predefinido de Impressão
 	New Scatter Brush from Selection	Novo Pincel de Dispersão a partir da Seleção
@@ -1652,6 +1659,8 @@
 	New Symbol…	Novo Símbolo…
 	New View…	Nova Visualização…
 	New Window	Nova Janela
+	Next Document	Próximo Documento
+	Previous Document	Documento Anterior
 	New Without Dialog	Novo sem Diálogo
 	New Workspace	Novo Espaço de Trabalho
 	New Workspace…	Novo Espaço de Trabalho…
@@ -2386,6 +2395,7 @@
 	Locked	Bloqueados
 	Hidden	Ocultos
 	Filter Layers Panel Rows	Filtrar linhas do painel Camadas
+@msg	`Custom` stands for changed settings: save the preset under another name	`Custom` representa configurações alteradas: salve a predefinição com outro nome
 @msg	`{key}` must be an array of these names: {_1}	`{key}` deve ser uma matriz destes nomes: {_1}
 	Search Commands…	Pesquisar Comandos…
 	Search commands and tools	Pesquisar comandos e ferramentas
@@ -2459,6 +2469,7 @@
 	Shape Builder Regions	Regiões do Construtor de Formas
 	Shape Builder Tool	Ferramenta Construtor de Formas
 	Shape Effects	Efeitos de Forma
+	Shape Mode	Modo de Forma
 	Shape Modes:	Modos de Forma:
 	Shape Properties:	Propriedades da Forma:
 	Shaper Tool	Ferramenta Formador
@@ -2502,6 +2513,7 @@
 	Show Original Path	Mostrar Caminho Original
 	Open this dialog with these settings next time	Abrir este diálogo com estas configurações na próxima vez
 	Auto-Simplify	Simplificar Automaticamente
+	Auto-Smooth	Suavizar Automaticamente
 	Show Package	Mostrar Pacote
 	Show Panel	Mostrar Painel
 	Show Perspective Grid	Mostrar Grade de Perspectiva
@@ -2539,6 +2551,7 @@
 	Simplify	Simplificar
 	Simplify:	Simplificar:
 	Simplify…	Simplificar…
+	Smooth…	Suavizar…
 	Simulate Colored Paper	Simular Papel Colorido
 	Simulate Paper	Simular Papel
 	Double Column	Coluna Dupla
@@ -2546,6 +2559,7 @@
 	Single Quotes:	Aspas Simples:
 	Single Right Quotation Mark	Aspa Direita Única
 	Single-line Composer	Compositor de Linha Única
+	Toggle Line Composer	Alternar Compositor de Linhas
 	Sixth Space	Espaço de Sexto
 	Size	Tamanho
 	Size Tile to Art	Dimensionar Bloco para a Arte
@@ -2631,6 +2645,11 @@
 	Strikethrough	Tachado
 	Stroke	Traçado
 	Stroke Color	Cor do Traçado
+	Fill Gradient	Gradiente de Preenchimento
+	Stroke Gradient	Gradiente do Traçado
+	Fill Pattern	Padrão de Preenchimento
+	Stroke Pattern	Padrão do Traçado
+	Patterns	Padrões
 	Stroke Options	Opções de Traçado
 	Stroke Weight	Peso do Traçado
 	Character:	Caractere:
@@ -2829,6 +2848,7 @@
 	Unlock Guides	Desbloquear Guias
 	Unnamed Objects	Objetos Sem Nome
 	Unprintable margin:	Margem não imprimível:
+	Unselected Artwork	Arte Não Selecionada
 	Unshift	Desfazer Mudança de Cor
 	Update Link	Atualizar Link
 	Update Links	Atualizar Links
@@ -3071,6 +3091,10 @@ imageTrace	Outline	Contorno
 	Shaper	Formador
 	Expand Shaper Group	Expandir Grupo Formador
 	Release Shaper Group	Liberar Grupo Formador
+	Remove from Shaper Group	Remover do Grupo Formador
+@msg	source must be the id of a Shaper Group's original shape	source deve ser o ID de uma forma original de um Grupo Formador
+@msg	group must be the id of a Shaper Group	group deve ser o ID de um Grupo Formador
+@msg	the shape is not an editable original shape of that Shaper Group	a forma não é uma forma original editável desse Grupo Formador
 	Select Shaper Face	Selecionar Face do Formador
 	Constrain	Restringir
 	Free Transform	Transformação Livre
@@ -3202,6 +3226,12 @@ font-technology	Variable	Variáveis
 	Library:	Biblioteca:
 	Image Tracing	Vetorização de imagem
 	Tracing Presets	Predefinições de vetorização
+	Manage Presets	Gerenciar Predefinidos
+	Save as New Preset…	Salvar como Novo Predefinido…
+	Rename…	Renomear…
+	Rename Preset	Renomear Predefinido
+	Save Image Trace Preset	Salvar Predefinido de Rastreamento de Imagem
+	Delete Image Trace Preset	Excluir Predefinido de Rastreamento de Imagem
 	Japanese	Japonês
 	Keep a link to an image file instead of only embedding it	Manter um link para o arquivo de imagem em vez de apenas incorporá-lo
 	Latin	Latim
@@ -3244,6 +3274,10 @@ font-technology	Variable	Variáveis
 	Outer Corner Tile	Ladrilho de canto externo
 	Side Tile	Ladrilho lateral
 	Inner Corner Tile	Ladrilho de canto interno
+	Auto-Centered	Auto-centralizado
+	Auto-Between	Auto-entre
+	Auto-Sliced	Auto-fatiado
+	Auto-Overlap	Auto-sobreposto
 	Start Tile	Ladrilho inicial
 	End Tile	Ladrilho final
 	Fit	Ajustar
@@ -3382,6 +3416,13 @@ axis	Both	Ambos
 	Drag to the window's left edge to dock	Arraste até a borda esquerda da janela para encaixar
 @msg	no library `{id}`	nenhuma biblioteca `{id}`
 @msg	select some type first	selecione algum texto primeiro
+@msg	the selection has no gradient fill	a seleção não tem gradiente de preenchimento
+@msg	the selection has no gradient stroke	a seleção não tem gradiente de traçado
+@msg	the selection has no pattern fill	a seleção não tem padrão de preenchimento
+@msg	the selection has no pattern stroke	a seleção não tem padrão de traçado
+@msg	no gradient swatch `{name}`	nenhuma amostra de gradiente `{name}`
+@msg	no pattern swatch `{name}`	nenhuma amostra de padrão `{name}`
+@msg	the library item is damaged	o item da biblioteca está danificado
 @msg	{_1} has no {_2} style	{_1} não tem o estilo {_2}
 @msg	a layer couldn't be read	não foi possível ler uma camada
 @msg	it has more than one artboard	tem mais de uma prancheta
@@ -3486,8 +3527,10 @@ axis	Both	Ambos
 @msg	`freeform.points` must be an array	`freeform.points` deve ser uma matriz
 @msg	`freeform.lines` must be an array	`freeform.lines` deve ser uma matriz
 @msg	`gradient` must be an object	`gradient` deve ser um objeto
+@msg	`groupColors` must be an array	`groupColors` deve ser uma matriz
 @msg	`library` is a library id or name (see {list})	`library` é o id ou o nome de uma biblioteca (veja {list})
 @msg	`mode` applies to freeform gradients	`mode` se aplica a gradientes de forma livre
+@msg	`preserve` must be an object	`preserve` deve ser um objeto
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` deve ser 1, 3 ou 5
 @msg	`stops` must be an array	`stops` deve ser uma matriz
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` deve ser um objeto com opções de SVG (veja document.formats)
@@ -3521,6 +3564,7 @@ axis	Both	Ambos
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` é uma cor de seleção: os matizes se aplicam a cores globais e especiais
 @msg	`{name}` is no recovery entry name	`{name}` não é o nome de uma entrada de recuperação
 @msg	`{name}` isn't a colour swatch	`{name}` não é uma amostra de cor
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	uma cor de seleção não pode colorir uma imagem em escala de cinza com transparência: use uma cor especial, preto ou branco
 @msg	`{path}` must be a bool or an object of bools	`{path}` deve ser um booleano ou um objeto de booleanos
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` não é uma cor (#rrggbb ou o nome de uma predefinição)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` não é uma ferramenta de Liquidificar
@@ -3566,6 +3610,10 @@ axis	Both	Ambos
 @msg	a page tree node has no kids	um nó da árvore de páginas não tem filhos
 @msg	a page's placement is not finite	a posição de uma página não é finita
 @msg	a preset named `{_1}` exists	já existe uma predefinição chamada `{_1}`
+@msg	`name` is empty	`name` está vazio
+@msg	`newName` is empty	`newName` está vazio
+@msg	`{name}` is a built-in preset and can't change: save it under another name	`{name}` é uma predefinição integrada e não pode ser alterada: salve-a com outro nome
+@msg	`{name}` is a built-in preset and stays	`{name}` é uma predefinição integrada e não pode ser excluída
 @msg	a swatch or color group named `{n}` exists	já existe uma amostra ou um grupo de cores chamado `{n}`
 @msg	a slice size must be a positive number of points	o tamanho de uma fatia deve ser um número positivo de pontos
 @msg	a spine keeps at least two points	uma coluna mantém pelo menos dois pontos
@@ -3651,6 +3699,7 @@ axis	Both	Ambos
 @msg	missing `id` (see plugin.list)	falta `id` (veja plugin.list)
 @msg	missing `name`	falta `name`
 @msg	missing `tool`	falta `tool`
+@msg	missing id	falta o id
 @msg	missing index	falta o índice
 @msg	missing number `{key}`	falta o número `{key}`
 @msg	missing integer `{key}`	falta o número inteiro `{key}`
@@ -3683,6 +3732,7 @@ axis	Both	Ambos
 @msg	no current layer	nenhuma camada atual
 @msg	no data	sem dados
 @msg	no dialog open	nenhuma caixa de diálogo aberta
+@msg	the open dialog has no Reset	a caixa de diálogo aberta não tem o botão Redefinir
 @msg	no document	nenhum documento
 @msg	no document open	nenhum documento aberto
 @msg	no effect applied yet	nenhum efeito aplicado ainda
@@ -3716,6 +3766,8 @@ axis	Both	Ambos
 @msg	no print service	sem serviço de impressão
 @msg	no revert command	sem comando de reverter
 @msg	no saved PDF preset named `{name}` (built-in presets are read-only: start a new one from them)	nenhuma predefinição de PDF salva chamada `{name}` (as predefinições integradas são somente leitura: crie uma nova a partir delas)
+@msg	no saved preset named `{name}`	nenhuma predefinição salva chamada `{name}`
+@msg	no saved preset named `{name}` to rename	nenhuma predefinição salva chamada `{name}` para renomear
 @msg	no saved presets	nenhuma predefinição salva
 @msg	no saved print preset named `{name}` ({DEFAULT_PRESET} is protected: start a new one from it)	nenhuma predefinição de impressão salva chamada `{name}` ({DEFAULT_PRESET} é protegida: crie uma nova a partir dela)
 @msg	no saved profiles	nenhum perfil salvo
@@ -3762,8 +3814,10 @@ axis	Both	Ambos
 @msg	not an EMF or WMF file	não é um arquivo EMF ou WMF
 @msg	not found	não encontrado
 @msg	not in pattern editing mode	não está no modo de edição de padrão
+@msg	finish editing the pattern first	termine de editar o padrão primeiro
 @msg	nothing encoded	nada codificado
 @msg	nothing selected	nada selecionado
+@msg	nothing selected is in a group	nada do que está selecionado está em um grupo
 @msg	nothing to align	nada para alinhar
 @msg	nothing to distort	nada para distorcer
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	nada para exportar: o documento não tem arte visível (ou ative Usar pranchetas)
@@ -3889,10 +3943,14 @@ axis	Both	Ambos
 @msg	the layer or group is locked	a camada ou o grupo está bloqueado
 @msg	the guide is on a hidden or locked layer	a guia está em uma camada oculta ou bloqueada
 @msg	the target layer is locked or hidden	a camada de destino está bloqueada ou oculta
+@msg	the object is hidden or locked	o objeto está oculto ou bloqueado
+@msg	the object is outside the isolated group	o objeto está fora do grupo isolado
+@msg	type objects can't be isolated	objetos de texto não podem ser isolados
 @msg	the layer to flatten into is hidden	a camada de destino do achatamento está oculta
 @msg	the object already has an opacity mask	o objeto já tem uma máscara de opacidade
 @msg	the object has no geometry	o objeto não tem geometria
 @msg	the object has no opacity mask	o objeto não tem máscara de opacidade
+@msg	stop editing the opacity mask first	pare de editar a máscara de opacidade primeiro
 @msg	the object has no stroke	o objeto não tem traço
 @msg	the object is beyond the plane's horizon	o objeto está além do horizonte do plano
 @msg	the object isn't in perspective	o objeto não está em perspectiva
@@ -3938,6 +3996,7 @@ axis	Both	Ambos
 @msg	unknown preset `{name}` (high, medium, low or a saved one: see flattener.presets.list)	predefinição desconhecida `{name}` (high, medium, low ou uma salva: veja flattener.presets.list)
 @msg	unknown preset `{name}` (see flattener.presets.list)	predefinição desconhecida `{name}` (veja flattener.presets.list)
 @msg	unknown preset `{name}` (see webExport.presets.list)	predefinição desconhecida `{name}` (veja webExport.presets.list)
+@msg	unknown preset `{name}`: not a built-in or saved preset (see imageTrace.presets)	predefinição desconhecida `{name}`: não é integrada nem salva (veja imageTrace.presets)
 @msg	unknown side `{other}` (left|right|top|bottom)	lado desconhecido `{other}` (left|right|top|bottom)
 @msg	unknown tool `{tool}`	ferramenta desconhecida `{tool}`
 @msg	unknown tool `{t}`	ferramenta desconhecida `{t}`
@@ -4084,6 +4143,9 @@ axis	Both	Ambos
 @msg	not a PSD file	não é um arquivo PSD
 @msg	the PSD file has an unknown colour mode ({m})	o arquivo PSD tem um modo de cor desconhecido ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	os dados de imagem do arquivo PSD usam uma compactação desconhecida ({m})
+@msg	the PCX file is cut short	o arquivo PCX está incompleto
+@msg	the PCX file's header is damaged	o cabeçalho do arquivo PCX está danificado
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	arquivos PCX com pixels de {bits} bits em {planes} planos não podem ser lidos
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	a imagem PSD é grande demais para ser lida ({_1} × {_2} pixels)
 @msg	zipped 32-bit PSD image data with prediction can't be read	dados de imagem PSD de 32 bits compactados em zip com previsão não podem ser lidos
 @msg	{depth}-bit PSD files in this colour mode can't be read	arquivos PSD de {depth} bits neste modo de cor não podem ser lidos
@@ -5250,6 +5312,7 @@ mark-style	Japanese	Japonesas
 @msg	Unknown dimension option {k}	Opção de cota desconhecida {k}
 @msg	the Color Picker is not open	o Seletor de Cores não está aberto
 @msg	the Simplify slider is not open	o controle deslizante Simplificar não está aberto
+@msg	the Smooth slider is not open	o controle deslizante Suavizar não está aberto
 @msg	the screen color sampler is already open	o coletor de cores da tela já está aberto
 @msg	this system has no screen color sampler	este sistema não tem coletor de cores da tela
 	Darkness	Escuridão
@@ -5538,4 +5601,9 @@ axis	Y Axis	Eixo Y
 	Scale Presets	Predefinições de escala
 @msg	a {width}×{height} screenshot's byte count overflows	a contagem de bytes de uma captura {width}×{height} transborda
 @msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	o {what} da janela ({points} pontos × {scale} DPI) não pode dimensionar uma captura
+# Object › Expand… dimmed until Expand Appearance (#3089).
+	Expand Appearance first (Object › Expand Appearance)	Expanda a aparência primeiro (Objeto › Expandir Aparência)
 	Live preview	Visualização ao vivo
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Texto de Ponto
+	Area Text	Texto de Área

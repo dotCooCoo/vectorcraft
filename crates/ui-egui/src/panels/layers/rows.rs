@@ -250,7 +250,9 @@ pub(super) fn row(ui: &mut Ui, view: &View, item: &Row, out: &mut Out) {
             let field = rename_id().with("field");
             let kept = crate::widgets::own_field_shift_enter(ui, field, &mut buf, &name);
             let mut child = ui.new_child(egui::UiBuilder::new().max_rect(name_rect));
-            let te = child.add(egui::TextEdit::singleline(&mut buf).id(field).desired_width(name_rect.width()).font(font.clone()));
+            let te = child.add(
+                egui::TextEdit::singleline(&mut buf).id(field).align(egui::Align2::LEFT_CENTER).desired_width(name_rect.width()).font(font.clone()),
+            );
             // Focus the field as it opens. Asking every frame took the focus back from Enter,
             // Escape or a click elsewhere, so the rename never ended.
             if !te.has_focus() && !te.lost_focus() {

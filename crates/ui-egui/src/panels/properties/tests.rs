@@ -1342,6 +1342,28 @@ fn merge_live_paint_is_a_quick_action_for_a_live_paint_group_and_more() {
     assert_eq!(app.session.active().unwrap().doc.parent_of(c_id), parent, "Undo takes it out again");
 }
 
+/// A selected group has Ungroup and Isolate Group in Quick Actions. While an opacity mask is
+/// edited, when Enter Isolation Mode is off, a group in the mask art has Ungroup only.
+#[test]
+fn isolate_group_is_not_a_quick_action_while_an_opacity_mask_is_edited() {
+    let mut app = new_app();
+    let group = |app: &mut VectorcraftApp, x: f64| {
+        let (a, b) = (rect(app, x, 20.0, 40.0, 40.0), rect(app, x + 50.0, 20.0, 40.0, 40.0));
+        app.run("select.set", json!({"ids": [a, b]})).unwrap();
+        app.run("object.group", json!({})).unwrap();
+    };
+    let ctx = egui::Context::default();
+    group(&mut app, 20.0);
+    let texts = tall(&mut app, &ctx, vec![]);
+    assert!(shows(&texts, "Ungroup") && shows(&texts, "Isolate Group"), "{texts:?}");
+    let (obj, m) = (rect(&mut app, 200.0, 100.0, 80.0, 80.0), rect(&mut app, 200.0, 100.0, 40.0, 80.0));
+    app.run("transparency.makeOpacityMask", json!({"ids": [obj, m]})).unwrap();
+    app.run("transparency.editOpacityMask", json!({"id": obj})).unwrap();
+    group(&mut app, 200.0);
+    let texts = tall(&mut app, &ctx, vec![]);
+    assert!(shows(&texts, "Ungroup") && !shows(&texts, "Isolate Group"), "{texts:?}");
+}
+
 /// A stroke with a variable width shows its Width Profile in the Appearance section, as every
 /// stroke does with the Width tool; choosing another profile is one undo step. A uniform stroke
 /// shows none with other tools.
@@ -1577,4 +1599,67 @@ fn a_symbol_instance_turns_about_its_registration_point() {
     let bx = app.selection_box().unwrap();
     assert!((bx.angle - 45.0).abs() < 1e-6, "turned to {}", bx.angle);
     assert!(near(bx.reference_point(8), vectorcraft_geom::Point::new(200.0, 160.0)), "the registration point moved to {:?}", bx.reference_point(8));
+}
+
+/// Ruler guides selected on their own (a click on one) show a Guides heading and a Transform
+/// section, where X moves the vertical ones and Y the horizontal ones; with art selected too, the
+/// panel shows the art's sections.
+#[test]
+fn selected_guides_show_their_position_in_a_transform_section() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
+    let v = app.run("guide.add", json!({"vertical": true, "pos": 30})).unwrap()["index"].as_u64().unwrap();
+    let h = app.run("guide.add", json!({"vertical": false, "pos": 20})).unwrap()["index"].as_u64().unwrap();
+    let pos = |app: &VectorcraftApp, i: u64| app.session.doc().unwrap().doc.guides[i as usize].pos;
+    let ctx = egui::Context::default();
+    // Steps the field labelled `label` up by one with ↑.
+    let step = |app: &mut VectorcraftApp, label: &str| {
+        let texts = frame(app, &ctx, vec![]);
+        let r = texts.iter().find(|(t, _)| t == label).unwrap_or_else(|| panic!("no {label:?} in {texts:?}")).1;
+        let at = egui::pos2(r.right() + 40.0, r.center().y);
+        let press = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
+        frame(app, &ctx, vec![Event::PointerMoved(at), press(true)]);
+        frame(app, &ctx, vec![press(false)]);
+        let up = Event::Key { key: egui::Key::ArrowUp, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() };
+        frame(app, &ctx, vec![up]);
+        frame(
+            app,
+            &ctx,
+            vec![Event::PointerButton { pos: egui::pos2(5.0, 690.0), button: PointerButton::Primary, pressed: true, modifiers: Default::default() }],
+        );
+    };
+    for (index, label, before) in [(v, "X:", 30.0), (h, "Y:", 20.0)] {
+        app.run("guide.select", json!({"indexes": [index]})).unwrap();
+        frame(&mut app, &ctx, vec![]);
+        let texts: Vec<String> = frame(&mut app, &ctx, vec![]).into_iter().map(|(t, _)| t).collect();
+        for shown in ["Guides", "Transform", "X:", "Y:"] {
+            assert!(texts.iter().any(|t| t == shown), "{shown:?} in {texts:?}");
+        }
+        assert!(!texts.iter().any(|t| t == "Document"), "{texts:?}");
+        step(&mut app, label);
+        assert_eq!((pos(&app, index) - before).abs(), 1.0, "{label} moves the selected guide");
+    }
+    // A guide and a rectangle: the rectangle's sections.
+    let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 40})).unwrap()["id"].as_u64().unwrap();
+    app.run("select.set", json!({"ids": [id]})).unwrap();
+    app.run("guide.select", json!({"indexes": [v], "toggle": true})).unwrap();
+    frame(&mut app, &ctx, vec![]);
+    let texts: Vec<String> = frame(&mut app, &ctx, vec![]).into_iter().map(|(t, _)| t).collect();
+    assert!(!texts.iter().any(|t| t == "Guides") && texts.iter().any(|t| t == "W:"), "{texts:?}");
+}
+
+/// #2238: Object › Path's Offset Path and Simplify take paths, so they aren't Quick Actions for
+/// type alone, where they could only fail ("select paths"); live type offsets through the
+/// Appearance panel's Effect › Path › Offset Path. A path, also with type, still has them.
+#[test]
+fn offset_path_and_simplify_are_not_quick_actions_for_type_alone() {
+    let mut app = new_app();
+    let t = app.run("text.create", json!({"x": 50, "y": 200, "text": "Hi"})).unwrap()["id"].clone();
+    let ctx = egui::Context::default();
+    let texts = tall(&mut app, &ctx, vec![]);
+    assert!(!shows(&texts, "Offset Path") && !shows(&texts, "Simplify") && shows(&texts, "Lock"), "type: {texts:?}");
+    let r = rect(&mut app, 20.0, 20.0, 40.0, 40.0);
+    app.run("select.set", json!({"ids": [t, r]})).unwrap();
+    let texts = tall(&mut app, &ctx, vec![]);
+    assert!(shows(&texts, "Offset Path") && shows(&texts, "Simplify"), "type and a path: {texts:?}");
 }

@@ -562,7 +562,11 @@ impl Writer<'_> {
             NodeKind::Image(im) => {
                 let id = self.id_attr(n);
                 let m = self.matrix(self.xf * im.xf);
-                let a = self.attrs(&css::transparency(n));
+                let mut props = css::transparency(n);
+                if n.extras().pixelated {
+                    props.push(("image-rendering", "pixelated".into()));
+                }
+                let a = self.attrs(&props);
                 if let Some(shared) = self.shared_images.get(&(im.key.clone(), im.width, im.height)) {
                     let shared = shared.clone();
                     self.line(&format!("<use{id} transform=\"{m}\"{a} xlink:href=\"#{shared}\"/>"));

@@ -1,6 +1,8 @@
 use super::labels::{PreviousLabel, label_field, name_field, take_previous_label};
 use super::panel_chrome::chevron_cell;
-use super::text::{after_shift_enter, recessed_text, select_all, select_all_on_focus, shift_enter_keeps_focus, take_dialog_focus};
+use super::text::{
+    after_shift_enter, focus_field, recessed_text, select_all, select_all_on_focus, shift_enter_keeps_focus, take_armed_focus, take_dialog_focus,
+};
 use super::{CornerRadius, RangeInclusive, Rect, Response, Sense, Stroke, StrokeKind, Tokens, Ui, Unit, id_with, pos2, scrub, vec2};
 
 /// Preferences › Units › Numbers Without Units Are Points (#394; on until set): the app sets it
@@ -356,7 +358,8 @@ pub fn mixed_field_named(
 }
 
 /// [`mixed_field`] whose ↑/↓, wheel and scrub stop at `bounds`; ↑/↓ and the wheel take `step`'s steps
-/// when it is given (see [`SliderValue::step`]).
+/// when it is given (see [`SliderValue::step`]). Armed with id salt `id` ([`arm_field_focus`]), it
+/// takes the keyboard focus with its value selected.
 #[allow(clippy::too_many_arguments)]
 fn bounded_field(
     ui: &mut Ui,
@@ -370,6 +373,7 @@ fn bounded_field(
     bounds: &RangeInclusive<f64>,
     step: Option<fn(f64, f64) -> f64>,
 ) -> Option<f64> {
+    let armed = take_armed_focus(ui, &id);
     let id = id_with(ui.scope_id(), id);
     let show = |value: f64| field_text(value, suffix, decimals);
     // The suffix (and %, °) may follow any operand: `45*2°`, `50% / 2`.
@@ -381,7 +385,14 @@ fn bounded_field(
     };
     let shown = value.map(show).unwrap_or_default();
     take_dialog_focus(ui, id, &shown);
+    if armed {
+        focus_field(ui, id, &shown);
+    }
     let (mut buf, commit, resp, rect) = recessed_text(ui, id, &shown, width, 1, label, name);
+    if armed {
+        // A field armed while it has focus keeps the text typed into it: select all of that text.
+        select_all(ui, id, &buf);
+    }
     select_all_on_focus(ui, &resp, &buf);
     // ↑/↓ and the wheel step at the field's precision (a count ignores Ctrl/Cmd's tenth); a drag on
     // its label scrubs it.
@@ -645,7 +656,9 @@ fn spin_generic(
 /// Spinner buttons follow the same modifier sizes as ↑/↓ in a focused number field:
 /// Shift ×10, Ctrl/Cmd ÷10, otherwise the caller's normal step, which also stops at each of
 /// `stops` ([`step_through`]). A stop that `show` writes with the same text as the value counts as
-/// reached, as in the field.
+/// reached, as in the field. As with ↑/↓, a plain or Ctrl/Cmd step goes to the next multiple of its
+/// size ([`step_to_multiple`]), a Shift step adds or takes ten steps, and the result is rounded to
+/// [`STEP_DECIMALS`] places (#4490); a stop keeps its places.
 pub(super) fn spinner_step(
     value: f64,
     step: f64,
@@ -655,12 +668,17 @@ pub(super) fn spinner_step(
     stops: &[f64],
     show: &dyn Fn(f64) -> String,
 ) -> f64 {
-    let (mods, multiplier) = STEPS.iter().find(|(m, _)| modifiers.matches_logically(*m)).map_or((egui::Modifiers::NONE, 1.0), |&(m, f)| (m, f));
-    if mods == egui::Modifiers::NONE && !stops.is_empty() {
-        return step_through(value, step, if up { 1.0 } else { -1.0 }, stops, shown_alike(show)).max(min);
-    }
-    let delta = step * multiplier;
-    (value + if up { delta } else { -delta }).max(min)
+    let (mods, multiplier) = STEPS.iter().find(|(m, _)| modifiers.matches_logically(*m)).copied().unwrap_or((egui::Modifiers::NONE, 1.0));
+    let size = step * multiplier;
+    let n = if up { 1.0 } else { -1.0 };
+    let v = if mods == egui::Modifiers::SHIFT {
+        value + size * n
+    } else if mods == egui::Modifiers::NONE && !stops.is_empty() {
+        step_through(value, size, n, stops, shown_alike(show))
+    } else {
+        step_to_multiple(value, size, n)
+    };
+    (if stops.contains(&v) { v } else { round_to(v, STEP_DECIMALS) }).max(min)
 }
 
 /// A number field that may be empty (Stroke dash/gap): `value` (points) shows in `unit` without
@@ -703,6 +721,7 @@ pub fn opt_field_named(ui: &mut Ui, id: impl std::hash::Hash, name: Option<&str>
                 egui::TextEdit::singleline(&mut buf)
                     .id(id)
                     .frame(egui::Frame::NONE)
+                    .align(egui::Align2::LEFT_CENTER)
                     .desired_width(width - 10.0)
                     .font(egui::FontId::proportional(12.5))
                     .text_color(if enabled { t.text_strong } else { t.text_disabled }),
