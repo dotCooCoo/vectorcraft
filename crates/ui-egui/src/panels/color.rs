@@ -432,6 +432,15 @@ fn apply(app: &mut VectorcraftApp, tgt: &Target, c: Color, phase: Live, behind: 
     }
 }
 
+/// [`apply`] a color chosen in the panel; once the pick ends, it also becomes the Color Guide's
+/// base color.
+fn choose(app: &mut VectorcraftApp, tgt: &Target, c: Color, phase: Live, behind: bool) {
+    if phase == Live::Released {
+        super::color_guide::choose_base(app, c);
+    }
+    apply(app, tgt, c, phase, behind);
+}
+
 /// Set the target's tint of its swatch to `t` (0..1), keeping the link (the T slider).
 fn apply_tint(app: &mut VectorcraftApp, tgt: &Target, tint: &Tint, t: f32, phase: Live) {
     match tgt {
@@ -580,7 +589,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
             })
             .inner;
         match hit {
-            Some(SpectrumHit::Pick(c, phase)) => apply(app, &tgt, c, phase, alt),
+            Some(SpectrumHit::Pick(c, phase)) => choose(app, &tgt, c, phase, alt),
             Some(SpectrumHit::Cycle) => set_mode(app, &tgt, mode.next()),
             Some(SpectrumHit::Recolor { invert }) => recolor(app, ui, &tgt, invert, alt),
             None => {}
@@ -718,15 +727,18 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         None => {}
     }
     if let Some((c, phase)) = behind {
-        apply(app, &tgt, c, phase, true);
+        choose(app, &tgt, c, phase, true);
     }
     if let (Some((t, phase)), Some(tint)) = (tinted, tgt.tint()) {
+        if phase == Live::Released {
+            super::color_guide::choose_base(app, tint.base.tinted(t));
+        }
         apply_tint(app, &tgt, tint, t, phase);
     }
     if let Some((c, phase, comps2)) = new {
         let key = (c.to_hex(), mode as u8);
         set_pstate(ui.ctx(), "color-comps", Some((key, comps2)));
-        apply(app, &tgt, c, phase, false);
+        choose(app, &tgt, c, phase, false);
     }
 }
 

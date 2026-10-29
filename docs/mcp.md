@@ -470,6 +470,10 @@ mode. To press the key during a drag, end one
 {"name":"pointer_gesture","arguments":{"tool":"selection","events":[{"kind":"drag","x":230,"y":170},{"kind":"up","x":230,"y":170}]}}
 ```
 
+`press_key {key: "Escape"}` between two `pointer_gesture` calls of a Selection tool drag (a move or an Alt-drag copy, a
+bounding-box scale or rotation, a marquee, a corner widget, pie widget or bracket drag) cancels it: the art goes back,
+no copy is left, no undo step is added, and the `up` event that follows does nothing.
+
 With nothing being dragged, `e` chooses the tool bound to E.
 
 While an arc is being dragged out with the Arc tool, `press_key {key: "c"}` switches it between an open and a closed
@@ -500,7 +504,8 @@ Errors (unknown tool, bad arguments, a disabled or failing command) come back as
 
 Swatches go through `run_command`: `swatch.list` lists every swatch with its colour group, kind and colour;
 `swatch.edit {name, newName?, color?, mode?, global?, spot?}` edits one (fills, strokes and text linked to a
-global or spot swatch follow its colour and name, as one undo step); `swatch.delete {names, unlink?}` deletes
+global or spot swatch follow its colour and name, as one undo step, in the art, opacity masks, symbols, graph
+designs, pattern tiles, graphic styles and the art of brushes); `swatch.delete {names, unlink?}` deletes
 swatches and colour groups in one undo step (art using a deleted global swatch keeps its colour, unlinked).
 `swatch.new {color?, mode?, spot?, global?, group?}` saves a colour (into a colour group with `group`), gradient
 or pattern; `swatch.newGroup {fromArtwork: true, toGlobal?, includeTints?}` makes a colour group of the selected
@@ -585,12 +590,16 @@ come back without a path), `file.newFromTemplate {path}`, `file.revert` and `fil
 with the values a save would use). Without a path the save commands return `{dataBase64, name, folder?, warnings}`. A document saved as SVG or PDF
 remembers its options, so the next save reuses them. A PDF opened with `pages`, `cropTo` or `password` is only part
 of the file, so Save asks for a new name instead of writing it back.
-`file.documentColorMode {mode, convert?, intent?, grays?}` switches the document colour mode, converting the colours of
-the art, symbols, pattern tiles and swatches through the colour settings (`object.convertDocumentColorMode` is an
-alias kept for older scripts). Gray colours stay Gray and print on the black plate only. RGB greys are colours like any
+`file.documentColorMode {mode, convert?, intent?, grays?}` switches the document color mode, converting the colors of
+the art (opacity masks included), symbols, graph designs, pattern tiles (with the tile that pattern editing's Cancel
+puts back), graphic styles, brushes (their art and a Hue Shift key color) and swatches through the color settings, in
+one undo step (`object.convertDocumentColorMode` is an alias kept for older scripts). Gray colors stay Gray and print
+on the black plate only. RGB grays are colors like any
 other: to CMYK they separate through the profile into four-colour greys and a rich black, as Illustrator converts
 them. `grays: "black"` puts RGB greys with R = G = B on the black plate instead, K = their grey value (the inks Edit Colors ›
-Convert to Grayscale before the switch would give); other colours convert as usual.
+Convert to Grayscale before the switch would give); other colors convert as usual. The reply's `changed` counts the
+colors that changed in the art, symbols, graph designs and pattern tiles; it does not count the colors of graphic
+styles and brushes.
 
 SVG import keeps what the canvas edits live. `<pattern>` becomes a pattern swatch. A `<symbol>` with `<use>` becomes a
 symbol (named after its `data-name`, else its id) with an instance per `<use>`; a `<use>` that shows it differently
@@ -1095,7 +1104,7 @@ The transform, Align, Object Properties and Live Shape Properties commands refus
 that is not true or false with `` `strokes` must be true or false ``, naming the key, and leave the document and its
 undo history as they were: the options `copy`, `strokes`, `corners`, `patterns`, `objects` and `typeAreas` in
 `object.transform`, `object.move`, `object.nudge`, `object.rotate`, `object.scale`, `object.reflect`, `object.shear`,
-`object.transformAgain` and `object.setBounds`; `anchors` in `object.transform`; `big` in `object.nudge`;
+`object.transformAgain` and `object.setBounds`; `anchors` and `releaseOutside` in `object.transform`; `big` in `object.nudge`;
 `absolute` in `object.rotate`; `proportional` in `object.setBounds`; `patterns` in `object.align`, `object.distribute`
 and `object.distributeSpacing`; `visible`, `locked`, `isolate` and `knockoutShape` in `object.setProps`; and
 `invertPie`, `makeSidesEqual` and `relativeRadii` in `object.setLiveShape`. A null is read as a key left out.
@@ -1258,6 +1267,12 @@ then composite against the art below it). SVG has no non-isolated groups, so the
 mask is edited; called again it shows the artwork, still editing. It is view state of the open document: the canvas
 (and `ui.screenshot`) shows it, exports never do, and it ends when mask editing ends.
 
+Isolation mode and mask editing exclude each other. In isolation mode `transparency.editOpacityMask` and
+`transparency.viewOpacityMask` are off, and `transparency.makeOpacityMask` refuses one target, an object or a layer,
+which it would take into mask editing; a call returns an error that ends "exit isolation mode first". While a mask is edited,
+`object.isolate` and `perspective.editText` are off, and a call returns an error that ends "stop editing the opacity
+mask first". Pattern editing mode does not count as isolation mode here.
+
 `view.transparencyGrid {on?}` (View → Show Transparency Grid; default: toggle) is view state of each open document,
 like the mask view: the grid shows behind the artboards of the documents that turn it on, on the canvas and in
 `ui.screenshot`, never in exports. It returns `{on}`, isn't undoable and doesn't mark the document changed.
@@ -1341,10 +1356,26 @@ that were already hidden or locked. The key object is cleared when it is one of 
 them again with the key object. When the call changes nothing, it records no undo step and still deselects them.
 Other `object.setProps` calls leave the selection unchanged.
 
+`object.unlockAll` and `object.showAll` unlock or show every locked or hidden object in the document and select
+them → `{count}`. With `scope: "group"` they take only the objects inside the groups that hold the selected objects:
+for each selected object, the group nearest above it, or the object itself when it is a group. The objects of a
+group inside another such group are counted once. With no selected object in a group, the call returns the error
+"nothing selected is in a group" and changes nothing. `scope: "document"` is the default, and any other value is
+refused. Object › Unlock All and Object › Show All clicked in the in-window menu bar with Shift+Alt (Shift+Option)
+held run with `scope: "group"`.
+
 `layer.move`, `node.move`, `layer.merge`, `layer.flatten`, `layer.collectInNew`, `dataset.select`, `dataset.next`
 and `dataset.prev` also deselect every selected object that is hidden or locked after the call, such as objects
 moved into a hidden or locked layer or group, or objects that a data set hides. The key object is cleared when it
 is one of them, and `edit.undo` selects them again with the key object.
+
+`object.hide.unselected` (Object › Hide › Unselected Artwork, Cmd+Alt+Shift+3) hides, in one undo step, every
+object that `select.all` takes and that is neither selected nor holds a selected object, and returns `{count}`. In a
+group that holds a selected object it hides the group's other members one by one; a clip group, a compound path or
+another object that holds a selected object stays as it is with its members. While Lock Guides is on it leaves the
+guide paths as they are. The selection stays as it is, and `object.showAll` shows the objects again. With nothing to
+hide it records no undo step. In isolation mode the menu item is disabled, and the command returns the error "exit
+isolation mode first" and changes nothing.
 
 These Select menu commands select only the objects that `select.all` selects and the objects inside them: every
 `select.same.*` and `select.object.*` command except `select.object.slices`, `select.nextAbove`, `select.nextBelow`
@@ -1357,6 +1388,19 @@ everything in it, and `select.all`, `select.allOnArtboard` and `select.inverse` 
 `select.nextAbove` and `select.nextBelow` select the nearest such object above or below the first selected object
 among the objects beside it in its group or layer, passing over hidden and locked objects and sublayers. When there
 is no such object, the selection stays as it is.
+
+## Shaper Groups
+
+`shaper.releaseSource {source, group?}` takes the original shape `source` out of its Shaper Group: the shape becomes a
+path just above the group with its own fill and stroke, and is selected. The group's result is computed again from the
+original shapes left, and a group left with none is removed. When `group` is given, it must be the Shaper Group that
+holds `source`. A source that is not an original shape of an editable Shaper Group is an error, and the document and its
+undo history stay as they were. The command returns `{id}`, the shape's id, and records one undo step, Remove from Shaper
+Group. Construction mode ends when the group was in it.
+
+`object.transform` with `releaseOutside: true` does the same for each moved original shape whose bounds end wholly
+outside the bounds the group's original shapes had before the move, in the move's undo step. A shape whose bounds still
+overlap them only moves. The Selection tool sends it at the end of a move in Construction mode.
 
 ## Global Edit
 
@@ -1484,7 +1528,11 @@ already walks Image Trace. Short agent entry points:
   `brush.new` refuses a longer one, counting the number it adds to a taken name, and `brush.options` refuses a
   longer `newName`. `brush.duplicate` does not check the length. A bristle brush that already has a longer name
   keeps it, and `brush.options` without a new name, or with a `newName` that only trims the white space around the
-  name, does not refuse. Other brush types take a name of any length.
+  name, does not refuse. Other brush types take a name of any length. A pattern brush's `outer_source` and `inner_source` set
+  what that kind of corner draws when the brush has no `outer_corner` or `inner_corner` art for it: `none` draws no
+  corner tile, and `autoCentered`, `autoBetween`, `autoSliced` and `autoOverlap` make one from the side tile. Without
+  a source, the corner draws the other kind of corner's art. `brush.options {params: {outer_corner: null}}` removes
+  the art.
 - Variables: `variable.list`, `variable.define {name, kind: text|visibility|image|graph}`, `variable.bind {variable, ids?}`,
   `variable.makeTextDynamic`, `variable.makeVisibilityDynamic`, `variable.makeImageDynamic`, `variable.makeGraphDynamic`,
   `variable.unbind`, `variable.rename`, `variable.delete`, `variable.highlight` (image values are file paths, graph
@@ -1548,7 +1596,14 @@ already walks Image Trace. Short agent entry points:
   highlight color, `#rrggbb` or a layer color's name; `#ff2a2a`) and `width` (the highlight's width, 1 to 20 screen
   pixels; 4). With `selectStrokes` off, Alt-click selects the face under the pointer as a click does; with
   `selectFills` off, a click selects the edge nearest the pointer as Alt-click does; with both off, a click selects
-  no face or edge.
+  no face or edge. A drag of 3 screen pixels or more draws a marquee, and the release runs `select.set {ids}` with
+  the faces and edges it touches (a face or edge partly inside counts, and so does a face that holds the whole
+  marquee), or `select.none` when it touches none. With Shift held at the press, the release runs
+  `select.toggle {ids}` with the faces and edges it touches, each of which leaves the selection or joins it, and runs
+  nothing when it touches none. `selectFills` off leaves the faces out, and `selectStrokes` off leaves the edges out. A click and a marquee run their command on the
+  release, and Escape between the press and the release removes the marquee so that the release runs nothing. The
+  tool does not highlight or select the faces and edges of a Live Paint group that is locked, on a locked layer or on
+  a locked artboard, or in isolation mode outside the isolated art.
   `livePaint.merge` keeps the bottom Live Paint group's id, name, lock, visibility, transparency, appearance, opacity
   mask and graphic style link. With a Live Paint group among the objects, `livePaint.make` adds the others to it as
   `livePaint.merge` does, and so does `livePaint.fill {ids}` when `point` is outside that group's faces.
@@ -2449,7 +2504,8 @@ so `path.moveAnchors {dx, dy}` (or a Direct Selection drag) pulls the path apart
 Selected End Points) joins the ends again; `path.join {ids: [a, b], ends: ["last", "first"]}` joins the ends asked for
 (the Pen's join, #776: drawing on from one open path, a click on another's end makes them one path). `path.convertAnchor {id, subpath?, anchor, to, x?, y?}` and
 `path.split {id, subpath?, anchor}` do the same to one anchor (the Anchor Point and Scissors tools); the Pen with Alt
-held over a selected path's handle, anchor or segment works as the Anchor Point tool. `path.reshapeSegment {id,
+held over a selected path's handle, anchor or segment works as the Anchor Point tool. `press_key` Escape between two
+`pointer_gesture` calls of an Anchor Point drag cancels it: the path goes back and no undo step is added. `path.reshapeSegment {id,
 subpath?, segment, t, dx, dy, perpendicular?}` (a segment dragged with Direct Selection or the Anchor Point tool) moves the segment's
 point at `t` by `dx`, `dy`: a smooth anchor at either end stays smooth, its other handle turning with the moved one.
 With `perpendicular: true` (Shift held during the drag) both of the segment's handles stand at right angles to the
@@ -2534,6 +2590,23 @@ dialog `simplifySlider` with field `level`) at the Auto-Simplify level for the s
 `ui.dialog.confirm`. `ui.simplifyAuto` moves the open slider back to the Auto-Simplify level, and `ui.simplifyMoreOptions`
 opens the Simplify dialog at the slider's tolerance. When OK confirms the dialog with `retain` ticked, the menu item opens
 the dialog on those settings next time.
+
+## Smooth
+
+`object.path.smooth` smooths the selected paths (or the objects in `ids`), compound path members included, as one undo
+step. `level` is the Smooth slider's, a whole number from 0 (minimum smoothing: the path stays within 0.1% of its longer
+side) to 100 (maximum smoothing); `auto: true` (Auto-Smooth) uses level 50, the default. Each path is refitted with
+curves within 0.1% to 2.5% of its longer side, keeping a corner only where it turns back on itself, so jags and kinks
+become curves; a refit never has more anchor points than the path had, so a shape whose corners the tolerance can't
+round, such as a rectangle, stays as it is. Closed paths stay closed and open paths keep their end points. The reply has the anchor counts `before` and `after` and the `level` used:
+
+```json
+{"name":"run_command","arguments":{"command":"object.path.smooth","params":{"level":80}}}
+```
+
+In the desktop app, Object › Path › Smooth opens the slider (`ui.menuDialog {command: "object.path.smooth"}`, dialog
+`smoothSlider` with field `level`) at the Auto-Smooth level and previews the result until `ui.dialog.confirm`;
+`ui.smoothAuto` moves the open slider back to the Auto-Smooth level.
 
 ## Editing a path with the Curvature tool
 
@@ -2623,8 +2696,10 @@ changes size, and type keeps its character strokes' weight. With Scale Corners o
 size. The journal entry of a scaling command records the `strokes` and `corners` it used, so actions replay alike.
 `object.transformAgain` applies the last transform's matrix with the `copy`, `strokes`, `corners`, `patterns` and
 `typeAreas` values that transform used, and a true or false value given in its own params takes precedence. After a
-drag of art without a pattern, `patterns` follows the preference `transformPatternTiles`. Its journal entry records
-the `strokes`, `corners` and `patterns` it used, as a transform's does.
+drag of art without a pattern, `patterns` follows the preference `transformPatternTiles`. After a Direct Selection or
+Group Selection drag that moved direct-selected anchors (`path.moveAnchors`), it moves the selected anchors and the
+objects selected whole by the same distance. Its journal entry records the `strokes`, `corners` and `patterns` it
+used, as a transform's does.
 
 ```json
 {"name":"run_command","arguments":{"command":"object.scale","params":{"sx":200,"strokes":true}}}
@@ -2846,7 +2921,8 @@ The Selection & Anchor Display and General preferences apply to `pointer_gesture
   Transform Patterns) and of the same param on the commands that move or duplicate art with an artboard (`artboard.move`
   and the Artboard tool, `artboard.duplicate`, `artboard.rearrange`, `artboard.setProps`): pattern fills and strokes
   move with the art. `object.nudge` (the arrow keys) and `path.moveAnchors` (a Direct Selection drag of selected
-  anchors) take the same param, with the same default, for the objects they move whole.
+  anchors, and a Direct Selection or Group Selection drag from an object while anchors are selected) take the same
+  param, with the same default, for the objects they move whole.
 - `selectSameTintPercent` (off by default): `select.same.fillColor`, `strokeColor` and `fillAndStroke` take every tint
   of a global or spot swatch; on, only the same tint.
 
@@ -5000,7 +5076,9 @@ active the active artboard (the navigator's and the Artboards panel's).
 `tool.options {tool}` opens what double-clicking the tool's button opens (its params doc lists every tool), in the
 desktop app. The Flare tool's are its Flare Tool Options (dialog `flareOptions`): `diameter` and `pathLength` (pt),
 `opacity`, `brightness`, `growth`, `fuzziness`, `longest`, `rayFuzziness` and `largest` (%), `rays`, `rings`,
-`direction` (°), and `raysOn` and `ringsOn` (the Rays and Rings checkboxes; off, the flare has none). OK keeps them
+`direction` (°), and `raysOn` and `ringsOn` (the Rays and Rings checkboxes; off, the flare has none). While Alt
+(Option on macOS) is held, the dialog's Cancel button reads Reset. Reset puts every option back to the tool's default,
+leaves a click's `x` and `y` unchanged and keeps the dialog open; `ui.dialogReset` does the same. OK keeps the options
 (`tool.setOption {tool: "flare", values}`) and the next flare dragged out uses them; a click with the tool opens the
 same dialog, and its OK also draws a flare there. The Artboard tool's are the active artboard's Artboard Options
 (dialog `artboardOptions`; the Artboard tool's active artboard while it is in use, else the window's; its `x` and `y`
@@ -5013,6 +5091,7 @@ for a new artboard, with `new: true` and the name, position and size that `artbo
 `artboard.new` with the fields and makes the new artboard the active one, and Cancel adds no artboard.
 `artboard.new` and `artboard.setProps` trim the white space around `name`, and a blank name gives the artboard its
 default name, "Artboard N" for the Nth artboard.
+A canvas-click dialog also has `preview` (initially on): tentative settings draw at the remembered click, Reset refreshes that preview, and Cancel discards it without persisting settings. OK accepts one flare as one Undo step. Toolbar-only options draw no artwork.
 
 ```json
 {"name":"run_command","arguments":{"command":"tool.setOption","params":{"tool":"flare","values":{"rays":24,"ringsOn":false}}}}
@@ -5059,6 +5138,8 @@ under the opposite corner, else of the front-most selected object. A Shift-click
 as a click does, so with `clickStrokeSplitsPath` on, a Shift-click on a stroke splits it. A marquee splits no stroke,
 however little the pointer moves: the tool sends no `splitStroke` with `rect`, and `shapeBuilder.merge` does not split
 a stroke when it has `rect`. With both `rect` and `points`, the command also touches what the points touch.
+`press_key` Escape during a Shape Builder drag, a marquee included, cancels it: the release sends no
+`shapeBuilder.merge`.
 
 ```json
 {"name":"run_command","arguments":{"command":"shapeBuilder.merge","params":{"rect":[50,50,200,200]}}}
@@ -5131,7 +5212,10 @@ the options, `editing`), or with no envelope selected the options new envelopes 
 the current shape) switch its kind and keep its content. `object.envelope.options` sets `fidelity` and the options
 (`antiAlias`, `preserveShape`: clippingMask or transparency, `distortAppearance`, `distortLinearGradients`,
 `distortPatternFills`; the last two need `distortAppearance`); with no envelope selected it sets them for new
-envelopes. New envelopes start with Distort Appearance on, as in the reference app; envelopes saved before these
+envelopes. With `antiAlias` false, the envelope's distorted images are drawn without smoothing, SVG export writes
+them with `image-rendering: pixelated` and PDF export writes them without `/Interpolate`. With `preserveShape`
+`transparency`, each piece of a distorted image is the image with a white opacity mask in the piece's shape instead
+of a clip group, after Expand too. New envelopes start with Distort Appearance on, as in the reference app; envelopes saved before these
 options existed keep their old look (appearance applied after the distortion).
 
 `object.envelope.release` gives back the content and the envelope's shape (a grey gradient mesh for warp and mesh
@@ -5260,7 +5344,9 @@ shows, and so do the click-to-size dialogs (`perspective.draw` with `at`: the cl
 `object.blend.make` blends the selected objects (or `ids`) into a live blend. Spacing and orientation default to
 what `object.blend.options` set with no blend selected (`object.blend.info` reads them: `target: "defaults"`),
 else Smooth Color and Align to Page. `starts` gives, per object, the anchor of its first subpath the blend starts
-from (as the Blend tool's clicks on anchor points do; an open path's last anchor runs it the other way). A blend
+from (as the Blend tool's clicks on anchor points do; an open path's last anchor runs it the other way). With the
+Blend tool, `press_key` Escape drops the object clicked first and stops the next click adding to the blend
+just made; the document and the selection stay as they are. A blend
 among the objects takes the others in as more key objects, keeping its options, name and transparency:
 
 ```json
@@ -5352,7 +5438,8 @@ right/left/down/up; none stored means the smooth mesh through the points, as old
 `object.envelope.setMeshPoint {id, index, x, y, handle?}` and `object.mesh.movePoint`, `object.mesh.addLine` and
 `object.mesh.deletePoint` edit them like a gradient mesh's (one undo step each). On the canvas a selected envelope
 shows its mesh; the Mesh tool and Direct Selection drag its points and the clicked point's handles, and the Mesh tool
-adds a row and a column where it clicks inside. The Control bar shows Edit Envelope / Edit Contents, the warp's
+adds a row and a column where it clicks inside. `press_key` Escape during a drag of a point or handle of a mesh
+envelope or a gradient mesh cancels it: the point goes back and no undo step is added. The Control bar shows Edit Envelope / Edit Contents, the warp's
 style, orientation, bend and distortions (or the mesh's rows and columns), Reset (an unbent warp, a flat mesh) and
 Envelope Options.
 

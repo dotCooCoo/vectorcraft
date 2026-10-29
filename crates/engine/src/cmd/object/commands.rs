@@ -15,7 +15,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Transform",
             [],
             None,
-            "{matrix: [a,b,c,d,e,f], copy?: bool, ids?, strokes?: bool, corners?: bool, typeAreas?: bool, anchors?: bool, objects?: bool (Transform Objects, default true; false: the art stays and, with patterns, only its pattern tiles transform), patterns?: bool (Transform Patterns: pattern fills and strokes transform with the art; default: prefs transformPatternTiles)} apply an affine to the selection (or ids); anchors (without ids or copy): paths with anchors selected with Direct Selection have only those anchors and their handles transformed, as the Transform tools and object.move/rotate/scale/reflect/shear do (default: the whole objects); strokes/corners: Scale Strokes & Effects / Scale Corners (default: the preferences); typeAreas: area type among them (not type inside a group) reshapes its frame by the matrix and its text reflows at its size, as a bounding-box handle drag does (default: the type transforms too)",
+            "{matrix: [a,b,c,d,e,f], copy?: bool, ids?, strokes?: bool, corners?: bool, typeAreas?: bool, anchors?: bool, objects?: bool (Transform Objects, default true; false: the art stays and, with patterns, only its pattern tiles transform), patterns?: bool (Transform Patterns: pattern fills and strokes transform with the art; default: prefs transformPatternTiles), releaseOutside?: bool} apply an affine to the selection (or ids); anchors (without ids or copy): paths with anchors selected with Direct Selection have only those anchors and their handles transformed, as the Transform tools and object.move/rotate/scale/reflect/shear do (default: the whole objects); strokes/corners: Scale Strokes & Effects / Scale Corners (default: the preferences); typeAreas: area type among them (not type inside a group) reshapes its frame by the matrix and its text reflows at its size, as a bounding-box handle drag does (default: the type transforms too); releaseOutside (without copy or anchors): a Shaper Group's original shape that ends wholly outside the bounds the group's original shapes had before takes shaper.releaseSource in the same undo step, named Remove from Shaper Group, as the Selection tool's moves in Construction mode do",
             has_doc,
             transform
         ),
@@ -154,7 +154,15 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection_outside_isolation,
             lock
         ),
-        cmd!("object.unlockAll", "Unlock All", ["Object"], Some("Cmd+Alt+2"), "{}", outside_isolation, unlock_all),
+        cmd!(
+            "object.unlockAll",
+            "Unlock All",
+            ["Object"],
+            Some("Cmd+Alt+2"),
+            "{scope?: \"document\"|\"group\" (default document; group: only the objects inside the groups that hold the selected objects, a selected group holding its own; the in-window menu item chosen with Shift+Alt)} unlock the locked objects and select them → {count}",
+            outside_isolation,
+            unlock_all
+        ),
         cmd!(
             "object.hide",
             "Selection",
@@ -164,7 +172,15 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection_outside_isolation,
             hide
         ),
-        cmd!("object.showAll", "Show All", ["Object"], Some("Cmd+Alt+3"), "{}", outside_isolation, show_all),
+        cmd!(
+            "object.showAll",
+            "Show All",
+            ["Object"],
+            Some("Cmd+Alt+3"),
+            "{scope?: \"document\"|\"group\" (default document; group: only the objects inside the groups that hold the selected objects, a selected group holding its own; the in-window menu item chosen with Shift+Alt)} show the hidden objects and select them → {count}",
+            outside_isolation,
+            show_all
+        ),
         cmd!(
             "object.compoundPath.make",
             "Make",
@@ -224,8 +240,8 @@ pub fn specs() -> Vec<CommandSpec> {
             "Enter Isolation Mode",
             [],
             None,
-            "{id?} isolate a group, a layer or a single object (default: the first selected object); type, a hidden or locked object, an object in a hidden or locked group or layer, and a guide path while Lock Guides is on are refused",
-            has_doc,
+            "{id?} isolate a group, a layer or a single object (default: the first selected object); type, a hidden or locked object, an object in a hidden or locked group or layer, and a guide path while Lock Guides is on are refused, and so is every object while an opacity mask is edited",
+            crate::cmd::maskedit::outside_mask_editing,
             isolate
         ),
         cmd!("object.exitIsolation", "Exit Isolation Mode", [], None, "{}", has_doc, exit_isolation),

@@ -27,7 +27,8 @@ pub struct ViewInfo {
     pub snap_to_pixel: bool,
     /// View → Snap to Point: picked points (a transform's reference point) land on anchors.
     pub snap_to_point: bool,
-    /// View → Snap to Glyph: drawing snaps to live-text baselines and glyph bounds (needs Smart Guides).
+    /// View → Snap to Glyph: drawing snaps to live-text glyph bounds, and on a single line of type to
+    /// its baseline, x-height, character widths and glyph anchor points (needs Smart Guides).
     pub snap_to_glyph: bool,
     /// View → Show Corner Widget.
     pub corner_widgets: bool,

@@ -492,6 +492,112 @@ fn lock_and_hide_with_nothing_to_lock_or_hide_record_no_undo_step() {
     }
 }
 
+/// Hide › Unselected Artwork hides, in one undo step, each object that is not selected and holds no selected object:
+/// here `b`, the member `n` of the group that holds the selected `m`, and `p` on another layer. The selected objects,
+/// that group, the clip group that holds the selected `c2` with all its members, a locked object, the art on a locked
+/// layer and an object hidden before stay as they are, and so does the selection. Show All shows them again.
+#[test]
+fn hide_unselected_artwork_hides_every_object_that_is_not_selected() {
+    let mut s = session();
+    let a = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
+    let b = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
+    let m = rect(&mut s, 40.0, 0.0, 10.0, 10.0);
+    let n = rect(&mut s, 60.0, 0.0, 10.0, 10.0);
+    sel(&mut s, &[m, n]);
+    let g = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let c1 = rect(&mut s, 80.0, 0.0, 10.0, 10.0);
+    let c2 = rect(&mut s, 85.0, 5.0, 10.0, 10.0);
+    let c3 = rect(&mut s, 80.0, 0.0, 30.0, 30.0);
+    sel(&mut s, &[c1, c2, c3]);
+    let clip = id_of(&s.execute("object.clippingMask.make", &json!({})).unwrap());
+    let k = rect(&mut s, 120.0, 0.0, 10.0, 10.0);
+    s.execute("layer.setProps", &json!({"id": k.0, "locked": true})).unwrap();
+    let h = rect(&mut s, 140.0, 0.0, 10.0, 10.0);
+    s.execute("layer.setProps", &json!({"id": h.0, "visible": false})).unwrap();
+    s.execute("layer.new", &json!({})).unwrap();
+    let p = rect(&mut s, 0.0, 100.0, 10.0, 10.0);
+    let locked_layer = id_of(&s.execute("layer.new", &json!({})).unwrap());
+    let q = rect(&mut s, 20.0, 100.0, 10.0, 10.0);
+    s.execute("layer.setProps", &json!({"id": locked_layer.0, "locked": true})).unwrap();
+    let shown = |s: &Session, ids: &[NodeId]| ids.iter().map(|id| node(s, *id).visible).collect::<Vec<_>>();
+    sel(&mut s, &[a, m, c2]);
+    let steps = undo_len(&s);
+    assert_eq!(s.execute("object.hide.unselected", &json!({})).unwrap(), json!({"count": 3}));
+    assert_eq!(shown(&s, &[b, n, p, h]), [false; 4]);
+    assert_eq!(shown(&s, &[a, m, g, c1, c2, c3, clip, k, q]), [true; 9]);
+    assert!(node(&s, k).locked);
+    assert_eq!((undo_len(&s), selected(&s)), (steps + 1, vec![a, m, c2]));
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(shown(&s, &[b, n, p]), [true; 3]);
+    s.execute("edit.redo", &json!({})).unwrap();
+    s.execute("object.showAll", &json!({})).unwrap();
+    assert_eq!(shown(&s, &[b, n, p, h]), [true; 4]);
+}
+
+/// Hide › Unselected Artwork leaves the art on a locked artboard as it is, as Select All leaves it unselected.
+#[test]
+fn hide_unselected_artwork_leaves_the_art_on_a_locked_artboard() {
+    let mut s = session();
+    let (a, b) = (rect(&mut s, 0.0, 0.0, 10.0, 10.0), rect(&mut s, 20.0, 0.0, 10.0, 10.0));
+    let on_locked = rect(&mut s, 2050.0, 50.0, 10.0, 10.0);
+    s.execute("artboard.new", &json!({"x": 2000, "y": 0, "width": 400, "height": 400})).unwrap();
+    s.execute("artboard.setProps", &json!({"index": 1, "locked": true})).unwrap();
+    sel(&mut s, &[a]);
+    assert_eq!(s.execute("object.hide.unselected", &json!({})).unwrap(), json!({"count": 1}));
+    assert_eq!([a, b, on_locked].map(|id| node(&s, id).visible), [true, false, true]);
+}
+
+/// In isolation mode Hide › Unselected Artwork is disabled: the menu item is off, and the command returns an error that
+/// names isolation mode and changes nothing. While Lock Guides is on it leaves the guides as they are. With nothing
+/// left to hide it records no undo step and returns a count of 0. A compound path that holds a selected path stays as
+/// it is.
+#[test]
+fn hide_unselected_artwork_keeps_locked_guides_and_is_disabled_in_isolation_mode() {
+    let mut s = session();
+    let guide = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
+    sel(&mut s, &[guide]);
+    s.execute("view.guides.make", &json!({})).unwrap();
+    s.execute("view.guides.lock", &json!({"locked": true})).unwrap();
+    let out = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
+    let m = rect(&mut s, 40.0, 0.0, 10.0, 10.0);
+    let n = rect(&mut s, 60.0, 0.0, 10.0, 10.0);
+    sel(&mut s, &[m, n]);
+    let g = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let hide = |s: &mut Session| s.execute("object.hide.unselected", &json!({})).unwrap();
+    let shown = |s: &Session, ids: &[NodeId]| ids.iter().map(|id| node(s, *id).visible).collect::<Vec<_>>();
+    s.execute("object.isolate", &json!({"id": g.0})).unwrap();
+    select_with_a_step_to_redo(&mut s, &[m]);
+    let before = history(&s);
+    let info = find_command("object.hide.unselected").unwrap().info(&s);
+    assert!(!info.enabled && info.disabled_reason.as_deref() == Some("exit isolation mode first"), "{info:?}");
+    let e = s.execute("object.hide.unselected", &json!({})).unwrap_err();
+    assert!(matches!(e, EngineError::Disabled(..)) && e.to_string().contains("isolation mode"), "{e}");
+    assert_eq!(shown(&s, &[m, n, out, guide]), [true; 4]);
+    assert_eq!((history(&s), selected(&s)), (before, vec![m]));
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    sel(&mut s, &[m]);
+    assert!(find_command("object.hide.unselected").unwrap().info(&s).enabled);
+    assert_eq!(hide(&mut s), json!({"count": 2}));
+    assert_eq!(shown(&s, &[n, out, guide]), [false, false, true]);
+    select_with_a_step_to_redo(&mut s, &[m]);
+    let before = history(&s);
+    assert_eq!(hide(&mut s), json!({"count": 0}));
+    assert_eq!(history(&s), before);
+    // With Lock Guides off, the guide path is hidden like other art.
+    s.execute("view.guides.lock", &json!({"locked": false})).unwrap();
+    sel(&mut s, &[m]);
+    assert_eq!(hide(&mut s), json!({"count": 1}));
+    assert_eq!(shown(&s, &[guide]), [false]);
+    // A compound path that holds the selected path stays as it is with its paths.
+    let outer = rect(&mut s, 0.0, 200.0, 100.0, 100.0);
+    let hole = rect(&mut s, 40.0, 240.0, 20.0, 20.0);
+    sel(&mut s, &[outer, hole]);
+    let c = id_of(&s.execute("object.compoundPath.make", &json!({})).unwrap());
+    sel(&mut s, &[hole]);
+    assert_eq!(hide(&mut s), json!({"count": 1}));
+    assert_eq!(shown(&s, &[g, c, outer, hole]), [false, true, true, true]);
+}
+
 // ---------- Transform Each ----------
 
 #[test]

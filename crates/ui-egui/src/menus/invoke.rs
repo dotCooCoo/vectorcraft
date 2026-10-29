@@ -13,6 +13,16 @@ pub fn click_target(label: &str, id: &str, p: &Value) -> (String, Value) {
     (id.to_string(), if p.is_null() { json!({}) } else { p.clone() })
 }
 
+/// What an in-window menu click on `target` (a [`click_target`]) runs with `held` held: Object ›
+/// Unlock All and Object › Show All chosen with Shift+Alt (Shift+Option) act only inside the groups
+/// that hold the selected objects (`scope: "group"`).
+pub(super) fn with_held_keys(target: (String, Value), held: egui::Modifiers) -> (String, Value) {
+    match target.0.as_str() {
+        "object.unlockAll" | "object.showAll" if held.shift && held.alt => (target.0, json!({"scope": "group"})),
+        _ => target,
+    }
+}
+
 /// The dialog of command `id` that shows the selection's current values (its query): its heading
 /// and the queried values it doesn't show. Type on a Path Options leaves the brackets where they
 /// are.
@@ -44,6 +54,7 @@ pub(super) fn menu_dialog(app: &VectorcraftApp, id: &str) -> Option<(&'static st
         // "Open this dialog with these settings next time" was ticked.
         "object.path.simplify" if app.ui.simplify.is_object() => ("simplify", app.ui.simplify.clone()),
         "object.path.simplify" => (crate::dialogs::simplify_slider::KIND, crate::dialogs::simplify_slider::fields(app)),
+        "object.path.smooth" => (crate::dialogs::smooth_slider::KIND, crate::dialogs::smooth_slider::fields()),
         "object.path.splitIntoGrid" => {
             // The grid starts at the size of the selection.
             let size =

@@ -645,7 +645,9 @@ fn spin_generic(
 /// Spinner buttons follow the same modifier sizes as ↑/↓ in a focused number field:
 /// Shift ×10, Ctrl/Cmd ÷10, otherwise the caller's normal step, which also stops at each of
 /// `stops` ([`step_through`]). A stop that `show` writes with the same text as the value counts as
-/// reached, as in the field.
+/// reached, as in the field. As with ↑/↓, a plain or Ctrl/Cmd step goes to the next multiple of its
+/// size ([`step_to_multiple`]), a Shift step adds or takes ten steps, and the result is rounded to
+/// [`STEP_DECIMALS`] places (#4490); a stop keeps its places.
 pub(super) fn spinner_step(
     value: f64,
     step: f64,
@@ -655,12 +657,17 @@ pub(super) fn spinner_step(
     stops: &[f64],
     show: &dyn Fn(f64) -> String,
 ) -> f64 {
-    let (mods, multiplier) = STEPS.iter().find(|(m, _)| modifiers.matches_logically(*m)).map_or((egui::Modifiers::NONE, 1.0), |&(m, f)| (m, f));
-    if mods == egui::Modifiers::NONE && !stops.is_empty() {
-        return step_through(value, step, if up { 1.0 } else { -1.0 }, stops, shown_alike(show)).max(min);
-    }
-    let delta = step * multiplier;
-    (value + if up { delta } else { -delta }).max(min)
+    let (mods, multiplier) = STEPS.iter().find(|(m, _)| modifiers.matches_logically(*m)).copied().unwrap_or((egui::Modifiers::NONE, 1.0));
+    let size = step * multiplier;
+    let n = if up { 1.0 } else { -1.0 };
+    let v = if mods == egui::Modifiers::SHIFT {
+        value + size * n
+    } else if mods == egui::Modifiers::NONE && !stops.is_empty() {
+        step_through(value, size, n, stops, shown_alike(show))
+    } else {
+        step_to_multiple(value, size, n)
+    };
+    (if stops.contains(&v) { v } else { round_to(v, STEP_DECIMALS) }).max(min)
 }
 
 /// A number field that may be empty (Stroke dash/gap): `value` (points) shows in `unit` without

@@ -1,6 +1,6 @@
 use super::{
     Arc, Beside, BuilderMap, EngineError, FillRule, Node, NodeId, PathData, Point, Rect, Result, Session, Touched, Value, b, bad, check_numbers,
-    f64_or, fill_param, finite, gap_param, ids_json, json, marquee_param, po, points_param, remnant, replace_roots, replace_with_pieces, root_ids,
+    f64_or, fill_param, finite, gap_param, ids_json, json, marquee_param, po, points_param, remnant, replace_leaves, replace_with_pieces, root_ids,
     shape_node, switch_or,
 };
 
@@ -125,43 +125,48 @@ pub(super) fn sb_merge(s: &mut Session, p: &Value) -> Result<Value> {
         let covered =
             if swatches { picked.iter().find_map(|r| r.top()) } else { first.as_ref().and_then(top_at).or_else(|| last.as_ref().and_then(top_at)) };
         let style_src = covered.or(map.shapes.len().checked_sub(1));
-        let mut new_nodes: Vec<Node> = vec![];
+        // What goes in place of each object the map was made from (none: it stays as it is).
+        let mut outs: Vec<Option<Vec<Node>>> = vec![];
         let mut merged_id = None;
         for (i, leaf) in leaves.iter().take(map.shapes.len()).enumerate() {
+            let mut out = None;
             let pieces: Vec<usize> = map.lines.iter().enumerate().filter(|(_, (l, _))| l.key == i as u64).map(|(k, _)| k).collect();
             if !pieces.is_empty() {
                 // An open path loses the pieces deleted and those between two merged (or deleted) regions.
                 let keep: Vec<usize> =
                     pieces.iter().copied().filter(|k| !touched.lines.contains(k) && !map.line_between(*k, &touched.regions)).collect();
-                if keep.len() == pieces.len() {
-                    new_nodes.push(d.reid(leaf));
-                } else {
+                if keep.len() != pieces.len() {
+                    let mut kept = vec![];
                     for k in keep {
                         if let Some((l, _)) = map.lines.get(k) {
-                            new_nodes.push(remnant(d, leaf, l.path.clone(), None));
+                            kept.push(remnant(d, leaf, l.path.clone(), None));
                         }
                     }
+                    out = Some(kept);
                 }
             } else if let Some(Some(rest)) = geometry.rests.get(i) {
                 // A shape loses the regions deleted or merged, then the edges deleted (each one on
                 // its outline, shared edges from every shape along them). What is left of its own
                 // outline keeps its fill rule; united faces fill with non-zero.
-                if !rest.path.is_empty() {
-                    new_nodes.push(remnant(d, leaf, rest.path.clone(), rest.united.then_some(FillRule::NonZero)));
-                }
-            } else {
-                new_nodes.push(d.reid(leaf));
+                out = Some(if rest.path.is_empty() {
+                    vec![]
+                } else {
+                    vec![remnant(d, leaf, rest.path.clone(), rest.united.then_some(FillRule::NonZero))]
+                });
             }
+            // The merged shape goes in place of the object it takes its look from, so it stays in
+            // that object's group (a clip group too).
             if !erase && !union.is_empty() && Some(i) == style_src {
                 let mut m = shape_node(d, union.clone(), Some(leaf));
                 if let Some(f) = &fill {
                     m.appearance.set_fill(f.clone());
                 }
                 merged_id = Some(m.id);
-                new_nodes.push(m);
+                out.get_or_insert_with(|| vec![leaf.clone()]).push(m);
             }
+            outs.push(out);
         }
-        let new_ids = replace_roots(d, &roots, new_nodes)?;
+        let new_ids = replace_leaves(d, &roots, &leaves, outs)?;
         sel.set(new_ids.iter().copied());
         Ok((new_ids, merged_id, touched, None))
     })?;

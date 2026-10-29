@@ -1342,6 +1342,28 @@ fn merge_live_paint_is_a_quick_action_for_a_live_paint_group_and_more() {
     assert_eq!(app.session.active().unwrap().doc.parent_of(c_id), parent, "Undo takes it out again");
 }
 
+/// A selected group has Ungroup and Isolate Group in Quick Actions. While an opacity mask is
+/// edited, when Enter Isolation Mode is off, a group in the mask art has Ungroup only.
+#[test]
+fn isolate_group_is_not_a_quick_action_while_an_opacity_mask_is_edited() {
+    let mut app = new_app();
+    let group = |app: &mut VectorcraftApp, x: f64| {
+        let (a, b) = (rect(app, x, 20.0, 40.0, 40.0), rect(app, x + 50.0, 20.0, 40.0, 40.0));
+        app.run("select.set", json!({"ids": [a, b]})).unwrap();
+        app.run("object.group", json!({})).unwrap();
+    };
+    let ctx = egui::Context::default();
+    group(&mut app, 20.0);
+    let texts = tall(&mut app, &ctx, vec![]);
+    assert!(shows(&texts, "Ungroup") && shows(&texts, "Isolate Group"), "{texts:?}");
+    let (obj, m) = (rect(&mut app, 200.0, 100.0, 80.0, 80.0), rect(&mut app, 200.0, 100.0, 40.0, 80.0));
+    app.run("transparency.makeOpacityMask", json!({"ids": [obj, m]})).unwrap();
+    app.run("transparency.editOpacityMask", json!({"id": obj})).unwrap();
+    group(&mut app, 200.0);
+    let texts = tall(&mut app, &ctx, vec![]);
+    assert!(shows(&texts, "Ungroup") && !shows(&texts, "Isolate Group"), "{texts:?}");
+}
+
 /// A stroke with a variable width shows its Width Profile in the Appearance section, as every
 /// stroke does with the Width tool; choosing another profile is one undo step. A uniform stroke
 /// shows none with other tools.

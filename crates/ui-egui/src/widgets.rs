@@ -293,6 +293,18 @@ mod spinner_modifier_tests {
         assert_eq!(spinner_step(0.0, 1.0, 0.0, false, egui::Modifiers::SHIFT, &[], &pt), 0.0);
     }
 
+    #[test]
+    fn plain_and_command_steps_go_to_the_next_multiple_as_arrow_keys_do() {
+        // As ↑/↓ in the field (#2881): a plain step goes to the next whole number, Ctrl/Cmd to the
+        // next tenth, rounded to the places fields keep; Shift adds or takes ten.
+        assert_eq!(spinner_step(1.37, 1.0, 0.0, true, egui::Modifiers::NONE, &[], &pt), 2.0);
+        assert_eq!(spinner_step(1.37, 1.0, 0.0, false, egui::Modifiers::NONE, &[], &pt), 1.0);
+        assert_eq!(spinner_step(1.37, 1.0, 0.0, true, egui::Modifiers::COMMAND, &[], &pt), 1.4);
+        assert_eq!(spinner_step(1.37, 1.0, 0.0, false, egui::Modifiers::COMMAND, &[], &pt), 1.3);
+        assert_eq!(spinner_step(1.37, 1.0, 0.0, true, egui::Modifiers::SHIFT, &[], &pt), 11.37);
+        assert_eq!(spinner_step(0.37, 1.0, 0.0, false, egui::Modifiers::NONE, &[], &pt), 0.0);
+    }
+
     /// A plain click on the spinner stops at each stop; Shift and Ctrl/Cmd steps do not.
     #[test]
     fn a_plain_spinner_step_stops_at_the_stops() {
@@ -303,7 +315,7 @@ mod spinner_modifier_tests {
         assert_eq!(spinner_step(0.1, 1.0, 0.0, false, plain, &stops, &pt), 0.0);
         assert_eq!(spinner_step(14.0, 1.0, 0.0, true, plain, &stops, &pt), 15.0);
         assert_eq!(spinner_step(14.0, 1.0, 0.0, false, egui::Modifiers::SHIFT, &stops, &pt), 4.0);
-        assert!((spinner_step(0.52, 1.0, 0.0, false, egui::Modifiers::COMMAND, &stops, &pt) - 0.42).abs() < 1e-9);
+        assert_eq!(spinner_step(0.52, 1.0, 0.0, true, egui::Modifiers::COMMAND, &stops, &pt), 0.6);
     }
 
     /// A stop the spinner's text shows as the value counts as reached: 2.004 pt and the 2 pt stop
