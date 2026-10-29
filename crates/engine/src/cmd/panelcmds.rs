@@ -548,6 +548,31 @@ fn set_format(s: &mut Session, p: &Value) -> Result<Value> {
             super::textedit::change_font_axes(st, v);
         }
     };
+    // The list settings of one paragraph: `list`, `bullet`, `number`, `listAlign` and `listLevel`.
+    let lists = |para: &mut vectorcraft_doc::ParaStyle| {
+        if list.is_some() || bullet.is_some() || number.is_some() {
+            let on = list != Some("none") && bullet != Some(None) && number != Some(None);
+            let had = para.list;
+            // A numbered list for list "number", or without `list` for a number style.
+            let numbered = list == Some("number") || (list.is_none() && number.is_some());
+            // The list's other settings (the marker's alignment) stay as they were.
+            para.list = on.then(|| vectorcraft_doc::text::ParaList {
+                bullet: bullet.flatten().or(had.map(|l| l.bullet)).unwrap_or_default(),
+                number: numbered.then(|| number.flatten().or(had.and_then(|l| l.number)).unwrap_or_default()),
+                ..had.unwrap_or_default()
+            });
+            // A paragraph that joins a list with no left or first-line indent gets a
+            // hanging indent, unless the call sets an indent.
+            if on && had.is_none() && !indents_given && para.left_indent == 0.0 && para.first_line_indent == 0.0 {
+                para.left_indent = vectorcraft_doc::text::LIST_HANGING_INDENT;
+                para.first_line_indent = -vectorcraft_doc::text::LIST_HANGING_INDENT;
+            }
+        }
+        if let Some(l) = para.list.as_mut() {
+            l.align = list_align.unwrap_or(l.align);
+            l.level = list_level.unwrap_or(l.level);
+        }
+    };
     s.edit("Character", |d, _| {
         for id in &ids {
             let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) else { continue };
@@ -571,28 +596,7 @@ fn set_format(s: &mut Session, p: &Value) -> Result<Value> {
                 if let Some(v) = num("spaceAfter") {
                     para.space_after = v.clamp(-MAX_PARA, MAX_PARA);
                 }
-                if list.is_some() || bullet.is_some() || number.is_some() {
-                    let on = list != Some("none") && bullet != Some(None) && number != Some(None);
-                    let had = para.list;
-                    // A numbered list for list "number", or without `list` for a number style.
-                    let numbered = list == Some("number") || (list.is_none() && number.is_some());
-                    // The list's other settings (the marker's alignment) stay as they were.
-                    para.list = on.then(|| vectorcraft_doc::text::ParaList {
-                        bullet: bullet.flatten().or(had.map(|l| l.bullet)).unwrap_or_default(),
-                        number: numbered.then(|| number.flatten().or(had.and_then(|l| l.number)).unwrap_or_default()),
-                        ..had.unwrap_or_default()
-                    });
-                    // A paragraph that joins a list with no left or first-line indent gets a
-                    // hanging indent, unless the call sets an indent.
-                    if on && had.is_none() && !indents_given && para.left_indent == 0.0 && para.first_line_indent == 0.0 {
-                        para.left_indent = vectorcraft_doc::text::LIST_HANGING_INDENT;
-                        para.first_line_indent = -vectorcraft_doc::text::LIST_HANGING_INDENT;
-                    }
-                }
-                if let Some(l) = para.list.as_mut() {
-                    l.align = list_align.unwrap_or(l.align);
-                    l.level = list_level.unwrap_or(l.level);
-                }
+                lists(para);
                 if let Some(v) = flag("hyphenate") {
                     para.hyphenate = v;
                 }
