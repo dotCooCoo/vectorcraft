@@ -1495,8 +1495,9 @@ fn recolor_notes_on_objects_left_unchanged_translate_with_their_counts() {
         let lang = Lang::from_code(code).expect("registered");
         for (note, counts) in notes {
             let shown = message(lang, note);
-            let english = ["completed", "locked", "hidden", "object", "unchanged"];
-            assert!(english.iter().all(|w| !shown.contains(w)), "{code}: {shown}");
+            // Whole words, so that a translation such as Catalan's "objecte" is not read as English.
+            let english = ["completed", "locked", "hidden", "object", "objects", "unchanged"];
+            assert!(shown.split(|c: char| !c.is_alphabetic()).all(|w| !english.contains(&w)), "{code}: {shown}");
             assert!(counts.iter().all(|n| shown.contains(n)), "{code}: {shown}");
         }
     }
