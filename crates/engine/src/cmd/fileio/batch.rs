@@ -5,7 +5,7 @@ use std::sync::Arc;
 use serde_json::{Value, json};
 use vectorcraft_doc::Document;
 
-use super::super::*;
+use super::super::{Result, Session, bad, str_param};
 use crate::{DocState, EngineError};
 
 pub(super) fn batch(s: &mut Session, p: &Value) -> Result<Value> {

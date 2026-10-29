@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use super::*;
+use super::{Deserialize, Serialize};
 
 /// Variable-width profile: (position 0..1 along the path, left width factor, right width factor),
 /// in order along the path. Two points at the same position make a discontinuous point: the

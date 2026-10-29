@@ -18,7 +18,10 @@ use vectorcraft_geom::{Affine, Point, Vec2};
 use super::edit::{outermost, selected_roots};
 use super::pathops::{remove_each, separate};
 use super::swatch::{anchor, names_param};
-use super::*;
+use super::{
+    CommandSpec, Result, Session, bad, check_numbers, cmd, color_value, find_command, has_doc, has_selection, id_param, ids_param, number_or, ok,
+    str_param, switch_or,
+};
 use crate::EngineError;
 
 mod brushes;

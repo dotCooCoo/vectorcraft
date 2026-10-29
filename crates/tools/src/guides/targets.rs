@@ -1,5 +1,8 @@
 use super::snap::{Leave, meeting, seg_direction, touch_params};
-use super::*;
+use super::{
+    Affine, Arc, BezPath, Document, FontDb, GuideStyle, Handle, HashSet, Line, Node, NodeId, NodeKind, OrientedBox, Overlay, ParamCurve,
+    ParamCurveNearest, PathSeg, Point, Rect, Ruler, Selection, Shape, SubPath, ToolContext, Vec2, layout_text,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum Kind {

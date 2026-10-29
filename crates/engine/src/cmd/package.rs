@@ -14,7 +14,7 @@ use vectorcraft_doc::{Document, LinkInfo};
 use serde_json::{Value, json};
 
 use super::fileio::{create_dir, write_file};
-use super::*;
+use super::{CommandSpec, EngineError, Result, Session, bad, bool_or, cmd, has_doc, str_param, unique_name};
 
 const C: &str = "file.package";
 
