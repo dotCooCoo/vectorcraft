@@ -388,6 +388,26 @@ fn the_palette_starts_with_registration() {
 }
 
 #[test]
+fn dotted_strokes_are_written_as_their_dots_with_a_warning() {
+    let mut doc = Document::new(200.0, 100.0);
+    let layer = doc.layers[0].id;
+    let mut stroke = StrokeLayer::new(solid(Color::rgb(0.0, 0.0, 0.0)), 4.0);
+    stroke.cap = LineCap::Round;
+    stroke.dash = Some(Dash { pattern: vec![0.0, 10.0], offset: 0.0, align_corners: false });
+    let line = PathData::from_bezpath(&kurbo::BezPath::from_vec(vec![
+        kurbo::PathEl::MoveTo((10.0, 50.0).into()),
+        kurbo::PathEl::LineTo((60.0, 50.0).into()),
+    ]));
+    let n = Node::path(doc.alloc_id(), line, Appearance { items: vec![AppearanceItem::Stroke(stroke)], ..Appearance::default() });
+    doc.insert(Some(layer), usize::MAX, n).unwrap();
+    let out = export_ai_editing(&doc, &opts()).unwrap();
+    assert!(out.warnings.iter().any(|w| w.contains("dots")), "{:?}", out.warnings);
+    let text = program(&doc);
+    assert!(!text.contains("[0 10] 0 d"), "{text}");
+    assert!(text.matches("\nf\n").count() >= 5, "a filled dot for each dash: {text}");
+}
+
+#[test]
 fn hidden_layers_open_hidden() {
     let mut doc = sample();
     let mut hidden = Node::layer(doc.alloc_id(), "Off", LayerColor::Preset(1));

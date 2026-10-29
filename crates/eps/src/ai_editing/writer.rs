@@ -32,7 +32,7 @@ pub(super) const CLIPPING: &str =
 pub(super) const IMAGES: &str = "images are written as their outlines filled with their average color in the editing data for other apps";
 pub(super) const LIVE: &str =
     "symbols, blends, envelopes, meshes, repeats, placed documents and intertwines are written as their art in the editing data for other apps";
-const STROKES: &str = "strokes a plain line can't draw (inside or outside the path, variable width, gradients, patterns, arrowheads) are written as filled outlines, and brushed strokes as their brush's art, in the editing data for other apps";
+const STROKES: &str = "strokes a plain line can't draw (inside or outside the path, variable width, dots, dashes fitted to corners, gradients, patterns, arrowheads) are written as filled outlines, and brushed strokes as their brush's art, in the editing data for other apps";
 pub(super) const TRANSPARENCY: &str = "transparency (opacity, blending modes, opacity masks) is left out of the editing data for other apps";
 pub(super) const EFFECTS: &str = "live effects other than geometry effects are left out of the editing data for other apps";
 const SWATCHES: &str = "gradient and pattern swatches are left out of the editing data for other apps";
