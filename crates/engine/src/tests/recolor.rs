@@ -660,6 +660,39 @@ fn recolor_of_everything_does_not_count_locked_art_whose_pattern_the_group_rewri
 }
 
 #[test]
+fn recolor_of_everything_does_not_count_locked_art_whose_nested_pattern_the_group_rewrite_recolors() {
+    let mut s = session();
+    run(&mut s, "swatch.newGroup", json!({"name": "Brand", "colors": ["#2878f0", "#ff0000"]}));
+    let names: Vec<String> =
+        s.doc().unwrap().doc.swatch_groups.iter().find(|g| g.name == "Brand").unwrap().swatches.iter().map(|w| w.name.clone()).collect();
+    for name in &names {
+        run(&mut s, "swatch.edit", json!({"name": name, "global": true}));
+    }
+    // "Dots": a tile linked to the group's second swatch; "Rings": a tile filled with "Dots".
+    let tile = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [tile.0], "swatch": names[1]}));
+    run(&mut s, "select.set", json!({"ids": [tile.0]}));
+    run(&mut s, "object.pattern.make", json!({"name": "Dots", "width": 20, "height": 20}));
+    run(&mut s, "object.pattern.done", json!({}));
+    let outer = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [outer.0], "swatch": "Dots"}));
+    run(&mut s, "select.set", json!({"ids": [outer.0]}));
+    run(&mut s, "object.pattern.make", json!({"name": "Rings", "width": 40, "height": 40}));
+    run(&mut s, "object.pattern.done", json!({}));
+    let tile_hex = |s: &Session| s.doc().unwrap().doc.pattern("Dots").unwrap().art[0].appearance.fill_paint().color().unwrap().to_hex();
+    let locked = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [locked.0], "swatch": "Rings"}));
+    set_props(&mut s, &[locked], json!({"locked": true}));
+    let open = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [open.0], "swatch": names[1]}));
+    select_all(&mut s);
+    // The rewrite recolors the inner tile, which the locked art shows through "Rings".
+    let r = run(&mut s, "recolor.apply", json!({"map": {"#ff0000": "#00ff00"}, "group": "Brand", "groupColors": ["#2878f0", "#00ff00"]}));
+    assert_eq!(tile_hex(&s), "#00ff00", "{r}");
+    assert_eq!(r["notChanged"], json!({"locked": 0, "hidden": 0}), "{r}");
+}
+
+#[test]
 fn recolor_of_everything_does_not_count_locked_art_that_would_only_take_a_swatch_link() {
     let mut s = session();
     run(&mut s, "swatch.new", json!({"name": "Red", "color": "#ff0000", "global": true}));

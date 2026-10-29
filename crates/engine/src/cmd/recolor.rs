@@ -119,24 +119,35 @@ fn used_colors(d: &Document, ids: &[NodeId], only: Option<&BTreeSet<NodeId>>) ->
 }
 
 /// The colors `n` shows, in paint order ([`node_colors`]), then the colors of the tiles of the
-/// patterns it uses as fills or strokes.
-fn shown_colors(d: &Document, n: &Node) -> Vec<Color> {
+/// patterns it uses as fills or strokes, and of the patterns those tiles use (each pattern once).
+fn shown_colors<'a>(d: &'a Document, n: &'a Node) -> Vec<Color> {
     let mut colors = vec![];
     node_colors(n, &mut |c, _| colors.push(*c));
     let mut patterns: Vec<&str> = vec![];
+    pattern_names(n, &mut patterns);
+    let mut next = 0;
+    while let Some(&name) = patterns.get(next) {
+        next += 1;
+        for a in d.pattern(name).map(|def| def.art.as_slice()).unwrap_or_default() {
+            node_colors(a, &mut |c, _| colors.push(*c));
+            pattern_names(a, &mut patterns);
+        }
+    }
+    colors
+}
+
+/// Adds the names of the patterns `n` and the objects inside it use as fills or strokes to `names`,
+/// leaving out names already there.
+fn pattern_names<'a>(n: &'a Node, names: &mut Vec<&'a str>) {
     n.walk(&mut |m| {
         for p in node_paints(m) {
             if let Paint::Pattern { pattern, .. } = p
-                && !patterns.contains(&pattern.as_str())
+                && !names.contains(&pattern.as_str())
             {
-                patterns.push(pattern);
+                names.push(pattern);
             }
         }
     });
-    for def in patterns.iter().filter_map(|p| d.pattern(p)) {
-        def.art.iter().for_each(|a| node_colors(a, &mut |c, _| colors.push(*c)));
-    }
-    colors
 }
 
 /// The objects whose colors `recolor.colors` and `recolor.reduce` read, for [`used_colors`]: `ids`
