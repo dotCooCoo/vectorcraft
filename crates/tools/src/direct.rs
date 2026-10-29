@@ -15,7 +15,10 @@
 //! objects entirely inside it (members of groups too), whole.
 //! In isolation mode both pick only the isolated object and what is inside it: anchors, segments,
 //! paths and groups outside it stay put.
-//! Both move objects selected as a whole as the Selection tool does, snapping alike.
+//! Both move objects selected as a whole as the Selection tool does, snapping alike. When the
+//! selection also holds direct-selected anchors or segments, a drag from an object moves those
+//! anchors and the objects selected whole, as an anchor drag does, and while Alt is held it
+//! copies the selected objects.
 //! Both pick the key objects of a blend, and click or drag ruler guides ([`crate::rulerguide`]).
 //! A Cmd/Ctrl+Shift double-click with either one releases the ruler guide or guide path under the
 //! pointer ([`release_guide_at`]).
@@ -158,6 +161,13 @@ pub struct DirectSelectionTool {
     handle_snap: HandleSnap,
     /// What the objects being moved snap to, gathered when the move begins.
     move_snap: Option<MoveSnap>,
+    /// What the point holding a move of objects snaps to while the move takes direct-selected
+    /// anchors along (`path.moveAnchors`): each move of objects sets it when it begins, to the
+    /// targets of an anchor drag when anchors are selected, else to `None`.
+    partial_snap: Option<PointSnap>,
+    /// With Snap to Grid or Snap to Pixel on, what such a move from a fill snaps instead of the
+    /// point it holds: the box around the selected anchors and the objects selected whole.
+    partial_grid: Option<MoveSnap>,
     /// The drag snapped to a point or a guide at its last step: the arrow turns hollow.
     snapped: bool,
     /// The anchor under the pointer (Highlight anchors on mouse over): its path, where it is.
@@ -182,6 +192,8 @@ impl DirectSelectionTool {
             copy_snap: None,
             handle_snap: HandleSnap::default(),
             move_snap: None,
+            partial_snap: None,
+            partial_grid: None,
             snapped: false,
             hover: None,
             guide: GuideEdit::default(),
@@ -199,7 +211,7 @@ impl DirectSelectionTool {
 
 /// Whether `id` may be picked while `scope` is isolated: it is that object, or it sits inside it.
 /// With no isolation, everything may be picked.
-fn in_scope(doc: &vectorcraft_doc::Document, scope: Option<NodeId>, id: NodeId) -> bool {
+pub(crate) fn in_scope(doc: &vectorcraft_doc::Document, scope: Option<NodeId>, id: NodeId) -> bool {
     scope.is_none_or(|scope| doc.ancestry(id).is_some_and(|anc| anc.contains(&scope)))
 }
 
@@ -453,8 +465,9 @@ impl Tool for DirectSelectionTool {
     fn options(&self) -> Value {
         self.mesh.options()
     }
-    /// Escape during a drag (anchors, handles, segments, objects, type areas, blend spines, a
-    /// marquee) cancels it: what it moved goes back and the tool waits for the next press (#1743).
+    /// Escape during a drag (anchors, handles, segments, objects, type areas, blend spines, mesh
+    /// points, corner widgets, the brackets of type on a path, a marquee) cancels it: what it moved
+    /// goes back and the tool waits for the next press (#1743).
     /// With Group Selection, E during a marquee drag makes the marquee select only the objects
     /// entirely inside it, whole, and E pressed again makes it select what it selects by default.
     fn key(&mut self, _cx: &ToolContext, key: ToolKey, _mods: Mods) -> Vec<Action> {
@@ -467,9 +480,11 @@ impl Tool for DirectSelectionTool {
         if key == ToolKey::Escape && self.guide.busy() {
             return self.guide.cancel();
         }
-        if key != ToolKey::Escape || matches!(self.state, State::Idle | State::Mesh | State::Corner(_) | State::Bracket(_)) {
+        if key != ToolKey::Escape || matches!(self.state, State::Idle) {
             return vec![];
         }
+        // A mesh point drag ends here too; the `Action::Cancel` below undoes it.
+        self.mesh.cancel();
         self.state = State::Idle;
         self.guides.clear();
         (self.anchor_snap, self.copy_snap, self.move_snap) = (None, None, None);
@@ -1002,7 +1017,16 @@ impl DirectSelectionTool {
             if p.distance(start) < cx.tol(3.0) {
                 return out;
             }
-            out.push(Action::Begin(if ev.mods.alt { "Copy".into() } else { "Move".into() }));
+            // With direct-selected anchors or segments in the selection, the drag moves
+            // them and the objects selected whole (`path.moveAnchors`), as an anchor drag
+            // does, while Alt is up; the other anchors of a partly selected path stay in
+            // place. The history names the move or the copy at the end.
+            self.partial_snap = (!cx.selection.anchors.is_empty()).then(|| PointSnap::new(cx, || Targets::for_anchor_drag(cx.doc, cx.selection)));
+            let grid = self.partial_snap.is_some() && grab.is_none() && (cx.snap_to_grid || cx.snap_to_pixel);
+            self.partial_grid =
+                grid.then(|| MoveSnap::grid_only(vectorcraft_effects::preview::anchor_bounds(cx.selection, cx.doc, cx.preview_bounds)));
+            let copy = ev.mods.alt && self.partial_snap.is_none();
+            out.push(Action::Begin(if copy { "Copy".into() } else { "Move".into() }));
             self.state = State::MoveObject { start, grab, hold, began: true, deselect: None };
             if grab.is_some() {
                 // Alt can go down or up at any time: gather both while nothing has moved.
@@ -1015,6 +1039,21 @@ impl DirectSelectionTool {
         let mut d = move_delta(start, p, ev.mods.shift, cx.constrain_angle);
         let unsnapped = d;
         self.guides.clear();
+        if !ev.mods.alt
+            && let Some(snap) = &self.partial_snap
+        {
+            let held = grab.unwrap_or(hold);
+            if let Some(grid) = &self.partial_grid {
+                (d, self.guides) = if ev.mods.shift { grid.snap_along(cx, held, d, false) } else { grid.snap(cx, held, d, false) };
+            } else {
+                let shift = ev.mods.shift.then(|| Leave::segment(cx, held, true));
+                let (q, guides) = snap.snap_from(cx, held + (p - start), shift.as_ref());
+                (d, self.guides) = (q - held, guides);
+            }
+            self.snapped = snapped(d, unsnapped, ev.mods.shift, &self.guides);
+            out.push(Action::Preview("path.moveAnchors".into(), json!({"dx": d.x, "dy": d.y})));
+            return out;
+        }
         let snap = if ev.mods.alt { &self.copy_snap } else { &self.anchor_snap };
         if let (Some(grab), Some(snap)) = (grab, snap) {
             let shift = ev.mods.shift.then(|| Leave::segment(cx, grab, true));

@@ -5,6 +5,8 @@ use super::tablet;
 #[cfg(all(windows, not(target_vendor = "win7")))]
 use super::windows_stylus;
 use super::{ClipboardProbeFactory, FilePick, PickRequest, Services, clipboard, cursor_theme, fileio, printing};
+#[cfg(target_os = "macos")]
+use super::{mac_save_format, mac_screen_color, mac_tablet};
 
 /// The window file dialogs belong to.
 pub(crate) type Parent = Option<std::sync::Arc<winit::window::Window>>;
