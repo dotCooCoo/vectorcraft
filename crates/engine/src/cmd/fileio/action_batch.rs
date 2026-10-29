@@ -98,6 +98,7 @@ pub(super) fn action_batch(s: &mut Session, p: &Value) -> Result<Value> {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn batch_folder(s: &mut Session, cmd: &str, p: &Value, override_open: bool, run: &Run<'_>) -> Result<Value> {
+    use super::screens::safe_file_name;
     use super::{absolute_path, distinct_names, may_read};
 
     let folder = str_param(p, "folder").map(absolute_path).ok_or_else(|| bad(cmd, "missing `folder`"))?;
@@ -110,10 +111,13 @@ fn batch_folder(s: &mut Session, cmd: &str, p: &Value, override_open: bool, run:
     if files.is_empty() {
         return Err(bad(cmd, "no readable files in the folder"));
     }
-    // Each file's name without its extension, with `-2`, `-3`… after a name an earlier file used
-    // (`a.svg` and `sub/a.svg`, or `a.svg` and `a.ai`), as data set names are numbered.
-    let stems =
-        distinct_names(files.iter().map(|path| std::path::Path::new(path).file_stem().and_then(|s| s.to_str()).unwrap_or("file").to_string()));
+    // Each file's name without its extension, through `safe_file_name` (`a..svg` gives `a`, the
+    // folder Windows makes for `a.`), with `-2`, `-3`… after a name an earlier file used (`a.svg` and
+    // `sub/a.svg`, or `a.svg` and `a.ai`), as data set names are numbered.
+    let stems = distinct_names(files.iter().map(|path| {
+        let stem = safe_file_name(std::path::Path::new(path).file_stem().and_then(|s| s.to_str()).unwrap_or(""));
+        if stem.is_empty() { "file".to_string() } else { stem }
+    }));
     let steps = filter_steps(run.steps, override_open, false);
     let run = Run { steps: &steps, ..*run };
     let mut processed = Vec::new();
@@ -137,7 +141,7 @@ fn batch_folder(s: &mut Session, cmd: &str, p: &Value, override_open: bool, run:
 #[cfg(not(target_arch = "wasm32"))]
 fn batch_datasets(s: &mut Session, cmd: &str, run: &Run<'_>) -> Result<Value> {
     use super::distinct_names;
-    use super::screens::file_part;
+    use super::screens::safe_file_name;
 
     let st = s.doc()?;
     let names: Vec<String> = st.doc.variables.datasets.iter().map(|d| d.name.clone()).collect();
@@ -149,10 +153,11 @@ fn batch_datasets(s: &mut Session, cmd: &str, run: &Run<'_>) -> Result<Value> {
     }
     let doc_stem = st.path.as_deref().and_then(|p| std::path::Path::new(p).file_stem().and_then(|s| s.to_str())).unwrap_or("Untitled").to_string();
     // Data set files are named File + Data Set Name (helpx, for Override Save/Export; the folder
-    // destination uses the same name). `file_part` writes the characters Windows does not allow in a
-    // file name (`/`, `\`, `:`, `<`, `>`, `"`, `|`, `?`, `*` and control characters) in the data set's
-    // name as `-`, and `distinct_names` adds `-2`, `-3`… to a name an earlier data set used.
-    let stems = distinct_names(names.iter().map(|name| format!("{doc_stem}_{}", file_part(name))));
+    // destination uses the same name). `safe_file_name` writes the characters Windows does not allow
+    // in a file name (`/`, `\`, `:`, `<`, `>`, `"`, `|`, `?`, `*` and control characters) as `-` and
+    // drops trailing periods and spaces, which Windows drops from a folder name (`a.` and `a` give
+    // one folder), and `distinct_names` adds `-2`, `-3`… to a name an earlier data set used.
+    let stems = distinct_names(names.iter().map(|name| safe_file_name(&format!("{doc_stem}_{name}"))));
     let steps = filter_steps(run.steps, true, false);
     let run = Run { steps: &steps, ..*run };
     let mut processed = Vec::new();
@@ -567,6 +572,58 @@ mod tests {
             assert_eq!(file_names(&dest.join(folder)), ["Artboard-1.svg"], "{r}");
             let svg = std::fs::read_to_string(dest.join(folder).join("Artboard-1.svg")).unwrap();
             assert!(svg.contains(fill), "{folder}: {svg}");
+        }
+    }
+
+    /// A source file whose name without its extension ends in a period (`a..svg`) gets the folder
+    /// name without it, numbered after the folder of `a.svg`: Windows drops the period from a folder
+    /// name, so `a.` and `a` would be one folder there.
+    #[test]
+    fn batch_override_export_numbers_folders_that_differ_by_a_trailing_period() {
+        let src = tmp("screens-period-src");
+        write_svg(&src, "a.svg", "#f00");
+        write_svg(&src, "a..svg", "#0f0");
+        let dest = tmp("screens-period-out");
+        let mut s = Session::new();
+        let r = s
+            .execute(
+                "action.batch",
+                &json!({
+                    "folder": src.to_string_lossy(),
+                    "destinationFolder": dest.to_string_lossy(),
+                    "commands": [{"command": "document.exportForScreens", "params": {"formats": [{"format": "svg"}]}}]
+                }),
+            )
+            .unwrap();
+        assert_eq!(r["failed"], 0, "{r}");
+        assert_eq!(file_names(&dest), ["a", "a-2"], "{r}");
+        for folder in ["a", "a-2"] {
+            assert_eq!(file_names(&dest.join(folder)), ["Artboard-1.svg"], "{r}");
+        }
+    }
+
+    /// Data sets whose names differ only by a trailing period (`a` and `a.`) get Export Assets
+    /// folders of their own: the second one's folder is numbered.
+    #[test]
+    fn batch_override_export_numbers_data_set_folders_that_differ_by_a_trailing_period() {
+        let dest = tmp("assets-period-out");
+        let mut s = with_data_sets(&["a", "a."]);
+        let id = s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        s.execute("assets.add", &json!({"ids": [id], "name": "Logo"})).unwrap();
+        let r = s
+            .execute(
+                "action.batch",
+                &json!({
+                    "source": "datasets",
+                    "destinationFolder": dest.to_string_lossy(),
+                    "commands": [{"command": "assets.export", "params": {"formats": [{"format": "svg"}]}}]
+                }),
+            )
+            .unwrap();
+        assert_eq!(r["failed"], 0, "{r}");
+        assert_eq!(file_names(&dest), ["Untitled_a", "Untitled_a-2"], "{r}");
+        for folder in ["Untitled_a", "Untitled_a-2"] {
+            assert_eq!(file_names(&dest.join(folder)), ["Logo.svg"], "{r}");
         }
     }
 

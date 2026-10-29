@@ -1519,9 +1519,10 @@ already walks Image Trace. Short agent entry points:
   source file's extension (`.vectorcraft` over data sets). Override Export gives a `document.exportForScreens` or
   `assets.export` step the `folder` `destinationFolder/<stem>`, in place of the step's own folder or an export
   preset's: one folder for each source file, named after the file without its extension, or for each data set,
-  named `<document>_<data set>`. The export names the files in it as it does outside Batch. When two source files
-  have the same name without the extension (`a.svg` and `sub/a.svg`, or `a.svg` and `a.ai`), the folder destination
-  and the overrides add `-2`, `-3`… to the name for each later file (compared without case), as for data sets.
+  named `<document>_<data set>`. Both names drop trailing periods and spaces (`a..svg` gives `a`). The export names
+  the files in it as it does outside Batch. When two source files have the same name without the extension
+  (`a.svg` and `sub/a.svg`, `a.svg` and `a.ai`, or `a.svg` and `a..svg`), the folder destination and the overrides
+  add `-2`, `-3`… to the name for each later file (compared without case), as for data sets.
 - Image Trace: `imageTrace.presets`, `imageTrace.make {id?, preset?, params?, view?}` (or `imageTrace.makeAndExpand`),
   `imageTrace.setView`, `imageTrace.expand`, `imageTrace.release`. A key inside `params` that is not one of the trace
   settings, such as `colours`, is an error that names it and the nearest setting (`colors`), as for a command's own keys.
