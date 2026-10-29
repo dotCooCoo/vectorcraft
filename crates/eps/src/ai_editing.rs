@@ -1,4 +1,4 @@
-//! The editing copy of the art that a PDF-compatible `.ai` file carries in its first page's
+//! The editing copy of the art that a PDF-compatible `.ai` file carries in its pages'
 //! `PieceInfo` ([`vectorcraft_pdf::PrivateData`]): the document's layers, sublayers, groups, paths,
 //! colors, swatches and artboards in the form [`crate::import`]'s `.ai` reader reads, so that apps
 //! that open `.ai` files from that copy get them as editable objects.
@@ -8,16 +8,18 @@
 //! groups and compound paths (§5.3.5), guides (§6) and layers (§9), with the newer forms the reader
 //! reads from files users sent:
 //!
-//! - Header comments: `%%For` (the document's author), `%%Canvassize`, `%%BoundingBox`,
+//! - Header comments: `%%Creator` (naming the format's app, see [`CREATOR_TEXT`]), `%%For` (the
+//!   document's author), `%%Canvassize`, `%%BoundingBox`,
 //!   `%%HiResBoundingBox`, `%AI5_FileFormat 14.0`, `%AI7_ImageSettings`, the first artboard as
-//!   `%AI3_Cropmarks` and `%AI5_ArtSize`, `%AI5_RulerUnits`, `%AI9_ColorModel` (1 RGB, 2 CMYK),
+//!   `%AI3_Cropmarks` and `%AI3_TileBox`, the canvas's center as `%AI3_TemplateBox`,
+//!   `%AI5_ArtSize 14400 14400`, `%AI5_RulerUnits`, `%AI9_ColorModel` (1 RGB, 2 CMYK),
 //!   `%AI5_ArtFlags`, `%AI5_TargetResolution`, `%AI5_NumLayers`, `%AI5_OpenViewLayers` (a digit for
 //!   each layer, 7 shown and 6 hidden), `%AI7_GridSettings` (§2.1.1), and the version comment
 //!   `%%AI8_CreatorVersion` ([`CREATOR_VERSION`]).
 //! - Setup: `0 Bn` (no gradient definitions, §3), the color swatches (`%AI5_BeginPalette`,
 //!   `0 0 Pb`, the Registration swatch, each swatch's color operator and `(name) Pc`, a color group as `0 (name) count Pg`
 //!   before its swatches, `PB`), then the artboards as the `ArtboardArray` of the `/Document`
-//!   dictionary, on `%_` lines.
+//!   dictionary and the canvas size as its `AIDocumentCanvasSize`, on `%_` lines.
 //! - Layers: `%AI5_BeginLayer`, `visible preview unlocked printing dimmed 0 1 colorIndex r g b 0
 //!   dimPercent 0 Lb` (14 operands; a color that isn't one of the preset layer colors has the
 //!   index -1), `(name) Ln`, the layer's name as an XML id in an `/ArtDictionary`, its art and
@@ -30,8 +32,10 @@
 //!   an `/ArtDictionary` whose `AI10_ArtUID` is the name as an XML id. Guides are `(N) *`, the
 //!   path, `(N) *` (`(n) *` when closed).
 //!
-//! Lines end in CR LF. Strings are written in UTF-8. Art space has y up, its origin at the first artboard's bottom-left
-//! corner. What the form above can't hold is written as plain filled and stroked paths, each such
+//! Lines end in CR LF. Strings are written in UTF-8. Art space is ruler space: y up, its origin at
+//! the first artboard's top-left corner. On the canvas ([`CANVAS_SIZE`] points square, y down) the
+//! artboards together are centered; each artboard's `RulerOrigin` is its top-left corner there, and
+//! `%AI3_TemplateBox` holds the canvas's center in art space. What the form above can't hold is written as plain filled and stroked paths, each such
 //! loss a warning: type as its outlines, gradients as their average color, pattern fills as their
 //! tiles cut to the shape, clipping groups and clipping layers as their art cut to the clipping
 //! path (the clipping path's fill cut too, its stroke not), images as their outlines filled with
@@ -67,6 +71,8 @@ const ROUNDTRIP_STREAM_TYPE: u32 = 2;
 const ZSTD_MARKER: &[u8] = b"%AI24_ZStandard_Data";
 /// `%%Canvassize`: the side of the canvas in points, as the files users sent have it.
 const CANVAS_SIZE: u32 = 16383;
+/// `%AI5_ArtSize`, as the files users sent have it.
+const ART_SIZE: u32 = 14400;
 /// `%AI5_ArtFlags` (§2.1.1, Table 4), as the files users sent have them: page setup, print tiles,
 /// placed images, preview patterns, split long paths, tile full pages, printer's default
 /// screens, auto default screens, compatible gradient printing.
@@ -75,6 +81,13 @@ const ART_FLAGS: &str = "0 0 0 1 0 0 1 0 0";
 const TARGET_RESOLUTION: u32 = 800;
 /// The gridlines' gray: VectorCraft's default grid color (200 of 255).
 const GRID_GRAY: f64 = 200.0 / 255.0;
+
+/// `%%Creator`. Apps that read the editing data take the file's version from this line while they
+/// read the header, and only a creator that names the format's app gets the version that measures
+/// `%AI3_TemplateBox` on a canvas of [`CANVAS_SIZE`] points; any other creator places the art
+/// 3,871.5 points off its artboard. The text holds no version number (a number in it would be
+/// read as the format's version).
+const CREATOR_TEXT: &str = "VectorCraft, editing data for Illustrator"; // brand-ok: the creator the format's version is read from
 
 /// The first line of a PostScript file (the DSC version comment).
 const PS_HEADER: &str = "%!PS-Adobe-3.0"; // brand-ok: the PostScript header comment
@@ -107,13 +120,14 @@ pub fn export_ai_editing(doc: &Document, o: &AiEditingOptions) -> Result<AiEditi
     // Live geometry effects as their result, as the PDF part draws them.
     let baked = baked(doc);
     let doc = baked.as_ref().unwrap_or(doc);
-    // The document is y down; art space y up from the first artboard's bottom-left corner.
-    let to_art = Affine::new([1.0, 0.0, 0.0, -1.0, -board.x0, board.y1]);
+    // The document is y down; art space is ruler space: y up, its origin the first artboard's
+    // top-left corner.
+    let to_art = Affine::new([1.0, 0.0, 0.0, -1.0, -board.x0, board.y0]);
     let mut w = Writer::new(doc, to_art);
     for layer in &doc.layers {
         w.layer(layer);
     }
-    let (width, height) = (board.width(), board.height());
+    let first = to_art.transform_rect_bbox(board);
     let art = doc
         .layers
         .iter()
@@ -122,13 +136,14 @@ pub fn export_ai_editing(doc: &Document, o: &AiEditingOptions) -> Result<AiEditi
         .map(|b| to_art.transform_rect_bbox(b))
         .filter(|b| b.is_finite())
         .reduce(|a, b| a.union(b))
-        .unwrap_or(Rect::new(0.0, 0.0, width, height));
-    let header = header(doc, o, &w, art, (width, height));
+        .unwrap_or(first);
+    let origin = ruler_origin(doc, to_art);
+    let header = header(doc, o, &w, art, first, origin);
     let mut s = header.clone();
     // No gradient definitions: gradients are written as their average color.
     s.push_str("%%BeginProlog\n%%EndProlog\n%%BeginSetup\n0 Bn\n");
     w.palette(&mut s);
-    artboards(&mut s, doc, to_art);
+    artboards(&mut s, doc, to_art, origin);
     s.push_str("%%EndSetup\n");
     s.push_str(&w.body);
     s.push_str("%%PageTrailer\ngsave annotatepage grestore showpage\n%%Trailer\n%%EOF\n");
@@ -164,7 +179,7 @@ fn baked(doc: &Document) -> Option<Document> {
     Some(out)
 }
 
-/// The editing data of `doc` as a `.ai` file's first page carries it: the program compressed with
+/// The editing data of `doc` as a `.ai` file's pages carry it: the program compressed with
 /// Zstandard after `%AI24_ZStandard_Data`, its header as the `AIMetaData`, and the version numbers
 /// that go with that form; and what it couldn't hold.
 pub fn private_data(doc: &Document, o: &AiEditingOptions) -> Result<(PrivateData, Vec<String>), String> {
@@ -182,13 +197,28 @@ pub fn private_data(doc: &Document, o: &AiEditingOptions) -> Result<(PrivateData
     Ok((p, out.warnings))
 }
 
-/// The header comments, through `%%EndComments`. `art`: the visible art's bounds, `size` the first
-/// artboard's, in art space.
-fn header(doc: &Document, o: &AiEditingOptions, w: &Writer, art: Rect, (width, height): (f64, f64)) -> String {
+/// Where art space's origin lies on the canvas (y down, [`CANVAS_SIZE`] points square): the
+/// artboards together centered on the canvas's center, on whole points, as the files users sent
+/// place them.
+fn ruler_origin(doc: &Document, to_art: Affine) -> (f64, f64) {
+    let all = doc.artboards.iter().map(|ab| to_art.transform_rect_bbox(ab.rect)).filter(|r| r.is_finite()).reduce(|a, b| a.union(b));
+    let c = all.map_or((0.0, 0.0), |r| (r.center().x, r.center().y));
+    let mid = canvas_center();
+    ((mid - c.0).floor(), (mid + c.1).floor())
+}
+
+/// The canvas's center, on its own axes and in both directions.
+fn canvas_center() -> f64 {
+    f64::from(CANVAS_SIZE) / 2.0
+}
+
+/// The header comments, through `%%EndComments`. `art`: the visible art's bounds, `first` the first
+/// artboard, in art space; `origin` art space's origin on the canvas ([`ruler_origin`]).
+fn header(doc: &Document, o: &AiEditingOptions, w: &Writer, art: Rect, first: Rect, origin: (f64, f64)) -> String {
     let mut s = String::new();
     s.push_str(PS_HEADER);
     s.push('\n');
-    let _ = writeln!(s, "%%Creator: VectorCraft {}", env!("CARGO_PKG_VERSION"));
+    let _ = writeln!(s, "%%Creator: {CREATOR_TEXT}");
     let _ = writeln!(s, "%%AI8_CreatorVersion: {CREATOR_VERSION}");
     // The user and the organization (§2.1.1).
     let _ = writeln!(s, "%%For: {} ()", ps::bytes(doc.metadata.author.as_bytes()));
@@ -216,13 +246,17 @@ fn header(doc: &Document, o: &AiEditingOptions, w: &Writer, art: Rect, (width, h
         ps::push_nums(&mut s, &cmyk.map(f64::from));
         let _ = writeln!(s, "{}", ps::bytes(name.as_bytes()));
     }
-    let (w2, h2) = (ps::num(width), ps::num(height));
-    let _ = writeln!(s, "%AI3_Cropmarks: 0 0 {w2} {h2}");
-    let (cx, cy) = (ps::num(width / 2.0), ps::num(height / 2.0));
+    // The first artboard, left, bottom, right, top.
+    let mut board = String::new();
+    ps::push_nums(&mut board, &[first.x0, first.y0, first.x1, first.y1]);
+    board.pop();
+    let _ = writeln!(s, "%AI3_Cropmarks: {board}");
+    // The canvas's center in art space.
+    let (cx, cy) = (ps::num(canvas_center() - origin.0), ps::num(origin.1 - canvas_center()));
     let _ = writeln!(s, "%AI3_TemplateBox: {cx} {cy} {cx} {cy}");
-    let _ = writeln!(s, "%AI3_TileBox: 0 0 {w2} {h2}");
+    let _ = writeln!(s, "%AI3_TileBox: {board}");
     s.push_str("%AI3_DocumentPreview: None\n");
-    let _ = writeln!(s, "%AI5_ArtSize: {w2} {h2}");
+    let _ = writeln!(s, "%AI5_ArtSize: {ART_SIZE} {ART_SIZE}");
     let _ = writeln!(s, "%AI5_RulerUnits: {}", ruler_units(doc.units));
     s.push_str("%AI24_LargeCanvasScale: 1\n");
     let model = if doc.color_mode == vectorcraft_doc::ColorMode::Cmyk { 2 } else { 1 };
@@ -256,19 +290,30 @@ fn ruler_units(u: Unit) -> u8 {
 }
 
 /// The artboards as the `ArtboardArray` of the `/Document` dictionary: each one's top-left and
-/// bottom-right corners in art space (`PositionPoint1`, `PositionPoint2`) and its name.
-fn artboards(s: &mut String, doc: &Document, to_art: Affine) {
+/// bottom-right corners in art space (`PositionPoint1`, `PositionPoint2`), its top-left corner on
+/// the canvas (`RulerOrigin`, `origin` being art space's origin there), its pixel aspect ratio
+/// (`PAR`), `DisplayMark` 0 (as in the files users sent), whether it is the selected one (the
+/// first) and its name; then the canvas's size. Apps that read the editing data drop a record that
+/// lacks any of the first five.
+fn artboards(s: &mut String, doc: &Document, to_art: Affine, origin: (f64, f64)) {
     s.push_str("%AI9_BeginDocumentData\n%_/Document :\n%_/Dictionary :\n%_/Array :\n");
-    for ab in &doc.artboards {
+    for (i, ab) in doc.artboards.iter().enumerate() {
         let r = to_art.transform_rect_bbox(ab.rect);
         s.push_str("%_/Dictionary :\n%_");
         ps::push_nums(s, &[r.x0, r.y1]);
         s.push_str("/RealPointRelToROrigin\n%_ (PositionPoint1) ,\n%_");
         ps::push_nums(s, &[r.x1, r.y0]);
-        s.push_str("/RealPointRelToROrigin\n%_ (PositionPoint2) ,\n");
+        s.push_str("/RealPointRelToROrigin\n%_ (PositionPoint2) ,\n%_");
+        ps::push_nums(s, &[origin.0 + r.x0, origin.1 - r.y1]);
+        s.push_str("/RealPoint\n%_ (RulerOrigin) ,\n%_");
+        let par = ab.video_ruler_pixel_aspect_ratio;
+        ps::push_num(s, if par.is_finite() && par > 0.0 { par } else { 1.0 });
+        let _ = writeln!(s, " /Real (PAR) ,\n%_0 /Int (DisplayMark) ,\n%_{} /Bool (IsArtboardSelected) ,", u8::from(i == 0));
         let _ = writeln!(s, "%_{} /UnicodeString (Name) ,\n%_; ,", ps::bytes(ab.name.as_bytes()));
     }
-    s.push_str("%_; (ArtboardArray) ,\n%_; /NotRecorded ,\n%_;\n%AI9_EndDocumentData\n");
+    s.push_str("%_; (ArtboardArray) ,\n");
+    let _ = writeln!(s, "%_{CANVAS_SIZE} /Int (AIDocumentCanvasSize) ,");
+    s.push_str("%_; /NotRecorded ,\n%_;\n%AI9_EndDocumentData\n");
 }
 
 #[cfg(test)]

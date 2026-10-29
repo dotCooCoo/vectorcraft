@@ -290,14 +290,56 @@ fn the_data_is_zstandard_compressed_with_the_header_as_metadata() {
         "%%AI8_CreatorVersion: 30.7.0\n%%For: () ()\n%%Title: (Sample)\n",
         "%%Canvassize: 16383\n",
         "%AI5_FileFormat 14.0\n%AI3_ColorUsage: Color\n%AI7_ImageSettings: 0\n%%DocumentCustomColors: (Gold)\n%%+ (Sky)\n%%+ (Mint)\n",
-        "%AI3_Cropmarks: 0 0 200 100\n",
-        "%AI5_ArtSize: 200 100\n",
+        "%AI3_Cropmarks: 0 -100 200 0\n%AI3_TemplateBox: 225.5 -50.5 225.5 -50.5\n%AI3_TileBox: 0 -100 200 0\n",
+        "%AI5_ArtSize: 14400 14400\n",
         "%AI9_ColorModel: 1\n%AI5_ArtFlags: 0 0 0 1 0 0 1 0 0\n%AI5_TargetResolution: 800\n%AI5_NumLayers: 2\n",
         "%AI5_OpenViewLayers: 77\n%AI7_GridSettings: 72 8 72 8 1 0 0.7843 0.7843 0.7843 0.7843 0.7843 0.7843\n%%EndComments\n",
     ] {
         assert!(header.contains(line), "{line}\n{header}");
     }
     assert_eq!((p.container_version, p.creator_version, p.roundtrip_version, p.roundtrip_stream_type), (12, 30, 24, 2));
+}
+
+/// Art space is ruler space: y up from the first artboard's top-left corner. The artboards
+/// together sit centered on the canvas: each one's top-left corner on the canvas (y down) is its
+/// `RulerOrigin`, and the template box holds the canvas's center in art space.
+#[test]
+fn art_lies_on_its_artboard_in_ruler_space() {
+    let mut doc = Document::new(200.0, 100.0);
+    let mut second = doc.artboards[0].clone();
+    (second.id, second.name, second.rect) = (2, "Back".into(), Rect::new(250.0, 0.0, 450.0, 100.0));
+    doc.artboards.push(second);
+    let rect = Node::path(
+        doc.alloc_id(),
+        shapes::rectangle(Rect::new(10.0, 20.0, 30.0, 40.0)),
+        Appearance::basic(solid(Color::gray(0.5)), Paint::None, 0.0),
+    );
+    let layer = doc.layers[0].id;
+    doc.insert(Some(layer), usize::MAX, rect).unwrap();
+    let text = program(&doc);
+    for line in [
+        "%%BoundingBox: 10 -40 30 -20\n",
+        "%AI3_Cropmarks: 0 -100 200 0\n",
+        "%AI3_TemplateBox: 225.5 -50.5 225.5 -50.5\n",
+        "\n10 -20 m\n",
+        "%_0 0 /RealPointRelToROrigin\n%_ (PositionPoint1) ,\n%_200 -100 /RealPointRelToROrigin\n%_ (PositionPoint2) ,\n%_7966 8141 /RealPoint\n%_ (RulerOrigin) ,\n%_1 /Real (PAR) ,\n%_0 /Int (DisplayMark) ,\n%_1 /Bool (IsArtboardSelected) ,\n",
+        "%_250 0 /RealPointRelToROrigin\n%_ (PositionPoint1) ,\n%_450 -100 /RealPointRelToROrigin\n%_ (PositionPoint2) ,\n%_8216 8141 /RealPoint\n%_ (RulerOrigin) ,\n%_1 /Real (PAR) ,\n%_0 /Int (DisplayMark) ,\n%_0 /Bool (IsArtboardSelected) ,\n",
+        "%_16383 /Int (AIDocumentCanvasSize) ,\n",
+    ] {
+        assert!(text.contains(line), "{line}\n{text}");
+    }
+    // The creator names the format's app, before the canvas size and the template box, and holds
+    // no version number another app could read as the format's version.
+    let creator = text.lines().find_map(|l| l.strip_prefix("%%Creator: ")).unwrap();
+    assert!(creator.contains("Illustrator"), "{creator}");
+    assert!(!creator.contains("88") && !creator.chars().any(|c| c.is_ascii_digit()), "{creator}");
+    assert!(text.find("%%Creator: ").unwrap() < text.find("%%Canvassize: 16383").unwrap());
+    assert!(text.find("%%Canvassize: 16383").unwrap() < text.find("%AI3_TemplateBox").unwrap());
+    // The reader puts the art back where it was, on its artboard.
+    let read = read_back(&doc);
+    assert_eq!(read.artboards.iter().map(|a| a.rect).collect::<Vec<_>>(), doc.artboards.iter().map(|a| a.rect).collect::<Vec<_>>());
+    let bounds = read.layers.iter().filter_map(|l| l.visual_bounds()).reduce(|a, b| a.union(b)).unwrap();
+    assert_eq!(bounds, Rect::new(10.0, 20.0, 30.0, 40.0));
 }
 
 #[test]

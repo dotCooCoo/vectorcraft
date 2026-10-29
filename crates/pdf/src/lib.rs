@@ -105,7 +105,7 @@ pub struct PdfOptions {
     pub modified: Option<i64>,
     /// The native document (`.vectorcraft` bytes) Preserve Editing embeds.
     pub native: Option<Vec<u8>>,
-    /// The editing copy of the art for the first page's `PieceInfo`, as a `.ai` file carries it.
+    /// The editing copy of the art for every page's `PieceInfo`, as a `.ai` file carries it.
     pub private_data: Option<PrivateData>,
     /// The pages drawn small, in page order: what Embed Page Thumbnails embeds (the writer
     /// doesn't draw; [`page_areas`] says what each page shows).

@@ -282,7 +282,7 @@ fn overflow_warning(cmd: &str, doc: &Document, p: &Value) -> Result<Option<Strin
 
 /// [`encode`] the pages of `doc`, carrying `native()` as the editing data (a `.ai` file: the
 /// native document with its save options, whose pages may be left blank), and `private()`, the
-/// editing copy of the art for other apps with what it couldn't hold, on the first page.
+/// editing copy of the art for other apps with what it couldn't hold, on every page.
 pub(super) fn encode_carrying(
     cmd: &str,
     doc: &Document,
