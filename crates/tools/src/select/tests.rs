@@ -79,6 +79,53 @@ fn a_press_on_a_masks_edge_selects_its_clip_group() {
     assert!(!a.iter().any(|a| matches!(a, Action::Exec(c, _) if c == "select.set")), "{a:?}");
 }
 
+/// The art of a selected clipped object (picked in the Layers panel), pressed where its mask
+/// hides it, is grabbed: a drag moves the selection (the art, not its clip group) and a click
+/// keeps it selected. With nothing of it selected, or with Shift, a press there starts a marquee.
+#[test]
+fn a_press_where_a_mask_hides_a_selected_object_drags_it() {
+    let (d, _, _, art) = doc_with_masked_square();
+    let p = paint();
+    let mut picked = Selection::default();
+    picked.add(art);
+    let shift = |kind, x, y| {
+        let mut e = ev(kind, x, y);
+        e.mods.shift = true;
+        e
+    };
+    let changes_selection = |a: &[Action]| a.iter().any(|a| matches!(a, Action::Exec(c, _) if c.starts_with("select.")));
+    // (370, 450): on the art, outside the mask (400..500).
+    let mut t = SelectionTool::default();
+    let c = cx(&d, &picked, &p);
+    assert!(t.pointer(&c, &ev(PointerKind::Down, 370.0, 450.0)).is_empty());
+    let a = t.pointer(&c, &ev(PointerKind::Drag, 390.0, 470.0));
+    assert!(a.iter().any(|a| matches!(a, Action::Begin(n) if n == "Move")), "{a:?}");
+    assert!(a.iter().any(|a| matches!(a, Action::Preview(c, _) if c == "object.transform")), "{a:?}");
+    assert_eq!(t.pointer(&c, &ev(PointerKind::Up, 390.0, 470.0)), vec![Action::Commit]);
+    // A click there keeps the selection.
+    let mut t = SelectionTool::default();
+    t.pointer(&c, &ev(PointerKind::Down, 370.0, 450.0));
+    assert!(!changes_selection(&t.pointer(&c, &ev(PointerKind::Up, 370.0, 450.0))));
+    // Nothing selected: a marquee, and a click deselects.
+    let none = Selection::default();
+    let c = cx(&d, &none, &p);
+    let mut t = SelectionTool::default();
+    t.pointer(&c, &ev(PointerKind::Down, 370.0, 450.0));
+    assert!(!t.pointer(&c, &ev(PointerKind::Drag, 390.0, 470.0)).iter().any(|a| matches!(a, Action::Begin(_))));
+    // Shift: a marquee that adds to the selection.
+    let c = cx(&d, &picked, &p);
+    let mut t = SelectionTool::default();
+    t.pointer(&c, &shift(PointerKind::Down, 370.0, 450.0));
+    assert!(!t.pointer(&c, &shift(PointerKind::Drag, 390.0, 470.0)).iter().any(|a| matches!(a, Action::Begin(_))));
+    // An object a click hits there wins: a press on a square over that point selects it.
+    let mut d = d;
+    let (front, l) = (d.alloc_id(), d.layers[0].id);
+    let square = vectorcraft_geom::shapes::rectangle(Rect::new(350.0, 430.0, 390.0, 470.0));
+    d.insert(Some(l), 2, vectorcraft_doc::Node::path(front, square, vectorcraft_doc::Appearance::default_art())).unwrap();
+    let a = SelectionTool::default().pointer(&cx(&d, &picked, &p), &ev(PointerKind::Down, 370.0, 450.0));
+    assert!(a.iter().any(|a| matches!(a, Action::Exec(c, v) if c == "select.set" && v["ids"] == json!([front.0]))), "{a:?}");
+}
+
 /// #955: grabbed by an anchor and dropped near another object's anchor, the anchor lands
 /// exactly on it with Smart Guides, even where lining the bounds up would leave it beside it.
 #[test]

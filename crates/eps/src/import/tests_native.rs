@@ -779,6 +779,25 @@ fn type_of_the_page_with_the_letters_of_made_type_where_it_lies_is_that_type() {
     }
 }
 
+/// A right-to-left paragraph's page type has its words in the order they show, not the order they
+/// are typed (a dimension's label " 120.5 mm " is drawn "mm 120.5"): it is still that text
+/// object's type as the page draws it, not a second copy of it with the nearest text object.
+#[test]
+fn type_of_the_page_with_the_words_of_made_type_in_another_order_is_that_type() {
+    let doc = text_document(&[("Hi there\r", 0, (8200.0, 8180.0), (0.0, 0.0), 0.0)]);
+    let art = native_with_text(&layer("Art", true, &text_object(0)), &doc);
+    let page = "0 0 0 1 setcmykcolor /Helvetica findfont 14 scalefont setfont 58.5 58.5 moveto (there Hi) show";
+    let r = import(&eps(page, &art)).unwrap();
+    let mut all = vec![];
+    r.document.walk(|n| {
+        if let NodeKind::Text(t) = &n.kind {
+            all.push(t.plain_text());
+        }
+    });
+    assert_eq!(all, ["Hi there"], "{:?}", r.warnings);
+    assert!(!r.warnings.iter().any(|w| w.contains("with another's")), "{:?}", r.warnings);
+}
+
 /// Page type of no text object that lies where the made type of two text objects is, with the
 /// letters of one of them in each of its pieces, is the type of both as the page draws it.
 #[test]

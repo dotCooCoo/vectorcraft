@@ -376,6 +376,11 @@
 	Fill Color	Warna isian
 	Opacity	Opasitas
 	Stroke Color	Warna stroke
+	Fill Gradient	Gradien isian
+	Stroke Gradient	Gradien stroke
+	Fill Pattern	Pola isian
+	Stroke Pattern	Pola stroke
+	Patterns	Pola
 	Stroke Weight	Ketebalan stroke
 	Graphic Style	Gaya grafis
 	Symbol Instance	Instans simbol
@@ -1497,6 +1502,12 @@ lighting	Light	Cahaya
 	Document Library	Pustaka dokumen
 	Library:	Pustaka:
 	Tracing Presets	Preset penelusuran
+	Manage Presets	Kelola preset
+	Save as New Preset…	Simpan sebagai preset baru…
+	Rename…	Ganti nama…
+	Rename Preset	Ganti nama preset
+	Save Image Trace Preset	Simpan preset telusur gambar
+	Delete Image Trace Preset	Hapus preset telusur gambar
 	Method:	Metode:
 	Mode:	Mode:
 	Noise	Derau
@@ -4200,6 +4211,7 @@ imageTrace	Outline	Kontur
 @msg	not an EMF or WMF file	bukan berkas EMF atau WMF
 @msg	not found	tidak ditemukan
 @msg	not in pattern editing mode	tidak dalam mode pengeditan pola
+@msg	finish editing the pattern first	selesaikan pengeditan pola terlebih dahulu
 @msg	nothing encoded	tidak ada yang dikodekan
 @msg	nothing selected	tidak ada yang dipilih
 @msg	nothing selected is in a group	tidak ada yang dipilih yang berada dalam grup
@@ -5561,4 +5573,6 @@ axis	Y Axis	Sumbu Y
 	Save Brush Library…	Simpan pustaka kuas…
 @msg	no empty artboards to delete	tidak ada artboard kosong untuk dihapus
 	Scale Presets	Preset skala
+# Object › Expand… dimmed until Expand Appearance (#3089).
+	Expand Appearance first (Object › Expand Appearance)	Perluas tampilan terlebih dahulu (Objek › Perluas tampilan)
 	Live preview	Pratinjau langsung

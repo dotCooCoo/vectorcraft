@@ -1148,9 +1148,14 @@ fn libraries(what: &str, data: &str) -> Result<(), TestCaseError> {
         let lib = r["id"].clone();
         let Ok(got) = no_panic(s.execute("library.get", &json!({"library": lib}))) else { return };
         let _ = no_panic(s.execute("select.all", &json!({})));
-        for (list, kind, key) in
-            [("graphics", "graphic", "id"), ("colors", "fillColor", "name"), ("charStyles", "charStyle", "name"), ("paraStyles", "paraStyle", "name")]
-        {
+        for (list, kind, key) in [
+            ("graphics", "graphic", "id"),
+            ("colors", "fillColor", "name"),
+            ("gradients", "fillGradient", "name"),
+            ("patterns", "fillPattern", "name"),
+            ("charStyles", "charStyle", "name"),
+            ("paraStyles", "paraStyle", "name"),
+        ] {
             if let Some(item) = got[list].get(0) {
                 let _ = no_panic(s.execute("library.use", &json!({"library": lib, "kind": kind, "item": item[key]})));
                 let to = json!({"library": lib, "kind": kind, "item": item[key], "group": got["groups"][0]["name"]});
@@ -1172,8 +1177,8 @@ fn libraries(what: &str, data: &str) -> Result<(), TestCaseError> {
     })
 }
 
-/// A Libraries panel library of the rich document's first object (a graphic), a colour, its
-/// type's character and paragraph styles and a group, exported, made once.
+/// A Libraries panel library of the rich document's first object (a graphic) and its gradient, a
+/// colour, a pattern, its type's character and paragraph styles and a group, exported, made once.
 fn saved_library() -> String {
     static TEXT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     TEXT.get_or_init(|| {
@@ -1182,6 +1187,11 @@ fn saved_library() -> String {
         let first = s.doc().unwrap().doc.layers[0].children().unwrap()[0].id.0;
         let g = s.execute("library.add", &json!({"kind": "graphic", "ids": [first]})).unwrap()["id"].clone();
         s.execute("library.add", &json!({"kind": "fillColor", "color": "#336699"})).unwrap();
+        s.execute("library.add", &json!({"kind": "fillGradient", "ids": [first]})).unwrap();
+        s.execute("select.set", &json!({"ids": [first]})).unwrap();
+        s.execute("object.pattern.make", &json!({"name": "Tiles", "width": 200, "height": 150})).unwrap();
+        s.execute("object.pattern.done", &json!({})).unwrap();
+        s.execute("library.add", &json!({"kind": "fillPattern", "swatch": "Tiles"})).unwrap();
         s.execute("select.all", &json!({})).unwrap();
         for kind in ["charStyle", "paraStyle"] {
             s.execute("library.add", &json!({"kind": kind})).unwrap();

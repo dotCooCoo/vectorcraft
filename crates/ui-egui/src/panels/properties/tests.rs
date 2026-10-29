@@ -1600,3 +1600,50 @@ fn a_symbol_instance_turns_about_its_registration_point() {
     assert!((bx.angle - 45.0).abs() < 1e-6, "turned to {}", bx.angle);
     assert!(near(bx.reference_point(8), vectorcraft_geom::Point::new(200.0, 160.0)), "the registration point moved to {:?}", bx.reference_point(8));
 }
+
+/// Ruler guides selected on their own (a click on one) show a Guides heading and a Transform
+/// section, where X moves the vertical ones and Y the horizontal ones; with art selected too, the
+/// panel shows the art's sections.
+#[test]
+fn selected_guides_show_their_position_in_a_transform_section() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
+    let v = app.run("guide.add", json!({"vertical": true, "pos": 30})).unwrap()["index"].as_u64().unwrap();
+    let h = app.run("guide.add", json!({"vertical": false, "pos": 20})).unwrap()["index"].as_u64().unwrap();
+    let pos = |app: &VectorcraftApp, i: u64| app.session.doc().unwrap().doc.guides[i as usize].pos;
+    let ctx = egui::Context::default();
+    // Steps the field labelled `label` up by one with ↑.
+    let step = |app: &mut VectorcraftApp, label: &str| {
+        let texts = frame(app, &ctx, vec![]);
+        let r = texts.iter().find(|(t, _)| t == label).unwrap_or_else(|| panic!("no {label:?} in {texts:?}")).1;
+        let at = egui::pos2(r.right() + 40.0, r.center().y);
+        let press = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
+        frame(app, &ctx, vec![Event::PointerMoved(at), press(true)]);
+        frame(app, &ctx, vec![press(false)]);
+        let up = Event::Key { key: egui::Key::ArrowUp, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() };
+        frame(app, &ctx, vec![up]);
+        frame(
+            app,
+            &ctx,
+            vec![Event::PointerButton { pos: egui::pos2(5.0, 690.0), button: PointerButton::Primary, pressed: true, modifiers: Default::default() }],
+        );
+    };
+    for (index, label, before) in [(v, "X:", 30.0), (h, "Y:", 20.0)] {
+        app.run("guide.select", json!({"indexes": [index]})).unwrap();
+        frame(&mut app, &ctx, vec![]);
+        let texts: Vec<String> = frame(&mut app, &ctx, vec![]).into_iter().map(|(t, _)| t).collect();
+        for shown in ["Guides", "Transform", "X:", "Y:"] {
+            assert!(texts.iter().any(|t| t == shown), "{shown:?} in {texts:?}");
+        }
+        assert!(!texts.iter().any(|t| t == "Document"), "{texts:?}");
+        step(&mut app, label);
+        assert_eq!((pos(&app, index) - before).abs(), 1.0, "{label} moves the selected guide");
+    }
+    // A guide and a rectangle: the rectangle's sections.
+    let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 40})).unwrap()["id"].as_u64().unwrap();
+    app.run("select.set", json!({"ids": [id]})).unwrap();
+    app.run("guide.select", json!({"indexes": [v], "toggle": true})).unwrap();
+    frame(&mut app, &ctx, vec![]);
+    let texts: Vec<String> = frame(&mut app, &ctx, vec![]).into_iter().map(|(t, _)| t).collect();
+    assert!(!texts.iter().any(|t| t == "Guides") && texts.iter().any(|t| t == "W:"), "{texts:?}");
+}

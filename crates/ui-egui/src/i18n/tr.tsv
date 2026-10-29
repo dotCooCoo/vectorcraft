@@ -1375,6 +1375,12 @@ font-technology	Variable	Değişken
 	Image Trace	Görüntü İzleme
 	Image Tracing	Görüntü İzleme
 	Tracing Presets	İzleme Ön Ayarları
+	Manage Presets	Ön Ayarları Yönet
+	Save as New Preset…	Yeni Ön Ayar Olarak Kaydet…
+	Rename…	Yeniden adlandır…
+	Rename Preset	Ön Ayarı Yeniden Adlandır
+	Save Image Trace Preset	Görüntü İzleme Ön Ayarını Kaydet
+	Delete Image Trace Preset	Görüntü İzleme Ön Ayarını Sil
 	Image Trace Presets	Görüntü İzleme Ön Ayarları
 	Image:	Resim:
 	Images:	Görseller:
@@ -2716,6 +2722,7 @@ font-technology	Variable	Değişken
 	X11 (XWayland) When a Pen Is Attached	Kalem Takıldığında X11 (XWayland)
 	Apply {name}	“{name}” Stilini Uygula
 	Redefine {name}	“{name}” Stilini Yeniden Tanımla
+@msg	`Custom` stands for changed settings: save the preset under another name	`Custom` değiştirilmiş ayarları ifade eder: ön ayarı başka bir adla kaydedin
 @msg	`{key}` must be an array of these names: {_1}	"{key}" şu adlardan oluşan bir dizi olmalıdır: {_1}
 	Search commands and tools	Komutları ve araçları arayın
 	Search commands and tools…	Komutları ve araçları arayın…
@@ -3010,6 +3017,11 @@ font-technology	Variable	Değişken
 	Stroke	Kontur
 	Stroke (X), double-click for the Color Picker	Kontur (X), Renk Seçici için çift tıklayın
 	Stroke Color	Kontur Rengi
+	Fill Gradient	Dolgu Degradesi
+	Stroke Gradient	Kontur Degradesi
+	Fill Pattern	Dolgu Deseni
+	Stroke Pattern	Kontur Deseni
+	Patterns	Desenler
 	Stroke Options	Kontur Seçenekleri
 	Character:	Karakter:
 	Character options	Karakter seçenekleri
@@ -3614,6 +3626,13 @@ axis	Both	Her İkisi
 	Float Tool Group	Araç Grubunu Yüzer Yap
 @msg	no library `{id}`	`{id}` kütüphanesi yok
 @msg	select some type first	önce bir tür seçin
+@msg	the selection has no gradient fill	seçimin degrade dolgusu yok
+@msg	the selection has no gradient stroke	seçimin degrade konturu yok
+@msg	the selection has no pattern fill	seçimin desen dolgusu yok
+@msg	the selection has no pattern stroke	seçimin desen konturu yok
+@msg	no gradient swatch `{name}`	degrade renk örneği yok `{name}`
+@msg	no pattern swatch `{name}`	desen renk örneği yok `{name}`
+@msg	the library item is damaged	kitaplık öğesi bozuk
 @msg	{_1} has no {_2} style	{_1}'nin {_2} stili yok
 @msg	a layer couldn't be read	bir katman okunamadı
 @msg	it has more than one artboard	birden fazla çalışma yüzeyi var
@@ -3770,6 +3789,10 @@ axis	Both	Her İkisi
 @msg	a page tree node has no kids	sayfa ağacı düğümünün çocuğu yok
 @msg	a page's placement is not finite	bir sayfanın yerleşimi sınırlı değildir
 @msg	a preset named `{_1}` exists	`{_1}` adında bir ön ayar mevcut
+@msg	`name` is empty	`name` boş
+@msg	`newName` is empty	`newName` boş
+@msg	`{name}` is a built-in preset and can't change: save it under another name	`{name}` yerleşik bir ön ayardır ve değiştirilemez: başka bir adla kaydedin
+@msg	`{name}` is a built-in preset and stays	`{name}` yerleşik bir ön ayardır ve silinemez
 @msg	a slice size must be a positive number of points	dilim boyutu pozitif sayıda nokta olmalıdır
 @msg	a stream runs past the end	bir akış sonundan geçiyor
 @msg	a stream's length is wrong	bir akışın uzunluğu yanlış
@@ -3921,6 +3944,8 @@ axis	Both	Her İkisi
 @msg	no print service	baskı hizmeti yok
 @msg	no revert command	geri alma komutu yok
 @msg	no saved PDF preset named `{name}` (built-in presets are read-only: start a new one from them)	`{name}` adında kayıtlı bir PDF hazır ayarı yok (yerleşik hazır ayarlar salt okunurdur: onlardan yeni bir tane başlatın)
+@msg	no saved preset named `{name}`	`{name}` adında kayıtlı bir ön ayar yok
+@msg	no saved preset named `{name}` to rename	yeniden adlandırılacak `{name}` adında kayıtlı bir ön ayar yok
 @msg	no saved presets	kayıtlı ön ayar yok
 @msg	no saved print preset named `{name}` ({DEFAULT_PRESET} is protected: start a new one from it)	`{name}` adında kayıtlı bir yazdırma ön ayarı yok ({DEFAULT_PRESET} korumalı: ondan yeni bir tane başlatın)
 @msg	no saved profiles	kayıtlı profil yok
@@ -3965,6 +3990,7 @@ axis	Both	Her İkisi
 @msg	not an RTF file: it doesn't start with {\\rtf	bir RTF dosyası değil: {\\rtf ile başlamıyor
 @msg	not found	bulunamadı
 @msg	not in pattern editing mode	desen düzenleme modunda değil
+@msg	finish editing the pattern first	önce deseni düzenlemeyi bitir
 @msg	nothing encoded	kodlanmış hiçbir şey yok
 @msg	nothing selected	hiçbir şey seçilmedi
 @msg	nothing selected is in a group	seçilenlerin hiçbiri bir grupta değil
@@ -4136,6 +4162,7 @@ axis	Both	Her İkisi
 @msg	unknown preset `{name}` (high, medium, low or a saved one: see flattener.presets.list)	bilinmeyen ön ayar `{name}` (yüksek, orta, düşük veya kaydedilmiş bir ayar: bkz. flattener.presets.list)
 @msg	unknown preset `{name}` (see flattener.presets.list)	bilinmeyen ön ayar `{name}` (bkz. düzleştirici.presets.list)
 @msg	unknown preset `{name}` (see webExport.presets.list)	bilinmeyen ön ayar `{name}` (bkz. webExport.presets.list)
+@msg	unknown preset `{name}`: not a built-in or saved preset (see imageTrace.presets)	bilinmeyen ön ayar `{name}`: yerleşik ya da kayıtlı bir ön ayar değil (bkz. imageTrace.presets)
 @msg	unknown side `{other}` (left|right|top|bottom)	bilinmeyen taraf `{other}` (sol|sağ|üst|alt)
 @msg	unknown tool `{tool}`	bilinmeyen araç `{tool}`
 @msg	unknown tool `{t}`	bilinmeyen araç `{t}`
@@ -5592,4 +5619,6 @@ axis	Y Axis	Y ekseni
 	Scale Presets	Ölçek ön ayarları
 @msg	a {width}×{height} screenshot's byte count overflows	{width}×{height} ekran görüntüsünün bayt sayısı taşıyor
 @msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	pencerenin {what} ({points} nokta × {scale} DPI) bir ekran görüntüsünü boyutlandıramaz
+# Object › Expand… dimmed until Expand Appearance (#3089).
+	Expand Appearance first (Object › Expand Appearance)	Önce görünümü genişletin (Nesne › Görünümü Genişlet)
 	Live preview	Canlı önizleme

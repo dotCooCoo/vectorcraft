@@ -547,6 +547,26 @@ fn busy_tool_keys(app: &mut VectorcraftApp, ctx: &egui::Context, view: ViewInfo)
             let _ = app.session.tool_key(ToolKey::Letter(c), Mods::default(), view);
         }
     }
+    // Between clicks, the active tool's shortcut chooses that tool again (W with the Blend
+    // tool's first pick held finishes the blend). While the button is held, it does nothing.
+    if !app.session.pointer_held() {
+        let presses = ctx.input(|i| shortcut_presses(&i.events, i.modifiers));
+        let keymap = crate::shortcut_editor::current();
+        let active = app.session.tool_id();
+        let again = presses.iter().any(|(names, letter)| {
+            let claimed = letter.is_some_and(|c| app.session.tool_claims_key(ToolKey::Letter(c), view));
+            // The first name bound to anything is the press's shortcut (Shift+W is the Width
+            // tool's, not W's).
+            !claimed
+                && names
+                    .iter()
+                    .find_map(|name| crate::keymap::vc_chord(name).and_then(|c| crate::keymap::lookup(&keymap.keymap, &c)))
+                    .is_some_and(|c| c.id.strip_prefix("tool:") == Some(active))
+        });
+        if again {
+            app.select_tool(active);
+        }
+    }
 }
 
 /// Give keys claimed by the active tool precedence over their command shortcuts.
@@ -703,6 +723,55 @@ fn latin(text: &str, physical: Option<Key>) -> String {
         Some(k) if !text.is_ascii() => k.symbol_or_name().to_lowercase(),
         _ => text.to_string(),
     }
+}
+
+/// Each new press's shortcut names, first match first, and the letter it types, without Cmd, Ctrl
+/// or Alt. A text-only press counts as well (Shift+~ arrives as the text `~` with Shift), unless
+/// the key that typed it repeated. A text's key is the press right before it (egui-winit) or,
+/// failing that, right after it (eframe's web build with no text field focused). Text reads its
+/// key's modifiers, or the latest modifier change (`held` before any), and tries its key's own
+/// name first.
+fn shortcut_presses(events: &[egui::Event], held: Modifiers) -> Vec<(Vec<String>, Option<char>)> {
+    let key_name = |key: &Key, m: &Modifiers| if m.shift { format!("Shift+{}", key.name()) } else { key.name().to_string() };
+    let press_at = |j: Option<usize>| match j.and_then(|j| events.get(j)) {
+        Some(egui::Event::Key { key, pressed: true, repeat, modifiers, .. }) => Some((*repeat, *modifiers, key_name(key, modifiers))),
+        _ => None,
+    };
+    let mut latest = held;
+    events
+        .iter()
+        .enumerate()
+        .filter_map(|(j, e)| match e {
+            egui::Event::ModifiersChanged(m) => {
+                latest = *m;
+                None
+            }
+            egui::Event::Key { key, pressed: true, repeat: false, modifiers, .. } if !(modifiers.command || modifiers.alt || modifiers.ctrl) => {
+                Some((vec![key_name(key, modifiers)], letter_of(*key)))
+            }
+            egui::Event::Text(t) => {
+                let typed_by = press_at(j.checked_sub(1)).or_else(|| press_at(Some(j + 1)));
+                let (repeated, mods, key_name) = typed_by.map_or((false, latest, None), |(r, m, n)| (r, m, Some(n)));
+                if repeated || mods.command || mods.alt || mods.ctrl {
+                    return None;
+                }
+                let upper = t.to_uppercase();
+                let alpha = t.chars().all(|c| c.is_alphabetic());
+                // A shifted letter is only Shift+letter; other shifted text may also be written
+                // without its Shift.
+                let text_names = match (mods.shift, alpha) {
+                    (true, true) => vec![format!("Shift+{upper}")],
+                    (true, false) => vec![upper, t.clone(), format!("Shift+{t}")],
+                    (false, _) => vec![upper, t.clone()],
+                };
+                let names: Vec<String> = key_name.into_iter().chain(text_names).collect();
+                let mut chars = t.chars();
+                let letter = chars.next().filter(|c| c.is_ascii_alphabetic() && chars.next().is_none()).map(|c| c.to_ascii_lowercase());
+                Some((names, letter))
+            }
+            _ => None,
+        })
+        .collect()
 }
 
 /// The digit a number-row or keypad key types.
