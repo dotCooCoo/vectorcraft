@@ -3,7 +3,10 @@ use super::plain::{
     plain_len, step_key,
 };
 use super::ports::{ported, ports, ports_shown};
-use super::*;
+use super::{
+    Action, BezPath, Cursor, ImeSurrounding, Mode, Mods, NodeId, Overlay, Point, PointerEvent, PointerKind, Preedit, Range, Rect, Shape,
+    SurroundingUnit, TextKind, TextRun, Tool, ToolContext, ToolKey, TypeTool, Value, edit, json,
+};
 
 impl Tool for TypeTool {
     fn id(&self) -> &'static str {
@@ -208,16 +211,7 @@ impl Tool for TypeTool {
                 out
             }
             ToolKey::Enter => self.replace(cx, "\n", None),
-            // Tab and Shift+Tab with the caret at the start of a list paragraph move it a level
-            // down or up; anywhere else Tab inserts a tab.
-            ToolKey::Tab => match self.list_level_step(&t, &text, a, b, if mods.shift { -1 } else { 1 }) {
-                Some(step) => {
-                    let mut out = self.commit();
-                    out.extend(step);
-                    out
-                }
-                None => self.replace(cx, "\t", None),
-            },
+            ToolKey::Tab => self.tab(cx, &t, &text, (a, b), mods.shift),
             ToolKey::Backspace | ToolKey::Delete if a != b => self.replace(cx, "", None),
             ToolKey::Backspace if self.caret > 0 => {
                 self.anchor = if word { edit::prev_word(&text, self.caret) } else { edit::prev_char(&text, self.caret) };

@@ -17,7 +17,9 @@ use vectorcraft_color::{Color, Paint};
 use vectorcraft_doc::ColorMode;
 use vectorcraft_render::proof;
 
-use super::*;
+#[cfg(not(target_arch = "wasm32"))]
+use super::EngineError;
+use super::{CommandSpec, Result, Session, always, bad, bool_or, cmd, color_value, has_doc, str_param, targets};
 
 /// `Document.unknown` key under which files before format v3 kept the assigned profiles (migrated
 /// to `Document::color_profiles` on load).

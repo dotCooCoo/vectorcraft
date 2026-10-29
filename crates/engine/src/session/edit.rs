@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    Arc, Document, EngineError, Interaction, LastTransform, NamedStep, Result, Selection, Session, TOO_DEEP, Value, cmd, deselect_hidden, doc_sane,
+    objects_in_range,
+};
 
 impl Session {
     /// Run `f` on a mutable copy of the active document. Outside an interaction this records one

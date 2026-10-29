@@ -18,7 +18,9 @@ use vectorcraft_doc::recolor::{ColorVisitor, Reach, map_links, recolor_node};
 use vectorcraft_doc::{Document, ImageBlob, Node, NodeId, NodeKind};
 
 use super::edit::selected_roots;
-use super::*;
+use super::{
+    CommandSpec, EngineError, Result, Session, always, bad, bool_or, cmd, color_value, f64_or, has_selection, ids_param, str_param, unique_name,
+};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![

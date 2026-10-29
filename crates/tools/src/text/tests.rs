@@ -107,6 +107,37 @@ fn type_arrows_keep_devanagari_clusters_with_an_rtl_suffix() {
     }
 }
 
+fn assert_unwrapped_hindi_glyphs(
+    db: &FontDb,
+    face: &vectorcraft_text::FontFace,
+    hindi_glyphs: &[&vectorcraft_text::PositionedGlyph],
+    hindi: &str,
+    text: &str,
+) {
+    for glyph in hindi_glyphs {
+        let used = db.face_by_id(glyph.font_id).expect("the Hindi glyph's loaded face");
+        assert!(used.file_data() == face.file_data(), "setup: Hindi uses the selected face bytes");
+        assert_eq!(used.face_index(), face.face_index(), "setup: Hindi uses the selected face index");
+        assert_ne!(glyph.gid, 0, "setup: Hindi glyph is present");
+        assert!(!glyph.rtl, "setup: Hindi prefix is LTR");
+        assert!(glyph.len > 0 && glyph.byte + glyph.len <= hindi.len(), "setup: Hindi glyph source range");
+        assert!(
+            text.is_char_boundary(glyph.byte) && text.is_char_boundary(glyph.byte + glyph.len),
+            "setup: glyph source ranges are UTF-8 boundaries"
+        );
+    }
+}
+
+fn assert_wrapped_hindi_glyphs(db: &FontDb, face: &vectorcraft_text::FontFace, lay: &vectorcraft_text::TextLayout, hindi: &str) {
+    for glyph in lay.glyphs.iter().filter(|g| g.byte < hindi.len()) {
+        let used = db.face_by_id(glyph.font_id).expect("the wrapped Hindi glyph's loaded face");
+        assert!(used.file_data() == face.file_data(), "setup: wrapped Hindi uses the selected face bytes");
+        assert_eq!(used.face_index(), face.face_index(), "setup: wrapped Hindi uses the selected face index");
+        assert_ne!(glyph.gid, 0, "setup: wrapped Hindi glyph is present");
+        assert!(!glyph.rtl, "setup: wrapped Hindi prefix stays LTR");
+    }
+}
+
 #[test]
 fn type_arrows_keep_devanagari_clusters_across_wrapped_lines() {
     use vectorcraft_doc::{Composer, Justify};
@@ -146,18 +177,7 @@ fn type_arrows_keep_devanagari_clusters_across_wrapped_lines() {
     assert!(!natural.vertical, "setup: horizontal text");
     let hindi_glyphs: Vec<_> = natural.glyphs.iter().filter(|g| g.byte < hindi.len()).collect();
     assert!(!hindi_glyphs.is_empty(), "setup: actual Hindi glyphs exist");
-    for glyph in &hindi_glyphs {
-        let used = db.face_by_id(glyph.font_id).expect("the Hindi glyph's loaded face");
-        assert!(used.file_data() == face.file_data(), "setup: Hindi uses the selected face bytes");
-        assert_eq!(used.face_index(), face.face_index(), "setup: Hindi uses the selected face index");
-        assert_ne!(glyph.gid, 0, "setup: Hindi glyph is present");
-        assert!(!glyph.rtl, "setup: Hindi prefix is LTR");
-        assert!(glyph.len > 0 && glyph.byte + glyph.len <= hindi.len(), "setup: Hindi glyph source range");
-        assert!(
-            text.is_char_boundary(glyph.byte) && text.is_char_boundary(glyph.byte + glyph.len),
-            "setup: glyph source ranges are UTF-8 boundaries"
-        );
-    }
+    assert_unwrapped_hindi_glyphs(db, &face, &hindi_glyphs, hindi, text);
     let prefix_width: f64 = hindi_glyphs.iter().filter(|g| g.byte < split).map(|g| g.advance).sum();
     let split_width: f64 = hindi_glyphs.iter().filter(|g| g.byte == split).map(|g| g.advance).sum();
     assert!(prefix_width.is_finite() && prefix_width > 0.0, "setup: prefix has positive finite advance");
@@ -179,13 +199,7 @@ fn type_arrows_keep_devanagari_clusters_across_wrapped_lines() {
     assert!(!lay.overflow, "setup: the full RTL suffix fits the tall frame");
     assert!(!lay.vertical, "setup: horizontal area text");
     assert!(lay.glyphs.iter().any(|g| g.rtl && g.byte > hindi.len()), "setup: actual RTL suffix selects Type's visual-arrow route");
-    for glyph in lay.glyphs.iter().filter(|g| g.byte < hindi.len()) {
-        let used = db.face_by_id(glyph.font_id).expect("the wrapped Hindi glyph's loaded face");
-        assert!(used.file_data() == face.file_data(), "setup: wrapped Hindi uses the selected face bytes");
-        assert_eq!(used.face_index(), face.face_index(), "setup: wrapped Hindi uses the selected face index");
-        assert_ne!(glyph.gid, 0, "setup: wrapped Hindi glyph is present");
-        assert!(!glyph.rtl, "setup: wrapped Hindi prefix stays LTR");
-    }
+    assert_wrapped_hindi_glyphs(db, &face, &lay, hindi);
     assert_eq!(edit::next_cluster(text, second), hindi.len(), "setup: logical cluster end is 18");
     assert_eq!(edit::prev_cluster(text, hindi.len()), second, "setup: logical cluster start is 6");
     assert_eq!(edit::prev_cluster(text, split), second, "setup: raw line endpoint 12 is inside the grapheme");

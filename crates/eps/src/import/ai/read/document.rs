@@ -1,7 +1,7 @@
 use super::art::{element_name, elements, join_and, sane};
 use super::containers::drop_commented_copies;
 use super::types::{FLIP, Kind, MAX_DEPTH};
-use super::*;
+use super::{Affine, Artboard, ColorMode, Document, NodeKind, Obj, OpacityMask, Paint, Point, Reader, Rect, Structure, Swatch, Unit, V, obj};
 
 /// `%AI5_RulerUnits` → [`Unit`] (Illustrator 7 spec table 3; centimeters is 4; pixels is 6 in later files).
 fn ruler_unit(v: u8) -> Option<Unit> {

@@ -1,4 +1,4 @@
-use super::*;
+use super::{canvas, cursors, render_worker};
 
 /// Cached canvas raster.
 pub struct CanvasCache {

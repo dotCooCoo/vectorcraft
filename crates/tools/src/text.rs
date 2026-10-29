@@ -346,6 +346,20 @@ impl TypeTool {
         Some(vec![Action::Exec("text.setFormat".into(), json!({"id": id.0, "start": a, "end": a, "listLevel": level}))])
     }
 
+    /// Tab (Shift+Tab with `shift`) in type `t` (plain text `text`) with the selection `a..b`: with
+    /// the caret at the start of a list paragraph, it moves the paragraph a level down or up
+    /// ([`Self::list_level_step`]); anywhere else Tab inserts a tab.
+    fn tab(&mut self, cx: &ToolContext, t: &TextObject, text: &str, (a, b): (usize, usize), shift: bool) -> Vec<Action> {
+        match self.list_level_step(t, text, a, b, if shift { -1 } else { 1 }) {
+            Some(step) => {
+                let mut out = self.commit();
+                out.extend(step);
+                out
+            }
+            None => self.replace(cx, "\t", None),
+        }
+    }
+
     /// Move the caret (Shift keeps the anchor). Moving ends the typing session.
     fn move_to(&mut self, byte: usize, extend: bool) -> Vec<Action> {
         let out = self.commit();

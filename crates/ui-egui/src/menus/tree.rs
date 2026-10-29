@@ -1,6 +1,6 @@
 use super::slots::{PERSPECTIVE_SLOTS, RECENT_FONT_IDS, RECENT_IDS, SAVED_SELECTION_IDS, SAVED_VIEW_IDS};
 use super::submenus::{INSERT_BREAK, INSERT_SPECIAL, INSERT_WHITESPACE, PATH_EFFECTS, TYPE_SIZES, effect_menu, font_items, insert_items};
-use super::*;
+use super::{Item, Sep, c, cp, json, sub, todo, todos};
 
 /// The in-window and native menu tree. The in-window bar skips the VectorCraft menu (see
 /// `menu_bar`); the native Mac bar is composed from the whole tree (see `native_menu`).

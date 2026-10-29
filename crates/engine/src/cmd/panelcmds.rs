@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use vectorcraft_doc::{Composer, JustificationOptions, NodeKind, Scaling, SingleWordJustify, TextRun};
 use vectorcraft_geom::{Rect, Vec2};
 
-use super::*;
+use super::{Affine, CommandSpec, NodeId, Result, Session, bad, bool_or, check_switches, cmd, has_doc, index, ok, point_indices};
 use crate::{Clipboard, EngineError};
 
 pub fn specs() -> Vec<CommandSpec> {
@@ -589,11 +589,9 @@ fn set_format(s: &mut Session, p: &Value) -> Result<Value> {
                         para.first_line_indent = -vectorcraft_doc::text::LIST_HANGING_INDENT;
                     }
                 }
-                if let (Some(align), Some(l)) = (list_align, para.list.as_mut()) {
-                    l.align = align;
-                }
-                if let (Some(level), Some(l)) = (list_level, para.list.as_mut()) {
-                    l.level = level;
+                if let Some(l) = para.list.as_mut() {
+                    l.align = list_align.unwrap_or(l.align);
+                    l.level = list_level.unwrap_or(l.level);
                 }
                 if let Some(v) = flag("hyphenate") {
                     para.hyphenate = v;

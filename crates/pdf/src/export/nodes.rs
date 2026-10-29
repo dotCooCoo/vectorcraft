@@ -1,5 +1,8 @@
 use super::exporter::{address, blend, constant_mask, cover, in_range, norm, rects_overlap, rule, to_path, writable};
-use super::*;
+use super::{
+    Affine, AppearanceItem, BezPath, BlendMode, Exporter, Fill, FillRule, LineCap, LineJoin, Mark, Node, NodeKind, NormalizedF32, Paint, Path, Rect,
+    Shape, Stroke, StrokeAlign, StrokeDash, StrokeLayer, Surface, WrittenShape, krilla, stroke,
+};
 
 impl Exporter<'_> {
     /// Opacity mask → luminosity soft mask. Outside the art the backdrop is black (clip) or white;
