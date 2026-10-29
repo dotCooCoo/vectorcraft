@@ -5,7 +5,8 @@ use super::compound::{clip_edit, clip_make, clip_release, compound_make, compoun
 use super::props::set_props;
 use super::shape::{expand_shape, set_live_shape};
 use super::transform::{move_cmd, nudge, reflect, rotate, scale, shear, transform, transform_again};
-use super::*;
+use super::{CommandSpec, cmd, has_doc, has_multi, has_selection, has_selection_or_guides};
+use crate::cmd::{has_selection_outside_isolation, outside_isolation};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -150,20 +151,20 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Lock"],
             Some("Cmd+2"),
             "{ids?: [id…] (selected first; default: the selection)}",
-            has_selection,
+            has_selection_outside_isolation,
             lock
         ),
-        cmd!("object.unlockAll", "Unlock All", ["Object"], Some("Cmd+Alt+2"), "{}", has_doc, unlock_all),
+        cmd!("object.unlockAll", "Unlock All", ["Object"], Some("Cmd+Alt+2"), "{}", outside_isolation, unlock_all),
         cmd!(
             "object.hide",
             "Selection",
             ["Object", "Hide"],
             Some("Cmd+3"),
             "{ids?: [id…] (selected first; default: the selection)}",
-            has_selection,
+            has_selection_outside_isolation,
             hide
         ),
-        cmd!("object.showAll", "Show All", ["Object"], Some("Cmd+Alt+3"), "{}", has_doc, show_all),
+        cmd!("object.showAll", "Show All", ["Object"], Some("Cmd+Alt+3"), "{}", outside_isolation, show_all),
         cmd!(
             "object.compoundPath.make",
             "Make",
@@ -260,7 +261,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Distribute Spacing",
             ["Window", "Align"],
             None,
-            "{axis: \"horizontal\"|\"vertical\", spacing?: pt (the key object, select.key, or the key guide, select.key {guide}, stays put and the others are spaced from it; a key guide along the axis leaves everything where it is), to?: \"selection\"|\"artboard\"|\"key\" (used without spacing and without anchor points selected, and with a key guide; default: the key while there is one, else the selection; \"key\" without spacing spaces as \"selection\" does), artboard?: index (0-based; with to: \"artboard\", the artboard to space across; the app passes the active one; default: as object.align's), bounds?: \"preview\"|\"geometric\" (default: the Use Preview Bounds preference; preview bounds take in strokes), patterns?: bool (Transform Patterns: pattern fills and strokes transform with the art; default: prefs transformPatternTiles)} without spacing, make the gaps between the selected objects equal, in the order of their left (top) edges, with the selected ruler guides across the axis as items with no size (#1597; guides along the axis stay): the first item's left (top) edge and the last one's right (bottom) edge stay put, or with to: \"artboard\" go to the artboard's left (top) and right (bottom) edges. With anchor points selected (Direct Selection), the points are spaced evenly along the axis instead, or `spacing` apart from the first (#1636)",
+            "{axis?: \"horizontal\"|\"vertical\" (default: \"horizontal\"), spacing?: pt (the key object, select.key, or the key guide, select.key {guide}, stays put and the others are spaced from it; a key guide along the axis leaves everything where it is), to?: \"selection\"|\"artboard\"|\"key\" (used without spacing and without anchor points selected, and with a key guide; default: the key while there is one, else the selection; \"key\" without spacing spaces as \"selection\" does), artboard?: index (0-based; with to: \"artboard\", the artboard to space across; the app passes the active one; default: as object.align's), bounds?: \"preview\"|\"geometric\" (default: the Use Preview Bounds preference; preview bounds take in strokes), patterns?: bool (Transform Patterns: pattern fills and strokes transform with the art; default: prefs transformPatternTiles)} without spacing, make the gaps between the selected objects equal, in the order of their left (top) edges, with the selected ruler guides across the axis as items with no size (#1597; guides along the axis stay): the first item's left (top) edge and the last one's right (bottom) edge stay put, or with to: \"artboard\" go to the artboard's left (top) and right (bottom) edges. With anchor points selected (Direct Selection), the points are spaced evenly along the axis instead, or `spacing` apart from the first (#1636)",
             can_distribute,
             distribute_spacing
         ),

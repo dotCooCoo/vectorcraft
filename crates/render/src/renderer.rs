@@ -12,7 +12,11 @@ use super::options::{AntiAlias, ISOLATION_DIM, MAX_CONTEXT_SIDE, RenderOptions, 
 use super::paint::{SUBSTITUTED, blend_mode, fill_rule};
 use super::text_geom::{TextGeom, text_geom, text_geom_snapped};
 use super::threads::{default_threads, single_threaded_context};
-use super::*;
+use super::{
+    Affine, AppearanceItem, Arc, BezPath, BlendMode, Compose, Composite, Document, FillRule, FrameCache, HashMap, Ink, Mix, Node, NodeId, NodeKind,
+    Pixmap, Rect, RenderContext, Renderer, Resources, Shape, StrokeAlign, StrokeLayer, SymbolBoxes, TextObject, TraceView, brush_fx, effects, fx,
+    group, ink, kurbo, live, lru, peniko, proof, vello_cpu,
+};
 
 mod images;
 mod nodes;

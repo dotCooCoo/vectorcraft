@@ -514,9 +514,9 @@ fn precise_cursors_command_is_listed_and_assignable_in_the_shortcut_editor() {
     assert_eq!(ed::default_of("view.preciseCursors"), None, "no default key");
     let mut overrides = craft_keymap::Overrides::new();
     assert_eq!(ed::effective_in(&overrides, "view.preciseCursors"), None);
-    assert_eq!(ed::assign(&mut overrides, "view.preciseCursors", Some("Cmd+Alt+Shift+U"), false), Ok(vec![]));
+    assert_eq!(ed::assign(&mut overrides, "view.preciseCursors", Some("Cmd+Alt+Shift+Q"), false), Ok(vec![]));
     let chord = ed::effective_in(&overrides, "view.preciseCursors").expect("assigned");
-    assert_eq!(ed::normalize(&chord), ed::normalize("Cmd+Alt+Shift+U"));
+    assert_eq!(ed::normalize(&chord), ed::normalize("Cmd+Alt+Shift+Q"));
     // A key another command holds is refused, so the new command can't take it over silently.
     assert!(ed::assign(&mut overrides, "view.preciseCursors", Some("Cmd+Alt+Shift+P"), false).is_err());
     assert_eq!(ed::assign(&mut overrides, "view.preciseCursors", None, false), Ok(vec![]));
@@ -655,6 +655,53 @@ fn expand_appearance_is_an_object_menu_item_only() {
     assert_eq!(paths, [vec!["Object".to_string()]]);
 }
 
+/// In isolation mode, every item of Object › Lock and Object › Hide, Unlock All and Show All are
+/// greyed out, while Group stays on. After Exit Isolation Mode they are on again.
+#[test]
+fn lock_and_hide_menus_are_greyed_out_in_isolation_mode() {
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    app.run("file.new", json!({})).unwrap();
+    let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap()["id"].clone();
+    let b = app.run("shape.rectangle", json!({"x": 80, "y": 10, "width": 50, "height": 50})).unwrap()["id"].clone();
+    app.run("select.set", json!({"ids": [a, b.clone()]})).unwrap();
+    let g = app.run("object.group", json!({})).unwrap()["id"].clone();
+    let lock_and_hide: Vec<String> = menu_entries(&app)
+        .into_iter()
+        .filter(|e| {
+            let path: Vec<&str> = e.path.iter().map(String::as_str).collect();
+            matches!(path[..], ["Object", "Lock" | "Hide"]) || path == ["Object"] && matches!(e.label.as_str(), "Unlock All" | "Show All")
+        })
+        .filter_map(|e| e.command)
+        .collect();
+    assert_eq!(
+        lock_and_hide,
+        [
+            "object.lock",
+            "object.lock.above",
+            "object.lock.otherLayers",
+            "object.unlockAll",
+            "object.hide",
+            "object.hide.above",
+            "object.hide.otherLayers",
+            "object.showAll"
+        ]
+    );
+    let shown = |app: &VectorcraftApp| -> Vec<bool> {
+        let entries = menu_entries(app);
+        lock_and_hide
+            .iter()
+            .chain([&"object.group".to_string()])
+            .map(|id| entries.iter().any(|e| e.command.as_ref() == Some(id) && e.enabled))
+            .collect()
+    };
+    app.run("object.isolate", json!({"id": g.clone()})).unwrap();
+    app.run("select.set", json!({"ids": [b]})).unwrap();
+    assert_eq!(shown(&app), [false, false, false, false, false, false, false, false, true], "in isolation mode");
+    app.run("object.exitIsolation", json!({})).unwrap();
+    app.run("select.set", json!({"ids": [g]})).unwrap();
+    assert_eq!(shown(&app), [true; 9], "after Exit Isolation Mode");
+}
+
 #[test]
 fn menus_are_as_wide_as_their_items() {
     // Items size the popup to the widest label and shortcut instead of the widest a menu may be.
@@ -720,4 +767,82 @@ fn new_window_is_disabled_until_it_opens_a_window() {
     assert!(!enabled(&app, "window.newWindow"), "New Window is enabled but opens no window");
     let e = app.run("window.newWindow", json!({})).unwrap_err();
     assert!(!e.contains("M11.5"), "a user-facing message, not a milestone: {e}");
+}
+
+/// #4143: Window menu panels and panel submenus are listed in alphabetical order according to the
+/// active interface language (e.g. French), rather than staying frozen in English alphabetical order.
+#[test]
+fn window_menu_panels_are_sorted_alphabetically_in_active_language() {
+    use crate::i18n::{Lang, current, name_sort_key, set_current, tr, tr_id};
+
+    let prev = current();
+
+    // 1. In English: panels between separator 2 and 3 are alphabetical.
+    set_current(Lang::EN);
+    let tree = menu_tree();
+    let (_, window) = tree.iter().find(|(t, _)| *t == "Window").unwrap();
+
+    let seps: Vec<usize> = window.iter().enumerate().filter(|(_, it)| matches!(it, Item::Sep)).map(|(i, _)| i).collect();
+    assert!(seps.len() >= 3, "Window menu should have at least 3 separators");
+    let panels = &window[seps[1] + 1..seps[2]];
+
+    let item_display = |it: &Item, lang: Lang| -> String {
+        match it {
+            Item::Cmd(l, id, _) => tr_id(lang, id, l).to_string(),
+            Item::Sub(l, _) | Item::Todo(l, _) | Item::Header(l) => tr(lang, l).to_string(),
+            Item::Sep => String::new(),
+        }
+    };
+
+    let en_keys: Vec<String> = panels.iter().map(|it| name_sort_key(&item_display(it, Lang::EN))).collect();
+    assert!(en_keys.windows(2).all(|w| w[0] <= w[1]), "English panels must be alphabetical: {en_keys:?}");
+
+    // 2. In French: panels are sorted alphabetically by their French names.
+    let fr = Lang::from_code("fr").unwrap();
+    set_current(fr);
+    let tree_fr = menu_tree();
+    let (_, window_fr) = tree_fr.iter().find(|(t, _)| *t == "Window").unwrap();
+    let seps_fr: Vec<usize> = window_fr.iter().enumerate().filter(|(_, it)| matches!(it, Item::Sep)).map(|(i, _)| i).collect();
+    let panels_fr = &window_fr[seps_fr[1] + 1..seps_fr[2]];
+
+    let fr_labels: Vec<String> = panels_fr.iter().map(|it| item_display(it, fr)).collect();
+    let fr_keys: Vec<String> = fr_labels.iter().map(|l| name_sort_key(l)).collect();
+    assert!(fr_keys.windows(2).all(|w| w[0] <= w[1]), "French panels must be alphabetical: {fr_labels:?}");
+
+    // Specific French placements:
+    // Calques (Layers) is under C, Plans de travail (Artboards) is under P, Nuancier (Swatches) is under N.
+    let pos = |name: &str| fr_labels.iter().position(|l| l == name).unwrap_or_else(|| panic!("missing {name} in {fr_labels:?}"));
+    assert!(pos("Aspect") < pos("Calques"), "Aspect before Calques");
+    assert!(pos("Calques") < pos("Dégradé"), "Calques before Dégradé");
+    assert!(pos("Nuancier") < pos("Plans de travail"), "Nuancier before Plans de travail");
+    assert!(pos("Plans de travail") < pos("Texte"), "Plans de travail before Texte");
+
+    // 3. Type submenu is also alphabetical in French.
+    let type_sub = panels_fr
+        .iter()
+        .find_map(|it| match it {
+            Item::Sub(l, items) if *l == "Type" => Some(items),
+            _ => None,
+        })
+        .unwrap();
+    let type_labels: Vec<String> = type_sub.iter().map(|it| item_display(it, fr)).collect();
+    let type_keys: Vec<String> = type_labels.iter().map(|l| name_sort_key(l)).collect();
+    assert!(type_keys.windows(2).all(|w| w[0] <= w[1]), "Type submenu must be alphabetical: {type_labels:?}");
+    assert_eq!(type_labels, vec!["Caractère", "Glyphes", "OpenType", "Paragraphe", "Styles de caractère", "Styles de paragraphe", "Tabulations",]);
+
+    // 4. In Polish: Łącza (Links) folds to L and sorts before Warstwy and Zmienne.
+    let pl = Lang::from_code("pl").unwrap();
+    set_current(pl);
+    let tree_pl = menu_tree();
+    let (_, window_pl) = tree_pl.iter().find(|(t, _)| *t == "Window").unwrap();
+    let seps_pl: Vec<usize> = window_pl.iter().enumerate().filter(|(_, it)| matches!(it, Item::Sep)).map(|(i, _)| i).collect();
+    let panels_pl = &window_pl[seps_pl[1] + 1..seps_pl[2]];
+    let pl_labels: Vec<String> = panels_pl.iter().map(|it| item_display(it, pl)).collect();
+    let pl_keys: Vec<String> = pl_labels.iter().map(|l| name_sort_key(l)).collect();
+    assert!(pl_keys.windows(2).all(|w| w[0] <= w[1]), "Polish panels must be alphabetical: {pl_labels:?}");
+    let pos_pl = |name: &str| pl_labels.iter().position(|l| l == name).unwrap_or_else(|| panic!("missing {name} in {pl_labels:?}"));
+    assert!(pos_pl("Łącza") < pos_pl("Warstwy"), "Łącza before Warstwy");
+    assert!(pos_pl("Warstwy") < pos_pl("Zmienne"), "Warstwy before Zmienne");
+
+    set_current(prev);
 }

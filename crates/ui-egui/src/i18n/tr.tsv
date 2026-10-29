@@ -1110,7 +1110,7 @@ font-technology	Variable	Değişken
 	Decrease Font Size by Five Steps	Yazı Tipi Boyutunu Beş Adım Azaltın
 	Increase Font Size	Yazı Tipi Boyutunu Artır
 	Increase Font Size by Five Steps	Yazı Tipi Boyutunu Beş Adım Artırın
-	Reset Tracking and Kerning	İzlemeyi ve Karakter Aralığını Sıfırla
+	Reset Tracking and Kerning	Takip ve Karakter Aralığını Sıfırla
 	Reset Horizontal Scale	Yatay Ölçeği Sıfırla
 	Spacing	Aralık
 	Step Type	Adım Türü
@@ -1528,7 +1528,7 @@ font-technology	Variable	Değişken
 	Layers Panel Options	Katmanlar Paneli Seçenekleri
 	Layout:	Düzen:
 	Leader:	Lider:
-	Leading	Lider
+	Leading	Satır Aralığı
 	Left	Sol
 	Left Grid:	Sol Izgara:
 	Left in Front	Sol Önde
@@ -2901,7 +2901,7 @@ font-technology	Variable	Değişken
 	Sixth Space	Altıncı Uzay
 	Size	Boyut
 	Size Tile to Art	Sanata Boyut Döşeme
-	Size/Leading	Boyut/Öncülük
+	Size/Leading	Boyut/Satır Aralığı
 	Size:	Boyut:
 	Ridges per segment:	Segment başına sırtlar:
 	Size: {size}  Tracking: {tracking}	Boyut: {size} Takip: {tracking}
@@ -3055,6 +3055,7 @@ font-technology	Variable	Değişken
 	Swatch Options…	Renk Örneği Seçenekleri…
 	Swatch Tiles	Renk Örneği Fayansları
 	Swatches	Renk Örnekleri
+	Switch Units	Birimleri değiştir
 	Switch workspace	Çalışma alanını değiştir
 	Add Content	İçerik Ekle
 	Click to apply to the selected type	Seçilen türe uygulamak için tıklayın
@@ -3560,8 +3561,8 @@ imageTrace	Outline	Kontur
 	  — {n} characters from another font	  — Başka bir yazı tipinden {n} karakterler
 	[Normal Character Style]	[Normal Karakter Stili]
 	[Normal Paragraph Style]	[Normal Paragraf Stili]
-	Top-to-Top Leading	Tepeden Tepeye Liderlik
-	Bottom-to-Bottom Leading	Aşağıdan Aşağıya Öncülük
+	Top-to-Top Leading	Tepeden Tepeye Satır Aralığı
+	Bottom-to-Bottom Leading	Aşağıdan Aşağıya Satır Aralığı
 	Burasagari	Burasagari
 	Force	kuvvet
 	About	Hakkında
@@ -3729,6 +3730,7 @@ axis	Both	Her İkisi
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}`, {min} ile {max} arasında olmalıdır ({x}'yi aldı)
 @msg	`{key}` must be one of {_1}	`{key}`, {_1}'den biri olmalıdır
 @msg	`{key}` must be true or false	"{key}" doğru veya yanlış olmalıdır
+@msg	`top` and `below` can't both be true	`top` ve `below` aynı anda true olamaz
 @msg	`select` must be true or false	`select` true veya false olmalıdır
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` ve `maxAnchors` tam sayı olmalıdır
 @msg	`{key}` must be a number not below 0	`{key}` 0'dan küçük olmayan bir sayı olmalıdır
@@ -4027,6 +4029,7 @@ axis	Both	Her İkisi
 @msg	select an object in perspective	perspektifte bir nesne seç
 @msg	select artwork (or a colour group) to recolor	yeniden renklendirilecek resmi (veya bir renk grubunu) seçin
 @msg	select at least two objects	en az iki nesne seç
+@msg	exit isolation mode first	önce izolasyon modundan çık
 @msg	select objects, not layers	katmanları değil nesneleri seçin
 @msg	select one path, or give its `id`	bir yol seçin veya "kimliğini" verin
 @msg	select paths to join	katılmak için yolları seçin

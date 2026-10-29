@@ -3094,6 +3094,7 @@ font-script	Japanese	汉字
 	Swatch Options…	色板选项…
 	Swatch Tiles	色板拼贴
 	Swatches	色板
+	Switch Units	切换单位
 	Switch workspace	切换工作区
 	Add Content	添加内容
 	Click to apply to the selected type	单击以应用到所选文字
@@ -3833,6 +3834,7 @@ imageTrace	Outline	轮廓
 @msg	clipboard is empty	剪贴板为空
 @msg	no anchor points selected	未选择锚点
 @msg	select at least two objects	请至少选择两个对象
+@msg	exit isolation mode first	请先退出隔离模式
 @msg	no saved presets	没有已保存的预设
 @msg	compound paths can only contain paths	复合路径只能包含路径
 @msg	no bounds	没有边界
@@ -4193,6 +4195,7 @@ imageTrace	Outline	轮廓
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command` 必须是其菜单项会打开对话框的命令 (请参阅 ui.menuDialog)
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` 必须是 grayscale、rgb、hsb、cmyk 或 websafe
 @msg	`{key}` must be true or false	`{key}` 必须是 true 或 false
+@msg	`top` and `below` can't both be true	`top` 和 `below` 不能同时为 true
 @msg	`select` must be true or false	`select` 必须是 true 或 false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` 和 `maxAnchors` 必须是整数
 @msg	`{key}` must be a number not below 0	`{key}` 必须是不小于 0 的数字

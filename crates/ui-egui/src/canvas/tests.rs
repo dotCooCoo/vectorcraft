@@ -6102,6 +6102,43 @@ fn the_task_bar_recolors_coloured_art() {
     assert!(app.ui.dialog.is_none(), "no Recolor button without colours");
 }
 
+/// The Contextual Task Bar's Lock button is off in isolation mode, as Object › Lock › Selection
+/// is: a click locks nothing and shows no error. Outside isolation mode it locks the selection.
+#[test]
+fn the_task_bar_lock_button_is_off_in_isolation_mode() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    let a = app.session.execute("shape.rectangle", &json!({"x": 150, "y": 130, "width": 40, "height": 40})).unwrap()["id"].clone();
+    let b = app.session.execute("shape.rectangle", &json!({"x": 210, "y": 130, "width": 40, "height": 40})).unwrap()["id"].clone();
+    app.session.execute("select.set", &json!({"ids": [a.clone(), b]})).unwrap();
+    let g = app.session.execute("object.group", &json!({})).unwrap()["id"].clone();
+    app.select_tool("selection");
+    let ctx = egui::Context::default();
+    let click_lock = |app: &mut VectorcraftApp| {
+        frame(app, &ctx, vec![]);
+        frame(app, &ctx, vec![]);
+        let bar = task_bar_rect(&ctx).expect("the task bar shows");
+        // Right to left: the frame's margin, More Options, then Lock.
+        let at = pos2(bar.right() - 8.0 - 30.0 - 6.0 - 15.0, bar.center().y);
+        let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
+        frame(app, &ctx, vec![egui::Event::PointerMoved(at)]);
+        frame(app, &ctx, vec![button(true)]);
+        frame(app, &ctx, vec![button(false)]);
+    };
+    let locked = |app: &VectorcraftApp, id: &serde_json::Value| {
+        app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().locked
+    };
+    app.session.execute("object.isolate", &json!({"id": g.clone()})).unwrap();
+    app.session.execute("select.set", &json!({"ids": [a.clone()]})).unwrap();
+    click_lock(&mut app);
+    assert!(!locked(&app, &a), "nothing is locked in isolation mode");
+    assert_eq!(app.ui.status, "", "no error");
+    app.session.execute("object.exitIsolation", &json!({})).unwrap();
+    app.session.execute("select.set", &json!({"ids": [g.clone()]})).unwrap();
+    click_lock(&mut app);
+    assert!(locked(&app, &g), "the group is locked outside isolation mode");
+}
+
 /// The Contextual Task Bar shows Image Trace first for a selected image: it traces the image
 /// with the Default preset and leaves the Image Trace panel as it was. For the Image Trace
 /// object it made, the first button is Expand, which keeps only the traced paths.

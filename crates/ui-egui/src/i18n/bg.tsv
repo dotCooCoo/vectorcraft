@@ -2994,10 +2994,10 @@ font-technology	Variable	Променливи
 	Sixth Space	Шесто разстояние
 	Size	Размер
 	Size Tile to Art	Оразмеряване на плочката според обектите
-	Size/Leading	Размер/Интервал
+	Size/Leading	Размер/междуредие
 	Size:	Размер:
 	Ridges per segment:	Изпъкналости на сегмент:
-	Size: {size}  Tracking: {tracking}	Размер: {size}  Интервал: {tracking}
+	Size: {size}  Tracking: {tracking}	Размер: {size}  Разредка: {tracking}
 	Skew	Искавяване
 	Skin Tone Ramps	Градиенти за цвят на кожата
 	Skip Blank Artboards	Пропускане на празни работни области
@@ -3160,6 +3160,7 @@ font-technology	Variable	Променливи
 	Swatch Options…	Опции на образец…
 	Swatch Tiles	Плочки на образец
 	Swatches	Образци
+	Switch Units	Превключване на мерните единици
 	Switch workspace	Превключване на работната среда
 	Add Content	Добавяне на съдържание
 	Click to apply to the selected type	Щракнете, за да приложите към избрания текст
@@ -3669,8 +3670,8 @@ imageTrace	Outline	Контур
 	  — {n} characters from another font	  — {n} знака от друг шрифт
 	[Normal Character Style]	[Нормален стил на знак]
 	[Normal Paragraph Style]	[Нормален стил на абзац]
-	Top-to-Top Leading	Разстояние между редовете отгоре до горе
-	Bottom-to-Bottom Leading	Разстояние между редовете отдолу до долу
+	Top-to-Top Leading	Междуредие отгоре до горе
+	Bottom-to-Bottom Leading	Междуредие отдолу до долу
 	Burasagari	Бурасагари
 	Force	Принудително
 	About	Относно
@@ -4158,6 +4159,7 @@ axis	Both	И двете
 @msg	select an object in perspective	изберете обект в перспектива
 @msg	select artwork (or a colour group) to recolor	изберете графика (или цветова група) за преоцветяване
 @msg	select at least two objects	изберете поне два обекта
+@msg	exit isolation mode first	първо излезте от режима на изолация
 @msg	select objects, not layers	изберете обекти, а не слоеве
 @msg	select one path, or give its `id`	изберете един път или задайте неговия `id`
 @msg	select paths to join	изберете пътища за обединяване
@@ -5378,7 +5380,7 @@ theme	Appearance	Външен вид
 	Word Spacing:	Разстояние между думите:
 	Letter Spacing:	Разстояние между буквите:
 	Glyph Scaling:	Мащабиране на знаците:
-	Auto Leading:	Автоматична междуредова разредка:
+	Auto Leading:	Автоматично междуредие:
 	Single Word Justification:	Подравняване на единична дума:
 	Full Justify	Пълно двустранно
 	Minimum must not exceed Desired, nor Desired Maximum.	Минималната стойност не може да надвишава желаната, нито желаната – максималната.

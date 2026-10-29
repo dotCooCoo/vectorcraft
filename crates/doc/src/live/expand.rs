@@ -1,7 +1,10 @@
 use super::envelope::{EnvelopeOptions, expand_envelope};
 use super::mesh::GradientMesh;
 use super::warp::map_nonlinear;
-use super::*;
+use super::{
+    Affine, Appearance, AppearanceItem, Arc, FillLayer, ImageObject, Node, NodeId, NodeKind, Paint, PathData, Point, Rect, SubPath, Vec2,
+    blend_expand,
+};
 
 /// Optional hook that converts nodes the pure evaluation can't map (text) to outlines.
 pub type Outliner<'a> = Option<&'a dyn Fn(&Node) -> Option<Node>>;

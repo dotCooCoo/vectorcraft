@@ -3225,6 +3225,7 @@ font-technology	Variable	Variables
 	Swatch Options…	Options de nuance…
 	Swatch Tiles	Carreaux de nuances
 	Swatches	Nuancier
+	Switch Units	Changer d’unités
 	Switch workspace	Changer d’espace de travail
 	Add Content	Ajouter du contenu
 	Click to apply to the selected type	Cliquez pour l’appliquer au texte sélectionné
@@ -3923,6 +3924,7 @@ axis	Both	Les deux
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` doit être compris entre {min} et {max} (reçu : {x})
 @msg	`{key}` must be one of {_1}	`{key}` doit valoir l’une de ces valeurs : {_1}
 @msg	`{key}` must be true or false	`{key}` doit valoir true ou false
+@msg	`top` and `below` can't both be true	`top` et `below` ne peuvent pas valoir true tous les deux
 @msg	`select` must be true or false	`select` doit valoir true ou false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` et `maxAnchors` doivent être des nombres entiers
 @msg	`{key}` must be a number not below 0	`{key}` doit être un nombre supérieur ou égal à 0
@@ -4259,6 +4261,7 @@ axis	Both	Les deux
 @msg	select an object in perspective	sélectionnez un objet en perspective
 @msg	select artwork (or a colour group) to recolor	sélectionnez l’illustration (ou un groupe de couleurs) dont redéfinir les couleurs
 @msg	select at least two objects	sélectionnez au moins deux objets
+@msg	exit isolation mode first	quittez d’abord le mode Isolation
 @msg	select objects, not layers	sélectionnez des objets, pas des calques
 @msg	select one path, or give its `id`	sélectionnez un tracé ou indiquez son `id`
 @msg	select paths to join	sélectionnez les tracés à joindre

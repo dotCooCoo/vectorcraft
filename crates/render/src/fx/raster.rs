@@ -1,5 +1,5 @@
 use super::entries::{Drawn, Inputs, Made, raster_bytes};
-use super::*;
+use super::{Affine, Document, EdgeMode, Filter, FilterPrimitive, Ink, RasterFx, Rect, RenderContext, Vec2, effects, peniko};
 
 pub(super) fn shadow_filter(dx: f64, dy: f64, blur: f64, color: peniko::Color) -> Filter {
     Filter::from_primitive(FilterPrimitive::DropShadowOnly {

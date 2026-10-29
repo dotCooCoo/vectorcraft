@@ -1,7 +1,7 @@
 use super::entries::{Row, entry, pretty_shortcut};
 use super::invoke::{field_event, focused_text_field, invoke, to_field};
 use super::tree::menu_tree_named;
-use super::*;
+use super::{Entry, Item, Tokens, Value, VectorcraftApp, widgets};
 
 /// Render the menu bar.
 /// The in-window menu bar. Returns where its titles end (x): the bar itself takes the full width.

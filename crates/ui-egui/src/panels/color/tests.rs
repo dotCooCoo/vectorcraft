@@ -332,6 +332,73 @@ fn shift_click_on_the_spectrum_cycles_modes() {
 }
 
 #[test]
+fn cmd_click_on_the_spectrum_applies_complement_and_cmd_shift_click_invert() {
+    let mut app = app();
+    let ctx = egui::Context::default();
+    let cmd = egui::Modifiers::COMMAND;
+    app.run("paint.setFill", json!({"color": "#336699"})).unwrap();
+    app.run("paint.setStroke", json!({"color": "#123456", "focus": false})).unwrap();
+    assert!(app.session.fill_active);
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), cmd);
+    assert_eq!(paints_hex(&app), ("#996633".into(), "#123456".into()), "Complement of the fill");
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), cmd | egui::Modifiers::SHIFT);
+    assert_eq!(paints_hex(&app), ("#6699cc".into(), "#123456".into()), "Invert of the fill");
+    assert_eq!(app.ui.color_mode, None, "Cmd/Ctrl+Shift-click does not cycle the modes");
+    // With Alt the inactive proxy (the stroke) changes, and the fill stays in front.
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), cmd | egui::Modifiers::ALT);
+    assert_eq!(paints_hex(&app), ("#6699cc".into(), "#563412".into()), "Complement of the stroke");
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), cmd | egui::Modifiers::SHIFT | egui::Modifiers::ALT);
+    assert_eq!(paints_hex(&app), ("#6699cc".into(), "#a9cbed".into()), "Invert of the stroke");
+    assert!(app.session.fill_active, "the fill stays in front");
+    // With the stroke in front, Alt recolors the fill.
+    app.run("paint.toggleActive", json!({})).unwrap();
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), cmd);
+    assert_eq!(paints_hex(&app), ("#6699cc".into(), "#edcba9".into()), "Complement of the stroke in front");
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), cmd | egui::Modifiers::ALT);
+    assert_eq!(paints_hex(&app), ("#cc9966".into(), "#edcba9".into()), "Complement of the fill behind");
+    assert!(!app.session.fill_active, "the stroke stays in front");
+    // A plain click still picks the spectrum's color.
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), egui::Modifiers::NONE);
+    assert_eq!(paints_hex(&app).1, "#ff0000");
+}
+
+#[test]
+fn cmd_click_on_the_spectrum_recolors_the_selected_gradient_stop() {
+    let mut app = app();
+    let ctx = egui::Context::default();
+    let stops = json!([{"offset": 0, "color": "#ff0000"}, {"offset": 1, "color": "#336699"}]);
+    app.run("paint.setFill", json!({"gradient": {"stops": stops, "start": [10, 35], "end": [60, 35]}})).unwrap();
+    app.select_tool("gradient");
+    app.run("gradient.selectStop", json!({"index": 1})).unwrap();
+    click_spectrum(&mut app, &ctx, (0.0, 0.5), egui::Modifiers::COMMAND);
+    let Paint::Gradient(g) = crate::panels::current_paints(&app).0 else { panic!("still a gradient") };
+    let hex: Vec<String> = g.gradient.stops.iter().map(|s| s.color.to_hex()).collect();
+    assert_eq!(hex, ["#ff0000", "#996633"], "only the selected stop changes");
+}
+
+#[test]
+fn cmd_click_on_the_spectrum_with_the_options_hidden() {
+    let mut app = app();
+    let ctx = egui::Context::default();
+    app.run("paint.setFill", json!({"color": "#336699"})).unwrap();
+    app.run("ui.colorPanel", json!({"options": false})).unwrap();
+    // The spectrum fills the row right of the proxy.
+    let mut row = Rect::NOTHING;
+    let input = egui::RawInput::default();
+    let mut full = ctx.run_ui(input, |ui| {
+        show(&mut app, ui);
+        row = ui.min_rect();
+    });
+    full.textures_delta.clear();
+    let pos = egui::pos2(row.right() - 4.0, row.center().y);
+    let cmd = egui::Modifiers::COMMAND | egui::Modifiers::SHIFT;
+    let button = |pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: cmd };
+    frame(&mut app, &ctx, vec![egui::Event::PointerMoved(pos), button(true)], cmd);
+    frame(&mut app, &ctx, vec![button(false)], cmd);
+    assert_eq!(paints_hex(&app).0, "#cc9966", "Invert of the fill");
+}
+
+#[test]
 fn double_clicking_a_proxy_opens_the_color_picker_for_it() {
     let mut app = app();
     let ctx = egui::Context::default();

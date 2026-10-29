@@ -283,6 +283,23 @@ fn blob_brush_sends_keep_selected_and_merge_only_with_selection() {
     assert_eq!(GestureTool::new("eraser").options(), json!({"size": 10.0, "angle": 0.0, "roundness": 100.0}));
 }
 
+/// The Blob Brush has a Fidelity, 1.5 pt by default and 0.01 to 100 pt, and its stroke sends it.
+#[test]
+fn blob_brush_sends_its_fidelity() {
+    let (d, _) = doc_with_rect();
+    let s = Selection::default();
+    let p = paint();
+    let cx = cx(&d, &s, &p);
+    let mut t = GestureTool::new("blobBrush");
+    assert_eq!(t.options()["fidelity"], json!(1.5));
+    for (set, sent) in [(1.5, 1.5), (6.0, 6.0), (0.001, 0.01), (500.0, 100.0)] {
+        t.set_option("fidelity", &json!(set));
+        assert_eq!(t.options()["fidelity"], json!(sent));
+        let acts = drag(&mut t, &cx, &[(50.0, 150.0), (250.0, 150.0)], Mods::default());
+        assert!(matches!(&acts[2][0], Action::Exec(c, v) if c == "path.blob" && v["fidelity"] == json!(sent)), "{set}: {acts:?}");
+    }
+}
+
 /// Shift keeps a Blob Brush stroke on the horizontal or vertical line through the press point,
 /// whichever is nearer to the pointer, at 90° steps from the Constrain Angle; the points
 /// dragged with Shift held move to the other line together, and each point follows the Shift
@@ -334,6 +351,90 @@ fn blob_brush_shift_keeps_the_stroke_horizontal_or_vertical() {
     let pts = blob(&drag_held(&mut t, &cx, &[(0.0, 0.0), (40.0, -20.0), (0.0, 0.0)], shift));
     let a = (-pts[1].1).atan2(pts[1].0).to_degrees();
     assert!(pts.len() == 3 && pts[2] == (0.0, 0.0) && (a - 30.0).abs() < 1e-9, "{pts:?}");
+}
+
+/// Alt switches the Blob Brush to the Smooth tool: held before the press, or pressed before the
+/// drag has moved, the cursor shows the Smooth tool, the drag shows a thin line and its release
+/// smooths the selected paths (`path.smoothRegion`) instead of painting. Shift does not
+/// constrain a smoothing drag, a stroke that has moved keeps painting when Alt goes down, and
+/// with nothing selected the release changes no path.
+#[test]
+fn blob_brush_alt_switches_to_the_smooth_tool() {
+    let (d, id) = doc_with_rect();
+    let mut s = Selection::default();
+    s.set([id]);
+    let p = paint();
+    let cx = ToolContext { measurement_labels: true, ..cx(&d, &s, &p) };
+    let alt = Mods { alt: true, ..Default::default() };
+    let at = Point::new(50.0, 50.0);
+    let smoothed = |acts: &[Vec<Action>]| -> Option<Value> {
+        match acts.last().and_then(|a| a.first()) {
+            Some(Action::Exec(c, v)) if c == "path.smoothRegion" => Some(v.clone()),
+            _ => None,
+        }
+    };
+    let mut t = GestureTool::new("blobBrush");
+    assert_eq!(t.cursor(&cx, at, alt), Cursor::Smooth);
+    assert_eq!(t.cursor(&cx, at, Mods::default()), Cursor::BlobBrush);
+    let stroke = [(50.0, 150.0), (150.0, 150.0), (250.0, 160.0)];
+    let acts = drag_held(&mut t, &cx, &stroke, alt);
+    assert!(acts[..acts.len() - 1].iter().all(|a| a.is_empty()), "{acts:?}");
+    let v = smoothed(&acts).unwrap_or_else(|| panic!("{acts:?}"));
+    assert_eq!(v, json!({"points": [[50.0, 150.0], [150.0, 150.0], [250.0, 160.0]], "radius": cx.tol(12.0), "fidelity": 1.5}));
+    // Mid-drag the cursor stays the Smooth tool's when Alt is let go, and the line is thin with
+    // no length label.
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0).with_mods(alt));
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 150.0, 150.0).with_mods(alt));
+    assert_eq!(t.cursor(&cx, at, Mods::default()), Cursor::Smooth);
+    let o = t.overlays(&cx);
+    assert!(o.iter().any(|o| matches!(o, Overlay::Path { width, .. } if *width == 1.0)), "{o:?}");
+    assert!(!o.iter().any(|o| matches!(o, Overlay::Measure { .. })), "{o:?}");
+    // After another tool is chosen mid-drag, the Blob Brush shows its own cursor when it is chosen
+    // again, and so does the Pencil after a drag that Alt key toggles to Smooth Tool made smooth.
+    assert!(t.deactivate(&cx).is_empty());
+    assert_eq!(t.cursor(&cx, at, Mods::default()), Cursor::BlobBrush);
+    let mut pencil = GestureTool::new("pencil");
+    pencil.set_option("altSmooth", &json!(true));
+    pencil.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0).with_mods(alt));
+    pencil.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 150.0, 150.0).with_mods(alt));
+    assert!(pencil.deactivate(&cx).is_empty());
+    assert_eq!(pencil.cursor(&cx, at, Mods::default()), Cursor::PencilNew);
+    // Alt pressed before the drag has moved smooths too, and Shift leaves the points where the
+    // pointer went.
+    let alt_shift = Mods { alt: true, shift: true, ..Default::default() };
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0));
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 150.0, 170.0).with_mods(alt_shift));
+    let acts = [t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 250.0, 160.0).with_mods(alt_shift))];
+    let v = smoothed(&acts).unwrap_or_else(|| panic!("{acts:?}"));
+    assert_eq!(v["points"], json!([[50.0, 150.0], [150.0, 170.0], [250.0, 160.0]]));
+    // A stroke that has moved keeps painting with Alt down.
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0));
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 150.0, 150.0));
+    assert_eq!(t.cursor(&cx, at, alt), Cursor::BlobBrush);
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 200.0, 150.0).with_mods(alt));
+    let acts = t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 250.0, 150.0).with_mods(alt));
+    assert!(matches!(acts.as_slice(), [Action::Exec(c, v)] if c == "path.blob" && v["points"].as_array().unwrap().len() == 4), "{acts:?}");
+    // So does a stroke that has moved too little to add a point.
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0));
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 50.25, 150.0));
+    assert_eq!(t.cursor(&cx, at, alt), Cursor::BlobBrush);
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 150.0, 150.0).with_mods(alt));
+    let acts = t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 250.0, 150.0).with_mods(alt));
+    assert!(matches!(acts.as_slice(), [Action::Exec(c, _)] if c == "path.blob"), "{acts:?}");
+    // Alt pressed while the pointer stands still at the press point does not paint on the release.
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0));
+    assert_eq!(t.cursor(&cx, at, alt), Cursor::Smooth);
+    let acts = t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 50.0, 150.0).with_mods(alt));
+    assert!(acts.is_empty(), "{acts:?}");
+    // A release away from the press point with no drag before it paints when Alt goes down.
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0));
+    let acts = t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 150.0, 150.0).with_mods(alt));
+    assert!(matches!(acts.as_slice(), [Action::Exec(c, _)] if c == "path.blob"), "{acts:?}");
+    // With nothing selected an Alt drag sends nothing.
+    let none = Selection::default();
+    let empty = crate::testutil::cx(&d, &none, &p);
+    let acts = drag_held(&mut t, &empty, &stroke, alt);
+    assert!(acts.iter().all(|a| a.is_empty()), "{acts:?}");
 }
 
 /// #3799: Shift held at the press draws a straight Pencil line from the press point, at 45°
@@ -701,6 +802,34 @@ fn pencil_alt_with_alt_to_smooth_on_smooths_instead_of_drawing_a_line() {
     let acts = drag_held(&mut t, &cx, &[(50.0, 150.0), (150.0, 150.0), (250.0, 160.0)], alt);
     assert!(acts[..acts.len() - 1].iter().all(|a| a.is_empty()), "{acts:?}");
     assert!(matches!(&acts.last().unwrap()[0], Action::Exec(c, v) if c == "path.smoothRegion" && v["points"].as_array().unwrap().len() == 3));
+}
+
+/// While Alt switches the Pencil to the Smooth tool, the Pencil smooths within the Smooth tool's
+/// radius at any Edit selected paths Within value, 0 included.
+#[test]
+fn pencil_alt_smooths_within_the_smooth_tools_radius() {
+    let (d, id) = doc_with_rect();
+    let mut s = Selection::default();
+    s.set([id]);
+    let p = paint();
+    let mut cx = cx(&d, &s, &p);
+    cx.smart_guides = false;
+    let pts = [(50.0, 150.0), (150.0, 150.0), (250.0, 160.0)];
+    let radius = |acts: &[Vec<Action>]| match acts.last().and_then(|a| a.first()) {
+        Some(Action::Exec(c, v)) if c == "path.smoothRegion" => v["radius"].as_f64().unwrap(),
+        a => panic!("expected path.smoothRegion, got: {a:?}"),
+    };
+    let alt = Mods { alt: true, ..Default::default() };
+    for zoom in [1.0, 2.0] {
+        cx.zoom = zoom;
+        let want = radius(&drag(&mut GestureTool::new("smooth"), &cx, &pts, Mods::default()));
+        for within in [0.0, 5.0, 40.0] {
+            let mut t = GestureTool::new("pencil");
+            t.set_option("altSmooth", &json!(true));
+            t.set_option("editWithin", &json!(within));
+            assert_eq!(radius(&drag_held(&mut t, &cx, &pts, alt)), want, "zoom {zoom}, editWithin {within}");
+        }
+    }
 }
 
 /// #3799: Alt's line starts and ends on Smart Guides as a stroke does, and pressed on an end of
