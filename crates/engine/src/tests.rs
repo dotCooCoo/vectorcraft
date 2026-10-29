@@ -1460,6 +1460,7 @@ fn shape_commands_refuse_a_number_or_boolean_given_as_text() {
         ("shape.flare", with(&flare, "opacity", json!("50")), "opacity"),
         ("shape.flare", with(&flare, "largest", json!(true)), "largest"),
         ("shape.flare", with(&flare, "rays", json!("15")), "rays"),
+        ("shape.flare", with(&flare, "rotation", json!("90")), "rotation"),
         ("shape.flare", json!({"cx": 100, "cy": 100, "x2": "300", "y2": 300}), "x2"),
         ("shape.flare", with(&flare, "direction", json!("45")), "direction"),
         ("shape.flare", with(&flare, "seed", json!("7")), "seed"),
@@ -3158,6 +3159,33 @@ fn flare_tool_two_step_gesture_is_one_undo() {
     assert!((centre.width() - 80.0).abs() < 0.5);
     let rays = children.iter().find(|c| c.name.as_deref() == Some("Rays")).unwrap();
     assert_eq!(rays.path_data().unwrap().subpaths.len(), 13);
+}
+
+/// `shape.flare`'s `rotation` turns the rays clockwise about the center, and leaves the halo, the
+/// center and the rings as they are.
+#[test]
+fn flare_rotation_turns_only_the_rays() {
+    use vectorcraft_geom::Affine;
+    let mut s = session();
+    let parts = |s: &mut Session, rotation: f64| {
+        let p = json!({"cx": 200, "cy": 200, "diameter": 60, "rays": 9, "rings": 4, "x2": 400, "y2": 300, "seed": 3, "rotation": rotation});
+        let id = NodeId(s.execute("shape.flare", &p).unwrap()["id"].as_u64().unwrap());
+        let NodeKind::Group { children, .. } = &s.doc().unwrap().doc.node(id).unwrap().kind else { panic!("flare is a group") };
+        children.iter().map(|c| (c.name.clone(), c.path_data().unwrap().clone())).collect::<Vec<_>>()
+    };
+    let plain = parts(&mut s, 0.0);
+    let turned = parts(&mut s, 90.0);
+    assert_eq!(plain.len(), turned.len());
+    let quarter = Affine::translate((200.0, 200.0)) * Affine::rotate(std::f64::consts::FRAC_PI_2) * Affine::translate((-200.0, -200.0));
+    for ((name, a), (_, b)) in plain.iter().zip(&turned) {
+        let pa: Vec<Point> = a.subpaths.iter().flat_map(|sp| sp.anchors.iter().map(|k| k.p)).collect();
+        let pb: Vec<Point> = b.subpaths.iter().flat_map(|sp| sp.anchors.iter().map(|k| k.p)).collect();
+        let want: Vec<Point> = if name.as_deref() == Some("Rays") { pa.iter().map(|&p| quarter * p).collect() } else { pa };
+        assert_eq!(pb.len(), want.len(), "{name:?}");
+        for (p, q) in pb.iter().zip(&want) {
+            assert!(p.distance(*q) < 1e-6, "{name:?}: {p:?} is not {q:?}");
+        }
+    }
 }
 
 #[test]

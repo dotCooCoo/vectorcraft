@@ -593,6 +593,12 @@ pub use flatten::FlattenOptions;
 /// A built-in or saved flattener preset ([`crate::Prefs::flattener_presets`]).
 pub use flatten::FlattenerPreset;
 
+/// A saved Image Trace preset ([`crate::Prefs::trace_presets`]), and a change to the saved presets.
+pub use buildcmds::{TracePreset, TracePresetChange};
+
+/// The saved Image Trace presets' revision and latest changes ([`crate::Session`] keeps them).
+pub(crate) use buildcmds::TracePresetChanges;
+
 /// The shapes a group selected alone gives the Pathfinder panel.
 pub use pathops::shape_count;
 

@@ -244,8 +244,11 @@ pub(super) const SKIPPED: &[(&str, &str)] = &[
     ("BeginSymbolList", "EndSymbolList"),
     ("BeginTextDocument", "EndTextDocument"),
     ("BeginEncoding", "EndEncoding"),
-    ("Alternate_Content", "End_Versioned_Content"),
 ];
+
+/// The note for versioned content whose `%AI17_End_Versioned_Content` is missing: every
+/// alternative after the first is read too, so some art may come in twice.
+pub const VERSIONED_UNENDED: &str = "versioned content that doesn't end was read whole: some art may come in twice";
 
 /// The note for a `/ForeignObject` (non-native art, the content of a placed PDF, which the editor
 /// shows but doesn't edit) whose PDF can't be read.

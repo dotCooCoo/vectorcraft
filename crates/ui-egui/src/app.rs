@@ -79,6 +79,7 @@ impl VectorcraftApp {
             titlebar_inset: 0.0,
             last_effect: None,
             last_warp: None,
+            character_focus: None,
             run_count: 0,
             clipboard_out: None,
             clipboard_published: None,

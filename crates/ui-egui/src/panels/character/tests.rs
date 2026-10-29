@@ -130,6 +130,56 @@ fn kerning_at_a_caret_sets_the_pair_not_the_whole_text() {
     assert_eq!((kerning(&app, 1), kerning(&app, 2), kerning(&app, 3)), (Some(-50.0), Some(30.0), Some(30.0)));
 }
 
+/// Highlight Kerning and Highlight Tracking show the Character panel and give its field the
+/// keyboard focus with the value selected: what is typed replaces it, and Enter applies it.
+/// Highlight Font Name opens the font family menu with its search field focused. Without
+/// selected type the panel shows and nothing takes the focus.
+#[test]
+fn highlight_commands_focus_the_font_kerning_and_tracking_fields() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
+    let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "AVAX", "size": 12})).unwrap()["id"].clone();
+    let ctx = egui::Context::default();
+    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui));
+        out.textures_delta.clear();
+    };
+    let typed = |text: &str| {
+        let enter = egui::Event::Key { key: egui::Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() };
+        vec![egui::Event::Text(text.into()), enter]
+    };
+    let spacing = |app: &VectorcraftApp| text_style(app).map(|(s, _)| (s.kerning, s.tracking)).unwrap();
+    app.run("select.set", json!({"ids": [id]})).unwrap();
+    assert_eq!(app.run("type.highlightKerning", json!({})).unwrap(), json!({"field": "kerning"}));
+    assert!(crate::panel_docking::showing(&app.ui, "character"), "the panel shows");
+    frame(&mut app, vec![]);
+    assert_eq!(app.character_focus, None, "the Kerning field took the focus");
+    frame(&mut app, typed("-40"));
+    assert_eq!(spacing(&app), (Some(-40.0), 0.0), "typing replaced the kerning");
+    app.run("type.highlightTracking", json!({})).unwrap();
+    frame(&mut app, vec![]);
+    frame(&mut app, typed("75"));
+    assert_eq!(spacing(&app), (Some(-40.0), 75.0), "typing replaced the tracking");
+    // Highlighting a field again while it holds typed text that is not applied selects all of it.
+    app.run("type.highlightKerning", json!({})).unwrap();
+    frame(&mut app, vec![]);
+    frame(&mut app, vec![egui::Event::Text("12345".into())]);
+    app.run("type.highlightKerning", json!({})).unwrap();
+    frame(&mut app, vec![]);
+    frame(&mut app, typed("-20"));
+    assert_eq!(spacing(&app), (Some(-20.0), 75.0), "typing replaced the text typed before");
+    ctx.memory_mut(|m| m.stop_text_input());
+    app.run("type.highlightFontName", json!({})).unwrap();
+    frame(&mut app, vec![]);
+    frame(&mut app, vec![]);
+    assert!(egui::Popup::is_any_open(&ctx), "the font family menu is open");
+    assert!(ctx.memory(|m| m.focused()).is_some(), "its search field has the focus");
+    // No type selected: the panel shows, the command fails and nothing is armed.
+    app.run("select.none", json!({})).unwrap();
+    assert!(app.run("type.highlightKerning", json!({})).is_err());
+    assert_eq!(app.character_focus, None);
+}
+
 /// A variable font gets the Variable Font button, which opens one slider per axis named as the
 /// font names it; a drag along one sets that axis of the selected type in one undo step.
 #[test]

@@ -125,6 +125,9 @@ pub struct VectorcraftApp {
     pub last_effect: Option<(String, serde_json::Value)>,
     /// Last confirmed Warp Options (bend, distortion, orientation) for the next new warp dialog.
     pub last_warp: Option<serde_json::Value>,
+    /// The Character panel field that takes the keyboard focus when the panel next draws it
+    /// ([`panels::character::highlight`]).
+    pub(crate) character_focus: Option<panels::character::Field>,
     /// Commands run through [`Self::run`] so far: the native menu bar reads its rows again when it
     /// moves ([`native_menu::sync`]).
     run_count: u64,

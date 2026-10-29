@@ -318,6 +318,24 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "",
         "{} the selected type (or the Type tool's selection) in its family's Italic (or Oblique) face, or back upright when it is italic; keeps the weight. A family without that face is left as it is, with a message. While the Type tool edits text, Cmd+Shift+I",
     ),
+    (
+        "type.highlightFontName",
+        "Highlight Font Name",
+        "Cmd+Alt+Shift+F",
+        "{} show the Character panel if it is hidden and open its font family menu, whose search field takes the keyboard focus: type to search, Enter applies the highlighted font → {field: \"fontName\"}. Without selected type (or text the Type tool edits) the panel shows, and the error says to select type first",
+    ),
+    (
+        "type.highlightKerning",
+        "Highlight Kerning",
+        "Cmd+Alt+K",
+        "{} show the Character panel if it is hidden and give its Kerning field the keyboard focus with its value selected: type a value and press Enter → {field: \"kerning\"}. Without selected type (or text the Type tool edits) the panel shows, and the error says to select type first",
+    ),
+    (
+        "type.highlightTracking",
+        "Highlight Tracking",
+        "",
+        "{} show the Character panel if it is hidden and give its Tracking field the keyboard focus with its value selected: type a value and press Enter → {field: \"tracking\"}. Without selected type (or text the Type tool edits) the panel shows, and the error says to select type first",
+    ),
     ("effect.last", "Last Effect…", "Cmd+Alt+Shift+E", "{} open the dialog of the last effect applied"),
     ("view.zoomIn", "Zoom In", "Cmd+=", "{}"),
     ("view.zoomOut", "Zoom Out", "Cmd+-", "{}"),
@@ -716,6 +734,12 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "{selected?: preset name} open the presets manager (dialog `flattenerPresets`, fields `selected`, then the selected preset's `name` and option keys: setting them on a saved preset saves it, a new `name` renames it; built-in presets don't change). New, Delete, Import… and Export… run flattener.presets.save / delete / import / export",
     ),
     (
+        "ui.imageTracePresetDialog",
+        "Save as New Preset…",
+        "",
+        "{params?: tracing settings (default: the Default preset's), rename?: a saved preset's name} the Image Trace panel's Manage Presets: open Save as New Preset… for those settings, or with `rename`, Rename… for that saved preset (dialog `imageTracePreset`, field `name`: a new \"Tracing Preset N\" or the preset's name); OK runs imageTrace.presets.save with the name (as `newName` when renaming), and the panel shows the preset it made from its settings",
+    ),
+    (
         "ui.flattenerPreview",
         "Flattener Preview",
         "",
@@ -814,7 +838,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "ui.expandDialog",
         "Expand…",
         "",
-        "{} open Expand for the selection (dialog `expand`, fields object, fill, stroke (all on; one the selection has nothing for is disabled, see object.expand.info), gradient: objects|mesh, steps 1..1000 (255)): OK runs object.expand with them as one undo step",
+        "{} open Expand for the selection (dialog `expand`, fields object, fill, stroke (all on; one the selection has nothing for is disabled, see object.expand.info), gradient: objects|mesh, steps 1..1000 (255)): OK runs object.expand with them as one undo step; dimmed, and an error, while the selection has an appearance effect.expandAppearance expands (object.expand.info's appearance)",
     ),
     (
         "attributes.openUrl",

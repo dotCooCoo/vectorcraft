@@ -170,11 +170,12 @@ fn wheel_view(
 ) -> (egui::PointerState, egui::Modifiers, bool, Option<Pos2>) {
     let line = ui.ctx().options(|o| o.input_options.line_scroll_speed);
     let wheel_zooms = app.session.prefs.zoom_with_mouse_wheel;
+    let animate = animated_zoom(&app.session.prefs);
     let turn_id = egui::Id::unique("canvas-wheel-turn");
     let turn_before: WheelTurn = ui.data(|d| d.get_temp(turn_id)).unwrap_or_default();
     let mut turn = turn_before;
     let (pointer, m, space, (factor, scroll)) =
-        ui.input(|i| (i.pointer.clone(), i.modifiers, i.key_down(egui::Key::Space), wheel(i, wheel_zooms, line, rect.height(), &mut turn)));
+        ui.input(|i| (i.pointer.clone(), i.modifiers, i.key_down(egui::Key::Space), wheel(i, wheel_zooms, animate, line, rect.height(), &mut turn)));
     if turn != turn_before {
         ui.data_mut(|d| d.insert_temp(turn_id, turn));
     }
@@ -261,12 +262,19 @@ fn begin_drag(app: &mut VectorcraftApp, ui: &Ui, f: &Pointing, p: Pos2) {
         // A new press has not dragged yet, whatever an interrupted one left behind.
         dd.remove::<Point>(tool_drag_doc_id());
         dd.insert_temp(tool_press_doc_id(), xf.to_doc(p));
+        // Space held at the press (Cmd+Space lends the Zoom tool) sizes the marquee until
+        // it is let go ([`zoom_marquee_start`]).
+        if matches!(d, Drag::ZoomBox { .. }) {
+            dd.insert_temp(zoom_space_free_id(), !space);
+        }
     });
 }
 
 /// A gesture held at `p`: the view follows, or the tool gets drag events.
 fn drag_held(app: &mut VectorcraftApp, ui: &Ui, f: &Pointing, d: Drag, p: Pos2) {
     let Pointing { resp, rect, pointer, m, space, xf, view, .. } = *f;
+    // Where the pointer was in the frame before: a zoom marquee moved with Space follows it.
+    let before: Option<Pos2> = ui.data(|dd| dd.get_temp(drag_pos_id()));
     ui.data_mut(|dd| dd.insert_temp(drag_pos_id(), p));
     match d {
         Drag::Pan { start, center, .. } => {
@@ -287,7 +295,11 @@ fn drag_held(app: &mut VectorcraftApp, ui: &Ui, f: &Pointing, d: Drag, p: Pos2) 
                 vm.rotation = vectorcraft_geom::normalize_deg(deg);
             }
         }
-        Drag::ZoomBox { start } => marquee(ui.painter(), egui::Rect::from_two_pos(start, p)),
+        Drag::ZoomBox { start } => {
+            let start = zoom_marquee_start(ui, start, before, p, space);
+            ui.data_mut(|dd| dd.insert_temp(drag_id(), Drag::ZoomBox { start }));
+            marquee(ui.painter(), egui::Rect::from_two_pos(start, p));
+        }
         Drag::ZoomScrub { start, held, moved } => {
             let dt = ui.input(|i| i.unstable_dt).min(0.25);
             let (held, moved) = (held + dt, moved || (p - start).length() > SCRUB_SLOP);
@@ -354,6 +366,8 @@ fn drag_released(app: &mut VectorcraftApp, ui: &Ui, f: &Pointing, d: Drag, p: Po
     let Pointing { resp, rect, m, space, xf, view, .. } = *f;
     // The last position the tool's drag got: none if the press never dragged.
     let last_drag: Option<Point> = ui.data(|dd| dd.get_temp(tool_drag_doc_id()));
+    // Where the pointer was in the frame before: a zoom marquee moved with Space follows it.
+    let before: Option<Pos2> = ui.data(|dd| dd.get_temp(drag_pos_id()));
     ui.data_mut(|dd| {
         dd.remove::<Drag>(drag_id());
         dd.remove::<Pos2>(drag_pos_id());
@@ -362,6 +376,8 @@ fn drag_released(app: &mut VectorcraftApp, ui: &Ui, f: &Pointing, d: Drag, p: Po
     });
     match d {
         Drag::ZoomBox { start } => {
+            let start = zoom_marquee_start(ui, start, before, p, space);
+            ui.data_mut(|dd| dd.remove::<bool>(zoom_space_free_id()));
             let r = egui::Rect::from_two_pos(start, p);
             if let Some(vm) = app.view_mut() {
                 if r.width() > 8.0 && r.height() > 8.0 {
@@ -439,6 +455,60 @@ fn double_click(app: &mut VectorcraftApp, ui: &Ui, f: &Pointing, p: Pos2) {
             }
         }
     }
+}
+
+/// Whether Space moves the Zoom tool's marquee in the drag under way ([`zoom_marquee_start`]).
+fn zoom_space_free_id() -> egui::Id {
+    egui::Id::unique("canvas-zoom-space-free")
+}
+
+/// The start corner of the Zoom tool's marquee in this frame. With Space held, the marquee moves
+/// as far as the pointer did since `before` and keeps its size; with Space let go, the drag sizes
+/// it again from where it moved to. Space held since the press (Cmd+Space lends the Zoom tool)
+/// sizes the marquee until it is let go. A marquee with no size yet is sized by the movement, so
+/// Space pressed before the pointer moves does not keep it at the press point. The frame's pointer
+/// moves and Space presses and releases are taken in the order they came, so each move follows the
+/// Space state it came with.
+fn zoom_marquee_start(ui: &Ui, start: Pos2, before: Option<Pos2>, p: Pos2, space: bool) -> Pos2 {
+    enum Step {
+        Space(bool),
+        Move(Pos2),
+    }
+    let id = zoom_space_free_id();
+    let steps: Vec<Step> = ui.input(|i| {
+        i.events
+            .iter()
+            .filter_map(|e| match e {
+                egui::Event::Key { key: egui::Key::Space, pressed, repeat: false, .. } => Some(Step::Space(*pressed)),
+                egui::Event::PointerMoved(q) => Some(Step::Move(*q)),
+                _ => None,
+            })
+            .collect()
+    });
+    // Space as it was when the frame began: the opposite of its first press or release, else as it is now.
+    let mut held = steps.iter().find_map(|s| if let Step::Space(down) = s { Some(!down) } else { None }).unwrap_or(space);
+    let mut free = !held || ui.data(|d| d.get_temp::<bool>(id)).unwrap_or(true);
+    let (mut start, mut at) = (start, before);
+    for s in steps.into_iter().chain(std::iter::once(Step::Move(p))) {
+        match s {
+            Step::Space(down) => {
+                held = down;
+                free |= !down;
+            }
+            Step::Move(q) => {
+                if let Some(b) = at
+                    && held
+                    && free
+                    && b != start
+                {
+                    start += q - b;
+                }
+                at = Some(q);
+            }
+        }
+    }
+    ui.data_mut(|d| d.insert_temp(id, free));
+    start
 }
 
 /// A marquee around screen rectangle `r`: dark dashes over a light line, so it shows on a white
