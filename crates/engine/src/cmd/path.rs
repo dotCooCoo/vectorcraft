@@ -1251,13 +1251,21 @@ fn insert_anchor(s: &mut Session, p: &Value) -> Result<Value> {
     let si = usize_opt(p, "subpath", "path.insertAnchor")?.unwrap_or(0);
     let seg = p.get("segment").and_then(Value::as_u64).map(index).ok_or_else(|| bad("path.insertAnchor", "missing segment"))?;
     let t = number_or(p, "t", 0.5, "path.insertAnchor")?.clamp(0.0, 1.0);
-    let idx = s.edit("Add Anchor Point", |d, _| {
+    let idx = s.edit("Add Anchor Point", |d, sel| {
         let path = path_mut(d, id)?;
         let sp = path.subpaths.get_mut(si).ok_or_else(|| EngineError::Other("no such subpath".into()))?;
         if seg >= sp.segment_count() {
             return Err(EngineError::Other("no such segment".into()));
         }
-        Ok(sp.insert_anchor(seg, t))
+        let idx = sp.insert_anchor(seg, t);
+        // A path that wasn't selected becomes the selection, its new anchor direct-selected, so
+        // the point added shows and can be edited at once (#4237).
+        if !sel.contains(id) {
+            sel.clear();
+            sel.add(id);
+            sel.anchors.entry(id).or_default().insert((si, idx));
+        }
+        Ok(idx)
     })?;
     Ok(json!({ "anchor": idx }))
 }

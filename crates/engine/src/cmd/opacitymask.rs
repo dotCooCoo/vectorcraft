@@ -343,6 +343,15 @@ impl TransparencyInfo {
             ids,
         }
     }
+
+    /// The opacity of the focused gradient mesh `point` (see `transparency.set`) instead of its
+    /// object's.
+    fn with_mesh_point(mut self, point: Option<(NodeId, usize, f32)>) -> Self {
+        if let Some((_, _, o)) = point {
+            self.opacity = Some((o as f64 * 10_000.0).round() / 100.0);
+        }
+        self
+    }
 }
 
 /// The nodes of `ids` that exist: looked up one by one when few, else in one walk of the tree.
@@ -370,7 +379,10 @@ impl Session {
     /// edited (`transparency.info` without ids).
     pub fn transparency_info(&self) -> TransparencyInfo {
         match (self.active(), transparency_targets(self, &Value::Null)) {
-            (Some(st), Ok(ids)) => TransparencyInfo::of(&st.doc, ids),
+            (Some(st), Ok(ids)) => {
+                let point = super::paint::focused_mesh_point_of(self, &ids);
+                TransparencyInfo::of(&st.doc, ids).with_mesh_point(point)
+            }
             _ => TransparencyInfo::default(),
         }
     }
@@ -378,7 +390,9 @@ impl Session {
 
 fn info(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
-    let i = TransparencyInfo::of(&st.doc, transparency_targets(s, p)?);
+    let ids = transparency_targets(s, p)?;
+    let point = super::paint::focused_mesh_point_of(s, &ids);
+    let i = TransparencyInfo::of(&st.doc, ids).with_mesh_point(point);
     Ok(json!({
         "ids": i.ids.iter().map(|id| id.0).collect::<Vec<_>>(),
         "opacity": i.opacity,

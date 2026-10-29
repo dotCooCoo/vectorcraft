@@ -57,6 +57,7 @@
 	Check Script	Kontrollér script
 	Other Script…	Andet script…
 	Document Setup…	Dokumentopsætning…
+	Switch Units	Skift enheder
 	Document Color Mode	Dokumentets farvetilstand
 	CMYK Color	CMYK-farve
 	RGB Color	RGB-farve
@@ -4257,6 +4258,7 @@ imageTrace	Outline	Kontur
 @msg	select an object in perspective	markér et objekt i perspektiv
 @msg	select artwork (or a colour group) to recolor	markér grafik (eller en farvegruppe) for at skifte farver
 @msg	select at least two objects	markér mindst to objekter
+@msg	exit isolation mode first	afslut først isoleringstilstand
 @msg	select objects, not layers	markér objekter, ikke lag
 @msg	select one path, or give its `id`	markér én sti, eller angiv dens `id`
 @msg	select paths to join	markér stier, der skal forbindes
@@ -5032,7 +5034,7 @@ mark-style	Japanese	Japansk
 	This system has no screen color sampler	Dette system har ingen skærmfarvesampler
 	Color blindness – Tritanopia-type	Farveblindhed – tritanopitype
 	Panels Except Tools and Control	Paneler undtagen værktøjer og kontrol
-	Reset Tracking and Kerning	Nulstil spærring og kerning
+	Reset Tracking and Kerning	Nulstil sporing og kerning
 	Reset Horizontal Scale	Nulstil vandret skalering
 @msg	span must be "object" or "selection", got {v}	span skal være "object" eller "selection", fik {v}
 @msg	span: "selection" places a `gradient`, not a swatch	span: "selection" placerer en `gradient`, ikke en farveprøve

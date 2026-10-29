@@ -416,7 +416,7 @@ objects' fills or strokes differ (`fillMixed` / `strokeMixed`, drawn as a "?" pr
 | `draw_path` | `{points \| d, closed?, fill?, stroke?, strokeWidth?, dash?, cap?, join?, opacity?, name?, effects?}` | `points` is `[[x,y],…]` or `[{x,y,in?,out?,smooth?},…]`. `d` is SVG path data. The options are below. |
 | `draw_shape` | `{shape, …geometry, fill?, stroke?, strokeWidth?, dash?, cap?, join?, opacity?, name?, effects?}` | `rectangle`/`ellipse`: `x,y,width,height` (plus `radius` for corners). `polygon`: `cx,cy,radius,sides`. `star`: `cx,cy,radius1,radius2,points`. `line`: `x1,y1,x2,y2`. |
 | `set_paint` | `{fill?, stroke?, strokeWidth?, ids?}` | Applies to the selection (or `ids`) and becomes the default for new art. Returns `{applied, objects}`: `objects` is the number of objects painted, as the `objects` of the `paint.setFill`, `paint.setStroke` and `stroke.set` replies (the largest of them): a selected group counts the objects inside it. When it is 0, a `note` says that only the paint for new art changed. |
-| `press_key` | `{key, mods?}` | Remote: a real key event. Headless: runs the command or tool bound to that shortcut, or sends the key to the busy tool (digits too: `5` while dragging with the Perspective Selection tool; `e` while dragging a Selection or Group Selection marquee). |
+| `press_key` | `{key, mods?}` | Remote: a real key event. Headless: runs the command or tool bound to that shortcut, or sends the key to the busy tool (digits too: `5` while dragging with the Perspective Selection tool; `e` while dragging a Selection or Group Selection marquee; `c` and `f` while dragging out an arc). |
 | `type_text` | `{text}` | Remote only. |
 | `answer_dialog` | `{set?: [{field, value?}], action?}` | Remote only. Sets fields of the app's open dialog in the order given with one `ui.dialog.set {fields}` (a missing `value` is `null`). The app stores all of them or none. When the app refuses the `ui.dialog.set`, for example because no dialog is open, the call is an error and `action` is not sent. Then `action` `confirm` (OK, `ui.dialog.confirm`) or `cancel` (`ui.dialog.cancel`). Give `set`, `action` or both; `set` holds at most 256 fields. `inspect_ui` shows the open dialog and its fields as `ui.dialog`. Returns `{dialog, result}`: the dialog after the fields were set (or `null`) and the reply to `confirm` or `cancel` (or `null`). After `invoke_menu` `app.quit`, `file.close` or `file.closeAll` replies `{"pending": "saveChanges"}`, `{action: "confirm"}` saves, `{set: [{field: "discard", value: true}], action: "confirm"}` closes without saving and `{action: "cancel"}` cancels the close or quit. |
 | `invoke_menu` | `{command, params?}` | Invokes a menu item by command id. Includes UI commands such as `view.*` and `window.*` in remote mode. |
@@ -431,7 +431,7 @@ objects' fills or strokes differ (`fillMixed` / `strokeMixed`, drawn as a "?" pr
 | `transform` | `{ids?, dx?, dy?, rotate?, scale?, scaleX?, scaleY?, reflect?, shear?, origin?, copy?}` | Runs move, rotate, scale, reflect, shear in that order. With `copy`, the first step duplicates. |
 | `create_graph` | `{type?, x, y, width, height, csv? \| series?, categories?, rows?}` | The nine Illustrator graph types: column, stacked column, bar, stacked bar, line, area, scatter, pie and radar. An empty CSV cell or a `null` in `rows` is a blank value; a number in straight quotes is a label. Edit later with `graph.setData` / `graph.setType` via `run_command`. `graph.column {design, columnType: vertical\|uniform\|repeating\|sliding, each, fractions: chop\|scale}` draws the columns or bars of the series picked with Group Selection (or `seriesIndexes`, or all of them) with a graph design saved by `graph.design`; with no `design` it returns the series' current design and options. Type in the design that holds a `%` followed by two digits shows each column's value, with at least the first digit's places before the decimal point and the second digit's places after it. |
 | `text_wrap` | `{ids?, offset?, invert?, release?}` | Area type below the objects (same layer) flows around them. |
-| `undo` / `redo` | `{}` | Many calls that change nothing record no undo step, for example `object.align` with nothing to move, `object.move` by 0 without `copy` and `object.showAll` with nothing hidden. `undo` (`edit.undo`) after such a call undoes the step before it. `inspect_document` lists the undo steps as `history`. `run_command` with `edit.clearHistory` removes every undo and redo step of the active document and returns `{cleared}`, the number of steps removed; the document stays as it is, and the command records no undo step. |
+| `undo` / `redo` | `{}` | Many calls that change nothing record no undo step, for example `object.align` with nothing to move, `object.move` by 0 without `copy` and `object.showAll` with nothing hidden. `undo` (`edit.undo`) after such a call undoes the step before it. `inspect_document` lists the undo steps as `history`. `run_command` with `edit.clearHistory` removes every undo and redo step of the active document and returns `{cleared}`, the number of steps removed; the document stays as it is, and the command records no undo step. While the Type tool edits type, `undo` and `redo` put its caret, with no characters selected, at the end of the text the step changed: after the text it puts back or retypes, or where the text it takes out was. A step that changes no characters, such as a formatting change, leaves the caret and the selection where they are. |
 
 For example, create editable Japanese area type with the engine's vertical writing mode:
 
@@ -471,6 +471,13 @@ mode. To press the key during a drag, end one
 ```
 
 With nothing being dragged, `e` chooses the tool bound to E.
+
+While an arc is being dragged out with the Arc tool, `press_key {key: "c"}` switches it between an open and a closed
+path, `{key: "f"}` switches its base between the X and Y axes in the same box, and `{key: "up"}` and `{key: "down"}`
+raise and lower its slope by 10, within −100…100. Each press switches once. The arc drawn on release uses these
+values, and they stay as the Arc tool's `closed`, `baseAlong` and `slope` options for the next arc. With nothing being
+dragged, `c` chooses the tool bound to C, and `f` runs the shortcut bound to F in remote mode (headless has no
+binding for it).
 
 Appearance stacks: an object can carry several fills and strokes (`appearance.addFill`, `appearance.addStroke`), indexed
 in paint order (0 is painted first, the bottom row of the Appearance panel). Cmd+/ runs `appearance.addFill` and
@@ -639,9 +646,13 @@ SVG writes one file per artboard of a `range`); `useArtboards: false` exports th
 its effects paint, the effects of groups, type and images included. `artboard.fitToArt` measures the art the same
 way.
 
-Raster exports take more options in `options`: `ppi` (72, 150, 300…; stored in the file), `background`
-(`transparent`, `white`, `black` or `"#rrggbb"`), `antiAlias` (`none`, `art`, `type`: text snapped to pixels) and,
-for PNG, `interlaced`.
+Raster exports take more options in `options`: `ppi` (72, 150, 300…; stored in the file, except in GIF, WebP and
+Targa), `background` (`transparent`, `white`, `black` or `"#rrggbb"`), `antiAlias` (`none`, `art`, `type`: text
+snapped to pixels) and, for PNG, `interlaced`. `width` or `height` sets the size of each file in pixels: each artboard
+(with `useArtboards`, each file), `rect` or art bounds gets the scale that makes it that wide or high, within 0.01–64
+pixels per point, and the file stores the resolution that results, as with `ppi`. `width` wins over `height`, and
+either one wins over `ppi` and `scale`. A value that is not a positive number is refused. Export for Screens rows keep
+their own size (`scale: "512w"`).
 
 Long-tail commands:
 
@@ -1129,7 +1140,8 @@ and `radial` in `shape.polarGrid`; `size` and the `width`, `height` and `fitMinP
 `end` in `type.step`; `by` in `type.size.increase` and `type.size.decrease`; `size` in `type.ruby`; `width`, `height`
 and `fitMinPercent` in `text.areaOptions`; `x` and `y` in `symbol.place`; `radius`, `density` and `scale` in
 `symbol.spray`; `radius` and `intensity` in `symbol.adjust`; `to` in `swatch.move`; `weight` and `opacity` in
-`appearance.setItem`; `angle` in `paint.editGradient` and in the `gradient` of a command that takes a paint; `t` in
+`appearance.setItem`; `r`, `g`, `b`, `c`, `m`, `y`, `k`, `gray` and `tint` in `edit.colors.adjustBalance`; `steps`
+and `amount` in `color.harmony`; `angle` in `paint.editGradient` and in the `gradient` of a command that takes a paint; `t` in
 `paint.freeform.splitLine`; `tolerance` and `gap` in `shapeBuilder.merge`; `gap` in `shapeBuilder.regions`; and
 `width` and `tolerance` in `livePaint.strokeEdge`. A null is read as a key left out. A gradient stop that names a
 swatch refuses a `tint` that is not a number with `` stop 0: `tint` must be a number ``.
@@ -1716,7 +1728,9 @@ the scope and what differs from the public documentation.
 fills, strokes, text, gradient stops, gradient-mesh points, embedded images (a recoloured copy of the image; linked
 images are left alone) and the tiles of pattern fills and strokes (a recoloured copy saved as a new pattern swatch,
 e.g. "Dots 2"; the original pattern is untouched). `includeImages: false` / `includePatterns: false` leave images or
-patterns out. The Blend commands also grade gradient meshes, which keep their shading.
+patterns out. The Blend commands also grade gradient meshes, which keep their shading. `edit.colors.saturate` needs
+`intensity`, a number from -100 to 100 (a number outside the range counts as its nearest end). Without one, or with a
+value that is not a number, it answers `` missing number `intensity` `` and changes nothing.
 
 ```json
 {"name":"run_command","arguments":{"command":"recolor.colors","params":{}}}
@@ -2107,7 +2121,8 @@ and `layerRows`, the rows highlighted in the panel.
   set|add|toggle}` is Shift-click (a range) and Ctrl/Cmd-click (toggle). Selecting art makes its layer current.
   Without `ids`, the panel commands below act on the highlighted rows, else on the current layer.
 - **Selection column**: `layer.selectAll {id, add?}` selects a row's visible, unlocked art (a layer's sublayers'
-  too); `add` (Shift) adds it, or removes it when it's all selected.
+  too); `add` (Shift) adds it, or removes it when it's all selected. Alt-click on a layer's or sublayer's name runs
+  `layer.selectAll {id}` and then `layer.setCurrent {id}`.
 - **Eye and lock**: `layer.setProps {ids?, visible?, locked?, name?}` for any rows, plus Layer Options for layers:
   `template` (also locks the layer and dims its images to 50% unless given), `printable`, `preview` (off: the layer
   draws and is clicked in outline, Ctrl/Cmd-click its eye), `dimImages` (0–100, or false) and `color` (an index 0–26,
@@ -2118,10 +2133,12 @@ and `layerRows`, the rows highlighted in the panel.
   inside it); a row never goes into itself or a row inside it, and a locked layer or group takes nothing. Dragging the
   selected-art square is `layer.move` with the selected objects. `node.move {id, parent?, index}` is the low-level
   form with the same nesting rules; unlike `layer.move`, it also moves a row into a locked layer or group.
-- **Buttons**: `layer.new {name?, top?, …options}` (above the current layer at its level; `top` with Ctrl/Cmd),
-  `layer.newSublayer {parent?, name?, …options}` (on top of the parent's contents), `layer.delete {ids?}` (rows with
-  what they hold; the last layer stays), `layer.locate {id?}` (highlights the selected object's row; the panel opens
-  the rows around it) and `layer.clippingMask.toggle`.
+- **Buttons**: `layer.new {name?, top?, below?, …options}` (above the current layer at its level; `top` with
+  Ctrl/Cmd; `below`, directly below the current layer at its level, with Ctrl/Cmd+Alt),
+  `layer.newSublayer {parent?, bottom?, name?, …options}` (on top of the parent's contents; `bottom`, under them but
+  above a clipping layer's clipping path, with Ctrl/Cmd+Alt), `layer.delete {ids?}` (rows with what they hold; the
+  last layer stays), `layer.locate {id?}` (highlights the selected object's row; the panel opens the rows around it)
+  and `layer.clippingMask.toggle`.
 - **Panel menu**: `layer.duplicate {ids?}`, `layer.merge {ids?}` (into the layer highlighted last, keeping the
   stacking order), `layer.flatten {id?}` (every other visible layer's art into one layer; hidden layers are deleted,
   templates stay), `layer.collectInNew {ids?}`, `layer.releaseToLayers {id?, build?}` and
@@ -2144,6 +2161,11 @@ and `layerRows`, the rows highlighted in the panel.
   opens no rows for it and scrolls as with the option off. A change made with the panel's own rows, buttons or menu is
   not located, and a change made during a drag is located when the drag ends.
   A document opens with only its top-level layers open; the open rows are saved in the native file and reopen that way.
+- **Lock and Hide in isolation mode**: in isolation mode, Object › Lock's and Object › Hide's items (`object.lock`,
+  `object.lock.above`, `object.lock.otherLayers`, `object.hide`, `object.hide.above`, `object.hide.otherLayers`),
+  `object.unlockAll` and `object.showAll` are off, and a call returns the error "command `object.hide` is not
+  available right now: exit isolation mode first", with the command's own id. Pattern editing mode and opacity mask
+  editing do not count as isolation mode for these commands.
 - **Search and filter** (control channel and the app's MCP): the Search All field keeps the rows whose names hold the
   text typed, and `ui.layersFilter {objects?, layers?}` sets the choices of the Filter button beside it. `objects` (By
   Object) takes `paths` (paths and compound paths), `shapes` (live rectangles, ellipses, polygons and lines), `text`,
@@ -2153,6 +2175,12 @@ and `layerRows`, the rows highlighted in the panel.
   one of those states (an empty list takes every row) and its name holds the search text, or when a row inside it
   stays. A key left out keeps its list. The filter lasts the session and does not change the document, its open rows
   or the selection. `ui.layersFilter` answers `{objects, layers}`.
+
+These Layers panel commands refuse a string, a number or another value that is not true or false with
+`` `copy` must be true or false ``, naming the key, and leave the document, the selection, the highlighted rows and
+the undo history as they were: `top` in `layer.new` and `layer.newSublayer`, `add` in `layer.selectAll` and
+`layer.target`, `copy` in `layer.move`, `on` in `layer.template` and `layer.pasteRemembersLayers`, and `build` in
+`layer.releaseToLayers`. A null is read as a key left out.
 
 ```json
 {"name":"run_command","arguments":{"command":"layer.newSublayer","params":{"name":"Shadows"}}}
@@ -2442,8 +2470,8 @@ These commands refuse a string or another value that is not a number with `` `dy
 naming the key; the document does not change and no undo step is recorded: `t`, `dx` and `dy` in
 `path.reshapeSegment` and `object.blend.spine.reshapeSegment`; `x`, `y` and `t` in `path.curvatureEdit`; `x` and `y`
 in `path.convertAnchor`; `t` in `path.insertAnchor`; `fidelity` and the `within` of `redraw` in `path.freehand` (and in
-`brush.freehand`, which runs it); `size`, `angle` and `roundness` in `path.eraseRegion`; `size` in `path.blob`;
-`width` in `path.eraseSegments`;
+`brush.freehand`, which runs it); `size`, `angle` and `roundness` in `path.eraseRegion`;
+`size` and `fidelity` in `path.blob`; `width` in `path.eraseSegments`;
 `radius` and `fidelity` in `path.smoothRegion`; `tolerance` in `path.joinScrub`; `dx` and `dy` in `path.moveAnchors`;
 and `dx`, `dy`, `tol` and `radius` in `path.reshape`. A null is read as a key left out. `path.convertAnchor` refuses
 an `x` without a `y`, or a `y` without an `x`, with "x and y must be given together". `path.freehand`,
@@ -2703,6 +2731,12 @@ anchor points, else the Align To choice. The Distribute commands send `to: "key"
 the Align To choice, and while there is a key object or a key guide they send the panel's Distribute Spacing value as
 `spacing`. Edit › Keyboard Shortcuts lists them under Align, with no default shortcut, and
 `shortcuts.set {id, shortcut}` gives one a shortcut.
+
+Edit › Keyboard Shortcuts and `shortcuts.list` leave out a command with a menu path and no default shortcut when its
+params doc has a required field (one with no `?` and no `=` default), no item of the menu bar runs it without params,
+and it opens no dialog when run without them, such as `document.setUnits {units}` (File › Document Setup › Units).
+They list such a command while the user has changed its shortcut (`overridden: true` in `shortcuts.list`), and
+`shortcuts.set` can change or clear it.
 
 The desktop app adds its active artboard, the one the Artboards panel highlights, to the `object.align`,
 `object.distribute`, `object.distributeSpacing` and `select.allOnArtboard` calls it runs without `artboard`, as it does
@@ -2987,14 +3021,17 @@ for a uniform stroke). `stroke.widthPoint.remove {id, index | indices}` deletes 
 points}` replaces them all, as dragging several Shift-selected points with the Width tool does in one undo step.
 With the Width tool, `press_key` Delete or Backspace removes the selected width points (`handledBy: "tool"`); with none
 selected the key clears the selected objects as usual (`edit.clear`). The Puppet Warp tool's selected pins go the
-same way.
+same way. With the Width tool, `press_key` Escape deselects the selected width points (`handledBy: "tool"`) and
+leaves the document and its undo history as they were.
 A compound path's stroke is the compound's: width point commands given one of its members edit the compound's
 profile, which runs along every subpath (the Width tool shows each subpath's points).
 
 `object.puppetWarp {ids?, pins, moved, angles?, expand?}` warps art as rigidly as possible so that each pin (a point
 on the art) lands on its `moved` point. `angles` (degrees, or null for a free pin; as long as `pins`) holds the turn
 the art takes around a pin, as Alt-dragging near a selected pin with the Puppet Warp tool does: one pin with
-`angles: [90]` turns the art a quarter turn around it.
+`angles: [90]` turns the art a quarter turn around it. `press_key` Escape between two `pointer_gesture` calls of a
+pin drag or a turn cancels it: the art, its pins and the selected pins go back to how the press found them, and no
+undo step is added.
 
 The Puppet Warp tool's pins live in the document while the same art stays selected (never saved; Undo and Redo take
 them back with the art). `object.puppetWarp.pins {ids?}` reads them: `pins` (where each sits on the shape the pins
@@ -3058,6 +3095,9 @@ three: General (rulers, positions and sizes, the Info panel, dialog distances, c
 (`document.inspect` → `units`): `document.setUnits {units}` (Document Setup) sets it for that document, and
 `prefs.set {key: "unitsGeneral", value}` sets it for the active document too (one undo step) and is the units
 `file.new` starts in when it gets no `units`. Stroke and Type are the preferences `unitsStroke` and `unitsType`.
+`document.switchUnits` (Cmd/Ctrl+Alt+Shift+U) sets the active document's units to the next unit in the order a
+right-click on a ruler lists them (Points, Picas, Inches, Millimeters, Centimeters, Pixels, Feet & Inches, Meters,
+Yards, Feet, then Points again), in one undo step, and replies `{units}`.
 `numbersWithoutUnitsArePoints` (on by default) makes the desktop app's length fields in picas read a number typed
 with no unit in points (`12` is 12 pt, `2p6` and `1p` stay picas, `12 mm` millimetres); off, it is in picas. Fields in
 other units read it in their unit either way, and the Preferences dialog dims the option unless a unit is Picas.
@@ -3187,11 +3227,16 @@ Every artboard command that takes an `index` fails with `no such artboard` when 
 clipboard stay as they were.
 These artboard commands refuse a string, a number or another value that is not true or false with
 `` `art` must be true or false ``, naming the key, and leave the document, its undo history and the clipboard as they
-were: `moveArt`, `scaleArt`, `strokes`, `corners`, `patterns`, `lockedAndHidden` and an artboard's `locked` in
-`artboard.setProps`; `moveArt`, `copy` and `patterns` in `artboard.move`; `art` and `patterns` in `artboard.duplicate`;
+were: `moveArt`, `scaleArt`, `strokes`, `corners`, `patterns`, `lockedAndHidden` and an artboard's `locked`,
+`showCenterMark`, `showCrossHairs` and `showVideoSafeAreas` in `artboard.setProps`; `showCenterMark`, `showCrossHairs`
+and `showVideoSafeAreas` in `artboard.new`; `moveArt`, `copy` and `patterns` in `artboard.move`; `art` and `patterns` in `artboard.duplicate`;
 and `art` in `artboard.copy` and `artboard.cut`. `artboard.setProps` refuses an artboard's `x`, `y`, `width` or
 `height` that is not a number, and `artboard.move` refuses such a `dx` or `dy`, with
 `` `dx` must be a number, not "10" ``. A null is read as a key left out.
+`artboard.new` refuses an `x`, `y`, `width` or `height` that is not a number with the same message, and
+`artboard.new` and `artboard.setProps` refuse a `name` that is not a string, such as 5, with
+`` `name` must be a string ``. Both leave the artboards and the undo history as they were, and read a null as the
+key left out.
 
 Scale Artwork with Artboard (#602): `artboard.setProps {index, x?, y?, width?, height?, scaleArt: true}` resizes an
 artboard and scales the art fully inside it, and its artboard guides, from the old rectangle onto the new one, each side
@@ -3692,7 +3737,8 @@ slice ids and the ids of objects with an object slice.
 ## Export for Screens
 
 `document.exportForScreens` writes every chosen artboard (`range`, `artboards`; default all) in every format row
-into `folder`, or returns the files as `dataBase64` without one; `zip: true` packs them into one store-only `.zip`.
+into `folder`, or returns the files as `dataBase64` without one; `zip: true` packs them into one `.zip`,
+each file deflated, or stored when deflating does not make it smaller.
 A row is `{format, scale?}` where `scale` is a factor (`2`, `"2x"`), a pixel width (`"100w"` or `width: 100`), a
 height (`"100h"`) or a resolution (`"72ppi"`); raster rows name their files `@2x`, `@100w`… unless `suffix` says
 otherwise. `fullDocument` writes one file per row instead (a PDF of every artboard, other formats the bounds of all
@@ -5064,7 +5110,8 @@ horizon; with Lock Station Point the other one swings), the horizon, the third v
 and right ground-level points (24 px from the origin along each wall's ground line: they move the whole grid; Shift
 keeps one axis), the left and right extents (separate: `extent` and `extentRight`; Alt drags both, Shift goes by
 whole cells), the vertical extent and the cell size widget (on the line where the planes meet, a cell up, or more
-cells while they're small) reshape the grid; Lock Grid stops them. The Plane Switching Widget stays put in a corner
+cells while they're small) reshape the grid; Lock Grid stops them. `press_key` Escape during a drag of one of them,
+or of a plane widget, cancels it and puts the grid back. The Plane Switching Widget stays put in a corner
 of the document window (headless: the first artboard's top-left corner); a press on it picks the plane with any tool
 while the grid shows (choosing a perspective tool shows it, and `perspective.grid.show` hides it again with the tool
 still chosen), and the keys 1–4 (`key` with `"1"`…`"4"`) pick the left, horizontal, right and no plane.
@@ -5117,7 +5164,8 @@ Brush Dimensions shared by the seven tools (`width`, `height` in pt, `angle`, `i
 `showBrush`) and the tool's own: `detail` (1..10); `simplify` (0..100) with `simplifyOn` (Warp, Twirl, Pucker,
 Bloat); `rate` (Twirl, -180..180°); `complexity` (0..15) and `affectAnchors`, `affectIn`, `affectOut` (Scallop,
 Crystallize, Wrinkle: what the brush moves); `horizontal`, `vertical` (Wrinkle, 0..1). Alt-drag sizes the brush from
-its current size (with Shift too it keeps its proportions). With Use Pressure Pen on, each `pointer_gesture` event's
+its current size (with Shift too it keeps its proportions). `press_key` Escape during a stroke cancels it and adds no
+undo step; during an Alt-drag it puts the brush size back. With Use Pressure Pen on, each `pointer_gesture` event's
 `pressure` (0..1) is the intensity there, and `object.liquify` takes points as `[x, y, pressure]`.
 
 ```json
@@ -5157,7 +5205,8 @@ distance along the plane's normal), so copies, duplicates and pastes stay attach
 `perspectiveSelection` tool, a drag moves the selection within its plane (`perspective.move`; Alt copies), the
 bounding-box handles scale it in plane space (`perspective.transform`; Shift keeps proportions, Alt scales about the
 centre), and `press_key` `5` during a drag switches the move to perpendicular to the plane (press again to switch
-back). The arrow keys nudge a selection in perspective by the keyboard increment (`perspective.nudge`; Shift ×10, Alt
+back). `press_key` Escape during a move, a resize or a plane widget drag cancels it and puts the objects and the
+grid back. The arrow keys nudge a selection in perspective by the keyboard increment (`perspective.nudge`; Shift ×10, Alt
 copies). Object › Transform › Transform Again repeats the last perspective move or scale in plane space.
 
 ```json

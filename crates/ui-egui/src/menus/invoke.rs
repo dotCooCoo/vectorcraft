@@ -114,7 +114,11 @@ pub fn invoke(app: &mut VectorcraftApp, id: &str, p: Value) {
     // (Recolor Artwork), opens on the art as the gesture left it.
     let r = app.session.finish_tool_edit();
     crate::canvas::apply_requests(app, r);
-    if SUBJECT_COMMANDS.contains(&id) && p.get("ids").is_none() && p.get("id").is_none() && !has_subject(app) {
+    if SUBJECT_COMMANDS.contains(&id)
+        && p.get("ids").is_none_or(|ids| ids.as_array().is_some_and(Vec::is_empty))
+        && p.get("id").is_none()
+        && !has_subject(app)
+    {
         return;
     }
     // Params first: some dialogs' fields take a look through the session (Move's last move).

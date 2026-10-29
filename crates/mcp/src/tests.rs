@@ -1413,6 +1413,30 @@ fn e_during_a_marquee_gesture_selects_only_the_objects_inside() {
     assert_eq!(serde_json::from_str::<Value>(&text_of(&r)).unwrap()["handledBy"], "tool.select", "{r}");
 }
 
+/// `press_key {key: "c"}` and `{key: "f"}` while an arc is being dragged go to the Arc tool, and
+/// the release draws one arc. With nothing dragged, C is a shortcut again.
+#[test]
+fn c_and_f_during_an_arc_gesture_go_to_the_arc_tool() {
+    let mut s = server();
+    let count = |s: &mut Server, id: u64| {
+        let r = call(s, id, "inspect_document", json!({}));
+        serde_json::from_str::<Value>(&text_of(&r)).unwrap()["objects"].as_u64().unwrap()
+    };
+    let before = count(&mut s, 1);
+    let begin = json!([{"kind": "down", "x": 100, "y": 100}, {"kind": "drag", "x": 200, "y": 180}]);
+    let r = call(&mut s, 2, "pointer_gesture", json!({"tool": "arc", "events": begin}));
+    assert_eq!(r["isError"], false, "{r}");
+    for (id, key) in [(3, "c"), (4, "f")] {
+        let r = call(&mut s, id, "press_key", json!({"key": key}));
+        assert_eq!(serde_json::from_str::<Value>(&text_of(&r)).unwrap()["handledBy"], "tool", "{key}: {r}");
+    }
+    let r = call(&mut s, 5, "pointer_gesture", json!({"tool": "arc", "events": [{"kind": "up", "x": 200, "y": 180}]}));
+    assert_eq!(r["isError"], false, "{r}");
+    assert_eq!(count(&mut s, 6), before + 1);
+    let r = call(&mut s, 7, "press_key", json!({"key": "c"}));
+    assert_ne!(serde_json::from_str::<Value>(&text_of(&r)).unwrap()["handledBy"], "tool", "{r}");
+}
+
 /// A click on one of two selected objects makes it the key object: `pointer_gesture` replies
 /// with it as `key` and `inspect_document` lists it, and a click on the key again lets it go.
 #[test]

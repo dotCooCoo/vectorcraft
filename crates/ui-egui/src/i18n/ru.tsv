@@ -3254,6 +3254,7 @@ mark-style	Japanese	Японский
 	Swatch Options…	Параметры образца…
 	Swatch Tiles	Плитки образцов
 	Swatches	Образцы
+	Switch Units	Переключить единицы
 	Switch workspace	Переключить рабочую среду
 	Add Content	Добавить содержимое
 	Click to apply to the selected type	Щёлкните, чтобы применить к выделенному тексту
@@ -3957,6 +3958,7 @@ axis	Both	Оба
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` должно быть от {min} до {max} (получено {x})
 @msg	`{key}` must be one of {_1}	`{key}` должно быть одним из: {_1}
 @msg	`{key}` must be true or false	`{key}` должно быть true или false
+@msg	`top` and `below` can't both be true	`top` и `below` не могут одновременно быть true
 @msg	`select` must be true or false	`select` должно быть true или false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` и `maxAnchors` должны быть целыми числами
 @msg	`{key}` must be a number not below 0	`{key}` должно быть числом не меньше 0
@@ -4293,6 +4295,7 @@ axis	Both	Оба
 @msg	select an object in perspective	выделите объект в перспективе
 @msg	select artwork (or a colour group) to recolor	выделите рисунок (или цветовую группу) для перекрашивания
 @msg	select at least two objects	выделите как минимум два объекта
+@msg	exit isolation mode first	сначала выйдите из режима изоляции
 @msg	select objects, not layers	выделите объекты, а не слои
 @msg	select one path, or give its `id`	выделите один контур или укажите его `id`
 @msg	select paths to join	выделите контуры для соединения

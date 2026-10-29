@@ -3258,6 +3258,7 @@ mark-style	Japanese	Giapponese
 	Swatch Options…	Opzioni campione…
 	Swatch Tiles	Riquadri campioni
 	Swatches	Campioni
+	Switch Units	Cambia unità
 	Switch workspace	Cambia area di lavoro
 	Add Content	Aggiungi contenuto
 	Click to apply to the selected type	Fai clic per applicarlo al testo selezionato
@@ -3961,6 +3962,7 @@ axis	Both	Entrambi
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` deve essere compreso tra {min} e {max} (ricevuto {x})
 @msg	`{key}` must be one of {_1}	`{key}` deve essere uno dei seguenti: {_1}
 @msg	`{key}` must be true or false	`{key}` deve essere true o false
+@msg	`top` and `below` can't both be true	`top` e `below` non possono essere entrambi true
 @msg	`select` must be true or false	`select` deve essere true o false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` e `maxAnchors` devono essere numeri interi
 @msg	`{key}` must be a number not below 0	`{key}` deve essere un numero non inferiore a 0
@@ -4297,6 +4299,7 @@ axis	Both	Entrambi
 @msg	select an object in perspective	seleziona un oggetto in prospettiva
 @msg	select artwork (or a colour group) to recolor	seleziona la grafica (o un gruppo colori) da ricolorare
 @msg	select at least two objects	seleziona almeno due oggetti
+@msg	exit isolation mode first	esci prima dalla modalità isolamento
 @msg	select objects, not layers	seleziona oggetti, non livelli
 @msg	select one path, or give its `id`	seleziona un tracciato o specifica il suo `id`
 @msg	select paths to join	seleziona i tracciati da unire

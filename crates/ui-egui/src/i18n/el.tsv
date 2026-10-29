@@ -2172,6 +2172,7 @@ axis	Both	Και τα δύο
 @msg	`{key}` must be between {min} and {max} (got {x})	Το `{key}` πρέπει να είναι μεταξύ {min} και {max} (δόθηκε {x})
 @msg	`{key}` must be one of {_1}	Το `{key}` πρέπει να είναι ένα από τα {_1}
 @msg	`{key}` must be true or false	Το `{key}` πρέπει να είναι true ή false
+@msg	`top` and `below` can't both be true	Τα `top` και `below` δεν μπορούν να είναι και τα δύο true
 @msg	`select` must be true or false	Το `select` πρέπει να είναι true ή false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	Τα `minAnchors` και `maxAnchors` πρέπει να είναι ακέραιοι αριθμοί
 @msg	`{key}` must be a number not below 0	Το `{key}` πρέπει να είναι αριθμός όχι μικρότερος από 0
@@ -3458,7 +3459,7 @@ theme	Appearance	Εμφάνιση
 	Size Tile to Art	Προσαρμογή μεγέθους πλακιδίου στο σχέδιο
 	Size/Leading	Μέγεθος/διάστιχο
 	Ridges per segment:	Ράχες ανά τμήμα:
-	Size: {size}  Tracking: {tracking}	Μέγεθος: {size}  Αραίωση: {tracking}
+	Size: {size}  Tracking: {tracking}	Μέγεθος: {size}  Απόσταση χαρακτήρων: {tracking}
 	Skin Tone Ramps	Χρωματικές κλίμακες τόνων δέρματος
 	Skip Blank Artboards	Παράλειψη κενών πινάκων σχεδίασης
 	Sky Gradients	Ντεγκραντέ ουρανού
@@ -3569,6 +3570,7 @@ theme	Appearance	Εμφάνιση
 	Swatch Options	Επιλογές δείγματος χρώματος
 	Swatch Options…	Επιλογές δείγματος χρώματος…
 	Swatch Tiles	Πλακίδια δειγμάτων χρωμάτων
+	Switch Units	Αλλαγή μονάδων
 	Switch workspace	Αλλαγή χώρου εργασίας
 	Add Content	Προσθήκη περιεχομένου
 	Click to apply to the selected type	Κλικ για εφαρμογή στο επιλεγμένο κείμενο
@@ -4215,6 +4217,7 @@ theme	Appearance	Εμφάνιση
 @msg	select an object in perspective	επιλέξτε αντικείμενο σε προοπτική
 @msg	select artwork (or a colour group) to recolor	επιλέξτε σχέδιο (ή ομάδα χρωμάτων) για επαναχρωματισμό
 @msg	select at least two objects	επιλέξτε τουλάχιστον δύο αντικείμενα
+@msg	exit isolation mode first	βγείτε πρώτα από τη λειτουργία απομόνωσης
 @msg	select objects, not layers	επιλέξτε αντικείμενα, όχι επίπεδα
 @msg	select one path, or give its `id`	επιλέξτε μία διαδρομή ή δώστε το `id` της
 @msg	select paths to join	επιλέξτε διαδρομές για ένωση

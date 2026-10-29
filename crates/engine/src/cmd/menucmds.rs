@@ -16,7 +16,7 @@ use vectorcraft_render::encode::{RasterExportOptions, RasterFormat};
 use super::edit::{duplicate_in, selected_roots};
 use super::{
     CommandSpec, EngineError, Result, Session, bad, check_numbers, check_switches, cmd, f64_or, fileio, find_command, has_doc, has_selection,
-    switch_or,
+    has_selection_outside_isolation, switch_or,
 };
 
 /// Session-level (not saved) state owned by the menu commands.
@@ -44,7 +44,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Lock"],
             None,
             "{} lock objects in the same layer that are above and overlap the selection, deselecting every selected object left locked or hidden (the key object too) → {count}",
-            has_selection,
+            has_selection_outside_isolation,
             |s, _| above(s, true)
         ),
         cmd!(
@@ -53,7 +53,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Lock"],
             None,
             "{} lock every layer that holds no selected object → {count}",
-            has_selection,
+            has_selection_outside_isolation,
             |s, _| other_layers(s, true)
         ),
         cmd!(
@@ -62,7 +62,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Hide"],
             None,
             "{} hide objects in the same layer that are above and overlap the selection, deselecting every selected object left hidden or locked (the key object too) → {count}",
-            has_selection,
+            has_selection_outside_isolation,
             |s, _| above(s, false)
         ),
         cmd!(
@@ -71,7 +71,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Hide"],
             None,
             "{} hide every layer that holds no selected object → {count}",
-            has_selection,
+            has_selection_outside_isolation,
             |s, _| other_layers(s, false)
         ),
         cmd!(

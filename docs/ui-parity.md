@@ -255,6 +255,9 @@ Cmd/Ctrl+Alt+N (`file.newWithoutDialog`, New Without Dialog in the shortcut edit
 settings the New Document dialog opens on (the first Recent entry, or the Print category's Letter while Recent is
 empty), without opening the dialog.
 
+Cmd/Ctrl+Alt+Shift+U (`document.switchUnits`, Switch Units in the shortcut editor) switches the document to the
+next unit in the order a right-click on a ruler lists them, from Feet back to Points.
+
 ## Panels, Control bar, Properties, context menus
 
 | Interaction | Status | Evidence |

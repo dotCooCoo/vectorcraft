@@ -3194,6 +3194,7 @@ effect	Points	Punkte
 	Swatch Options…	Farbfeldoptionen…
 	Swatch Tiles	Farbfeldkacheln
 	Swatches	Farbfelder
+	Switch Units	Einheiten wechseln
 	Switch workspace	Arbeitsbereich wechseln
 	Add Content	Inhalt hinzufügen
 	Click to apply to the selected type	Klicken, um auf den ausgewählten Text anzuwenden
@@ -3845,6 +3846,7 @@ theme	Appearance	Erscheinungsbild
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` muss zwischen {min} und {max} liegen (erhalten: {x})
 @msg	`{key}` must be one of {_1}	`{key}` muss einer der folgenden Werte sein: {_1}
 @msg	`{key}` must be true or false	`{key}` muss true oder false sein
+@msg	`top` and `below` can't both be true	`top` und `below` können nicht beide true sein
 @msg	`select` must be true or false	`select` muss true oder false sein
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` und `maxAnchors` müssen ganze Zahlen sein
 @msg	`{key}` must be a number not below 0	`{key}` muss eine Zahl nicht kleiner als 0 sein
@@ -4182,6 +4184,7 @@ theme	Appearance	Erscheinungsbild
 @msg	select an object in perspective	wählen Sie ein Objekt in der Perspektive aus
 @msg	select artwork (or a colour group) to recolor	wählen Sie eine Grafik (oder eine Farbgruppe) zum Neufärben aus
 @msg	select at least two objects	wählen Sie mindestens zwei Objekte aus
+@msg	exit isolation mode first	beenden Sie zuerst den Isolationsmodus
 @msg	select objects, not layers	wählen Sie Objekte aus, keine Ebenen
 @msg	select one path, or give its `id`	wählen Sie einen Pfad aus oder geben Sie seine `id` an
 @msg	select paths to join	wählen Sie Pfade zum Zusammenfügen aus

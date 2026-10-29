@@ -295,6 +295,28 @@ fn offset_rect_joins() {
 }
 
 #[test]
+fn offset_of_an_open_path_whose_ends_meet_is_the_closed_shape_offset() {
+    // Issue #3773: an open path whose last anchor sits on its first offsets like the closed shape,
+    // not as a ring around its outline.
+    let corners = [Point::new(0.0, 0.0), Point::new(20.0, 0.0), Point::new(20.0, 10.0), Point::new(0.0, 10.0), Point::new(0.0, 0.0)];
+    let r = PathData::single(SubPath::polyline(&corners, false));
+    let grown = offset_path(&r, 2.0, Join::Miter, 4.0);
+    assert!(close(ar(&grown), 24.0 * 14.0, 1e-6), "{}", ar(&grown));
+    assert_eq!(grown.subpaths.len(), 1);
+    assert_eq!(grown.anchor_count(), 4);
+    assert!(close(ar(&offset_path(&r, -2.0, Join::Miter, 4.0)), 16.0 * 6.0, 1e-6));
+    // A curved outline: the last anchor's in-handle shapes the closing curve.
+    let mut sp = circle(0.0, 0.0, 10.0).subpaths.remove(0);
+    let first = sp.anchors[0];
+    sp.anchors.push(vectorcraft_geom::Anchor::with_handles(first.p, first.h_in, first.p));
+    sp.anchors[0].h_in = first.p;
+    sp.closed = false;
+    let o = offset_path(&PathData::single(sp), 3.0, Join::Round, 4.0);
+    assert!(close(ar(&o), PI * 169.0, 2e-3), "{}", ar(&o));
+    assert_eq!(o.subpaths.len(), 1);
+}
+
+#[test]
 fn outline_stroke_of_line() {
     let l = PathData::single(SubPath::polyline(&[Point::new(0.0, 0.0), Point::new(30.0, 40.0)], false));
     let o = outline_stroke(&l, 4.0, Cap::Butt, Join::Miter, 4.0);

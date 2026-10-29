@@ -46,6 +46,10 @@ impl eframe::App for App {
         #[cfg(windows)]
         windows_stylus::raw_input_hook(raw);
         file_access::unconfined(|| self.app.raw_input_hook(ctx, raw));
+        // A mouse-up that never reached the window (#4326) is delivered once AppKit reports
+        // that no mouse button is down.
+        #[cfg(target_os = "macos")]
+        self.app.release_lost_buttons(ctx, raw, objc2_app_kit::NSEvent::pressedMouseButtons() != 0);
     }
     #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
