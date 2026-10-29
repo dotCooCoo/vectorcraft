@@ -386,8 +386,8 @@ fn open_exts_cover_every_readable_format() {
 
 #[test]
 fn library_open_filters_list_library_formats_first() {
-    let filters: Vec<_> = library_open_filters("Swatch libraries", super::swatchlib::LIBRARY_EXTS).collect();
-    assert_eq!(filters[0], ("Swatch libraries", super::swatchlib::LIBRARY_EXTS));
+    let filters: Vec<_> = library_open_filters("Swatch libraries", crate::cmd::swatchlib::LIBRARY_EXTS).collect();
+    assert_eq!(filters[0], ("Swatch libraries", crate::cmd::swatchlib::LIBRARY_EXTS));
     assert!(filters[0].1.contains(&"ase"));
     assert_eq!(filters[1], ("All readable files", OPEN_EXTS));
 }
@@ -752,7 +752,7 @@ fn a_save_refuses_disagreeing_options_and_names_unread_native_ones() {
     let w: Vec<&str> = r["warnings"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
     assert!(w.iter().any(|w| w.starts_with("`version` was not used")) && !w.iter().any(|w| w.starts_with("`compress`")), "{w:?}");
     // `precision` is read by native files and templates only.
-    for name in ["p.svg", "p.pdf", "p.ai"] {
+    for name in ["p.svg", "p.pdf", "p.ai", "p.eps"] {
         let r = s.execute("file.saveCopy", &json!({"path": d.join(name).to_string_lossy(), "precision": 2})).unwrap();
         let w: Vec<&str> = r["warnings"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
         assert!(w.iter().any(|w| w.starts_with("`precision` was not used:")), "{name}: {w:?}");
