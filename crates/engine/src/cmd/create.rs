@@ -5,7 +5,10 @@ use vectorcraft_doc::{Appearance, CharStyle, LiveShape, Node, NodeKind, TextObje
 use vectorcraft_geom::{Affine, Anchor, AnchorKind, FillRule, PathData, Point, Rect, SubPath, shapes};
 
 use super::newart::NewArt;
-use super::*;
+use super::{
+    CommandSpec, NodeId, Result, Session, bad, bool_or, check_numbers, check_switches, cmd, color_value, f64_or, f64_req, finite_numbers, has_doc,
+    number_or, str_param, switch_or,
+};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![

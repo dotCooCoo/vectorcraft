@@ -1,5 +1,5 @@
 use super::exporter::{UNDECODED, writable, xf};
-use super::*;
+use super::{BlendMode, Exporter, Image, NodeKind, Rect, Size, Surface};
 
 impl Exporter<'_> {
     /// Image `im` placed `size` points wide and high, resampled and compressed as the Compression

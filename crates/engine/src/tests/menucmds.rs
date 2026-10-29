@@ -2601,13 +2601,18 @@ fn guides_and_art_move_together_when_selected() {
     assert!(s.doc().unwrap().doc.node(copied_id).is_none());
     assert!(s.doc().unwrap().doc.node(a).is_some());
 
+    guides_and_art_later_cases(&mut s, a);
+}
+
+/// Cases 5 to 8 of [`guides_and_art_move_together_when_selected`]: explicit ids, preview copies and moving a guide.
+fn guides_and_art_later_cases(s: &mut Session, a: NodeId) {
     // 5. Explicit ids: only the specified art moves, guides stay put.
-    sel(&mut s, &[a]);
+    sel(s, &[a]);
     s.execute("guide.select", &json!({"indexes": [0, 1], "toggle": true})).unwrap();
     s.execute("object.transform", &json!({"ids": [a.0], "matrix": [1, 0, 0, 1, 40, 50]})).unwrap();
     let b = s.doc().unwrap().doc.bounds_of(&[a], false).unwrap();
     assert_eq!((b.x0, b.y0), (50.0, 60.0));
-    assert_eq!(guides(&s), vec![(true, 200.0), (false, 300.0)]);
+    assert_eq!(guides(s), vec![(true, 200.0), (false, 300.0)]);
     s.execute("edit.undo", &json!({})).unwrap();
 
     // 6. Interactive preview copies: dragging with Alt previews the copies and commit keeps them.
@@ -2615,32 +2620,32 @@ fn guides_and_art_move_together_when_selected() {
     s.preview("object.transform", &json!({"matrix": [1, 0, 0, 1, 10, 20], "copy": true})).unwrap();
     s.preview("object.transform", &json!({"matrix": [1, 0, 0, 1, 30, 40], "copy": true})).unwrap();
     s.commit_interaction().unwrap();
-    assert_eq!(guides(&s).len(), 4);
-    assert_eq!(guides(&s)[2], (true, 230.0));
-    assert_eq!(guides(&s)[3], (false, 340.0));
+    assert_eq!(guides(s).len(), 4);
+    assert_eq!(guides(s)[2], (true, 230.0));
+    assert_eq!(guides(s)[3], (false, 340.0));
     s.execute("edit.undo", &json!({})).unwrap();
-    assert_eq!(guides(&s), vec![(true, 200.0), (false, 300.0)]);
+    assert_eq!(guides(s), vec![(true, 200.0), (false, 300.0)]);
 
     // 7. Dragging a guide (guide.move) when art is also selected moves both art and guides.
-    sel(&mut s, &[a]);
+    sel(s, &[a]);
     s.execute("guide.select", &json!({"indexes": [0, 1], "toggle": true})).unwrap();
     s.execute("guide.move", &json!({"dx": 10, "dy": 20})).unwrap();
     let b = s.doc().unwrap().doc.bounds_of(&[a], false).unwrap();
     assert_eq!((b.x0, b.y0), (20.0, 30.0));
-    assert_eq!(guides(&s), vec![(true, 210.0), (false, 320.0)]);
+    assert_eq!(guides(s), vec![(true, 210.0), (false, 320.0)]);
     s.execute("edit.undo", &json!({})).unwrap();
     let b = s.doc().unwrap().doc.bounds_of(&[a], false).unwrap();
     assert_eq!((b.x0, b.y0), (10.0, 10.0));
-    assert_eq!(guides(&s), vec![(true, 200.0), (false, 300.0)]);
+    assert_eq!(guides(s), vec![(true, 200.0), (false, 300.0)]);
 
     // 8. Copy-dragging a guide (guide.move { copy: true }) when art is also selected duplicates both.
     s.execute("guide.move", &json!({"dx": 10, "dy": 20, "copy": true})).unwrap();
-    assert_eq!(guides(&s).len(), 4);
-    assert_eq!(guides(&s)[2], (true, 210.0));
-    assert_eq!(guides(&s)[3], (false, 320.0));
+    assert_eq!(guides(s).len(), 4);
+    assert_eq!(guides(s)[2], (true, 210.0));
+    assert_eq!(guides(s)[3], (false, 320.0));
     assert_eq!(s.doc().unwrap().doc.layers[0].children().unwrap().len(), 2);
     s.execute("edit.undo", &json!({})).unwrap();
-    assert_eq!(guides(&s).len(), 2);
+    assert_eq!(guides(s).len(), 2);
     assert_eq!(s.doc().unwrap().doc.layers[0].children().unwrap().len(), 1);
 }
 
