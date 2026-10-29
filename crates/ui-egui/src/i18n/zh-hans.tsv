@@ -1475,6 +1475,12 @@ file-filter	Templates	模板
 	Image Trace	图像描摹
 	Image Tracing	图像描摹对象
 	Tracing Presets	描摹预设
+	Manage Presets	管理预设
+	Save as New Preset…	存储为新预设…
+	Rename…	重命名…
+	Rename Preset	重命名预设
+	Save Image Trace Preset	保存图像描摹预设
+	Delete Image Trace Preset	删除图像描摹预设
 	Image Trace Presets	图像描摹预设
 	Image:	图像：
 	Images:	图像：
@@ -3040,6 +3046,11 @@ font-script	Japanese	汉字
 	Stroke	描边
 	Stroke (X), double-click for the Color Picker	描边 (X)，双击打开拾色器
 	Stroke Color	描边颜色
+	Fill Gradient	填色渐变
+	Stroke Gradient	描边渐变
+	Fill Pattern	填色图案
+	Stroke Pattern	描边图案
+	Patterns	图案
 	Stroke Options	描边选项
 	Character:	字符：
 	Character options	字符选项
@@ -3646,6 +3657,7 @@ imageTrace	Outline	轮廓
 # names and values in backticks or code (`colorModel rgb`, `document.export`) stay as they are.
 # Simplified Chinese: no final 。 unless the English ends with a period; a space between Chinese text and
 # an adjacent Latin word, number or {placeholder}; 、 between the items of a list.
+@msg	`Custom` stands for changed settings: save the preset under another name	`Custom` 表示已更改的设置：请以其他名称保存预设
 @msg	`{key}` must be an array of these names: {_1}	`{key}` 必须是由以下名称组成的数组：{_1}
 @msg	Reset {_1}	重置 {_1}
 @msg	Saving	正在保存
@@ -3880,6 +3892,7 @@ imageTrace	Outline	轮廓
 @msg	already editing a pattern	已在编辑图案
 @msg	no pattern `{name}`	没有图案 `{name}`
 @msg	not in pattern editing mode	不在图案编辑模式中
+@msg	finish editing the pattern first	请先完成图案编辑
 @msg	pattern missing	缺少图案
 @msg	select a repeat	请选择一个重复对象
 @msg	select an Intertwine group	请选择一个交织组
@@ -4145,6 +4158,10 @@ imageTrace	Outline	轮廓
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} 是导出增效工具 (文件 › 导出 › 导出为…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` 为 {size} 字节（上限 {MAX_DOCUMENT_DATA}）
 @msg	a preset named `{_1}` exists	名为 `{_1}` 的预设已存在
+@msg	`name` is empty	`name` 为空
+@msg	`newName` is empty	`newName` 为空
+@msg	`{name}` is a built-in preset and can't change: save it under another name	`{name}` 是内置预设，无法更改：请以其他名称保存
+@msg	`{name}` is a built-in preset and stays	`{name}` 是内置预设，无法删除
 @msg	a swatch or color group named `{n}` exists	名为 `{n}` 的色板或颜色组已存在
 @msg	no print preset named `{base}`	没有名为 `{base}` 的打印预设
 @msg	no print preset named `{name}`	没有名为 `{name}` 的打印预设
@@ -4163,6 +4180,8 @@ imageTrace	Outline	轮廓
 @msg	PDF settings are not an object	PDF 设置不是对象
 @msg	PDF security settings are not an object	PDF 安全性设置不是对象
 @msg	no saved PDF preset named `{name}` (built-in presets are read-only: start a new one from them)	没有名为 `{name}` 的已保存 PDF 预设 (内置预设为只读：请以它们为基础新建一个)
+@msg	no saved preset named `{name}`	没有名为 `{name}` 的已保存预设
+@msg	no saved preset named `{name}` to rename	没有名为 `{name}` 的已保存预设可供重命名
 @msg	Saved to User Defined: {_1}	已保存到“用户定义”：{_1}
 @msg	choose a direction to divide in	请选择分割方向
 @msg	choice must be "merge" or "add", not `{choice}`	choice 必须是 "merge" 或 "add"，而不是 `{choice}`
@@ -4236,6 +4255,13 @@ imageTrace	Outline	轮廓
 @msg	choose a folder to export to	请选择要导出到的文件夹
 @msg	the selection has no URL (or they differ)	所选对象没有 URL (或其 URL 各不相同)
 @msg	select some type first	请先选择一些文字
+@msg	the selection has no gradient fill	所选对象没有渐变填色
+@msg	the selection has no gradient stroke	所选对象没有渐变描边
+@msg	the selection has no pattern fill	所选对象没有图案填色
+@msg	the selection has no pattern stroke	所选对象没有图案描边
+@msg	no gradient swatch `{name}`	没有渐变色板 `{name}`
+@msg	no pattern swatch `{name}`	没有图案色板 `{name}`
+@msg	the library item is damaged	库项目已损坏
 @msg	{_1} font families available	有 {_1} 个可用的字体系列
 @msg	{_1} has no {_2} style	{_1} 没有 {_2} 样式
 @msg	Copied the CSS of {rules} object(s)	已复制 {rules} 个对象的 CSS
@@ -4245,6 +4271,7 @@ imageTrace	Outline	轮廓
 @msg	unknown highlight `{h}`	未知的高亮显示 `{h}`
 @msg	unknown overprints `{o}` (preserve, simulate or discard)	未知的叠印方式 `{o}` (preserve、simulate 或 discard)
 @msg	unknown preset `{name}` (see flattener.presets.list)	未知预设 `{name}` (请参阅 flattener.presets.list)
+@msg	unknown preset `{name}`: not a built-in or saved preset (see imageTrace.presets)	未知预设 `{name}`：既不是内置预设，也不是已保存的预设 (请参阅 imageTrace.presets)
 @msg	Select text or click into text with the Type tool to insert glyphs	请选择文字，或用文字工具在文字中单击，以插入字形
 @msg	`library` is a library id or name (see {list})	`library` 是库 id 或名称 (请参阅 {list})
 @msg	no library `{key}` (see {list})	没有库 `{key}` (请参阅 {list})
@@ -5475,4 +5502,6 @@ axis	Y Axis	Y 轴
 	Scale Presets	缩放预设
 @msg	a {width}×{height} screenshot's byte count overflows	{width}×{height} 截图的字节数溢出
 @msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	窗口的{what}（{points} 点 × {scale} DPI）无法确定截图大小
+# Object › Expand… dimmed until Expand Appearance (#3089).
+	Expand Appearance first (Object › Expand Appearance)	请先扩展外观（对象 › 扩展外观）
 	Live preview	实时预览

@@ -2,6 +2,40 @@ use super::*;
 use crate::testutil::*;
 use vectorcraft_doc::Selection;
 
+/// Direct Selection and Group Selection grab a selected clipped object (picked in the Layers
+/// panel) where its mask hides it, as on its visible part: a drag moves it. With nothing of it
+/// selected there, a press starts a marquee.
+#[test]
+fn a_press_where_a_mask_hides_a_selected_object_drags_it() {
+    let (d, _, _, art) = doc_with_masked_square();
+    let p = paint();
+    let mut picked = Selection::default();
+    picked.add(art);
+    let none = Selection::default();
+    // (370, 450): on the art, outside the mask (400..500).
+    for group in [false, true] {
+        let c = cx(&d, &picked, &p);
+        let mut t = DirectSelectionTool::new(group);
+        let down = t.pointer(&c, &PointerEvent::new(PointerKind::Down, 370.0, 450.0));
+        assert!(!down.iter().any(|a| matches!(a, Action::Exec(c, _) if c.starts_with("select."))), "{down:?} (group: {group})");
+        let a = t.pointer(&c, &PointerEvent::new(PointerKind::Drag, 390.0, 470.0));
+        assert!(a.iter().any(|a| matches!(a, Action::Begin(n) if n == "Move")), "{a:?} (group: {group})");
+        t.pointer(&c, &PointerEvent::new(PointerKind::Up, 390.0, 470.0));
+        // With Shift, a marquee.
+        let shift = Mods { shift: true, ..Mods::default() };
+        let mut t = DirectSelectionTool::new(group);
+        t.pointer(&c, &PointerEvent::new(PointerKind::Down, 370.0, 450.0).with_mods(shift));
+        let a = t.pointer(&c, &PointerEvent::new(PointerKind::Drag, 390.0, 470.0).with_mods(shift));
+        assert!(!a.iter().any(|a| matches!(a, Action::Begin(_))), "{a:?} (group: {group})");
+        assert!(t.overlays(&c).iter().any(|o| matches!(o, Overlay::Marquee(_))), "a marquee (group: {group})");
+        let c = cx(&d, &none, &p);
+        let mut t = DirectSelectionTool::new(group);
+        t.pointer(&c, &PointerEvent::new(PointerKind::Down, 370.0, 450.0));
+        let a = t.pointer(&c, &PointerEvent::new(PointerKind::Drag, 390.0, 470.0));
+        assert!(!a.iter().any(|a| matches!(a, Action::Begin(_))), "{a:?} (group: {group})");
+    }
+}
+
 /// #414: a ruler guide is picked over the art, but an anchor on it is picked first.
 #[test]
 fn direct_and_group_selection_pick_ruler_guides() {

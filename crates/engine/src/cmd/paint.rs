@@ -423,7 +423,7 @@ fn apply_to_proxy(s: &mut Session, p: &Value, paint: Paint, cmd: &str) -> Result
 /// Set the fill (or stroke) of the targets of `p` (the `item` and `ids` params, see
 /// `paint.setFill`) and of the defaults for new art, focus its proxy unless `focus` is false, and
 /// remember the paint. Replies `{objects}`: how many objects took the paint.
-fn apply_paint(s: &mut Session, p: &Value, paint: Paint, fill: bool) -> Result<Value> {
+pub(crate) fn apply_paint(s: &mut Session, p: &Value, paint: Paint, fill: bool) -> Result<Value> {
     let cmd = if fill { "paint.setFill" } else { "paint.setStroke" };
     let focus = switch_or(p, "focus", true, cmd)?;
     let span = spans_targets(p, &paint).map_err(|e| bad(cmd, e))?;

@@ -233,7 +233,10 @@ pub fn enabled(app: &VectorcraftApp, id: &str) -> bool {
         id if id.starts_with(crate::panels::symbols::USER_SLOT) => crate::panels::symbols::user_library(app, id).is_some(),
         "ui.saveBrushLibrary" => crate::panels::brushes::has_brushes(app),
         id if id.starts_with(crate::panels::brushes::USER_SLOT) => crate::panels::brushes::user_library(app, id).is_some(),
-        "ui.expandDialog" => app.session.active().is_some_and(|d| !d.selection.is_empty()),
+        // Dimmed for appearance attributes, which Expand Appearance expands first (#3089).
+        "ui.expandDialog" => {
+            app.session.active().is_some_and(|d| !d.selection.is_empty()) && !vectorcraft_engine::cmd::expand::has_appearance(&app.session)
+        }
         "ui.spotColors" => app.session.active().is_some(),
         "ui.menuDialog" => app.session.active().is_some_and(|d| !d.selection.is_empty()),
         "ui.simplifyAuto" | "ui.simplifyMoreOptions" => crate::dialogs::simplify_slider::showing(app),

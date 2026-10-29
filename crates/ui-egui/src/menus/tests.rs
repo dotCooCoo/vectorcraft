@@ -283,6 +283,20 @@ fn panel_ids_are_case_insensitive_and_labels_work() {
     app.ui.dock_collapsed = false;
 }
 
+/// #4542: Edit › Color Settings… and Assign Profile… show the Separations Preview panel, which
+/// isn't in an icon column, and leave it showing when it already does.
+#[test]
+fn color_settings_and_assign_profile_show_the_separations_panel() {
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    app.run("file.new", json!({})).unwrap();
+    let shown = |app: &VectorcraftApp| checked(app, "window.panel", &json!({"panel": "separations"})).unwrap();
+    assert!(!shown(&app));
+    for id in ["edit.colorSettings", "edit.colorSettings", "edit.assignProfile"] {
+        app.run(id, json!({})).unwrap();
+        assert!(shown(&app), "{id} shows the panel");
+    }
+}
+
 #[test]
 fn saved_views_store_and_restore_the_view() {
     let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
