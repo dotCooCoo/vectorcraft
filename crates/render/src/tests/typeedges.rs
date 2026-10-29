@@ -154,6 +154,36 @@ fn the_methods_keep_the_opacity_of_the_paint() {
     }
 }
 
+/// In an export that composites with floating point, None, Crisp and Strong type composite its
+/// translucent fills as precisely as Sharp type: inside the characters each method draws the
+/// pixels Sharp draws, within the one step of rounding that keeping the type's pixels as 8-bit
+/// values adds.
+#[test]
+fn the_methods_keep_precise_compositing() {
+    let fills = [(Color::rgb(0.9, 0.2, 0.1), 0.37), (Color::rgb(0.1, 0.6, 0.8), 0.53), (Color::rgb(0.3, 0.1, 0.7), 0.29)];
+    let opts = RenderOptions { precise: true, ..Default::default() };
+    let draw = |m: TypeAntiAlias| {
+        let mut d = page(m, Some(FillLayer { opacity: 0.41, ..FillLayer::new(Paint::solid(Color::rgb(0.2, 0.7, 0.3))) }));
+        let id = d.layers[0].children().and_then(|c| c.first()).map(|n| n.id).unwrap();
+        let n = d.node_mut(id).unwrap();
+        for (c, o) in fills {
+            n.appearance.items.push(AppearanceItem::Fill(FillLayer { opacity: o, ..FillLayer::new(Paint::solid(c)) }));
+        }
+        Renderer::new().render(&d, W, H, Affine::IDENTITY, &opts).pixels
+    };
+    let sharp = draw(TypeAntiAlias::Sharp);
+    let most = sharp.chunks(4).map(|p| p[3]).max().unwrap_or(0);
+    let inside: Vec<usize> = sharp.chunks(4).enumerate().filter(|(_, p)| p[3] == most).map(|(i, _)| i).collect();
+    assert!(inside.len() > 200, "{} pixels inside the characters", inside.len());
+    for m in [TypeAntiAlias::None, TypeAntiAlias::Crisp, TypeAntiAlias::Strong] {
+        let drawn = draw(m);
+        let px = |p: &[u8], i: usize| [p[i * 4], p[i * 4 + 1], p[i * 4 + 2], p[i * 4 + 3]];
+        let off = |i: usize| px(&drawn, i).iter().zip(px(&sharp, i)).any(|(a, b)| a.abs_diff(b) > 1);
+        let wrong: Vec<_> = inside.iter().filter(|i| off(**i)).take(5).map(|i| (*i, px(&sharp, *i), px(&drawn, *i))).collect();
+        assert!(wrong.is_empty(), "{m:?}: (pixel, Sharp, drawn) {wrong:?}");
+    }
+}
+
 /// Type whose own fill multiplies with the art below it is drawn as Sharp draws it, so the fill
 /// still multiplies with that art.
 #[test]

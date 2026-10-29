@@ -357,7 +357,7 @@ impl Renderer {
             r.inside_layer(|r| r.draw_text_geom(&mut off, frame, n, t, g, kept));
             off.flush();
             let mut pm = Pixmap::new(w, h);
-            off.render(&mut pm, &mut r.resources);
+            off.render_with(&mut pm, &mut r.resources, r.raster);
             pm
         };
         let sharp = TextObject { anti_alias: TypeAntiAlias::Sharp, ..t.clone() };
