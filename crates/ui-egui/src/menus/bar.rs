@@ -1,7 +1,7 @@
 use super::entries::{Row, entry, pretty_shortcut};
-use super::invoke::{field_event, focused_text_field, invoke, to_field};
+use super::invoke::{field_event, focused_text_field, invoke, to_field, with_held_keys};
 use super::tree::menu_tree_named;
-use super::*;
+use super::{Entry, Item, Tokens, Value, VectorcraftApp, widgets};
 
 /// Render the menu bar.
 /// The in-window menu bar. Returns where its titles end (x): the bar itself takes the full width.
@@ -153,7 +153,7 @@ fn render_row(app: &VectorcraftApp, ui: &mut egui::Ui, row: &Row, checks: bool, 
         None => ui.add_enabled(row.enabled, egui::Button::new(text).shortcut_text(sc)),
     };
     if r.clicked() {
-        *clicked = row.target();
+        *clicked = row.target().map(|target| with_held_keys(target, ui.input(|i| i.modifiers)));
         ui.close();
     }
 }
