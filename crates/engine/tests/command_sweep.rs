@@ -250,6 +250,10 @@ fn commands_that_do_not_wait_for_a_tool_edit_change_no_document() {
                     cases.push(json!({ k.as_str(): v }));
                 }
             }
+            // Find Objects selects only with a filter, which one key at a time does not give it.
+            if c.id == "document.find" {
+                cases.extend([json!({"kind": "Path", "select": true}), json!({"name": "no such name", "select": true})]);
+            }
             for p in &cases {
                 let mut s = fx.session();
                 let before = tool_edit_state(&s);
