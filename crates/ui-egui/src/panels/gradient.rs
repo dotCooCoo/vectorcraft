@@ -9,6 +9,8 @@
 //! recolours the stop it lands on; a global or spot colour (or a tint of one) stays linked, so
 //! editing the swatch recolours the stop. The thumbnail menu marks the gradient swatch the
 //! gradient was applied from. Hide Options leaves the thumbnail, the proxy and the slider.
+//! Cmd/Ctrl-click on the thumbnail (the Gradient Fill box) or on the Tools panel's Gradient
+//! button resets the active proxy's gradient to the linear White, Black gradient.
 //!
 //! With the Stroke proxy in front, the Stroke buttons lay a linear or radial gradient within the
 //! stroke (placed on the page like a fill's), along it or across it (angle and aspect ratio then
@@ -187,6 +189,16 @@ fn write_stops(app: &mut VectorcraftApp, params: Value, select: Option<usize>, p
     {
         select_stop(app, Some(i));
     }
+}
+
+/// Paint the active proxy with the linear White, Black gradient, as one undo step (a solid or no
+/// paint becomes that gradient). It runs `paint.setFill` or `paint.setStroke`, so characters
+/// selected with the Type tool take it alone and an unpainted stroke gets its 1 pt weight. With
+/// nothing selected it sets the default. Cmd/Ctrl-click on the Gradient Fill box or on the Tools
+/// panel's Gradient button runs it.
+pub(crate) fn reset_to_linear_white_black(app: &mut VectorcraftApp) {
+    let cmd = if app.session.fill_active { "paint.setFill" } else { "paint.setStroke" };
+    app.run(cmd, json!({ "gradient": { "kind": "linear", "stops": stops_json(&Gradient::default().stops) } })).ok();
 }
 
 /// Save the gradient as a swatch; its stops keep their color models.
@@ -444,8 +456,12 @@ fn thumbnail(app: &mut VectorcraftApp, ui: &mut Ui, g: &GradientPaint, is_grad: 
     widgets::gradient_chip(ui, r, g);
     ui.painter().rect_stroke(r, 0.0, Stroke::new(1.0, t.border), StrokeKind::Inside);
     let resp = resp.on_hover_text(tl!("Gradient Fill: click to apply, drag onto art"));
-    if resp.clicked() && !is_grad {
-        edit(app, json!({}), Live::Released);
+    if resp.clicked() {
+        if ui.input(|i| i.modifiers.command) {
+            reset_to_linear_white_black(app);
+        } else if !is_grad {
+            edit(app, json!({}), Live::Released);
+        }
     }
     // The dragged copy carries no placement: it fits the art it lands on.
     widgets::drag_source(ui, &resp, || PanelDrag::paint(Paint::Gradient(Box::new(g.clone()))));

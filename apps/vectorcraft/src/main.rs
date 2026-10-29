@@ -26,6 +26,8 @@ mod gpu;
 #[cfg(target_os = "linux")]
 mod linux_stylus;
 mod logging;
+#[cfg(all(target_os = "macos", feature = "wgpu"))]
+mod mac_color_space;
 #[cfg(target_os = "macos")]
 mod mac_fonts;
 #[cfg(target_os = "macos")]
@@ -481,6 +483,29 @@ fn main() -> std::process::ExitCode {
             std::process::ExitCode::FAILURE
         }
     }
+}
+
+/// Tests only: while a test starts another program, the child briefly holds a copy of every file
+/// this process has open, until it runs that program. A file lock held through such a copy outlives
+/// its own handle, so a GPU start test that released the start file and opened it again found it
+/// still locked, as if another copy of the app were running, and failed. A test that starts a
+/// program holds [`spawning`]; a test that depends on the start file's lock holds [`no_spawns`].
+#[cfg(all(
+    test,
+    any(feature = "wgpu", any(target_os = "linux", target_os = "freebsd", target_os = "dragonfly", target_os = "netbsd", target_os = "openbsd"))
+))]
+static CHILD_SPAWN: std::sync::RwLock<()> = std::sync::RwLock::new(());
+
+/// Held while a test starts another program (see [`CHILD_SPAWN`]).
+#[cfg(all(test, any(target_os = "linux", target_os = "freebsd", target_os = "dragonfly", target_os = "netbsd", target_os = "openbsd")))]
+fn spawning() -> std::sync::RwLockWriteGuard<'static, ()> {
+    CHILD_SPAWN.write().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// Held by a test that releases a locked file and opens it again (see [`CHILD_SPAWN`]).
+#[cfg(all(test, feature = "wgpu"))]
+fn no_spawns() -> std::sync::RwLockReadGuard<'static, ()> {
+    CHILD_SPAWN.read().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 #[cfg(all(test, feature = "wgpu"))]

@@ -695,6 +695,8 @@ fn run_ui_part10(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result
         "ui.expandDialog" => crate::dialogs::expand::open(app),
         "ui.simplifyAuto" => crate::dialogs::simplify_slider::auto(app),
         "ui.simplifyMoreOptions" => crate::dialogs::simplify_slider::more_options(app),
+        "ui.smoothAuto" => crate::dialogs::smooth_slider::auto(app),
+        "ui.dialogReset" => crate::dialogs::reset(app),
         "attributes.openUrl" => crate::panels::attributes::open_url(app, p),
         "ui.javascriptFilesDialog" => crate::panels::svg_interactivity::files_dialog(app, p),
         "ui.spotColors" => crate::dialogs::spot_colors::open(app),

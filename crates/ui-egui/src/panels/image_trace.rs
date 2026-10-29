@@ -29,7 +29,7 @@ fn ignore_color(params: &Value) -> [u8; 3] {
     let hex = params["ignoreColor"].as_str().unwrap_or("").trim_start_matches('#');
     let channel = |i: usize| hex.get(i * 2..i * 2 + 2).and_then(|h| u8::from_str_radix(h, 16).ok());
     match (hex.len(), channel(0), channel(1), channel(2)) {
-        (6, Some(r), Some(g), Some(b)) => [r, g, b],
+        (6, Some(r), Some(g), Some(b)) if hex.bytes().all(|b| b.is_ascii_hexdigit()) => [r, g, b],
         _ => [255; 3],
     }
 }
