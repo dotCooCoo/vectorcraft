@@ -3,7 +3,9 @@ use super::{
     PlacedKey, Rect, RenderContext, Renderer, SUBSTITUTED, Shape, TextGeom, TextObject, blend_mode, blob_pixmap, depends_on_document, fx, holds_type,
     image_mip, ink, kurbo, lru, peniko, place, proof, stain_bits, text_geom, text_geom_snapped, vello_cpu,
 };
+use super::{AntiAlias, Pixmap, single_threaded_context};
 use crate::paint;
+use crate::{MAX_RASTER_SIDE, TypeAntiAlias, TypeEdgeEntry};
 
 impl Renderer {
     pub(super) fn draw_text(&mut self, ctx: &mut RenderContext, f: &Frame, n: &Node, t: &TextObject) {
