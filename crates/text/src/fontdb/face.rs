@@ -214,6 +214,11 @@ impl FontFace {
     pub fn vertical_metrics(&self) -> (f64, f64) {
         (self.ascent, self.descent)
     }
+    /// The height of the lowercase letters in font units, positive (estimated from the ascent
+    /// when the font has no OS/2 value).
+    pub fn x_height(&self) -> f64 {
+        self.x_height
+    }
     /// The line gap the font asks for between lines, in font units (from the same table as
     /// [`vertical_metrics`](Self::vertical_metrics); 0 when it has none).
     pub fn line_gap(&self) -> f64 {

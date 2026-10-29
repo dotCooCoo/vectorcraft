@@ -327,7 +327,7 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context, req: &ControlReques
                     return err(format!("the `{}` dialog has no field `{f}`; its fields: {names}", d.kind));
                 }
                 for (f, value) in fields {
-                    d.fields.insert(f, value);
+                    crate::dialogs::set_field(d, f, value);
                 }
                 ok(serde_json::to_value(&*d).unwrap_or_default())
             }

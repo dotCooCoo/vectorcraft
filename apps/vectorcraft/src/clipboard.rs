@@ -415,7 +415,7 @@ mod mac {
     use objc2_app_kit::NSPasteboard;
     use objc2_foundation::{NSArray, NSString};
 
-    use super::*;
+    use super::{Flavour, pasteboard_types};
 
     /// Does the pasteboard hold one of `mimes` ([`pasteboard_types`])? Asks for its types only.
     pub fn has(mimes: &[&'static str]) -> bool {

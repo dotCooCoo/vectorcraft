@@ -59,6 +59,8 @@ impl VectorcraftApp {
                 from_worker: false,
                 waits_for_still: cfg!(target_arch = "wasm32"),
                 still: None,
+                fill: None,
+                fill_worker: None,
                 worker: None,
                 worker_started: false,
                 slices: None,
