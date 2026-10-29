@@ -99,6 +99,25 @@ fn save_as_takes_on_path_format_and_options() {
     let _ = std::fs::remove_dir_all(d);
 }
 
+/// #4523: a new document's VectorCraft Options start as the last native save used them (not its
+/// artboard range, nor Use Compression, which its preference decides).
+#[test]
+fn a_new_document_offers_the_native_options_used_last() {
+    let d = dir("lastnative");
+    let mut s = session();
+    let opts = json!({"preview": true, "embedProfiles": false, "pdfCompatible": true, "separateArtboards": true, "range": "1"});
+    s.execute("file.saveAs", &json!({"path": path(&d, "a.vectorcraft"), "options": opts})).unwrap();
+    s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
+    let o = s.execute("file.formatOptions", &json!({"format": "vectorcraft"})).unwrap();
+    let value = |k: &str| o["options"][k]["value"].clone();
+    assert_eq!((value("preview"), value("embedProfiles"), value("pdfCompatible")), (json!(true), json!(false), json!(true)));
+    assert_eq!(
+        (value("separateArtboards"), value("range")),
+        (o["options"]["separateArtboards"]["default"].clone(), o["options"]["range"]["default"].clone())
+    );
+    let _ = std::fs::remove_dir_all(d);
+}
+
 #[test]
 fn another_format_without_a_path_hands_the_bytes_back() {
     let d = dir("otherfmt");

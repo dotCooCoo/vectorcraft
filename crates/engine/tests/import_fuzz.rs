@@ -1148,9 +1148,14 @@ fn libraries(what: &str, data: &str) -> Result<(), TestCaseError> {
         let lib = r["id"].clone();
         let Ok(got) = no_panic(s.execute("library.get", &json!({"library": lib}))) else { return };
         let _ = no_panic(s.execute("select.all", &json!({})));
-        for (list, kind, key) in
-            [("graphics", "graphic", "id"), ("colors", "fillColor", "name"), ("charStyles", "charStyle", "name"), ("paraStyles", "paraStyle", "name")]
-        {
+        for (list, kind, key) in [
+            ("graphics", "graphic", "id"),
+            ("colors", "fillColor", "name"),
+            ("gradients", "fillGradient", "name"),
+            ("patterns", "fillPattern", "name"),
+            ("charStyles", "charStyle", "name"),
+            ("paraStyles", "paraStyle", "name"),
+        ] {
             if let Some(item) = got[list].get(0) {
                 let _ = no_panic(s.execute("library.use", &json!({"library": lib, "kind": kind, "item": item[key]})));
                 let to = json!({"library": lib, "kind": kind, "item": item[key], "group": got["groups"][0]["name"]});
@@ -1172,8 +1177,8 @@ fn libraries(what: &str, data: &str) -> Result<(), TestCaseError> {
     })
 }
 
-/// A Libraries panel library of the rich document's first object (a graphic), a colour, its
-/// type's character and paragraph styles and a group, exported, made once.
+/// A Libraries panel library of the rich document's first object (a graphic) and its gradient, a
+/// colour, a pattern, its type's character and paragraph styles and a group, exported, made once.
 fn saved_library() -> String {
     static TEXT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     TEXT.get_or_init(|| {
@@ -1182,6 +1187,11 @@ fn saved_library() -> String {
         let first = s.doc().unwrap().doc.layers[0].children().unwrap()[0].id.0;
         let g = s.execute("library.add", &json!({"kind": "graphic", "ids": [first]})).unwrap()["id"].clone();
         s.execute("library.add", &json!({"kind": "fillColor", "color": "#336699"})).unwrap();
+        s.execute("library.add", &json!({"kind": "fillGradient", "ids": [first]})).unwrap();
+        s.execute("select.set", &json!({"ids": [first]})).unwrap();
+        s.execute("object.pattern.make", &json!({"name": "Tiles", "width": 200, "height": 150})).unwrap();
+        s.execute("object.pattern.done", &json!({})).unwrap();
+        s.execute("library.add", &json!({"kind": "fillPattern", "swatch": "Tiles"})).unwrap();
         s.execute("select.all", &json!({})).unwrap();
         for kind in ["charStyle", "paraStyle"] {
             s.execute("library.add", &json!({"kind": kind})).unwrap();
@@ -3779,6 +3789,26 @@ fn pdf_streams_the_reader_would_fail_on_are_refused() {
     for bytes in [form(fine, "0 0 5 5 re f"), deep_pdf(&inline("<< /Predictor 1 >>"), "<< >>"), held(format!("[{function}]")), shaded(&function)] {
         vectorcraft_engine::cmd::fileio::load("fine.pdf", &bytes).expect("opens");
     }
+}
+
+/// A page drawing a thousand times one form that decodes to 64 MiB (of spaces, then a square):
+/// each drawing reads the form again, so the import stops at the page's form content instead of
+/// decoding 64 GB (#3569, which hung).
+#[test]
+fn pdf_a_huge_form_drawn_over_and_over_is_refused_in_bounded_time() {
+    use std::io::Write as _;
+    let mut e = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::best());
+    for _ in 0..64 {
+        e.write_all(&[b' '; 1 << 20]).unwrap();
+    }
+    e.write_all(b"0 0 5 5 re f").unwrap();
+    let form = packed_as_is(FORM, &e.finish().unwrap());
+    let bytes = pdf_with(&"/F Do ".repeat(1000), "<< /XObject << /F 5 0 R >> >>", &[form]);
+    let start = std::time::Instant::now();
+    let e = vectorcraft_engine::cmd::fileio::load("repeated.pdf", &bytes).err().map(|e| e.to_string());
+    let took = start.elapsed();
+    assert!(e.as_deref().is_some_and(|e| e.contains("no document was imported")), "{e:?}");
+    assert!(took < std::time::Duration::from_secs(60), "took {took:?}");
 }
 
 #[test]

@@ -277,6 +277,8 @@
 	Anchor Point	Punt d’ancoratge
 	Anchor Point Tool	Eina de punt d’ancoratge
 	Anchor Points	Punts d’ancoratge
+	"In" Control Points	Punts de control «d’entrada»
+	"Out" Control Points	Punts de control «de sortida»
 	Anchor Points, Handle, and Bounding Box Display	Visualització de punts d’ancoratge, nanses i quadre delimitador
 	Anchor/Path Labels	Etiquetes d’ancoratge/traçat
 	Anchors	Ancoratges
@@ -1016,6 +1018,7 @@
 	Delete Group	Suprimeix el grup
 	Delete Guide	Suprimeix la guia
 	Delete Guides	Suprimeix les guies
+	Delete Image Trace Preset	Suprimeix el preajust de traçat d’imatge
 	Delete Layer	Suprimeix la capa
 	Delete Library	Suprimeix la biblioteca
 	Delete Library Group	Suprimeix el grup de biblioteca
@@ -2283,6 +2286,7 @@
 	Make with Top Object	Crea amb l’objecte superior
 	Make with Warp…	Crea amb deformació…
 	Make/Release Clipping Mask	Crea/Allibera una màscara de retall
+	Manage Presets	Gestiona els preajustos
 	Manage Workspaces	Gestiona els espais de treball
 	Manage Workspaces…	Gestiona els espais de treball…
 	Manually	Manualment
@@ -3260,10 +3264,12 @@
 	Rename Library Group	Canvia el nom del grup de la biblioteca
 	Rename Library…	Canvia el nom de la biblioteca…
 	Rename Paragraph Style	Canvia el nom de l’estil de paràgraf
+	Rename Preset	Canvia el nom del preajust
 	Rename Style	Canvia el nom de l’estil
 	Rename Variable	Canvia el nom de la variable
 	Rename View	Canvia el nom de la vista
 	Rename Workspace	Canvia el nom de l’espai de treball
+	Rename…	Canvia el nom…
 	Render Threads (-1 = Automatic)	Fils de renderització (-1 = automàtic)
 	Rendering intent:	Intenció de renderització:
 	Reorder	Reordena
@@ -3445,6 +3451,7 @@
 	Save a Copy…	Desa una còpia…
 	Save and Close	Desa i tanca
 	Save As	Desa com a
+	Save as New Preset…	Desa com a preajust nou…
 	Save as PDF…	Desa com a PDF…
 	Save as preset:	Desa com a preajust:
 	Save as Template	Desa com a plantilla
@@ -3471,6 +3478,7 @@
 	Save Graphic Style Library…	Desa la biblioteca d’estils gràfics…
 	Save Grid as Preset	Desa la quadrícula com a preajust
 	Save Grid as Preset…	Desa la quadrícula com a preajust…
+	Save Image Trace Preset	Desa el preajust de traçat d’imatge
 	Save PDF	Desa el PDF
 	Save PDF Dialog	Diàleg Desa el PDF
 	Save PDF Preset	Desa el preajust de PDF
@@ -4027,6 +4035,11 @@
 	Stroke	Traç
 	Stroke (X), double-click for the Color Picker	Traç (X), fes doble clic per al selector de color
 	Stroke Color	Color del traç
+	Fill Gradient	Degradat de farciment
+	Stroke Gradient	Degradat del traç
+	Fill Pattern	Motiu de farciment
+	Stroke Pattern	Motiu del traç
+	Patterns	Motius
 	Stroke Direction	Direcció del traç
 	Stroke Length	Longitud del traç
 	Stroke Options	Opcions del traç
@@ -4696,6 +4709,7 @@
 @msg	`colorGroup` needs `palette: "documentLibrary"`	`colorGroup` necessita `palette: "documentLibrary"`
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command` ha de ser una ordre que obri un diàleg des del seu element de menú (vegeu ui.menuDialog)
 @msg	`corners` must be an array of anchor indices, not {v}	`corners` ha de ser una matriu d’índexs de punts d’ancoratge, no {v}
+@msg	`Custom` stands for changed settings: save the preset under another name	`Custom` representa una configuració modificada: deseu el preajust amb un altre nom
 @msg	`dither` applies to gradient fills (paint.setFill)	`dither` s’aplica als farciments de degradat (paint.setFill)
 @msg	`dither` applies to gradient fills (stroke: false)	`dither` s’aplica als farciments de degradat (stroke: false)
 @msg	`dither` must be true or false	`dither` ha de ser cert o fals
@@ -4710,6 +4724,8 @@
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` i `maxAnchors` han de ser nombres enters
 @msg	`mode` applies to freeform gradients	`mode` s’aplica als degradats de forma lliure
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` ha de ser grayscale, rgb, hsb, cmyk o websafe
+@msg	`name` is empty	`name` és buit
+@msg	`newName` is empty	`newName` és buit
 @msg	`pathfinder` must be an object	`pathfinder` ha de ser un objecte
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` ha de ser 1, 3 o 5
 @msg	`select` must be true or false	`select` ha de ser cert o fals
@@ -4743,6 +4759,8 @@
 @msg	`{k}` must be [x, y]	`{k}` ha de ser [x, y]
 @msg	`{min_key}` is greater than `{max_key}`	`{min_key}` és més gran que `{max_key}`
 @msg	`{name}` has no options	`{name}` no té opcions
+@msg	`{name}` is a built-in preset and can't change: save it under another name	`{name}` és un preajust integrat i no es pot canviar: deseu-lo amb un altre nom
+@msg	`{name}` is a built-in preset and stays	`{name}` és un preajust integrat i no es pot suprimir
 @msg	`{name}` is a built-in workspace; choose another name	`{name}` és un espai de treball integrat; trieu un altre nom
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` és un color de procés: els tons s’apliquen als colors globals i directes
 @msg	`{name}` is no recovery entry name	`{name}` no és un nom d’entrada de recuperació
@@ -5092,6 +5110,7 @@
 @msg	No fonts are missing in this document	No falta cap tipus de lletra en aquest document
 @msg	no format to export to	no hi ha cap format per exportar-hi
 @msg	no free recovery area	no hi ha àrea de recuperació lliure
+@msg	no gradient swatch `{name}`	no hi ha la mostra de degradat `{name}`
 @msg	no gradient stop or freeform point is selected	no hi ha cap parada de degradat ni cap punt de forma lliure seleccionat
 @msg	no graphic style `{name}`	no hi ha l’estil gràfic `{name}`
 @msg	no graphic style `{n}`	no hi ha l’estil gràfic `{n}`
@@ -5106,6 +5125,7 @@
 @msg	no native format	no hi ha format natiu
 @msg	no pages	no hi ha pàgines
 @msg	no pattern `{name}`	no hi ha el motiu `{name}`
+@msg	no pattern swatch `{name}`	no hi ha la mostra de motiu `{name}`
 @msg	no perspective grid preset named `{name}`	no hi ha cap preajust de quadrícula de perspectiva anomenat `{name}`
 @msg	no plug-in {0} is installed	no hi ha instal·lat el complement {0}
 @msg	no plug-in {id} is installed	no hi ha instal·lat el complement {id}
@@ -5118,6 +5138,8 @@
 @msg	no print service	no hi ha servei d’impressió
 @msg	no revert command	no hi ha cap ordre de reversió
 @msg	no saved PDF preset named `{name}` (built-in presets are read-only: start a new one from them)	no hi ha cap preajust de PDF desat anomenat `{name}` (els preajustos integrats són de només lectura: creeu-ne un de nou a partir d’ells)
+@msg	no saved preset named `{name}`	no hi ha cap preajust desat anomenat `{name}`
+@msg	no saved preset named `{name}` to rename	no hi ha cap preajust desat anomenat `{name}` per canviar-ne el nom
 @msg	no saved presets	no hi ha preajustos desats
 @msg	no saved print preset named `{name}` ({DEFAULT_PRESET} is protected: start a new one from it)	no hi ha cap preajust d’impressió desat anomenat `{name}` ({DEFAULT_PRESET} està protegit: creeu-ne un de nou a partir d’ell)
 @msg	no saved profiles	no hi ha perfils desats
@@ -5177,6 +5199,7 @@
 @msg	not an RTF file: it doesn't start with {\\rtf	no és un fitxer RTF: no comença amb {\\rtf
 @msg	not found	no s’ha trobat
 @msg	not in pattern editing mode	no esteu en mode d’edició de motius
+@msg	finish editing the pattern first	acabeu primer l’edició del motiu
 @msg	nothing encoded	no s’ha codificat res
 @msg	nothing in data set {name} was applied: no object is bound to a variable it has a value for	no s’ha aplicat res del conjunt de dades {name}: cap objecte està vinculat a una variable per a la qual tingui un valor
 @msg	nothing selected	no hi ha res seleccionat
@@ -5390,6 +5413,7 @@
 @msg	the image's pixels don't match its size	els píxels de la imatge no coincideixen amb la seva mida
 @msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	L’últim inici de VectorCraft va acabar a {name} abans que aparegués la seva finestra, així que s’ha iniciat amb {summary}. Per tornar a provar aquell processador gràfic, canvia Preferències › Rendiment › Processador gràfic o inicia amb WGPU_BACKEND definit
 @msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	L’últim inici de VectorCraft va acabar mentre llistava els processadors gràfics, així que s’ha iniciat amb {summary} només amb OpenGL. Per tornar a provar els altres sistemes gràfics, canvia Preferències › Rendiment › Processador gràfic o inicia amb WGPU_BACKEND definit
+@msg	the library item is damaged	l’element de la biblioteca està malmès
 @msg	the layer has no objects to clip by	la capa no té objectes amb què retallar
 @msg	the layer or group is locked	la capa o el grup està bloquejat
 @msg	the layer to flatten into is hidden	la capa on aplanar està oculta
@@ -5430,6 +5454,10 @@
 @msg	the screen color sampler is already open	el mostrejador de color de pantalla ja és obert
 @msg	the search couldn't start: try again in a moment	la cerca no s’ha pogut iniciar: torna-ho a provar d’aquí a un moment
 @msg	the selected stroke's profile is already listed as {_1}	el perfil del traç seleccionat ja apareix com a {_1}
+@msg	the selection has no gradient fill	la selecció no té farciment de degradat
+@msg	the selection has no gradient stroke	la selecció no té traç de degradat
+@msg	the selection has no pattern fill	la selecció no té farciment de motiu
+@msg	the selection has no pattern stroke	la selecció no té traç de motiu
 @msg	the selection has no URL (or they differ)	la selecció no té cap URL (o difereixen)
 @msg	the selection isn't in perspective	la selecció no és en perspectiva
 @msg	The shape is too complex for a 3D effect	La forma és massa complexa per a un efecte 3D
@@ -5492,6 +5520,7 @@
 @msg	unknown preset `{name}` (high, medium, low or a saved one: see flattener.presets.list)	preajust desconegut `{name}` (high, medium, low o un de desat: consulta flattener.presets.list)
 @msg	unknown preset `{name}` (see flattener.presets.list)	preajust desconegut `{name}` (consulta flattener.presets.list)
 @msg	unknown preset `{name}` (see webExport.presets.list)	preajust desconegut `{name}` (consulta webExport.presets.list)
+@msg	unknown preset `{name}`: not a built-in or saved preset (see imageTrace.presets)	preajust desconegut `{name}`: no és integrat ni desat (consulta imageTrace.presets)
 @msg	unknown side `{other}` (left|right|top|bottom)	costat desconegut `{other}` (left|right|top|bottom)
 @msg	unknown snap option `{key}` (use {options})	opció d’ajustament desconeguda `{key}` (fes servir {options})
 @msg	unknown tool `{tool}`	eina desconeguda `{tool}`

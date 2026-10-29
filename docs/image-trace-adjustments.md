@@ -46,6 +46,11 @@ most `colors` of its colors are used. A missing group and a group with no solid 
 mode, palette or library in the panel clears the group. A group the active document does not have shows as All
 and traces as All.
 
+**Document Library linked colors.** With Library › Document Swatches, with or without a color group,
+a traced fill or stroke whose color comes from a global or spot swatch is linked to that swatch, and
+one whose color comes from a tint swatch is linked to its base at the tint. Editing the swatch
+recolors the trace. Colors from process swatches and from swatch libraries are not linked.
+
 **Document Library** traces with the library's colors as they are. Each pixel takes the library
 color nearest to it in lightness and hue, with a difference in hue or chroma counted three times
 as much as one in lightness, so a gray or a muted brown takes a black, white or other neutral

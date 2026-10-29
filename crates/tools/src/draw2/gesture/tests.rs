@@ -122,6 +122,40 @@ fn pencil_with_live_curve_fitting_off_previews_the_stroke_unfitted() {
     assert!(!drawn.is_empty() && drawn.iter().all(Option::is_none), "{drawn:?}");
 }
 
+/// A stroke whose Fidelity is finer than half a screen pixel previews fitted at half a pixel, which
+/// looks the same at a fraction of the fit's cost (#4565); the release, and another tool chosen
+/// while it is drawn, fit it at its own Fidelity. A coarser Fidelity previews as it is kept.
+#[test]
+fn fine_fidelity_previews_at_half_a_pixel() {
+    let (d, _) = doc_with_rect();
+    let s = Selection::default();
+    let p = paint();
+    let mut cx = cx(&d, &s, &p);
+    let stroke = [(0.0, 0.0), (10.0, 5.0), (20.0, 0.0), (30.0, 5.0)];
+    let fidelities = |acts: &[Action]| -> Vec<f64> {
+        acts.iter().filter_map(|a| if let Action::Preview(_, v) = a { v["fidelity"].as_f64() } else { None }).collect()
+    };
+    for id in ["pencil", "paintbrush"] {
+        for (zoom, fidelity, drawn) in [(1.0, 0.01, 0.5), (4.0, 0.01, 0.125), (1.0, 1.5, 1.5)] {
+            cx.zoom = zoom;
+            let mut t = GestureTool::new(id);
+            t.set_option("fidelity", &json!(fidelity));
+            let acts = drag(&mut t, &cx, &stroke, Mods::default());
+            let (release, during) = acts.split_last().unwrap();
+            assert_eq!(fidelities(&during.concat()), [drawn; 3], "{id} at {zoom}x, {fidelity} pt");
+            assert_eq!(fidelities(release), [fidelity], "{id} at {zoom}x, {fidelity} pt: the release");
+            t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 0.0, 0.0));
+            for &(x, y) in &stroke[1..] {
+                t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, x, y));
+            }
+            let acts = t.deactivate(&cx);
+            let kept = if drawn > fidelity { [fidelity].to_vec() } else { vec![] };
+            assert_eq!(fidelities(&acts), kept, "{id} at {zoom}x, {fidelity} pt: another tool chosen");
+            assert_eq!(acts.last(), Some(&Action::Commit));
+        }
+    }
+}
+
 /// Keep selected is on by default, and every Pencil and Paintbrush preview sends it.
 #[test]
 fn pencil_and_paintbrush_send_keep_selected() {

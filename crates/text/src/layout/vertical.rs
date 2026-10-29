@@ -23,7 +23,7 @@ pub(super) fn whole_character_widths(glyphs: &mut [SGlyph]) {
 /// before the automatic digit rule.
 /// <https://helpx.adobe.com/illustrator/using/formatting-asian-characters.html>
 pub(super) fn tate_chu_yoko(g: &mut [SGlyph], style: impl Fn(&SGlyph) -> (f64, bool)) {
-    let manual: Vec<bool> = g.iter().map(|gl| style(gl).1).collect();
+    let manual: Vec<bool> = g.iter().map(|gl| gl.ch != '\u{2028}' && style(gl).1).collect();
     let digits: Vec<bool> = g.iter().map(|gl| gl.inline.is_none() && gl.ch.is_ascii_digit()).collect();
     let mut i = 0;
     while i < g.len() {

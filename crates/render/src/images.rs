@@ -198,6 +198,18 @@ impl ImageStore {
         pm
     }
 
+    /// Keep `pm` as `key` as [`ImageStore::insert`] does, holding no reference to it afterwards,
+    /// then drop entries over budget → whether the store holds `key`'s pixels. Pixels larger than
+    /// the budget are not kept.
+    pub(crate) fn keep(&mut self, key: ImageKey, pm: Arc<Pixmap>) -> bool {
+        if pixmap_bytes(&pm) > self.budget {
+            return false;
+        }
+        drop(self.insert(key.clone(), pm));
+        self.evict();
+        self.entries.contains_key(&key)
+    }
+
     /// Drop the least recently used entries no one else holds until within budget.
     fn evict(&mut self) {
         if self.bytes <= self.budget {
@@ -269,6 +281,42 @@ pub fn set_image_cache_budget(bytes: usize) {
 /// Bytes of decoded images the renderers share now.
 pub fn image_cache_bytes() -> usize {
     store().bytes()
+}
+
+/// Keep `img`, the decoded pixels of `blob`, in the store as a renderer keeps the pixels it
+/// decodes, so the first render that draws `blob` uses them instead of decoding it. Returns whether
+/// `img` was kept or the store already held `blob`'s pixels. It returns false, without looking at
+/// the store, for a CMYK image and for pixels a renderer would refuse to decode: more than the
+/// decode allowance as RGBA, or more than fits beside the pixels being drawn now. The store then
+/// drops the least recently used entries beyond its budget, as it does whenever a renderer adds
+/// pixels, and returns false when that leaves `img` out: pixels larger than the budget are never
+/// kept.
+pub fn keep_decoded_image(blob: &ImageBlob, img: image::DynamicImage) -> bool {
+    let (key, lut, _) = crate::blobs::blob_key(blob);
+    if lut.is_some() || !crate::paint::within_allowance(img.width(), img.height()) {
+        return false;
+    }
+    let kept = store().get(&key);
+    let size = match kept {
+        Some(pm) => (pm.width(), pm.height()),
+        None => {
+            let Some(pm) = crate::paint::decoded_pixmap(img) else { return false };
+            let size = (pm.width(), pm.height());
+            if !store().keep(key, Arc::new(pm)) {
+                return false;
+            }
+            size
+        }
+    };
+    remember_size(blob, size);
+    true
+}
+
+/// Whether the store holds the decoded pixels of `blob` at full size.
+pub fn image_cached(blob: &ImageBlob) -> bool {
+    // The key first: working it out takes the store's lock too.
+    let (key, _, _) = crate::blobs::blob_key(blob);
+    store().peek(&key).is_some()
 }
 
 /// `blob`'s content key and kind, hashed and sniffed once per blob allocation.
@@ -368,6 +416,29 @@ mod tests {
         s.set_budget(400);
         assert!(s.peek(&key("b")).is_none() && s.peek(&key("c")).is_some(), "now b goes first");
         assert_eq!(s.bytes(), 400);
+    }
+
+    /// Pixels kept for a first frame are dropped at once when the budget has no room for them,
+    /// since nothing draws them yet.
+    #[test]
+    fn kept_pixels_larger_than_the_budget_are_not_kept() {
+        // 10×10 pixmaps: 400 bytes each.
+        let mut s = ImageStore::new(300);
+        assert!(!s.keep(key("big"), Arc::new(Pixmap::new(10, 10))));
+        assert_eq!(s.bytes(), 0);
+        assert!(s.peek(&key("big")).is_none());
+        // Room for one: the older one, held by no one, goes.
+        let mut s = ImageStore::new(400);
+        assert!(s.keep(key("a"), Arc::new(Pixmap::new(10, 10))));
+        assert!(s.keep(key("b"), Arc::new(Pixmap::new(10, 10))));
+        assert!(s.peek(&key("a")).is_none() && s.peek(&key("b")).is_some());
+        assert_eq!(s.bytes(), 400);
+        // The one kept is held while drawn: a new one that doesn't fit beside it is dropped.
+        let held = s.get(&key("b"));
+        assert!(!s.keep(key("c"), Arc::new(Pixmap::new(10, 10))));
+        assert!(s.peek(&key("c")).is_none());
+        assert_eq!(s.bytes(), 400);
+        drop(held);
     }
 
     #[test]

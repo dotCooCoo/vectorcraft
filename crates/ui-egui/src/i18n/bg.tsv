@@ -167,6 +167,8 @@
 	Anchor Point	Опорна точка
 	Anchor Point Tool	Инструмент „Опорна точка“
 	Anchor Points	Опорни точки
+	"In" Control Points	„Входящи“ контролни точки
+	"Out" Control Points	„Изходящи“ контролни точки
 	Anchor Points, Handle, and Bounding Box Display	Показване на опорни точки, манипулатори и ограничителна рамка
 	Anchor/Path Labels	Етикети на опорни точки/пътища
 	Anchors:	Опорни точки:
@@ -1494,6 +1496,12 @@ font-technology	Variable	Променливи
 	Image Trace	Трасиране на изображение
 	Image Tracing	Трасиране на изображения
 	Tracing Presets	Предварителни настройки за трасиране
+	Manage Presets	Управление на предварителните настройки
+	Save as New Preset…	Запази като нова предварителна настройка…
+	Rename…	Преименуване…
+	Rename Preset	Преименуване на предварителна настройка
+	Save Image Trace Preset	Запази предварителна настройка за трасиране на изображения
+	Delete Image Trace Preset	Изтриване на предварителна настройка за трасиране на изображения
 	Image Trace Presets	Предварителни настройки за трасиране на изображения
 	Image:	Изображение:
 	Images:	Изображения:
@@ -3111,6 +3119,11 @@ font-technology	Variable	Променливи
 	Stroke	Щрих
 	Stroke (X), double-click for the Color Picker	Щрих (X), щракнете двукратно за палитрата с цветове
 	Stroke Color	Цвят на щриха
+	Fill Gradient	Градиент на запълване
+	Stroke Gradient	Градиент на щриха
+	Fill Pattern	Мостра на запълване
+	Stroke Pattern	Мостра на щриха
+	Patterns	Мостри
 	Stroke Options	Опции на щриха
 	Character:	Знак:
 	Character options	Опции на знака
@@ -4100,6 +4113,7 @@ axis	Both	И двете
 @msg	not an EMF or WMF file	не е EMF или WMF файл
 @msg	not found	не е открито
 @msg	not in pattern editing mode	не е в режим на редактиране на мостра
+@msg	finish editing the pattern first	първо завършете редактирането на мострата
 @msg	nothing encoded	нищо не е кодирано
 @msg	nothing selected	нищо не е избрано
 @msg	nothing selected is in a group	нищо от избраното не е в група
@@ -5285,6 +5299,9 @@ theme	Appearance	Външен вид
 # Type › Reset Tracking and Kerning
 	Reset Tracking and Kerning	Нулиране на разредката и кернинга
 	Reset Horizontal Scale	Нулиране на хоризонталния мащаб
+	Highlight Font Name	Маркиране на името на шрифта
+	Highlight Kerning	Маркиране на кернинга
+	Highlight Tracking	Маркиране на разредката
 @msg	span must be "object" or "selection", got {v}	span трябва да е "object" или "selection", а не {v}
 @msg	span: "selection" places a `gradient`, not a swatch	span: "selection" поставя `gradient`, а не мостра
 @msg	span: "selection" places a gradient: give `gradient`	span: "selection" поставя градиент: задайте `gradient`
@@ -5551,4 +5568,6 @@ axis	Y Axis	Y ос
 	Save Brush Library…	Запази библиотека с четки…
 @msg	no empty artboards to delete	няма празни работни области за изтриване
 	Scale Presets	Пресети за мащаб
+# Object › Expand… dimmed until Expand Appearance (#3089).
+	Expand Appearance first (Object › Expand Appearance)	Първо разширете външния вид (Обект › Разширяване на външния вид)
 	Live preview	Преглед на живо

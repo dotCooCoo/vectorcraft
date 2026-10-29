@@ -27,8 +27,14 @@ use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, Tool
 /// radius while Alt switches it to the Smooth tool.
 const SMOOTH_RADIUS: f64 = 12.0;
 
+/// The finest Fidelity (screen pixels) a Pencil or Paintbrush stroke is fitted at while it is drawn:
+/// a fit's cost grows as its Fidelity shrinks (at 0.01 pt a long pen stroke lagged, #4565), and
+/// a preview within half a pixel of the stroke looks the same. The release fits it at its Fidelity.
+const PREVIEW_FIDELITY_PX: f64 = 0.5;
+
 pub struct GestureTool {
-    /// How many points the last preview of the stroke had ([`crate::previews_at`]).
+    /// How many points the last preview of the stroke had ([`crate::previews_at`]); 0 when it was
+    /// fitted coarser than the stroke kept ([`PREVIEW_FIDELITY_PX`]).
     previewed: usize,
     id: &'static str,
     points: Vec<Point>,
@@ -488,8 +494,11 @@ impl Tool for GestureTool {
                 }
                 // With the Pencil's Live preview off a thin line shows instead (`overlays`).
                 if self.previews() && crate::previews_at(self.points.len()) {
-                    self.previewed = self.points.len();
                     let mut v = self.freehand_params(false);
+                    let fidelity = self.fidelity.max(cx.tol(PREVIEW_FIDELITY_PX));
+                    v["fidelity"] = json!(fidelity);
+                    // A preview fitted coarser than the stroke kept is stale (`deactivate`).
+                    self.previewed = if fidelity > self.fidelity { 0 } else { self.points.len() };
                     if !self.live_fit {
                         // Live curve fitting off: the release fits the stroke (`finish`).
                         v["fit"] = json!(false);

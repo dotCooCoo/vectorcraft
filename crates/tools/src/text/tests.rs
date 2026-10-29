@@ -1469,3 +1469,22 @@ fn ime_surrounding_reports_the_document_when_it_changed_under_the_session() {
     assert_eq!(stale, ImeSurrounding::Available { text: "XYZ".into(), cursor: 3, anchor: 3 });
     assert!(!tool.ime_session_matches_document(&cx(&d, &sel, &p)), "the commit starts a fresh session");
 }
+
+#[test]
+fn shift_enter_inserts_soft_return() {
+    let (mut d, id, mut tool) = editing("Hello World");
+    let (sel, p) = (Selection::default(), paint());
+    tool.caret = 5;
+    tool.anchor = 5;
+    let snap = d.clone();
+    let shift = Mods { shift: true, ..Default::default() };
+    let acts = tool.key(&cx(&d, &sel, &p), ToolKey::Enter, shift);
+    apply(&mut d, &snap, &acts);
+    let NodeKind::Text(t) = &d.node(id).unwrap().kind else { panic!() };
+    assert_eq!(t.plain_text(), "Hello\u{2028} World");
+    // Plain Enter inserts standard newline
+    let acts = tool.key(&cx(&d, &sel, &p), ToolKey::Enter, Mods::default());
+    apply(&mut d, &snap, &acts);
+    let NodeKind::Text(t) = &d.node(id).unwrap().kind else { panic!() };
+    assert_eq!(t.plain_text(), "Hello\u{2028}\n World");
+}
