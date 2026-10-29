@@ -721,6 +721,31 @@ fn recolor_of_everything_does_not_count_locked_art_that_would_only_take_a_swatch
 }
 
 #[test]
+fn recolor_of_everything_does_not_count_locked_art_whose_nested_pattern_would_only_take_a_swatch_link() {
+    let mut s = session();
+    run(&mut s, "swatch.new", json!({"name": "Red", "color": "#ff0000", "global": true}));
+    // "Dots": an unlinked red tile; "Rings": a tile filled with "Dots".
+    let tile = rect(&mut s, json!("#ff0000"));
+    run(&mut s, "select.set", json!({"ids": [tile.0]}));
+    run(&mut s, "object.pattern.make", json!({"name": "Dots", "width": 20, "height": 20}));
+    run(&mut s, "object.pattern.done", json!({}));
+    let outer = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [outer.0], "swatch": "Dots"}));
+    run(&mut s, "select.set", json!({"ids": [outer.0]}));
+    run(&mut s, "object.pattern.make", json!({"name": "Rings", "width": 40, "height": 40}));
+    run(&mut s, "object.pattern.done", json!({}));
+    rect(&mut s, json!("#ff0000"));
+    let rings = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [rings.0], "swatch": "Rings"}));
+    set_props(&mut s, &[rings], json!({"locked": true}));
+    select_all(&mut s);
+    // The inner tile would only take the link to the document's red swatch.
+    let r = run(&mut s, "recolor.apply", json!({"map": {"#ff0000": "#ff0000"}, "limitTo": "document"}));
+    assert_eq!(r["notChanged"], json!({"locked": 0, "hidden": 0}), "{r}");
+    assert!(r.get("warning").is_none(), "{r}");
+}
+
+#[test]
 fn locked_and_hidden_members_of_a_selected_group_are_recolored_and_not_counted() {
     let mut s = session();
     let ids = [rect(&mut s, json!("#ff0000")), rect(&mut s, json!("#ff0000")), rect(&mut s, json!("#ff0000"))];

@@ -228,19 +228,31 @@ impl<'a> Recolor<'a> {
     }
 
     /// The patterns this pass has copied whose copy differs from the original only by swatch
-    /// links: the copy's name → the original's.
+    /// links: the copy's name → the original's. A copy whose tile uses other copies counts when
+    /// those copies do.
     fn link_only_copies(&self, d: &Document) -> HashMap<String, String> {
-        let none = HashMap::new();
-        let art = |v: &[Arc<Node>]| v.iter().map(|n| without_links((**n).clone(), &none)).collect::<Vec<_>>();
+        let art = |v: &[Arc<Node>], same: &HashMap<String, String>| v.iter().map(|n| without_links((**n).clone(), same)).collect::<Vec<_>>();
         let copies: HashMap<&str, &PatternDef> = self.new_patterns.iter().map(|p| (p.name.as_str(), p)).collect();
-        self.patterns
+        let pairs: Vec<(&String, &String, &PatternDef, &PatternDef)> = self
+            .patterns
             .iter()
             .filter_map(|(old, new)| {
                 let new = new.as_ref()?;
-                let copy = copies.get(new.as_str())?;
-                (art(&d.pattern(old)?.art) == art(&copy.art)).then(|| (new.clone(), old.clone()))
+                Some((new, old, d.pattern(old)?, *copies.get(new.as_str())?))
             })
-            .collect()
+            .collect();
+        let mut same = HashMap::new();
+        loop {
+            let found: Vec<(String, String)> = pairs
+                .iter()
+                .filter(|(new, _, original, copy)| !same.contains_key(*new) && art(&original.art, &same) == art(&copy.art, &same))
+                .map(|(new, old, _, _)| ((*new).clone(), (*old).clone()))
+                .collect();
+            if found.is_empty() {
+                return same;
+            }
+            same.extend(found);
+        }
     }
 
     /// Recolour the objects `ids` and everything inside them (each once), add the new images and
