@@ -430,6 +430,36 @@ fn shape_builder_gesture_waits_for_the_map_without_holding_the_caller() {
     assert!(!t.editing());
 }
 
+/// Escape during a drag made while the map of a large selection is being built cancels the
+/// recorded gesture too: the release and the polls after it merge nothing, the tool stops
+/// waiting once the map is there, and the next drag merges on its own.
+#[test]
+fn shape_builder_escape_cancels_a_gesture_made_while_the_map_is_built() {
+    let (d, s) = square_row(200);
+    let p = paint();
+    let cx1 = ToolContext { revision: (1, 1), ..cx(&d, &s, &p) };
+    let mut t = ShapeBuilderTool::default();
+    t.pointer(&cx1, &ev(PointerKind::Move, 15.0, 10.0));
+    assert!(t.pointer(&cx1, &ev(PointerKind::Down, 15.0, 10.0)).is_empty());
+    assert!(t.pointer(&cx1, &ev(PointerKind::Drag, 35.0, 10.0)).is_empty());
+    assert_eq!(t.cache.builds, 0, "the gesture did not wait for the map");
+    assert!(t.claims_key(&cx1, ToolKey::Escape));
+    assert!(t.key(&cx1, ToolKey::Escape, Mods::default()).is_empty());
+    assert!(t.pointer(&cx1, &ev(PointerKind::Up, 35.0, 10.0)).is_empty());
+    assert!(poll_actions(&mut t, &cx1).is_empty(), "the canceled gesture merges nothing");
+    assert!(!t.waiting() && !t.editing());
+    // The next drag merges what it touches, with no event of the canceled one.
+    let mut fresh = ShapeBuilderTool::default();
+    fresh.pointer(&cx1, &ev(PointerKind::Move, 55.0, 10.0));
+    poll_until_ready(&mut fresh, &cx1);
+    let next = [ev(PointerKind::Down, 55.0, 10.0), ev(PointerKind::Drag, 75.0, 10.0), ev(PointerKind::Up, 75.0, 10.0)];
+    for e in &next {
+        fresh.pointer(&cx1, e);
+        t.pointer(&cx1, e);
+    }
+    assert_eq!(poll_actions(&mut t, &cx1), poll_actions(&mut fresh, &cx1));
+}
+
 #[test]
 fn shape_builder_hover_builds_a_small_map_at_once() {
     let (d, s) = square_row(3);

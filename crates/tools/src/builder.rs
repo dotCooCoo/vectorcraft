@@ -718,6 +718,8 @@ impl Tool for ShapeBuilderTool {
             self.dragging = false;
             self.points.clear();
             self.touched = Touched::default();
+            // A gesture recorded while the map is being built is canceled with it.
+            self.deferred = None;
             (self.marquee, self.hover, self.far) = (None, None, false);
             return vec![];
         }
