@@ -260,6 +260,8 @@
 	Anchor Point	Horgonypont
 	Anchor Point Tool	Horgonypont
 	Anchor Points	Horgonypontok
+	"In" Control Points	„Bemenő” vezérlőpontok
+	"Out" Control Points	„Kimenő” vezérlőpontok
 	Anchor Points, Handle, and Bounding Box Display	Horgonypontok, fogantyúk és befoglaló keret megjelenítése
 	Anchor/Path Labels	Horgonypont- és útvonalcímkék
 	Anchors	Horgonypontok
@@ -3201,6 +3203,9 @@ mark-style	Japanese	Japán
 	Reset to White, Black	Visszaállítás fehér–fekete átmenetre
 	Reset Tracing	Tracing visszaállítása
 	Reset Tracking and Kerning	Betűköz és alávágás visszaállítása
+	Highlight Font Name	Betűtípusnév kiemelése
+	Highlight Kerning	Alávágás kiemelése
+	Highlight Tracking	Betűköz kiemelése
 	Reset Typography	Typography visszaállítása
 	Reset Web	Web visszaállítása
 	Reset with Mesh	Visszaállítás hálóval

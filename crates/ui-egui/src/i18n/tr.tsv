@@ -166,6 +166,8 @@
 	Anchor Point	Bağlantı Noktası
 	Anchor Point Tool	Bağlantı Noktası Aracı
 	Anchor Points	Bağlantı Noktaları
+	"In" Control Points	"Giriş" Kontrol Noktaları
+	"Out" Control Points	"Çıkış" Kontrol Noktaları
 	Anchor Points, Handle, and Bounding Box Display	Bağlantı Noktaları, Tutamaç ve Sınırlandırma Kutusu Görünümü
 	Anchor/Path Labels	Bağlantı/Yol Etiketleri
 	Anchors:	Çapalar:
@@ -1108,6 +1110,9 @@ font-technology	Variable	Değişken
 	Increase Font Size by Five Steps	Yazı Tipi Boyutunu Beş Adım Artırın
 	Reset Tracking and Kerning	Takip ve Karakter Aralığını Sıfırla
 	Reset Horizontal Scale	Yatay Ölçeği Sıfırla
+	Highlight Font Name	Yazı Tipi Adını Vurgula
+	Highlight Kerning	Karakter Aralığını Vurgula
+	Highlight Tracking	Takibi Vurgula
 	Spacing	Aralık
 	Step Type	Adım Türü
 	Fit in View	Görünüme Sığdır
@@ -1965,7 +1970,8 @@ font-technology	Variable	Değişken
 	Opacity: Default	Opaklık: Varsayılan
 	Opacity: {value}	Opaklık: {value}
 	Opaque	Opak
-	Open	Açık
+	Open	Aç
+shape	Open	Açık
 	Open a document to edit its patterns.	Desenlerini düzenlemek için bir belge açın.
 	Open a document to navigate it.	Gezinmek için bir belge açın.
 	Open a document to preview its flattening.	Düzleştirilmesinin önizlemesini görmek için bir belge açın.
@@ -2151,7 +2157,7 @@ font-technology	Variable	Değişken
 	Pie Graph Tool	Pasta Grafik Aracı
 	Pixel Preview	Piksel Önizlemesi
 	Pixels	Piksel
-	Place	Yer
+	Place	Yerleştir
 	Place DXF	DXF'yi yerleştir
 	Place onto a new locked, dimmed template layer below the current layer	Geçerli katmanın altındaki yeni kilitli, soluk şablon katmanına yerleştirin
 	Place PDF	PDF'yi yerleştir

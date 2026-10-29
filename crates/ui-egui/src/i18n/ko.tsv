@@ -376,6 +376,9 @@ font-technology	Variable	가변
 	Increase Font Size by Five Steps	글꼴 크기 5단계 키우기
 	Reset Tracking and Kerning	자간 및 커닝 재설정
 	Reset Horizontal Scale	가로 비율 재설정
+	Highlight Font Name	글꼴 이름 강조 표시
+	Highlight Kerning	커닝 강조 표시
+	Highlight Tracking	자간 강조 표시
 	Step Type	단계별 문자
 	Find Font…	글꼴 찾기…
 	Change Case	대소문자 변경
@@ -912,6 +915,8 @@ font-technology	Variable	가변
 	Anchor Point	앵커 포인트
 	Anchor Point Tool	앵커 포인트 도구
 	Anchor Points	앵커 포인트
+	"In" Control Points	"들어오는" 제어점
+	"Out" Control Points	"나가는" 제어점
 	Anchor Points, Handle, and Bounding Box Display	앵커 포인트, 핸들, 경계 상자 표시
 	Anchor/Path Labels	앵커/패스 레이블
 	Angle	각도

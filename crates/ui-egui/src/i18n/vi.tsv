@@ -197,6 +197,8 @@
 	Anchor Point	Điểm neo
 	Anchor Point Tool	Công cụ Điểm neo
 	Anchor Points	Các điểm neo
+	"In" Control Points	Điểm điều khiển "vào"
+	"Out" Control Points	Điểm điều khiển "ra"
 	Anchor Points, Handle, and Bounding Box Display	Hiển thị điểm neo, tay nắm và hộp giới hạn
 	Anchor/Path Labels	Nhãn điểm neo/đường dẫn
 	Anchors:	Điểm neo:
@@ -2962,6 +2964,9 @@ mark-style	Japanese	Kiểu Nhật
 	Reset to default	Đặt lại về mặc định
 	Reset to White, Black	Đặt lại về Trắng, Đen
 	Reset Tracking and Kerning	Đặt lại giãn chữ và kerning
+	Highlight Font Name	Đánh dấu tên phông
+	Highlight Kerning	Đánh dấu kerning
+	Highlight Tracking	Đánh dấu giãn chữ
 	Reset with Mesh	Đặt lại với lưới
 	Reset with Mesh…	Đặt lại với lưới…
 	Reset with Warp	Đặt lại với biến dạng

@@ -167,6 +167,8 @@
 	Anchor Point	Опорна точка
 	Anchor Point Tool	Инструмент „Опорна точка“
 	Anchor Points	Опорни точки
+	"In" Control Points	„Входящи“ контролни точки
+	"Out" Control Points	„Изходящи“ контролни точки
 	Anchor Points, Handle, and Bounding Box Display	Показване на опорни точки, манипулатори и ограничителна рамка
 	Anchor/Path Labels	Етикети на опорни точки/пътища
 	Anchors:	Опорни точки:
@@ -5292,6 +5294,9 @@ theme	Appearance	Външен вид
 # Type › Reset Tracking and Kerning
 	Reset Tracking and Kerning	Нулиране на разредката и кернинга
 	Reset Horizontal Scale	Нулиране на хоризонталния мащаб
+	Highlight Font Name	Маркиране на името на шрифта
+	Highlight Kerning	Маркиране на кернинга
+	Highlight Tracking	Маркиране на разредката
 @msg	span must be "object" or "selection", got {v}	span трябва да е "object" или "selection", а не {v}
 @msg	span: "selection" places a `gradient`, not a swatch	span: "selection" поставя `gradient`, а не мостра
 @msg	span: "selection" places a gradient: give `gradient`	span: "selection" поставя градиент: задайте `gradient`

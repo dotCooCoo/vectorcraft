@@ -182,7 +182,7 @@ impl Ctx<'_> {
 
     fn emit(&mut self, g: &SGlyph, pre: Affine, origin: Point, angle: f64, advance: f64, line: usize) {
         // Control characters (tabs) and soft hyphens draw nothing (fonts map them to .notdef).
-        let blank = g.is_soft_hyphen() || g.ch.is_control();
+        let blank = g.is_soft_hyphen() || g.ch.is_control() || g.ch == '\u{2028}';
         // A colour glyph draws its art (COLR layers, an SVG document) or its image (a bitmap, or
         // COLR paints documents have no form for), not its outline; COLR, then SVG, then bitmaps.
         // Art in the text's colours takes the run's fill (black when it isn't a colour) and

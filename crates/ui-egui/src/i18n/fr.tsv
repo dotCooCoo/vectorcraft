@@ -182,6 +182,8 @@
 	Anchor Point	Point d’ancrage
 	Anchor Point Tool	Outil Point d’ancrage
 	Anchor Points	Points d’ancrage
+	"In" Control Points	Points de contrôle « entrants »
+	"Out" Control Points	Points de contrôle « sortants »
 	Anchor Points, Handle, and Bounding Box Display	Affichage des points d’ancrage, des poignées et du cadre de sélection
 	Anchor/Path Labels	Libellés de point d’ancrage/tracé
 	Anchors:	Points d’ancrage :
@@ -1148,6 +1150,9 @@ font-technology	Variable	Variables
 	Increase Font Size by Five Steps	Augmenter la taille de police de cinq incréments
 	Reset Tracking and Kerning	Réinitialiser l’approche et le crénage
 	Reset Horizontal Scale	Réinitialiser la mise à l’échelle horizontale
+	Highlight Font Name	Surligner le nom de la police
+	Highlight Kerning	Surligner le crénage
+	Highlight Tracking	Surligner l’approche
 	Spacing	Espacement
 	Step Type	Texte par incréments
 	Fit in View	Ajuster à la vue

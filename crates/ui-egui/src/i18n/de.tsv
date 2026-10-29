@@ -156,6 +156,8 @@
 	Anchor Point	Ankerpunkt
 	Anchor Point Tool	Ankerpunkt-Werkzeug
 	Anchor Points	Ankerpunkte
+	"In" Control Points	„Eingehende“ Kontrollpunkte
+	"Out" Control Points	„Ausgehende“ Kontrollpunkte
 	Anchor Points, Handle, and Bounding Box Display	Anzeige von Ankerpunkten, Griffen und Begrenzungsrahmen
 	Anchor/Path Labels	Anker-/Pfadbeschriftungen
 	Anchors:	Ankerpunkte:
@@ -1126,6 +1128,9 @@ font-technology	Variable	Variabel
 	Increase Font Size by Five Steps	Schriftgrad um fünf Schritte erhöhen
 	Reset Tracking and Kerning	Laufweite und Kerning zurücksetzen
 	Reset Horizontal Scale	Horizontale Skalierung zurücksetzen
+	Highlight Font Name	Schriftname hervorheben
+	Highlight Kerning	Kerning hervorheben
+	Highlight Tracking	Laufweite hervorheben
 	Spacing	Abstand
 	Step Type	Text schrittweise ändern
 	Fit in View	In Ansicht einpassen

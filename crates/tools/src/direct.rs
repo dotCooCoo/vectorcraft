@@ -3,8 +3,9 @@
 //! Direct Selection: click an anchor to select it (Shift toggles), click a segment to select the
 //! segment independently of its endpoint anchors, drag to move selected anchors (the one pressed on snaps to
 //! anchors, segments and Smart Guides, or with them off Snap to Point; Shift keeps the move at 45°
-//! steps; Alt on an anchor or a segment picks the whole path and Alt-drag copies it), drag a
-//! direction handle to
+//! steps; Alt on an anchor or a segment picks the whole path and Alt-drag copies it; an Alt-click
+//! on a path selected whole adds its group, and each further Alt-click adds the next group up, as
+//! Group Selection's clicks do), drag a direction handle to
 //! reshape (Shift keeps it at 45° steps round its anchor, Alt moves it alone; smart guides snap
 //! it), marquee to select anchors (Shift-drag toggles them: the selected ones inside are
 //! deselected, the others selected), drag a corner widget of any path (a star, a pen path) to round its corners
@@ -178,6 +179,9 @@ pub struct DirectSelectionTool {
     click: Option<(NodeId, usize, usize)>,
     /// A click on a whole path picks the segment on release; a drag still moves the whole path.
     click_segment: Option<(NodeId, usize, usize)>,
+    /// An Alt-click on a path selected whole adds this enclosing group on release, as a Group
+    /// Selection click does; an Alt-drag still copies the selection.
+    click_group: Option<NodeId>,
 }
 
 impl DirectSelectionTool {
@@ -199,6 +203,7 @@ impl DirectSelectionTool {
             guide: GuideEdit::default(),
             click: None,
             click_segment: None,
+            click_group: None,
         }
     }
 
@@ -444,6 +449,23 @@ struct SegmentHit {
     curved: bool,
 }
 
+/// The group a Group Selection click on a selected object adds, given the object's `ancestry`
+/// (its layer and sublayers first, the object last). It walks up from the object and returns the
+/// first ancestor below the layer and its sublayers that is not yet selected. The walk stops at the
+/// isolated object, since the next group up is outside isolation mode, and at any layer or
+/// sublayer, including one inside a group.
+fn next_group(cx: &ToolContext, ancestry: &[NodeId]) -> Option<NodeId> {
+    // Skip the layer and its sublayers: they are not objects.
+    let layers = ancestry.iter().take_while(|id| cx.doc.node(**id).is_some_and(Node::is_layer)).count().max(1);
+    ancestry
+        .iter()
+        .skip(layers)
+        .rev()
+        .copied()
+        .take_while(|id| in_scope(cx.doc, cx.isolation, *id) && !cx.doc.node(*id).is_some_and(Node::is_layer))
+        .find(|id| !cx.selection.contains(*id))
+}
+
 /// The segment of path `id` nearest to `p`, where the hit test found its stroke.
 fn segment_at(cx: &ToolContext, id: NodeId, p: Point) -> Option<SegmentHit> {
     let pd = cx.doc.node(id)?.path_data()?;
@@ -488,7 +510,7 @@ impl Tool for DirectSelectionTool {
         self.state = State::Idle;
         self.guides.clear();
         (self.anchor_snap, self.copy_snap, self.move_snap) = (None, None, None);
-        (self.click, self.click_segment) = (None, None);
+        (self.click, self.click_segment, self.click_group) = (None, None, None);
         vec![Action::Cancel]
     }
     fn claims_key(&self, _cx: &ToolContext, key: ToolKey) -> bool {
@@ -512,6 +534,7 @@ impl Tool for DirectSelectionTool {
             (PointerKind::Down, _) => {
                 self.click = None;
                 self.click_segment = None;
+                self.click_group = None;
                 if let Some(c) = CornerDrag::hit(cx, ev, true) {
                     self.state = State::Corner(c);
                     return vec![];
@@ -882,11 +905,7 @@ impl DirectSelectionTool {
             h.ancestry.push(part);
             h.leaf = part;
         }
-        // Walk up from the leaf: select the first ancestor not yet selected (below the layer).
-        // Stop at the isolated object: the next group up is outside isolation mode.
-        let chain: Vec<NodeId> = h.ancestry.iter().skip(1).rev().copied().take_while(|id| in_scope(cx.doc, cx.isolation, *id)).collect();
-        let target =
-            if cx.selection.contains(h.leaf) { chain.iter().find(|id| !cx.selection.contains(**id)).copied().unwrap_or(h.leaf) } else { h.leaf };
+        let target = if cx.selection.contains(h.leaf) { next_group(cx, &h.ancestry).unwrap_or(h.leaf) } else { h.leaf };
         let mut deselect = None;
         let mut out = vec![];
         if ev.mods.shift {
@@ -919,8 +938,13 @@ impl DirectSelectionTool {
             return vec![];
         }
         // A double-click edits what is drawn: not a clipping path's outline.
-        if hit_test(cx.doc, p, cx.hit_options()).and_then(|h| cx.doc.node(h.leaf)).is_some_and(|n| matches!(n.kind, NodeKind::Text(_))) {
+        let hit = hit_test(cx.doc, p, cx.hit_options());
+        if hit.as_ref().and_then(|h| cx.doc.node(h.leaf)).is_some_and(|n| matches!(n.kind, NodeKind::Text(_))) {
             return vec![Action::SwitchTool("type".into())];
+        }
+        // Outside the isolated art it leaves isolation mode, as with the Selection tool (#4466).
+        if hit.is_none() && cx.isolation.is_some() {
+            return vec![Action::Exec("object.exitIsolation".into(), json!({}))];
         }
         vec![]
     }
@@ -928,10 +952,14 @@ impl DirectSelectionTool {
         if cx.doc.node(id).is_some_and(|n| is_area_type(n) || is_path_type(n)) {
             return self.press_type_area(cx, id, vec![(si, ai)], p, ev.mods.shift);
         }
-        // Alt picks the whole path (and Alt-drag copies it), as on a segment.
+        // Alt picks the whole path (and Alt-drag copies it), as on a segment. On a path
+        // already selected whole, an Alt-click adds the next enclosing group on release.
         if ev.mods.alt {
             self.state = State::MoveObject { start: p, grab: Some(grab), hold: grab, began: false, deselect: None };
             let whole = cx.selection.contains(id) && cx.selection.partial(id).is_none();
+            if whole && !ev.mods.shift {
+                self.click_group = cx.doc.ancestry(id).and_then(|a| next_group(cx, &a));
+            }
             return if whole { vec![] } else { vec![Action::Exec("select.set".into(), json!({"ids": [id.0]}))] };
         }
         // A path with all its anchors selected is stored whole (no partial entry).
@@ -988,8 +1016,13 @@ impl DirectSelectionTool {
                 return vec![Action::Exec("select.segments".into(), json!({"id": h.leaf.0, "segments": [[s.si, s.seg]]}))];
             }
         }
-        // Clicking the fill selects the whole leaf path (all anchors).
+        // Clicking the fill selects the whole leaf path (all anchors). With Alt, a click
+        // on a path already selected whole adds the next enclosing group on release,
+        // as Group Selection's click does; each further Alt-click climbs one level.
         self.state = State::MoveObject { start: p, grab: None, hold: hold_point(cx, &h, p), began: false, deselect: None };
+        if ev.mods.alt && whole && !ev.mods.shift {
+            self.click_group = next_group(cx, &h.ancestry);
+        }
         if ev.mods.shift {
             return vec![Action::Exec("select.toggle".into(), json!({"id": h.leaf.0}))];
         }
@@ -1094,6 +1127,7 @@ impl DirectSelectionTool {
         self.state = State::Idle;
         self.guides.clear();
         (self.anchor_snap, self.copy_snap, self.move_snap) = (None, None, None);
+        let group = self.click_group.take();
         match (began, deselect, self.click.take(), self.click_segment.take()) {
             (true, ..) => vec![Action::Commit],
             (false, Some(id), _, _) => vec![Action::Exec("select.toggle".into(), json!({"id": id.0}))],
@@ -1103,7 +1137,7 @@ impl DirectSelectionTool {
             (false, None, None, Some((id, si, seg))) => {
                 vec![Action::Exec("select.segments".into(), json!({"id": id.0, "segments": [[si, seg]]}))]
             }
-            (false, None, None, None) => vec![],
+            (false, None, None, None) => group.map(|g| Action::Exec("select.add".into(), json!({"ids": [g.0]}))).into_iter().collect(),
         }
     }
     fn release_marquee(&mut self, cx: &ToolContext, p: Point, (start, toggle, enclosed): (Point, bool, bool)) -> Vec<Action> {

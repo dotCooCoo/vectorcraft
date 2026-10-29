@@ -181,6 +181,8 @@
 	Anchor Point	Punto di ancoraggio
 	Anchor Point Tool	Strumento Punto di ancoraggio
 	Anchor Points	Punti di ancoraggio
+	"In" Control Points	Punti di controllo "in entrata"
+	"Out" Control Points	Punti di controllo "in uscita"
 	Anchor Points, Handle, and Bounding Box Display	Visualizzazione di punti di ancoraggio, maniglie e riquadro di delimitazione
 	Anchor/Path Labels	Etichette ancoraggio/tracciato
 	Anchors:	Ancoraggi:
@@ -1149,6 +1151,9 @@ font-technology	Variable	Variabili
 	Increase Font Size by Five Steps	Aumenta dimensione font di cinque incrementi
 	Reset Tracking and Kerning	Reimposta spaziatura caratteri e crenatura
 	Reset Horizontal Scale	Reimposta scala orizzontale
+	Highlight Font Name	Evidenzia nome del font
+	Highlight Kerning	Evidenzia crenatura
+	Highlight Tracking	Evidenzia spaziatura caratteri
 	Spacing	Spaziatura
 	Step Type	Dimensione testo a incrementi
 	Fit in View	Adatta alla vista

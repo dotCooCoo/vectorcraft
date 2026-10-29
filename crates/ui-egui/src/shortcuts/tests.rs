@@ -323,6 +323,39 @@ fn cmd_alt_q_resets_tracking_and_kerning() {
     assert_eq!(spacing(&mut app), [(json!("One "), json!(200.0), json!(-40.0)), (json!("Two"), json!(0.0), json!(null))]);
 }
 
+/// Cmd+Alt+K highlights the Character panel's Kerning field and Cmd+Alt+Shift+F highlights its
+/// font name field for the selected type, and Cmd+Alt+K also does so while the Type tool edits
+/// text. Cmd+Alt+K does not open Preferences (Cmd+K).
+#[test]
+fn cmd_alt_k_and_cmd_alt_shift_f_highlight_the_character_fields() {
+    use crate::panels::character::Field;
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+    let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "One Two"})).unwrap()["id"].as_u64().unwrap();
+    let chord = |key, m| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers: m };
+    app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
+    frame(&mut app, vec![chord(Key::K, Modifiers::COMMAND | Modifiers::ALT)]);
+    assert_eq!(app.character_focus, Some(Field::Kerning));
+    assert!(app.ui.dialog.is_none(), "not Preferences");
+    assert!(crate::panel_docking::showing(&app.ui, "character"));
+    frame(&mut app, vec![chord(Key::F, Modifiers::COMMAND | Modifiers::ALT | Modifiers::SHIFT)]);
+    assert_eq!(app.character_focus, Some(Field::FontName));
+    // While the Type tool edits text.
+    app.character_focus = None;
+    app.select_tool("type");
+    app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+    app.session.set_tool_option("select", &json!({"start": 4, "end": 7}));
+    assert!(app.session.tool_wants_text());
+    frame(&mut app, vec![chord(Key::K, Modifiers::COMMAND | Modifiers::ALT)]);
+    assert_eq!(app.character_focus, Some(Field::Kerning));
+    assert!(app.ui.dialog.is_none(), "not Preferences");
+    // Keyboard Shortcuts lists all three under Type; Highlight Tracking has no default key.
+    for id in ["type.highlightFontName", "type.highlightKerning", "type.highlightTracking"] {
+        assert_eq!(crate::shortcut_editor::entry(id).map(|e| e.group.as_str()), Some("Type"), "{id}");
+    }
+    assert_eq!(crate::menus::shortcut_of("type.highlightTracking"), None);
+}
+
 /// Cmd+Shift+X resets the horizontal scale of the selected type to 100%, and of the Type
 /// tool's selected text while it edits. egui reports the chord as a Cut with Shift held, and
 /// the type object is not cut.

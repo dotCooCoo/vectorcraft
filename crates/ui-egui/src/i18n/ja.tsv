@@ -380,6 +380,9 @@ font-technology	Variable	バリアブル
 	Increase Font Size by Five Steps	フォントサイズを5段階大きく
 	Reset Tracking and Kerning	トラッキングとカーニングをリセット
 	Reset Horizontal Scale	水平比率をリセット
+	Highlight Font Name	フォント名をハイライト
+	Highlight Kerning	カーニングをハイライト
+	Highlight Tracking	トラッキングをハイライト
 	Step Type	文字を段階的に調整
 	Find Font…	フォントの検索と置換…
 	Change Case	大文字と小文字の変更
@@ -917,6 +920,8 @@ font-technology	Variable	バリアブル
 	Anchor Point	アンカーポイント
 	Anchor Point Tool	アンカーポイントツール
 	Anchor Points	アンカーポイント
+	"In" Control Points	「イン」コントロールポイント
+	"Out" Control Points	「アウト」コントロールポイント
 	Anchor Points, Handle, and Bounding Box Display	アンカーポイント、ハンドル、バウンディングボックスの表示
 	Anchor/Path Labels	アンカー／パスラベル
 	Angle	角度
