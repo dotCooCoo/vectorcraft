@@ -218,10 +218,29 @@ impl<'a> Recolor<'a> {
         Self { links: self.links, ..Self::new(self.scope, self.f) }
     }
 
-    /// The entries of `objects` (ids, each with a flag) whose object this pass would change. The
-    /// document stays as it is.
+    /// The entries of `objects` (ids, each with a flag) whose object this pass would change, other
+    /// than by swatch links alone, its patterns' tiles included. The document stays as it is.
     pub(crate) fn would_change<T: Copy>(mut self, d: &Document, objects: &[(NodeId, T)]) -> Vec<(NodeId, T)> {
-        objects.iter().copied().filter(|(id, _)| d.node(*id).is_some_and(|n| self.subtree(d, n).is_some())).collect()
+        let tried: Vec<(&Node, Node, T)> =
+            objects.iter().filter_map(|&(id, flag)| d.node(id).and_then(|n| Some((n, self.subtree(d, n)?, flag)))).collect();
+        let same = self.link_only_copies(d);
+        tried.into_iter().filter_map(|(n, m, flag)| (without_links(m, &same) != without_links(n.clone(), &same)).then_some((n.id, flag))).collect()
+    }
+
+    /// The patterns this pass has copied whose copy differs from the original only by swatch
+    /// links: the copy's name → the original's.
+    fn link_only_copies(&self, d: &Document) -> HashMap<String, String> {
+        let none = HashMap::new();
+        let art = |v: &[Arc<Node>]| v.iter().map(|n| without_links((**n).clone(), &none)).collect::<Vec<_>>();
+        let copies: HashMap<&str, &PatternDef> = self.new_patterns.iter().map(|p| (p.name.as_str(), p)).collect();
+        self.patterns
+            .iter()
+            .filter_map(|(old, new)| {
+                let new = new.as_ref()?;
+                let copy = copies.get(new.as_str())?;
+                (art(&d.pattern(old)?.art) == art(&copy.art)).then(|| (new.clone(), old.clone()))
+            })
+            .collect()
     }
 
     /// Recolour the objects `ids` and everything inside them (each once), add the new images and
@@ -322,6 +341,29 @@ impl<'a> Recolor<'a> {
         self.patterns.insert(name.to_string(), Some(new.clone()));
         Some(new)
     }
+}
+
+/// `n` with the swatch links of its paints and its children's removed, each color kept as it
+/// shows, and each pattern named in `same` (a copy → its original) by its original's name.
+fn without_links(mut n: Node, same: &HashMap<String, String>) -> Node {
+    for p in vectorcraft_doc::swatches::node_paints_mut(&mut n) {
+        map_links(p, &|_, link, _| link.take().is_some());
+        match p {
+            Paint::Gradient(g) => g.swatch = None,
+            Paint::Pattern { pattern, .. } => {
+                if let Some(original) = same.get(pattern.as_str()) {
+                    *pattern = original.clone();
+                }
+            }
+            _ => {}
+        }
+    }
+    if let Some(children) = n.children_mut() {
+        for c in children.iter_mut() {
+            *c = Arc::new(without_links((**c).clone(), same));
+        }
+    }
+    n
 }
 
 /// What a pass over document `d` does to each colour the shared visitor meets.

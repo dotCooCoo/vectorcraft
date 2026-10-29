@@ -609,6 +609,85 @@ fn recolor_of_everything_counts_the_locked_and_hidden_objects_it_left_out() {
 }
 
 #[test]
+fn recolor_of_everything_counts_locked_art_that_only_loses_its_group_swatch_link() {
+    let mut s = session();
+    run(&mut s, "swatch.newGroup", json!({"name": "Brand", "colors": ["#2878f0", "#ff0000"]}));
+    let names: Vec<String> =
+        s.doc().unwrap().doc.swatch_groups.iter().find(|g| g.name == "Brand").unwrap().swatches.iter().map(|w| w.name.clone()).collect();
+    for name in &names {
+        run(&mut s, "swatch.edit", json!({"name": name, "global": true}));
+    }
+    let open = rect(&mut s, json!("#000000"));
+    let locked = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [open.0, locked.0], "swatch": names[1]}));
+    set_props(&mut s, &[locked], json!({"locked": true}));
+    select_all(&mut s);
+    // The group is rewritten with one color, so its second swatch goes and the locked art only
+    // loses its link to it.
+    let r = run(&mut s, "recolor.apply", json!({"map": {"#ff0000": "#00ff00"}, "group": "Brand", "groupColors": ["#123456"]}));
+    assert_eq!(fill(&s, open).to_hex(), "#00ff00");
+    assert_eq!(fill(&s, locked).to_hex(), "#ff0000", "the locked art keeps its color");
+    assert_eq!(r["notChanged"], json!({"locked": 1, "hidden": 0}), "{r}");
+}
+
+#[test]
+fn recolor_of_everything_does_not_count_locked_art_whose_pattern_the_group_rewrite_recolors() {
+    let mut s = session();
+    run(&mut s, "swatch.newGroup", json!({"name": "Brand", "colors": ["#2878f0", "#ff0000"]}));
+    let names: Vec<String> =
+        s.doc().unwrap().doc.swatch_groups.iter().find(|g| g.name == "Brand").unwrap().swatches.iter().map(|w| w.name.clone()).collect();
+    for name in &names {
+        run(&mut s, "swatch.edit", json!({"name": name, "global": true}));
+    }
+    // "Dots": a tile linked to the group's second swatch.
+    let tile = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [tile.0], "swatch": names[1]}));
+    run(&mut s, "select.set", json!({"ids": [tile.0]}));
+    run(&mut s, "object.pattern.make", json!({"name": "Dots", "width": 20, "height": 20}));
+    run(&mut s, "object.pattern.done", json!({}));
+    let tile_hex = |s: &Session| s.doc().unwrap().doc.pattern("Dots").unwrap().art[0].appearance.fill_paint().color().unwrap().to_hex();
+    assert_eq!(tile_hex(&s), "#ff0000");
+    let locked = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [locked.0], "swatch": "Dots"}));
+    set_props(&mut s, &[locked], json!({"locked": true}));
+    let open = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [open.0], "swatch": names[1]}));
+    select_all(&mut s);
+    // The group's second swatch is rewritten with the row's new color, and the tile follows it.
+    let r = run(&mut s, "recolor.apply", json!({"map": {"#ff0000": "#00ff00"}, "group": "Brand", "groupColors": ["#2878f0", "#00ff00"]}));
+    assert_eq!(tile_hex(&s), "#00ff00", "{r}");
+    assert_eq!(r["notChanged"], json!({"locked": 0, "hidden": 0}), "{r}");
+}
+
+#[test]
+fn recolor_of_everything_does_not_count_locked_art_that_would_only_take_a_swatch_link() {
+    let mut s = session();
+    run(&mut s, "swatch.new", json!({"name": "Red", "color": "#ff0000", "global": true}));
+    // "Dots": an unlinked red tile.
+    let tile = rect(&mut s, json!("#ff0000"));
+    run(&mut s, "select.set", json!({"ids": [tile.0]}));
+    run(&mut s, "object.pattern.make", json!({"name": "Dots", "width": 20, "height": 20}));
+    run(&mut s, "object.pattern.done", json!({}));
+    let open = rect(&mut s, json!("#ff0000"));
+    let locked = rect(&mut s, json!("#ff0000"));
+    let dots = rect(&mut s, json!("#000000"));
+    run(&mut s, "paint.setFill", json!({"ids": [dots.0], "swatch": "Dots"}));
+    set_props(&mut s, &[locked, dots], json!({"locked": true}));
+    select_all(&mut s);
+    // The row keeps the color and snaps it to the document's global swatch of the same color, so
+    // the open art only takes the link.
+    let r = run(&mut s, "recolor.apply", json!({"map": {"#ff0000": "#ff0000"}, "limitTo": "document"}));
+    let link = |s: &Session, id: NodeId| match s.doc().unwrap().doc.node(id).unwrap().appearance.fill_paint() {
+        vectorcraft_color::Paint::Solid { swatch, .. } => swatch,
+        p => panic!("{p:?}"),
+    };
+    assert!(link(&s, open).is_some(), "{r}");
+    assert_eq!(fill(&s, locked).to_hex(), "#ff0000");
+    assert_eq!(r["notChanged"], json!({"locked": 0, "hidden": 0}), "{r}");
+    assert!(r.get("warning").is_none(), "{r}");
+}
+
+#[test]
 fn locked_and_hidden_members_of_a_selected_group_are_recolored_and_not_counted() {
     let mut s = session();
     let ids = [rect(&mut s, json!("#ff0000")), rect(&mut s, json!("#ff0000")), rect(&mut s, json!("#ff0000"))];

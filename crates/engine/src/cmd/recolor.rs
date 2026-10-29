@@ -116,6 +116,27 @@ fn used_colors(d: &Document, ids: &[NodeId], only: Option<&BTreeSet<NodeId>>) ->
     used.into_iter().map(|(_, u)| u).collect()
 }
 
+/// The colors `n` shows, in paint order ([`node_colors`]), then the colors of the tiles of the
+/// patterns it uses as fills or strokes.
+fn shown_colors(d: &Document, n: &Node) -> Vec<Color> {
+    let mut colors = vec![];
+    node_colors(n, &mut |c, _| colors.push(*c));
+    let mut patterns: Vec<&str> = vec![];
+    n.walk(&mut |m| {
+        for p in node_paints(m) {
+            if let Paint::Pattern { pattern, .. } = p
+                && !patterns.contains(&pattern.as_str())
+            {
+                patterns.push(pattern);
+            }
+        }
+    });
+    for def in patterns.iter().filter_map(|p| d.pattern(p)) {
+        def.art.iter().for_each(|a| node_colors(a, &mut |c, _| colors.push(*c)));
+    }
+    colors
+}
+
 /// The objects whose colors `recolor.colors` and `recolor.reduce` read, for [`used_colors`]: `ids`
 /// (each checked) or else the selection, with everything they hold; with nothing selected, the
 /// objects Select All takes and the objects inside them, leaving out every hidden or locked object
@@ -501,18 +522,22 @@ fn apply(s: &mut Session, p: &Value) -> Result<Value> {
         let map = ColorMap::new(&rows, method, own_model, &links, kept);
         let f = |c: Color| map.map(c);
         let lf = |c: &mut Color, link: &mut Option<String>, tint: &mut f32| map.map_link(c, link, tint);
-        // The objects left out whose colors the pass would change, as they are now. The trial
-        // pass does not count towards the note on color models.
-        let before: Vec<(Node, bool)> = Recolor::with_links(scope, &f, &lf)
+        // The objects left out whose colors the pass would change, with the colors they show now.
+        // The trial pass does not count towards the note on color models.
+        let before: Vec<(NodeId, Vec<Color>, bool)> = Recolor::with_links(scope, &f, &lf)
             .would_change(d, &left)
             .into_iter()
-            .filter_map(|(id, hidden)| Some((d.node(id)?.clone(), hidden)))
+            .filter_map(|(id, hidden)| Some((id, shown_colors(d, d.node(id)?), hidden)))
             .collect();
         map.converted.set(false);
         let changed = Recolor::with_links(scope, &f, &lf).run(d, &ids);
         let edit = group.map(|g| super::swatch::rewrite_group(d, g, &new, rename, C)).transpose()?;
-        // Rewriting the group's swatches can change art linked to them, left out or not.
-        let not_changed = NotChanged::of(before.iter().filter(|(n, _)| d.node(n.id) == Some(n)).map(|(_, hidden)| *hidden));
+        // Rewriting the group's swatches can change the colors of art linked to them, left out or
+        // not, and of the patterns it uses. Art that only loses its link keeps its colors and is
+        // counted.
+        let not_changed = NotChanged::of(
+            before.iter().filter(|(id, colors, _)| d.node(*id).is_some_and(|now| shown_colors(d, now) == *colors)).map(|(_, _, hidden)| *hidden),
+        );
         Ok((changed, edit, added, map.converted.get(), not_changed))
     })?;
     let mut out = json!({ "changed": changed, "swatches": added });
