@@ -13,6 +13,31 @@ fn input_request(app: &mut VectorcraftApp, method: &str, params: Value) -> Value
 }
 
 #[test]
+fn deferred_pointer_reply_uses_the_gesture_document_after_file_new() {
+    let mut app = VectorcraftApp::new(Session::new(), Services::default());
+    app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
+    let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 40, "height": 40})).unwrap()["id"].as_u64().unwrap();
+    app.run("select.set", json!({"ids": [id]})).unwrap();
+    let (reply, received) = std::sync::mpsc::channel();
+    let at = app.session.input_count();
+    app.pointer_replies.push(super::PendingPointerReply {
+        from: at,
+        to: at,
+        document: app.session.active().map(|d| d.uid),
+        tool: app.session.tool_id().to_string(),
+        reply,
+    });
+
+    app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
+    app.answer_pointer_replies(&egui::Context::default());
+
+    let result = received.try_recv().unwrap();
+    assert_eq!(result["ok"], true, "{result}");
+    assert_eq!(result["result"]["selection"], json!([id]));
+    assert_eq!(result["result"]["key"], Value::Null);
+}
+
+#[test]
 fn ui_set_turns_the_image_trace_preview_off_and_on() {
     let mut app = VectorcraftApp::new(Session::new(), Services::default());
     assert!(app.ui.image_trace_preview);

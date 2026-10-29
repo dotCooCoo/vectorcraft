@@ -88,7 +88,9 @@ impl VectorcraftApp {
                         }
                     }
                 }
-                control::Outcome::AfterToolEdit { from, to } => self.pointer_replies.push((from, to, reply)),
+                control::Outcome::AfterToolEdit { from, to, document, tool } => {
+                    self.pointer_replies.push(control::PendingPointerReply { from, to, document, tool, reply });
+                }
             }
         }
         if handled == control::MAX_CONTROL_REQUESTS_PER_FRAME {
@@ -120,11 +122,12 @@ impl VectorcraftApp {
 
     /// Sends the waiting `ui.pointer` replies whose events have been made.
     fn send_pointer_replies(&mut self) {
-        for (from, to, reply) in std::mem::take(&mut self.pointer_replies) {
+        for pending in std::mem::take(&mut self.pointer_replies) {
+            let control::PendingPointerReply { from, to, document, tool, reply } = pending;
             if self.session.input_applied(from, to) {
-                let _ = reply.send(control::pointer_reply(self));
+                let _ = reply.send(control::pointer_reply_for(self, document, &tool));
             } else {
-                self.pointer_replies.push((from, to, reply));
+                self.pointer_replies.push(control::PendingPointerReply { from, to, document, tool, reply });
             }
         }
     }

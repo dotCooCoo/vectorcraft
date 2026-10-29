@@ -81,7 +81,7 @@ use tests::{
 mod tests;
 
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
@@ -136,7 +136,7 @@ pub struct VectorcraftApp {
     pending_screenshots: Vec<PendingScreenshot>,
     /// `ui.pointer` replies waiting for their events and the edit the tool computes on another
     /// thread ([`control::Outcome::AfterToolEdit`]), with the numbers of those events.
-    pointer_replies: Vec<(u64, u64, Sender<ControlResponse>)>,
+    pointer_replies: Vec<control::PendingPointerReply>,
     /// Admitted captures whose settled frame has not come yet (issued one at a time).
     queued_screenshots: Vec<QueuedScreenshot>,
     screenshot_token: u64,

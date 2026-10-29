@@ -95,6 +95,14 @@ fn reserve_synthetic(app: &mut VectorcraftApp, additional: usize) -> Result<(), 
 
 pub type ControlResponse = Value;
 
+pub(crate) struct PendingPointerReply {
+    pub from: u64,
+    pub to: u64,
+    pub document: Option<u64>,
+    pub tool: String,
+    pub reply: Sender<ControlResponse>,
+}
+
 pub struct ControlRequest {
     pub method: String,
     pub params: Value,
@@ -151,14 +159,28 @@ pub enum Outcome {
     AfterToolEdit {
         from: u64,
         to: u64,
+        document: Option<u64>,
+        tool: String,
     },
 }
 
 /// The reply to `ui.pointer`: the selection, the key object and the active tool.
 pub(crate) fn pointer_reply(app: &mut VectorcraftApp) -> Value {
-    match app.run("document.inspect", json!({})) {
-        Ok(d) => json!({"ok": true, "result": {"selection": d["selection"], "key": d["key"], "tool": app.session.tool_id()}}),
-        Err(e) => json!({"ok": false, "error": e.to_string()}),
+    pointer_reply_for(app, app.session.active().map(|d| d.uid), app.session.tool_id())
+}
+
+pub(crate) fn pointer_reply_for(app: &VectorcraftApp, document: Option<u64>, tool: &str) -> Value {
+    let state = document.and_then(|uid| app.session.documents().iter().find(|d| d.uid == uid));
+    match state {
+        Some(state) => json!({
+            "ok": true,
+            "result": {
+                "selection": state.selection.objects.iter().map(|id| id.0).collect::<Vec<_>>(),
+                "key": state.selection.key.map(|id| id.0),
+                "tool": tool,
+            }
+        }),
+        None => json!({"ok": false, "error": "the gesture's document is no longer open"}),
     }
 }
 
@@ -558,7 +580,7 @@ fn pointer_events(app: &mut VectorcraftApp, ctx: &egui::Context, req: &ControlRe
     // a hover is answered at once.
     let to = app.session.input_count();
     if !app.session.input_applied(from, to) {
-        return Outcome::AfterToolEdit { from, to };
+        return Outcome::AfterToolEdit { from, to, document: app.session.active().map(|d| d.uid), tool: app.session.tool_id().to_string() };
     }
     Outcome::Done(pointer_reply(app))
 }
