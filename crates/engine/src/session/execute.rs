@@ -104,6 +104,11 @@ impl Session {
         };
         // The entries the command journals belong to the undo groups of the documents it edits, and to
         // the group of the document it starts in when it ends there too.
+        // Selection and view commands preserve a pending Blend pick. Keep the document's
+        // identity to distinguish committed content changes, including Undo and Redo.
+        let blend_before = (self.depth == 0 && self.tool_id() == "blend" && !self.in_tool_actions && !self.previewing)
+            .then(|| self.active().map(|d| (d.uid, d.history_revision)))
+            .flatten();
         let (doc, journal, grouped) = (self.active().map(|d| d.uid), self.journal.len(), self.undo_group_docs());
         let open = (self.depth == 0).then(|| self.docs.iter().map(|d| d.uid).collect::<Vec<_>>());
         let r = if self.depth == 0 { self.run_guarded(id, run) } else { self.run_nested(run) };
@@ -121,9 +126,11 @@ impl Session {
         }
         if self.depth == 0 {
             self.journal_in_undo_groups(doc, &grouped, journal);
-            self.after_command(Some(id));
+            let history_changed =
+                blend_before.is_some_and(|(uid, before)| self.active().is_none_or(|d| d.uid != uid || d.history_revision != before));
+            self.after_command(Some(id), history_changed);
         } else if matches!(id, "edit.undo" | "edit.redo") {
-            // A step of `command.batch`: the tool hears of it as it does of the command alone.
+            // A batch step retains the same Text tool notification as a command alone.
             self.notify_text_tool(id);
         }
         Ok(r)

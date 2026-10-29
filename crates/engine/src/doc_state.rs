@@ -13,6 +13,8 @@ pub struct DocState {
     /// Increments on every change (also selection and view-only changes); UIs re-render when it
     /// moves. Not a dirty flag: see [`DocState::is_dirty`].
     pub revision: u64,
+    /// Changes only when an accepted edit changes committed history; previews and view changes do not.
+    pub(crate) history_revision: u64,
     /// The document as last saved (or opened). Structural sharing makes "unchanged" a pointer
     /// comparison, and undoing back to the saved state counts as clean.
     pub(crate) saved_doc: Arc<Document>,
@@ -93,6 +95,8 @@ pub struct DocState {
     /// asks about a link outside any caller's scope.
     pub opened_by: Option<Arc<file_access::AutomationRoots>>,
 }
+
+static NEXT_HISTORY_REVISION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 static NEXT_DOC_UID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
@@ -241,6 +245,7 @@ impl DocState {
             history: History { limit: 500, ..Default::default() },
             path,
             revision: 1,
+            history_revision: 0,
             active_layer,
             layer_rows: vec![],
             variables_highlight: None,
@@ -314,10 +319,17 @@ impl DocState {
             self.revision += 1;
         }
     }
+    /// Allocate a fresh committed-history position. Rollback can restore an older position,
+    /// but a later edit must never reuse the abandoned position's token.
+    pub(crate) fn note_history_change(&mut self) {
+        self.history_revision = NEXT_HISTORY_REVISION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+
     /// Record an undo step: `doc` and `selection` as they were before an edit (the document now is
     /// the one after it). In an undo group only the group's first edit records one: the edits
     /// after it extend that step.
     pub(crate) fn push_undo(&mut self, mut label: String, doc: Arc<Document>, selection: Arc<Selection>) {
+        self.note_history_change();
         if let Some(g) = &mut self.undo_group {
             let recorded = |first: &Arc<Document>| self.history.undo.last().is_some_and(|l| Arc::ptr_eq(&l.doc, first));
             if g.first.as_ref().is_some_and(recorded) {

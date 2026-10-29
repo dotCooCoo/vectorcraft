@@ -176,6 +176,7 @@ impl Session {
             // Fails only without a document, and then there is no typing to keep.
             let _ = crate::cmd::settle_interaction(self);
         }
+        self.blend_lent_history = (self.tool.id() == "blend").then(|| self.active().map(|d| (d.uid, d.history_revision))).flatten();
         let lent = self.make_tool(id);
         self.lender = Some(std::mem::replace(&mut self.tool, lent));
         PointerEvent { mods: Mods { cmd: false, ..ev.mods }, ..*ev }
@@ -190,7 +191,9 @@ impl Session {
         let r = self.apply_actions(acts);
         self.keep_tool_settings();
         self.tool = lender;
-        self.after_command(None);
+        let before = self.blend_lent_history.take();
+        let changed = r.is_ok() && before.is_some_and(|(uid, before)| self.active().is_none_or(|d| d.uid != uid || d.history_revision != before));
+        self.after_command(None, changed);
         r.map(drop)
     }
 
@@ -391,6 +394,9 @@ impl Session {
     /// (one undo step); released anywhere else, none is. With the Artboard tool it is an artboard
     /// guide of the active artboard.
     pub fn ruler_guide(&mut self, vertical: bool, ev: &PointerEvent, on_canvas: bool, view: ViewInfo) -> Result<()> {
+        // Ruler dragging borrows no selection tool. Only an accepted history step ends a pick.
+        let blend_before =
+            (self.tool_id() == "blend" && ev.kind == PointerKind::Up).then(|| self.active().map(|d| (d.uid, d.history_revision))).flatten();
         let g = match self.ruler_guide.take() {
             Some(g) => Some(g),
             None => {
@@ -405,7 +411,14 @@ impl Session {
         if ev.kind != PointerKind::Up {
             self.ruler_guide = Some(g);
         }
-        self.apply_actions(acts).map(drop)
+        let result = self.apply_actions(acts).map(drop);
+        if result.is_ok()
+            && let Some((uid, before)) = blend_before
+        {
+            let changed = self.active().is_none_or(|d| d.uid != uid || d.history_revision != before);
+            self.after_command(None, changed);
+        }
+        result
     }
 
     /// Time passed while the pointer button is held (`dt` seconds; see [`Tool::tick`]): the
@@ -686,11 +699,11 @@ impl Session {
     }
 
     /// Let the active tool finish work a command from outside it ended ([`vectorcraft_tools::Tool::after_command`]):
-    /// the Type tool and the Eyedropper clear a character range whose text is no longer selected.
-    /// After `edit.undo` or `edit.redo` (`cmd`), the tool is told first, so the Type tool puts the
-    /// caret where the step changed the text.
-    pub(crate) fn after_command(&mut self, cmd: Option<&str>) {
-        if self.in_tool_actions || (!self.tool.wants_text() && self.tool.id() != "eyedropper") {
+    /// the Type tool and the Eyedropper clear a character range whose text is no longer selected;
+    /// Blend abandons its pending pick or extension chain only after a committed history change.
+    /// Undo/Redo also notify the Type tool so its caret follows the changed text.
+    pub(crate) fn after_command(&mut self, cmd: Option<&str>, history_changed: bool) {
+        if self.in_tool_actions || (!self.tool.wants_text() && self.tool.id() != "eyedropper" && !(self.tool.id() == "blend" && history_changed)) {
             return;
         }
         if let Some(cmd @ ("edit.undo" | "edit.redo")) = cmd {
@@ -699,7 +712,7 @@ impl Session {
         let acts = self.with_tool_cx(self.last_view, |t, cx| t.after_command(cx));
         // The command itself succeeded: a failure here only leaves the edit as it was.
         if let Err(e) = self.apply_actions(acts) {
-            log::warn!("ending the text edit: {e}");
+            log::warn!("updating the tool after a command: {e}");
         }
     }
 

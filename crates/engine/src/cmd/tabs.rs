@@ -69,6 +69,16 @@ fn apply(s: &mut Session, p: &Value, stops: Vec<TabStop>, label: &str) -> Result
     let ids = text_targets(s, p, "text.tabs.set")?;
     let range = TextRange::parse(p, "text.tabs.set")?;
     let n = stops.len();
+    // An unchanged range must not allocate an Undo step or interrupt a pending tool action.
+    let doc = &s.doc()?.doc;
+    let changed = ids.iter().any(|id| {
+        let Some(NodeKind::Text(t)) = doc.node(*id).map(|n| &n.kind) else { return false };
+        let span = para_span(range, t).unwrap_or(0..t.paragraph_count());
+        span.into_iter().any(|i| t.para_at(i).tabs != stops)
+    });
+    if !changed {
+        return Ok(json!({ "stops": n }));
+    }
     s.edit(label, |d, _| {
         for id in &ids {
             if let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) {

@@ -16,7 +16,7 @@ impl Session {
         if let Some(st) = self.active_mut()
             && st.undo_group.is_none()
         {
-            st.undo_group = Some(UndoGroup { first: None, journal: vec![], steps: vec![], label });
+            st.undo_group = Some(UndoGroup { history_revision: st.history_revision, first: None, journal: vec![], steps: vec![], label });
         }
     }
 
@@ -29,7 +29,8 @@ impl Session {
         let Some(label) = &self.explicit_undo_group else { return };
         for st in &mut self.docs {
             if !open.contains(&st.uid) && st.undo_group.is_none() {
-                st.undo_group = Some(UndoGroup { first: None, journal: vec![], steps: vec![], label: label.clone() });
+                st.undo_group =
+                    Some(UndoGroup { history_revision: st.history_revision, first: None, journal: vec![], steps: vec![], label: label.clone() });
             }
         }
     }
@@ -97,6 +98,7 @@ impl Session {
                 && st.history.undo.last().is_some_and(|e| Arc::ptr_eq(&e.doc, &first))
                 && let Some(e) = st.history.undo.pop()
             {
+                st.history_revision = g.history_revision;
                 st.doc = e.doc;
                 st.selection = Arc::unwrap_or_clone(e.selection);
                 deselect_hidden(&self.menu, &st.doc, &mut st.selection);
@@ -193,11 +195,12 @@ impl Session {
         let journal = self.journal.len();
         let st = self.active()?;
         let uid = st.uid;
+        let history_revision = st.history_revision;
         let joined = st.undo_group.as_ref().map(|g| (st.doc.clone(), st.selection.clone(), g.first.clone()));
         if joined.is_none() {
             self.begin_undo_group();
         }
-        Some(UndoScope { uid, journal, joined })
+        Some(UndoScope { uid, journal, joined, history_revision })
     }
 
     /// End `scope` in its own document, whichever document is active now; undo groups open in other
@@ -227,6 +230,7 @@ impl Session {
             Some(f) if g.first.as_ref().is_some_and(|now| Arc::ptr_eq(now, f)) => {}
             Some(_) => return,
         }
+        st.history_revision = scope.history_revision;
         st.doc = doc;
         st.selection = selection;
         cmd::globaledit::follow_history(st);

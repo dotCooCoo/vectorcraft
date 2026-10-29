@@ -53,6 +53,7 @@ pub(crate) struct PreviewCopies {
 /// An open undo group ([`Session::begin_undo_group`]): the edits made in it are one undo step.
 #[derive(Clone, Debug)]
 pub struct UndoGroup {
+    pub(crate) history_revision: u64,
     /// The document before the group's first edit, as the undo step that edit recorded keeps it.
     pub(crate) first: Option<Arc<Document>>,
     /// The numbers of the journal entries made in the group's document while it was open: a canceled
@@ -75,6 +76,7 @@ pub(crate) type BatchSteps = (usize, Vec<(usize, Option<usize>)>);
 /// One undo step begun with [`Session::begin_undo_scope`], which [`Session::end_undo_scope`] ends.
 #[derive(Clone, Debug)]
 pub struct UndoScope {
+    pub(crate) history_revision: u64,
     /// The document ([`DocState::uid`]).
     pub(crate) uid: u64,
     /// The journal's length when the scope began.

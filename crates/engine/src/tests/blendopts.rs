@@ -186,6 +186,263 @@ fn the_blend_tool_picks_again_when_its_first_pick_is_deleted() {
 }
 
 #[test]
+fn blend_pick_survives_selection_but_not_committed_history_changes() {
+    for change in ["create", "paint", "batch", "undo", "redo"] {
+        let mut s = session();
+        let (a, b, c) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0), rect(&mut s, 400.0, 0.0, 40.0));
+        // Prepare an unrelated edit; Undo/Redo must cancel even though A survives.
+        rect(&mut s, 600.0, 0.0, 40.0);
+        if change == "redo" {
+            s.execute("edit.undo", &json!({})).unwrap();
+        }
+        s.select_tool("blend", ViewInfo::default()).unwrap();
+        let click = |s: &mut Session, x| s.pointer(&PointerEvent::new(PointerKind::Down, x, 20.0), ViewInfo::default()).unwrap();
+        s.pointer(&PointerEvent::new(PointerKind::Down, 40.0, 0.0), ViewInfo::default()).unwrap();
+        s.execute("select.set", &json!({"ids": [c.0]})).unwrap();
+        assert!(!s.overlays(ViewInfo::default()).is_empty());
+        match change {
+            "create" => {
+                rect(&mut s, 800.0, 0.0, 40.0);
+            }
+            "paint" => {
+                s.execute("paint.setFill", &json!({"ids": [c.0], "color": "#ff0000"})).unwrap();
+            }
+            "batch" => {
+                s.execute(
+                    "command.batch",
+                    &json!({"commands": [
+                        {"command": "paint.setFill", "params": {"ids": [c.0], "color": "#ff0000"}}
+                    ]}),
+                )
+                .unwrap();
+            }
+            "undo" => {
+                s.execute("edit.undo", &json!({})).unwrap();
+            }
+            _ => {
+                s.execute("edit.redo", &json!({})).unwrap();
+            }
+        }
+        assert!(s.doc().unwrap().doc.node(a).is_some());
+        assert!(s.overlays(ViewInfo::default()).is_empty(), "{change}");
+        let depth = s.doc().unwrap().history.undo.len();
+        click(&mut s, 220.0);
+        assert_eq!(s.doc().unwrap().selection.objects, vec![b]);
+        assert_eq!(s.doc().unwrap().history.undo.len(), depth);
+        click(&mut s, 420.0);
+        let g = s.doc().unwrap().selection.objects[0];
+        let (keys, blend) = spec(&s, g);
+        assert_eq!(keys, vec![b, c]);
+        assert!(blend.starts.iter().all(Option::is_none), "the abandoned anchor correspondence is gone");
+    }
+}
+
+#[test]
+fn blend_pick_survives_queries_selection_only_batches_and_rolled_back_edits() {
+    let mut s = session();
+    let (a, b, c) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0), rect(&mut s, 400.0, 0.0, 40.0));
+    s.select_tool("blend", ViewInfo::default()).unwrap();
+    let click = |s: &mut Session, x| s.pointer(&PointerEvent::new(PointerKind::Down, x, 20.0), ViewInfo::default()).unwrap();
+    click(&mut s, 20.0);
+    s.execute("object.blend.info", &json!({})).unwrap();
+    s.execute(
+        "command.batch",
+        &json!({"commands": [
+            {"command": "select.set", "params": {"ids": [c.0]}}
+        ]}),
+    )
+    .unwrap();
+    assert!(
+        s.execute(
+            "command.batch",
+            &json!({"commands": [
+                {"command": "paint.setFill", "params": {"ids": [c.0], "color": "#ff0000"}},
+                {"command": "no.such.command"}
+            ]})
+        )
+        .is_err()
+    );
+    assert!(!s.overlays(ViewInfo::default()).is_empty(), "no committed edit cancelled the pick");
+    click(&mut s, 220.0);
+    let g = s.doc().unwrap().selection.objects[0];
+    assert_eq!(spec(&s, g).0, vec![a, b]);
+}
+
+#[test]
+fn blend_pick_survives_unchanged_tabs_but_not_changed_tabs() {
+    for changed in [false, true] {
+        let mut s = session();
+        let (a, b) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0));
+        let text = id_of(&s.execute("text.create", &json!({"x":500,"y":200,"text":"A\nB"})).unwrap());
+        s.execute("text.tabs.set", &json!({"ids":[text.0],"stops":[{"position":10}]})).unwrap();
+        s.execute("text.tabs.set", &json!({"ids":[text.0],"start":2,"end":2,"stops":[{"position":20}]})).unwrap();
+        s.select_tool("blend", ViewInfo::default()).unwrap();
+        let click = |s: &mut Session, x| s.pointer(&PointerEvent::new(PointerKind::Down, x, 20.0), ViewInfo::default()).unwrap();
+        click(&mut s, 20.0);
+        let (depth, history) = (s.doc().unwrap().history.undo.len(), s.doc().unwrap().history_revision);
+        let params = if changed {
+            json!({"ids":[text.0],"stops":[{"position":10}]})
+        } else {
+            json!({"ids":[text.0],"start":0,"end":0,"stops":[{"position":10}]})
+        };
+        s.execute("text.tabs.set", &params).unwrap();
+        assert_eq!(s.doc().unwrap().history.undo.len(), depth + usize::from(changed));
+        assert_eq!(s.doc().unwrap().history_revision == history, !changed);
+        click(&mut s, 220.0);
+        let selected = s.doc().unwrap().selection.objects[0];
+        if changed {
+            assert_eq!(selected, b, "a committed history edit starts a new pair");
+        } else {
+            assert_eq!(spec(&s, selected).0, vec![a, b], "the unchanged paragraph keeps its first pick");
+        }
+    }
+}
+
+#[test]
+fn extending_the_same_history_group_clears_a_new_blend_pick() {
+    let mut s = session();
+    let (a, b, c) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0), rect(&mut s, 400.0, 0.0, 40.0));
+    s.begin_undo_group();
+    s.execute("paint.setFill", &json!({"ids":[c.0],"color":"#ff0000"})).unwrap();
+    s.select_tool("blend", ViewInfo::default()).unwrap();
+    let click = |s: &mut Session, x| s.pointer(&PointerEvent::new(PointerKind::Down, x, 20.0), ViewInfo::default()).unwrap();
+    click(&mut s, 20.0);
+    let depth = s.doc().unwrap().history.undo.len();
+    s.execute("paint.setFill", &json!({"ids":[c.0],"color":"#0000ff"})).unwrap();
+    assert_eq!(s.doc().unwrap().history.undo.len(), depth, "the existing history step was extended");
+    click(&mut s, 220.0);
+    assert_eq!(s.doc().unwrap().selection.objects, vec![b]);
+    assert!(s.doc().unwrap().doc.node(a).is_some());
+    s.end_undo_group(false);
+}
+
+#[test]
+fn cancelled_undo_scopes_restore_the_committed_history_position() {
+    for joined in [false, true] {
+        let mut s = session();
+        let a = rect(&mut s, 0.0, 0.0, 40.0);
+        if joined {
+            s.begin_undo_group();
+            s.execute("paint.setFill", &json!({"ids":[a.0],"color":"#ff0000"})).unwrap();
+        }
+        let before = s.doc().unwrap().history_revision;
+        let scope = s.begin_undo_scope().unwrap();
+        s.execute("paint.setFill", &json!({"ids":[a.0],"color":"#0000ff"})).unwrap();
+        let abandoned = s.doc().unwrap().history_revision;
+        assert_ne!(abandoned, before);
+        s.end_undo_scope(scope, true);
+        assert_eq!(s.doc().unwrap().history_revision, before, "joined {joined}");
+        s.execute("paint.setFill", &json!({"ids":[a.0],"color":"#00ff00"})).unwrap();
+        assert_ne!(s.doc().unwrap().history_revision, abandoned, "new edits cannot reuse a rolled-back position");
+        if joined {
+            s.end_undo_group(false);
+        }
+    }
+}
+
+#[test]
+fn an_external_edit_ends_blend_chaining_without_changing_the_finished_blend() {
+    let mut s = session();
+    let (a, b, c, d) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0), rect(&mut s, 400.0, 0.0, 40.0), rect(&mut s, 600.0, 0.0, 40.0));
+    s.select_tool("blend", ViewInfo::default()).unwrap();
+    let click = |s: &mut Session, x| s.pointer(&PointerEvent::new(PointerKind::Down, x, 20.0), ViewInfo::default()).unwrap();
+    click(&mut s, 20.0);
+    click(&mut s, 220.0);
+    let old = s.doc().unwrap().selection.objects[0];
+    s.execute("paint.setFill", &json!({"ids": [c.0], "color": "#ff0000"})).unwrap();
+    click(&mut s, 420.0);
+    assert_eq!(s.doc().unwrap().selection.objects, vec![c]);
+    click(&mut s, 620.0);
+    let new = s.doc().unwrap().selection.objects[0];
+    assert_eq!(spec(&s, old).0, vec![a, b]);
+    assert_eq!(spec(&s, new).0, vec![c, d]);
+}
+
+#[test]
+fn blend_pick_distinguishes_a_borrowed_selection_click_from_a_committed_drag() {
+    for outcome in ["click", "move", "cancel"] {
+        let moved = outcome == "move";
+        let mut s = session();
+        let (a, b, c) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0), rect(&mut s, 400.0, 0.0, 40.0));
+        let view = ViewInfo::default();
+        s.select_tool("blend", view).unwrap();
+        for kind in [PointerKind::Down, PointerKind::Up] {
+            s.pointer(&PointerEvent::new(kind, 20.0, 20.0), view).unwrap();
+        }
+        let cmd = Mods { cmd: true, ..Mods::default() };
+        s.pointer(&PointerEvent::new(PointerKind::Down, 420.0, 20.0).with_mods(cmd), view).unwrap();
+        let (x, y) = if outcome != "click" { (440.0, 40.0) } else { (420.0, 20.0) };
+        if outcome != "click" {
+            s.pointer(&PointerEvent::new(PointerKind::Drag, x, y).with_mods(cmd), view).unwrap();
+        }
+        if outcome == "cancel" {
+            s.cancel_interaction().unwrap();
+        }
+        s.pointer(&PointerEvent::new(PointerKind::Up, x, y).with_mods(cmd), view).unwrap();
+        assert_eq!(s.tool_id(), "blend");
+        s.pointer(&PointerEvent::new(PointerKind::Down, 220.0, 20.0), view).unwrap();
+        if moved {
+            assert_eq!(s.doc().unwrap().selection.objects, vec![b], "the committed borrowed drag ended the pick");
+            s.pointer(&PointerEvent::new(PointerKind::Down, x, y), view).unwrap();
+        }
+        let g = s.doc().unwrap().selection.objects[0];
+        assert!(matches!(node(&s, g).kind, NodeKind::Blend { .. }), "{outcome}: final pick must make a blend");
+        assert_eq!(spec(&s, g).0, if moved { vec![b, c] } else { vec![a, b] });
+    }
+}
+
+#[test]
+fn blend_pick_survives_a_cancelled_preview_but_not_its_acceptance() {
+    for accepted in [false, true] {
+        let mut s = session();
+        let (a, b, c) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0), rect(&mut s, 400.0, 0.0, 40.0));
+        let view = ViewInfo::default();
+        s.select_tool("blend", view).unwrap();
+        s.pointer(&PointerEvent::new(PointerKind::Down, 20.0, 20.0), view).unwrap();
+        s.begin_interaction("Recolor").unwrap();
+        s.preview("paint.setFill", &json!({"ids": [c.0], "color": "#ff0000"})).unwrap();
+        s.execute("object.blend.info", &json!({})).unwrap();
+        assert!(!s.overlays(view).is_empty(), "a tentative preview or query does not end the pick");
+        if accepted {
+            s.commit_interaction().unwrap();
+        } else {
+            s.cancel_interaction().unwrap();
+        }
+        s.pointer(&PointerEvent::new(PointerKind::Down, 220.0, 20.0), view).unwrap();
+        if accepted {
+            assert_eq!(s.doc().unwrap().selection.objects, vec![b]);
+            s.pointer(&PointerEvent::new(PointerKind::Down, 420.0, 20.0), view).unwrap();
+        }
+        let g = s.doc().unwrap().selection.objects[0];
+        assert_eq!(spec(&s, g).0, if accepted { vec![b, c] } else { vec![a, b] });
+    }
+}
+
+#[test]
+fn blend_pick_survives_a_cancelled_ruler_guide_but_not_a_committed_one() {
+    for accepted in [false, true] {
+        let mut s = session();
+        let (a, b, c) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0), rect(&mut s, 400.0, 0.0, 40.0));
+        let view = ViewInfo::default();
+        s.select_tool("blend", view).unwrap();
+        s.pointer(&PointerEvent::new(PointerKind::Down, 20.0, 20.0), view).unwrap();
+        let depth = s.doc().unwrap().history.undo.len();
+        s.ruler_guide(true, &PointerEvent::new(PointerKind::Drag, 510.0, 150.0), true, view).unwrap();
+        assert_eq!(s.doc().unwrap().history.undo.len(), depth, "the guide is still a preview");
+        s.ruler_guide(true, &PointerEvent::new(PointerKind::Up, 510.0, 150.0), accepted, view).unwrap();
+        assert_eq!(s.doc().unwrap().doc.guides.len(), usize::from(accepted));
+        assert_eq!(s.doc().unwrap().history.undo.len(), depth + usize::from(accepted));
+        s.pointer(&PointerEvent::new(PointerKind::Down, 220.0, 20.0), view).unwrap();
+        if accepted {
+            assert_eq!(s.doc().unwrap().selection.objects, vec![b]);
+            s.pointer(&PointerEvent::new(PointerKind::Down, 420.0, 20.0), view).unwrap();
+        }
+        let g = s.doc().unwrap().selection.objects[0];
+        assert_eq!(spec(&s, g).0, if accepted { vec![b, c] } else { vec![a, b] });
+    }
+}
+
+#[test]
 fn the_blend_tool_blends_from_clicked_anchors_and_keeps_adding() {
     let mut s = session();
     let (a, b, c) = (rect(&mut s, 0.0, 0.0, 40.0), rect(&mut s, 200.0, 0.0, 40.0), rect(&mut s, 400.0, 0.0, 40.0));

@@ -487,6 +487,7 @@ fn undo(s: &mut Session, _: &Value) -> Result<Value> {
     let mut turned = crate::HistoryEntry::turned(e.label, doc, selection, &st.doc, costs);
     turned.named = e.named;
     st.history.redo.push(turned);
+    st.note_history_change();
     st.history.trim();
     st.revision += 1;
     st.selection.prune(&st.doc);
@@ -513,6 +514,7 @@ fn redo(s: &mut Session, _: &Value) -> Result<Value> {
     let mut turned = crate::HistoryEntry::turned(e.label, doc, selection, &st.doc, costs);
     turned.named = e.named;
     st.history.undo.push(turned);
+    st.note_history_change();
     st.history.trim();
     st.revision += 1;
     st.selection.prune(&st.doc);

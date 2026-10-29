@@ -138,6 +138,10 @@ impl Tool for BlendTool {
             None => Cursor::Blend,
         }
     }
+    fn after_command(&mut self, _cx: &ToolContext) -> Vec<Action> {
+        (self.first, self.chained) = (None, false);
+        vec![]
+    }
     fn busy(&self) -> bool {
         self.first.is_some()
     }

@@ -237,6 +237,7 @@ impl Session {
     }
 
     pub fn commit_interaction(&mut self) -> Result<()> {
+        let history_before = self.active().map(|d| d.history_revision);
         self.clear_deferred_overlay_cache();
         self.remember_pending_paint();
         let st = self.doc_mut()?;
@@ -294,6 +295,11 @@ impl Session {
         let (doc, journal, grouped) = (self.active().map(|d| d.uid), self.journal.len(), self.undo_group_docs());
         self.journal.push(preview);
         self.journal_in_undo_groups(doc, &grouped, journal);
+        // An enclosing command notifies only after its transaction succeeds.
+        if self.depth == 0 && self.tool_id() == "blend" {
+            let history_changed = self.active().is_some_and(|d| Some(d.history_revision) != history_before);
+            self.after_command(None, history_changed);
+        }
         Ok(())
     }
 
