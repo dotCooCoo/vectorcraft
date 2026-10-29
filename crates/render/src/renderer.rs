@@ -1,4 +1,4 @@
-use super::blobs::{blob_key, blob_pixmap, image_mip, lookup, mask_value, mip_level, plain_image};
+use super::blobs::{blob_key, blob_pixmap, image_mip, lookup, mask_value, mip_level, plain_image, shape_masked_image, white_shape_mask};
 use super::clock::now;
 use super::frame::{
     ClipEntry, ClipPaintEntry, Frame, FrameStats, GeomEntry, MAX_INLINE_DEPTH, MISSING_INLINE_LOGGED, PlacedEntry, PlacedKey, PtrMap, SliceEntry,
@@ -121,6 +121,7 @@ impl Renderer {
         if let Some(m) = opts.mask_view.and_then(|id| doc.node(id)).and_then(|n| n.extras().mask.as_deref()) {
             let pixels = self.mask_values(&frame, m, w, h).into_iter().flat_map(|v| [v, v, v, 255]).collect();
             self.end_frame();
+            self.stats.symbol_art = symbols.art_measured();
             self.stats.micros = now().saturating_sub(start);
             return Rendered { width: w as u32, height: h as u32, pixels };
         }
@@ -144,6 +145,7 @@ impl Renderer {
         if !inks {
             proof::post(&mut pixels, opts);
         }
+        self.stats.symbol_art = symbols.art_measured();
         self.stats.micros = now().saturating_sub(start);
         Rendered { width: w as u32, height: h as u32, pixels }
     }
