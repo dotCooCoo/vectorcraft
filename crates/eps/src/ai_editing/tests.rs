@@ -618,6 +618,40 @@ fn type_is_written_as_create_outlines_makes_it() {
 }
 
 #[test]
+fn inline_graphics_in_type_are_written_as_their_art() {
+    let mut doc = Document::new(200.0, 100.0);
+    let layer = doc.layers[0].id;
+    let mark = Node::path(
+        doc.alloc_id(),
+        shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)),
+        Appearance::basic(solid(Color::rgb(0.0, 0.0, 1.0)), Paint::None, 0.0),
+    );
+    doc.symbols.push(Symbol { name: "Mark".into(), art: Arc::new(mark) });
+    let style = vectorcraft_doc::CharStyle { size: 18.0, fill: solid(Color::BLACK), ..vectorcraft_doc::CharStyle::default() };
+    let mut t = vectorcraft_doc::TextObject::point(vectorcraft_geom::Point::new(10.0, 70.0), "A", style.clone());
+    t.runs.push(vectorcraft_doc::TextRun::inline(vectorcraft_doc::InlineArt::new("Mark"), style));
+    let mut text = Node::new(doc.alloc_id(), NodeKind::Text(Box::new(t)));
+    // A stroke of the object's own above the Characters row: drawn over the inline graphic.
+    let red = solid(Color::rgb(1.0, 0.0, 0.0));
+    text.appearance =
+        Appearance { items: vec![AppearanceItem::Stroke(StrokeLayer::new(red.clone(), 3.0))], contents_index: Some(0), ..Appearance::default() }
+            .into();
+    doc.insert(Some(layer), usize::MAX, text).unwrap();
+    let back = read_back(&doc);
+    let mut all = vec![];
+    paths(back.layers[0].children().unwrap(), &mut all);
+    let has = |p: &Node, c: &Paint| p.appearance.items.iter().any(|i| paint(i.paint()) == paint(c));
+    let blue = solid(Color::rgb(0.0, 0.0, 1.0));
+    let art: Vec<&Node> = all.iter().filter(|p| has(p, &blue)).collect();
+    assert_eq!(art.len(), 1, "the inline graphic is written");
+    // To the right of the letter, 18 pt high as the run's size makes it.
+    let b = art[0].visual_bounds().unwrap();
+    assert!(b.x0 > 10.0 && (b.height() - 18.0).abs() < 0.01, "{b:?}");
+    let at = |c: &Paint| all.iter().position(|p| has(p, c)).unwrap();
+    assert!(at(&blue) < at(&red), "the stroke above the characters is over the inline graphic");
+}
+
+#[test]
 fn a_stained_symbol_instance_is_written_in_its_stained_colors() {
     let mut doc = Document::new(200.0, 100.0);
     let layer = doc.layers[0].id;

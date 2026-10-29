@@ -36,7 +36,7 @@
 //! the first artboard's top-left corner. On the canvas ([`CANVAS_SIZE`] points square, y down) the
 //! artboards together are centered; each artboard's `RulerOrigin` is its top-left corner there, and
 //! `%AI3_TemplateBox` holds the canvas's center in art space. What the form above can't hold is written as plain filled and stroked paths, each such
-//! loss a warning: type as its outlines, gradients as their average color, pattern fills as their
+//! loss a warning: type as its outlines and its inline graphics' art, gradients as their average color, pattern fills as their
 //! tiles cut to the shape, clipping groups and clipping layers as their art cut to the clipping
 //! path (the clipping path's fill cut too, its stroke not), images as their outlines filled with
 //! their average color, symbols and live objects as their art, strokes a plain line can't draw as

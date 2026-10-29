@@ -507,18 +507,54 @@ impl<'a> Writer<'a> {
 
     /// Type `n` as a group of what Type › Create Outlines makes of it
     /// ([`vectorcraft_effects::outline_text`]): each run's glyphs with their underline and
-    /// strikethrough, its color glyphs, and the object's own fills and strokes.
+    /// strikethrough, its color glyphs, and the object's own fills and strokes; then its inline
+    /// graphics as their symbols' art where the layout places them, as the PDF page draws them.
     fn text(&mut self, n: &Node) {
         self.warn(TYPE);
         self.line("u");
-        if let Some(outlined) = vectorcraft_effects::outline_text(n) {
-            let state = self.state;
-            for c in outlined.children().map(Vec::as_slice).unwrap_or_default() {
-                self.node(c);
+        let doc = self.doc;
+        let resolved = match &n.kind {
+            NodeKind::Text(t) => Some(doc.inline_resolved(t).into_owned()),
+            _ => None,
+        };
+        let node = match &resolved {
+            Some(t) => Node { kind: NodeKind::Text(Box::new(t.clone())), ..n.clone() },
+            None => n.clone(),
+        };
+        let state = self.state;
+        let outlined = vectorcraft_effects::outline_text(&node);
+        let pieces = outlined.as_ref().and_then(|o| o.children()).map(Vec::as_slice).unwrap_or_default();
+        // The object's fills and strokes above the Characters row, when they paint, are the last
+        // piece: the inline graphics go under it, as the PDF page draws them.
+        let above = !node.appearance.split_contents().1.is_empty() && {
+            let bare = Node { appearance: Default::default(), ..node.clone() };
+            let glyphs = vectorcraft_effects::outline_text(&bare).and_then(|o| o.children().map(Vec::len)).unwrap_or_default();
+            pieces.len() > glyphs
+        };
+        let (under, over) = pieces.split_at(pieces.len() - usize::from(above));
+        for c in under {
+            self.node(c);
+        }
+        if let Some(t) = resolved.as_ref().filter(|_| self.nest < MAX_NEST) {
+            let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+            for ig in &layout.inlines {
+                let Some(art) = t.runs.get(ig.run).and_then(|r| r.inline.as_ref()) else { continue };
+                let Some(sym) = doc.symbols.iter().find(|x| x.name == art.symbol) else { continue };
+                self.warn(LIVE);
+                let mut art_node = (*sym.art).clone();
+                // Strokes scale with the art, as on the canvas.
+                art_node.transform(t.xf * ig.xf * doc.symbol_natural_xf(&art.symbol), true);
+                (art_node.visible, art_node.locked, art_node.name) = (true, false, None);
+                self.nest += 1;
+                self.node(&art_node);
+                self.nest -= 1;
             }
-            if let Some((locked, hidden)) = state {
-                self.state(locked, hidden);
-            }
+        }
+        for c in over {
+            self.node(c);
+        }
+        if let Some((locked, hidden)) = state {
+            self.state(locked, hidden);
         }
         self.line("U");
     }
