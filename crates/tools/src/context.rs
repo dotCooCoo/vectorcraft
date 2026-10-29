@@ -1,4 +1,4 @@
-use super::*;
+use super::{Document, NodeId, Paint, Point, Selection, Unit, Vec2, distort, select, xform};
 
 /// Paint defaults for new art (the fill/stroke proxy) and the rest of the new-art template.
 #[derive(Clone, Debug, PartialEq)]

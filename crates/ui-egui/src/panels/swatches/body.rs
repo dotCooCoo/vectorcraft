@@ -3,7 +3,7 @@ use super::dnd::{TileEvents, apply_drop, click_selection, highlighted, selection
 use super::tiles::{
     draw_folder, draw_registration, folder_tile, global_mark, list_icons, list_row, list_row_name, pattern_thumb, tile_grid, tile_id,
 };
-use super::*;
+use super::{Entry, Kind, Paint, Sense, Ui, VectorcraftApp, View, active_paint, apply, entries, json, pstate, set_pstate, swatch_tile, widgets};
 
 /// The id of the find field's text (shown with the panel menu's Show Find Field).
 pub(super) fn find_id() -> egui::Id {

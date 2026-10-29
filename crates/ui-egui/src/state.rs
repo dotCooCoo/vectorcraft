@@ -66,7 +66,7 @@ pub const ROTATE_VIEW_ANGLES: [(&str, f64); 12] = [
     ("-90°", -90.0),
 ];
 
-use super::*;
+use super::{ControlResponse, Sender};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Zoom stop stepping reads this (set each UI frame and before commands) so canvas wheel zoom

@@ -13,7 +13,10 @@ use serde_json::{Value, json};
 use vectorcraft_doc::{Artboard, Document, LAYER_COLORS, LayerColor, Node, NodeId, NodeKind, Scaling};
 use vectorcraft_geom::{Affine, Rect};
 
-use super::*;
+use super::{
+    CommandSpec, Result, Session, bad, bool_or, check_numbers, check_switches, checked_id, checked_ids_param, cmd, color_value, f64_or, has_doc,
+    has_selection, id_param, ids_param, index, ok, str_param,
+};
 use crate::EngineError;
 
 /// Most rows one panel command takes (ids are untrusted input).

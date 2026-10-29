@@ -15,13 +15,6 @@
 //! keyboard isn't confined.
 #![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
 
-#[cfg(all(feature = "windows7", any(feature = "wgpu", feature = "accessibility")))]
-compile_error!("windows7 requires --no-default-features (wgpu and accessibility must be disabled)");
-#[cfg(all(windows, feature = "windows7", not(target_vendor = "win7")))]
-compile_error!("windows7 requires --target x86_64-win7-windows-msvc; the ordinary Windows target still imports newer APIs");
-#[cfg(all(target_vendor = "win7", not(feature = "windows7")))]
-compile_error!("the win7 target requires --no-default-features --features windows7");
-
 mod automation_args;
 mod clipboard;
 #[cfg(feature = "wgpu")]
@@ -50,7 +43,7 @@ mod open_documents;
 mod portal_save;
 mod prefs_dir;
 mod printing;
-#[cfg(all(windows, not(target_vendor = "win7")))]
+#[cfg(windows)]
 mod system_fonts;
 mod tablet;
 mod window;
@@ -190,7 +183,7 @@ fn main() -> std::process::ExitCode {
     let logger = logging::install();
     vectorcraft_ui_egui::i18n::detect_system_lang_in_background();
     // Before the first font scan (the app's start): the fonts font services load (#579).
-    #[cfg(all(windows, not(target_vendor = "win7")))]
+    #[cfg(windows)]
     system_fonts::install();
     #[cfg(target_os = "macos")]
     mac_fonts::install();
@@ -295,7 +288,7 @@ fn main() -> std::process::ExitCode {
     // With Windows Ink, winit reports a pen as a touch and drops its barrel button and which end
     // is down; the message hook notes each pointer contact and whether it starts with the barrel
     // button held, and writes the pen's end into the pen feed (`windows_stylus`).
-    #[cfg(all(windows, not(target_vendor = "win7")))]
+    #[cfg(windows)]
     let options = {
         use winit::platform::windows::EventLoopBuilderExtWindows as _;
         let mut options = options;
@@ -435,10 +428,6 @@ fn main() -> std::process::ExitCode {
                     app.graphics_adapter = Some(summary);
                     let (loss, ctx) = (graphics_loss.clone(), cc.egui_ctx.clone());
                     rs.device.set_device_lost_callback(move |reason, msg| loss.report(&ctx, format!("{reason:?}: {msg}")));
-                }
-                #[cfg(feature = "windows7")]
-                {
-                    app.graphics_adapter = Some("OpenGL (Windows 7 compatibility)".into());
                 }
                 app.custom_titlebar = custom_titlebar;
                 if let Some(port) = control_port {

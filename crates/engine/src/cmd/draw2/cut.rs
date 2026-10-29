@@ -1,7 +1,10 @@
 use super::common::{
     dist_to_polyline, ids_json, path_mut, path_of, points_param, poly_bounds, replace_with_pieces, sibling_with, target_paths, usize_opt,
 };
-use super::*;
+use super::{
+    Anchor, AnchorKind, Beside, BezPath, BoolOp, Cap, EngineError, FillRule, Join, NodeId, ParamCurve, PathData, Point, Result, Session, SubPath,
+    Value, bad, eraser_area, eraser_tip, f64_or, fill_contains, id_param, json, number_or, po,
+};
 
 /// Split a filled path into connected pieces (each outer contour with its holes).
 pub(in super::super) fn components(pd: &PathData) -> Vec<PathData> {

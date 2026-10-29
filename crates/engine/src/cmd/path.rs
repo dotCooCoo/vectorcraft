@@ -9,7 +9,10 @@ use vectorcraft_geom::{Anchor, AnchorKind, PathData, Point, SubPath, Vec2};
 use super::create::anchor_from_json;
 use super::draw2::usize_opt;
 use super::pathops::Beside;
-use super::*;
+use super::{
+    CommandSpec, Result, Session, bad, check_numbers, check_switches, cmd, f64_or, f64_req, finite_numbers, has_anchors, has_doc, has_selection,
+    id_param, ids_param, index, number_or, ok, str_param, switch_or, targets,
+};
 use crate::EngineError;
 
 pub fn specs() -> Vec<CommandSpec> {

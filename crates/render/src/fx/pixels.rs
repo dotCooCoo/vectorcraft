@@ -6,7 +6,10 @@ use super::raster::{
     DRAG_PIXEL_BUDGET, PIXEL_BUDGET, PixelEntry, ViewCrop, content_changing, doc_raster_ppi, drag_scale, draw_placed, draw_scaled, filter_region,
     filter_region_within, hard_edged, image_size, linear_key, looks_around, pan_margin,
 };
-use super::*;
+use super::{
+    Affine, AppearanceItem, Arc, BezPath, Channels, DefaultHasher, Document, FillRule, Frame, GeomContext, Hash, Hasher, Ink, Node, PixelFx,
+    RasterFx, Rect, RenderContext, Renderer, Shape, blend_mode, effects, fill_rule, paint, peniko,
+};
 
 impl Renderer {
     /// Paint `content` through the content-changing effects of `rfx` (Gaussian Blur, Feather, the
