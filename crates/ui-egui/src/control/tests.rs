@@ -20,21 +20,17 @@ fn deferred_pointer_reply_uses_the_gesture_document_after_file_new() {
     app.run("select.set", json!({"ids": [id]})).unwrap();
     let (reply, received) = std::sync::mpsc::channel();
     let at = app.session.input_count();
-    app.pointer_replies.push(super::PendingPointerReply {
-        from: at,
-        to: at,
-        document: app.session.active().map(|d| d.uid),
-        tool: app.session.tool_id().to_string(),
-        reply,
-    });
+    app.pointer_replies.push(super::PendingPointerReply { from: at, to: at, document: app.session.active().map(|d| d.uid), reply });
 
     app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
+    app.run("tool.select", json!({"tool": "rectangle"})).unwrap();
     app.answer_pointer_replies(&egui::Context::default());
 
     let result = received.try_recv().unwrap();
     assert_eq!(result["ok"], true, "{result}");
     assert_eq!(result["result"]["selection"], json!([id]));
     assert_eq!(result["result"]["key"], Value::Null);
+    assert_eq!(result["result"]["tool"], "rectangle");
 }
 
 #[test]

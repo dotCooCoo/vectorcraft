@@ -99,7 +99,6 @@ pub(crate) struct PendingPointerReply {
     pub from: u64,
     pub to: u64,
     pub document: Option<u64>,
-    pub tool: String,
     pub reply: Sender<ControlResponse>,
 }
 
@@ -160,16 +159,15 @@ pub enum Outcome {
         from: u64,
         to: u64,
         document: Option<u64>,
-        tool: String,
     },
 }
 
 /// The reply to `ui.pointer`: the selection, the key object and the active tool.
 pub(crate) fn pointer_reply(app: &mut VectorcraftApp) -> Value {
-    pointer_reply_for(app, app.session.active().map(|d| d.uid), app.session.tool_id())
+    pointer_reply_for(app, app.session.active().map(|d| d.uid))
 }
 
-pub(crate) fn pointer_reply_for(app: &VectorcraftApp, document: Option<u64>, tool: &str) -> Value {
+pub(crate) fn pointer_reply_for(app: &VectorcraftApp, document: Option<u64>) -> Value {
     let state = document.and_then(|uid| app.session.documents().iter().find(|d| d.uid == uid));
     match state {
         Some(state) => json!({
@@ -177,7 +175,7 @@ pub(crate) fn pointer_reply_for(app: &VectorcraftApp, document: Option<u64>, too
             "result": {
                 "selection": state.selection.objects.iter().map(|id| id.0).collect::<Vec<_>>(),
                 "key": state.selection.key.map(|id| id.0),
-                "tool": tool,
+                "tool": app.session.tool_id(),
             }
         }),
         None => json!({"ok": false, "error": "the gesture's document is no longer open"}),
@@ -580,7 +578,7 @@ fn pointer_events(app: &mut VectorcraftApp, ctx: &egui::Context, req: &ControlRe
     // a hover is answered at once.
     let to = app.session.input_count();
     if !app.session.input_applied(from, to) {
-        return Outcome::AfterToolEdit { from, to, document: app.session.active().map(|d| d.uid), tool: app.session.tool_id().to_string() };
+        return Outcome::AfterToolEdit { from, to, document: app.session.active().map(|d| d.uid) };
     }
     Outcome::Done(pointer_reply(app))
 }
