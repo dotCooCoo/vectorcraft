@@ -13,7 +13,7 @@ use vectorcraft_eps::{EpsOptions, Level, Overprint, Preview, Raster};
 use vectorcraft_geom::{Point, Rect};
 
 use super::super::flatten::{FlattenOptions, flatten_document};
-use super::super::*;
+use super::super::{CommandSpec, EngineError, Result, Session, bad, cmd, has_doc, str_param};
 use super::{ArtboardPick, Encoded, FormatOption};
 
 const C: &str = "document.export";

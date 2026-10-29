@@ -1,4 +1,4 @@
-use super::*;
+use super::{CacheKey, Cursor, Mods, Point, VectorcraftApp};
 
 /// The active tool's cursor at the pointer, as `mods` make it. While the view moves (`still`
 /// false), the cursor the tool last gave for the same tool and keys stays: asking the tool again

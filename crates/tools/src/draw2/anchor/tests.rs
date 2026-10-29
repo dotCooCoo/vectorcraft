@@ -301,6 +301,34 @@ fn scissors_splits_at_segment() {
     );
 }
 
+/// With Alt held the Scissors tool acts as the Add Anchor Point tool: a click sends what the Add
+/// Anchor Point tool's click sends (an anchor inserted on a segment, nothing away from every path)
+/// and never splits, and the cursor is the Add Anchor Point tool's everywhere. Without Alt it cuts
+/// again.
+#[test]
+fn scissors_with_alt_adds_an_anchor() {
+    let (d, id) = doc_with_rect();
+    let s = Selection::default();
+    let p = paint();
+    let cx = cx(&d, &s, &p);
+    let mut t = AnchorTool::new("scissors");
+    let mut add = AnchorTool::new("addAnchor");
+    let alt = Mods { alt: true, ..Mods::default() };
+    for (x, y) in [(200.0, 150.0), (150.0, 101.0), (200.0, 100.0), (400.0, 400.0)] {
+        let down = PointerEvent::new(PointerKind::Down, x, y);
+        let a = t.pointer(&cx, &down.with_mods(alt));
+        assert_eq!(a, add.pointer(&cx, &down), "({x}, {y})");
+        assert!(!a.iter().any(|a| matches!(a, Action::Exec(c, _) if c == "path.split")), "({x}, {y})");
+        assert_eq!(t.cursor(&cx, Point::new(x, y), alt), Cursor::PenAdd, "({x}, {y})");
+    }
+    let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 200.0, 150.0).with_mods(alt));
+    assert!(matches!(&a[..], [Action::Exec(c, v)] if c == "path.insertAnchor" && v["id"] == id.0 && v["segment"] == 1));
+    let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 200.0, 150.0));
+    assert!(matches!(&a[..], [Action::Exec(c, v)] if c == "path.split" && v["id"] == id.0 && v["segment"] == 1));
+    assert_eq!(t.cursor(&cx, Point::new(200.0, 150.0), Mods::default()), Cursor::Scissors);
+    assert_eq!(t.cursor(&cx, Point::new(400.0, 400.0), Mods::default()), Cursor::ScissorsNotAllowed);
+}
+
 /// The Add Anchor Point, Delete Anchor Point, Anchor Point and Scissors tools pick anchors and
 /// segments only on the art a click can pick: not on a Shaper Group's original shapes unless
 /// they are isolated (Construction mode), and in isolation mode only on the isolated object.

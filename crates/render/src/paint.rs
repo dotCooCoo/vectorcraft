@@ -5,7 +5,7 @@ use vectorcraft_geom::{Rect, Vec2};
 use vello_cpu::RenderContext;
 use vello_cpu::peniko::{self, ColorStop};
 
-use super::*;
+use super::{BlendMode, Compose, FillRule, Mix, vello_cpu};
 use crate::Frame;
 
 /// Set the context paint (colours as frame `f` paints them). Returns false if nothing should be

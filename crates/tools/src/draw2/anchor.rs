@@ -10,7 +10,7 @@
 //! still held: at 45° steps from where it was). Space held during a convert- or handle-drag moves
 //! the anchor, handles and all, as while drawing with the Pen. Blend spine points and handles
 //! follow the same conversions (#2544).
-//! Scissors: click a path to split it there.
+//! Scissors: click a path to split it there (Alt = add, as the Add Anchor Point tool does).
 
 use serde_json::json;
 use vectorcraft_doc::NodeId;
@@ -316,6 +316,9 @@ impl Tool for AnchorTool {
                 }
             }
             ("scissors", PointerKind::Down) => {
+                if ev.mods.alt {
+                    return Self::add(cx, p);
+                }
                 if let Some((id, si, ai)) = hit_anchor(cx, p, point) {
                     return vec![Action::Exec("path.split".into(), json!({"id": id.0, "subpath": si, "anchor": ai}))];
                 }
@@ -554,6 +557,7 @@ impl Tool for AnchorTool {
             "addAnchor" => Cursor::PenDelete,
             "deleteAnchor" if !m.alt => Cursor::PenDelete,
             "deleteAnchor" => Cursor::PenAdd,
+            "scissors" if m.alt => Cursor::PenAdd,
             "scissors" => {
                 if hit_segment(cx, p, cx.pick_tol()).is_some() {
                     Cursor::Scissors

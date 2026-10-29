@@ -165,6 +165,7 @@ mod transparencygrid;
 mod trap;
 mod typearea;
 mod typescale;
+mod typeundo;
 mod units;
 mod variables;
 mod webexport;

@@ -12,7 +12,7 @@ use std::sync::Arc;
 use serde_json::{Value, json};
 use vectorcraft_doc::{Document, MaskEdit, Node, NodeId, NodeKind, Selection};
 
-use super::*;
+use super::{CommandSpec, EngineError, Result, Session, bad, cmd, has_doc, id_param};
 
 /// Name of the temporary mask-editing layer.
 pub const MASK_EDIT_LAYER: &str = "Opacity Mask Editing";

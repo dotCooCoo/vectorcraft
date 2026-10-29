@@ -8,6 +8,8 @@
 //! The mode follows the colour's own model (the last mode picked comes back for colours in its
 //! model and shows the defaults for new art; the app keeps it between sessions). Alt-clicking the
 //! spectrum or a chip paints the inactive proxy; Shift-clicking the spectrum cycles the modes;
+//! Cmd/Ctrl-clicking it applies Complement and Cmd/Ctrl+Shift-clicking it applies Invert, both to
+//! the inactive proxy when Alt is also held;
 //! Shift-dragging a slider moves the others in tandem; RGB and HSB show the out-of-gamut warning;
 //! Hide Options leaves just the proxy and the spectrum (the app keeps it between sessions too).
 //! `ui.colorPanel` picks a mode and shows or hides the options as the panel menu does.
@@ -459,6 +461,26 @@ fn set_mode(app: &mut VectorcraftApp, tgt: &Target, mode: Mode) {
     }
 }
 
+/// Invert (`invert`) or Complement, as the panel menu's items do: a gradient stop or freeform point
+/// is recolored in place, and a solid color or a "?" proxy goes through `paint.invert` or
+/// `paint.complement` (each selected object keeps its color model). Without a color or a "?"
+/// proxy nothing changes. With `behind` (Alt held) the command recolors the inactive proxy instead.
+fn recolor(app: &mut VectorcraftApp, ui: &Ui, tgt: &Target, invert: bool, behind: bool) {
+    let (cmd, f): (&str, fn(&Color) -> Color) =
+        if invert { ("paint.invert", Color::invert_keep_model) } else { ("paint.complement", Color::complement_keep_model) };
+    if behind {
+        app.run(cmd, json!({ "stroke": app.session.fill_active })).ok();
+        return;
+    }
+    match (tgt, tgt.color()) {
+        (Target::Stop { .. } | Target::Point { .. }, Some(c)) => apply(app, tgt, f(&c), Live::Released, false),
+        (_, color) if color.is_some() || super::active_mixed(app, ui.ctx()) => {
+            app.run(cmd, json!({})).ok();
+        }
+        _ => {}
+    }
+}
+
 /// `ui.colorPanel {mode?, options?}`: pick a mode as the panel menu does ([`set_mode`]), and Show
 /// Options (true) or Hide Options (false). → {mode, options, shown}: the mode picked last (null:
 /// none yet), whether the options show, and the mode the panel shows the color in (`tint` for a
@@ -516,6 +538,10 @@ enum SpectrumHit {
     Pick(Color, Live),
     /// Shift-click: the next colour mode.
     Cycle,
+    /// Cmd/Ctrl-click: Complement, or with Shift also held (`invert`) Invert.
+    Recolor {
+        invert: bool,
+    },
 }
 
 /// The spectrum ramp: hue across, white to full colour to black down (a grey ramp in Grayscale).
@@ -528,7 +554,11 @@ fn spectrum(ui: &mut Ui, mode: Mode, size: egui::Vec2) -> Option<SpectrumHit> {
     if let Some(p) = resp.hover_pos() {
         ui.painter().rect_stroke(Rect::from_center_size(p, vec2(5.0, 5.0)), 0.0, Stroke::new(1.0, Color32::WHITE), StrokeKind::Middle);
     }
-    if resp.clicked() && ui.input(|i| i.modifiers.shift) {
+    let (command, shift) = ui.input(|i| (i.modifiers.command, i.modifiers.shift));
+    if resp.clicked() && command {
+        return Some(SpectrumHit::Recolor { invert: shift });
+    }
+    if resp.clicked() && shift {
         return Some(SpectrumHit::Cycle);
     }
     let (p, phase) = widgets::pointer_phase(&resp)?;
@@ -552,6 +582,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         match hit {
             Some(SpectrumHit::Pick(c, phase)) => apply(app, &tgt, c, phase, alt),
             Some(SpectrumHit::Cycle) => set_mode(app, &tgt, mode.next()),
+            Some(SpectrumHit::Recolor { invert }) => recolor(app, ui, &tgt, invert, alt),
             None => {}
         }
         return;
@@ -683,6 +714,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     match spectrum(ui, mode, vec2(ui.available_width(), 46.0)) {
         Some(SpectrumHit::Pick(c, phase)) => pick(c, phase, &mut new),
         Some(SpectrumHit::Cycle) => set_mode(app, &tgt, mode.next()),
+        Some(SpectrumHit::Recolor { invert }) => recolor(app, ui, &tgt, invert, alt),
         None => {}
     }
     if let Some((c, phase)) = behind {
@@ -714,20 +746,10 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
         }
     }
     ui.separator();
-    // Solid colours (and a "?" proxy) go through the proxy commands (each selected object keeps
-    // its colour model); a gradient stop is recoloured in place.
-    let recolor = color.is_some() || super::active_mixed(app, ui.ctx());
-    for (label, cmd, f) in [
-        (tl!("Invert"), "paint.invert", Color::invert_keep_model as fn(&Color) -> Color),
-        (tl!("Complement"), "paint.complement", Color::complement_keep_model),
-    ] {
-        if menu_item(ui, label, recolor, false) {
-            match (&tgt, color) {
-                (Target::Stop { .. } | Target::Point { .. }, Some(c)) => apply(app, &tgt, f(&c), Live::Released, false),
-                _ => {
-                    app.run(cmd, json!({})).ok();
-                }
-            }
+    let enabled = color.is_some() || super::active_mixed(app, ui.ctx());
+    for (label, invert) in [(tl!("Invert"), true), (tl!("Complement"), false)] {
+        if menu_item(ui, label, enabled, false) {
+            recolor(app, ui, &tgt, invert, false);
         }
     }
     ui.separator();

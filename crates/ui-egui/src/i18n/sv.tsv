@@ -3157,6 +3157,7 @@ font-technology	Variable	Variabla
 	Swatch Options…	Färgrutealternativ…
 	Swatch Tiles	Rutvy för färgrutor
 	Swatches	Färgrutor
+	Switch Units	Byt enheter
 	Switch workspace	Byt arbetslayout
 	Add Content	Lägg till innehåll
 	Click to apply to the selected type	Klicka för att använda på den markerade texten
@@ -3842,6 +3843,7 @@ axis	Both	Båda
 @msg	`{key}` must be between {min} and {max} (got {x})	`{key}` måste vara mellan {min} och {max} (fick {x})
 @msg	`{key}` must be one of {_1}	`{key}` måste vara något av {_1}
 @msg	`{key}` must be true or false	`{key}` måste vara true eller false
+@msg	`top` and `below` can't both be true	`top` och `below` kan inte båda vara true
 @msg	`select` must be true or false	`select` måste vara true eller false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` och `maxAnchors` måste vara heltal
 @msg	`{key}` must be a number not below 0	`{key}` måste vara ett tal som inte är under 0
@@ -4167,6 +4169,7 @@ axis	Both	Båda
 @msg	select an object in perspective	markera ett objekt i perspektiv
 @msg	select artwork (or a colour group) to recolor	markera grafik (eller en färggrupp) att färga om
 @msg	select at least two objects	markera minst två objekt
+@msg	exit isolation mode first	avsluta isoleringsläget först
 @msg	select objects, not layers	markera objekt, inte lager
 @msg	select one path, or give its `id`	markera en bana eller ange dess `id`
 @msg	select paths to join	markera banor att foga samman

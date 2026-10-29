@@ -1,6 +1,6 @@
 use super::run::normalize_panel;
 use super::slots::{perspective_grid, recent_slot, saved_selection_name, saved_selection_slot, saved_view, saved_view_slot};
-use super::*;
+use super::{Brightness, Value, VectorcraftApp};
 
 /// Checked state for toggle items.
 pub fn checked(app: &VectorcraftApp, id: &str, p: &Value) -> Option<bool> {
@@ -156,8 +156,9 @@ pub(crate) fn waits_for_ime(app: &VectorcraftApp, id: &str) -> bool {
 }
 
 /// Engine commands that take `ids` and otherwise act on the Appearance panel's subject (the
-/// targeted layer, group or object, else the selection). Without `ids` and without a subject they
-/// are off, as the panel's buttons are: in menus, in the command palette and on their keys.
+/// targeted layer, group or object, else the selection). Without `ids` (or with an empty list) and
+/// without a subject they are off, as the panel's buttons are: in menus, in the command palette and
+/// on their keys.
 pub(super) const SUBJECT_COMMANDS: [&str; 2] = ["appearance.addFill", "appearance.addStroke"];
 
 /// Is there an Appearance panel subject: a targeted layer, group or object, or a selected one?

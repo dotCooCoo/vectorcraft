@@ -1791,6 +1791,7 @@ file-filter	Templates	範本
 @msg	clipboard is empty	剪貼簿是空的
 @msg	no anchor points selected	未選取錨點
 @msg	select at least two objects	請選取至少兩個物件
+@msg	exit isolation mode first	請先結束隔離模式
 @msg	no saved presets	沒有已儲存的預設集
 @msg	compound paths can only contain paths	複合路徑只能包含路徑
 @msg	no bounds	沒有邊界
@@ -2151,6 +2152,7 @@ file-filter	Templates	範本
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command` 必須是選單項目會開啟對話框的指令 (請參閱 ui.menuDialog)
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` 必須是 grayscale、rgb、hsb、cmyk 或 websafe
 @msg	`{key}` must be true or false	`{key}` 必須是 true 或 false
+@msg	`top` and `below` can't both be true	`top` 和 `below` 不能同時為 true
 @msg	`select` must be true or false	`select` 必須是 true 或 false
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` 和 `maxAnchors` 必須是整數
 @msg	`{key}` must be a number not below 0	`{key}` 必須是不小於 0 的數字
@@ -4032,6 +4034,7 @@ font-script	Japanese	漢字
 	Swatch Options…	色票選項…
 	Swatch Tiles	色票拼貼
 	Swatches	色票
+	Switch Units	切換單位
 	Switch workspace	切換工作區
 	Add Content	新增內容
 	Click to apply to the selected type	按一下以套用到所選文字
