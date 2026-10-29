@@ -8,15 +8,20 @@
 //! groups and compound paths (§5.3.5), guides (§6) and layers (§9), with the newer forms the reader
 //! reads from files users sent:
 //!
-//! - Header comments: `%%BoundingBox`, `%%HiResBoundingBox`, `%AI5_FileFormat 14.0`, the first
-//!   artboard as `%AI3_Cropmarks` and `%AI5_ArtSize`, `%AI5_RulerUnits`, `%AI9_ColorModel` (1 RGB, 2
-//!   CMYK), `%AI5_NumLayers`, and the version comment `%%AI8_CreatorVersion` ([`CREATOR_VERSION`]).
-//! - Setup: the color swatches (`%AI5_BeginPalette`, `0 0 Pb`, each swatch's color operator and
-//!   `(name) Pc`, a color group as `0 (name) count Pg` before its swatches, `PB`), then the
-//!   artboards as the `ArtboardArray` of the `/Document` dictionary, on `%_` lines.
+//! - Header comments: `%%For` (the document's author), `%%Canvassize`, `%%BoundingBox`,
+//!   `%%HiResBoundingBox`, `%AI5_FileFormat 14.0`, `%AI7_ImageSettings`, the first artboard as
+//!   `%AI3_Cropmarks` and `%AI5_ArtSize`, `%AI5_RulerUnits`, `%AI9_ColorModel` (1 RGB, 2 CMYK),
+//!   `%AI5_ArtFlags`, `%AI5_TargetResolution`, `%AI5_NumLayers`, `%AI5_OpenViewLayers` (a digit for
+//!   each layer, 7 shown and 6 hidden), `%AI7_GridSettings` (§2.1.1), and the version comment
+//!   `%%AI8_CreatorVersion` ([`CREATOR_VERSION`]).
+//! - Setup: `0 Bn` (no gradient definitions, §3), the color swatches (`%AI5_BeginPalette`,
+//!   `0 0 Pb`, the Registration swatch, each swatch's color operator and `(name) Pc`, a color group as `0 (name) count Pg`
+//!   before its swatches, `PB`), then the artboards as the `ArtboardArray` of the `/Document`
+//!   dictionary, on `%_` lines.
 //! - Layers: `%AI5_BeginLayer`, `visible preview unlocked printing dimmed 0 1 colorIndex r g b 0
 //!   dimPercent 0 Lb` (14 operands; a color that isn't one of the preset layer colors has the
-//!   index -1), `(name) Ln`, its art and sublayers, `LB`, `%AI5_EndLayer--`.
+//!   index -1), `(name) Ln`, the layer's name as an XML id in an `/ArtDictionary`, its art and
+//!   sublayers, `LB`, `%AI5_EndLayer--`.
 //! - Colors: `g` gray, `k` CMYK, `c m y k r g b Xa` RGB (Lab is written as RGB); a spot color
 //!   `c m y k (name) tint x` (CMYK) or `c m y k r g b|L a b (name) tint 1|2 Xx` (RGB or Lab); a
 //!   global process color `… (name) tint model Xk`; Registration `1 1 1 1 ([Registration]) tint
@@ -25,7 +30,7 @@
 //!   an `/ArtDictionary` whose `AI10_ArtUID` is the name as an XML id. Guides are `(N) *`, the
 //!   path, `(N) *` (`(n) *` when closed).
 //!
-//! Strings are written in UTF-8. Art space has y up, its origin at the first artboard's bottom-left
+//! Lines end in CR LF. Strings are written in UTF-8. Art space has y up, its origin at the first artboard's bottom-left
 //! corner. What the form above can't hold is written as plain filled and stroked paths, each such
 //! loss a warning: type as its outlines, gradients as their average color, pattern fills as their
 //! tiles cut to the shape, clipping groups and clipping layers as their art cut to the clipping
@@ -60,6 +65,16 @@ const ROUNDTRIP_VERSION: u32 = 24;
 const ROUNDTRIP_STREAM_TYPE: u32 = 2;
 /// What starts the data streams of Zstandard-compressed data.
 const ZSTD_MARKER: &[u8] = b"%AI24_ZStandard_Data";
+/// `%%Canvassize`: the side of the canvas in points, as the files users sent have it.
+const CANVAS_SIZE: u32 = 16383;
+/// `%AI5_ArtFlags` (§2.1.1, Table 4), as the files users sent have them: page setup, print tiles,
+/// placed images, preview patterns, split long paths, tile full pages, printer's default
+/// screens, auto default screens, compatible gradient printing.
+const ART_FLAGS: &str = "0 0 0 1 0 0 1 0 0";
+/// `%AI5_TargetResolution` (§2.1.1).
+const TARGET_RESOLUTION: u32 = 800;
+/// The gridlines' gray: VectorCraft's default grid color (200 of 255).
+const GRID_GRAY: f64 = 200.0 / 255.0;
 
 /// The first line of a PostScript file (the DSC version comment).
 const PS_HEADER: &str = "%!PS-Adobe-3.0"; // brand-ok: the PostScript header comment
@@ -98,7 +113,6 @@ pub fn export_ai_editing(doc: &Document, o: &AiEditingOptions) -> Result<AiEditi
     for layer in &doc.layers {
         w.layer(layer);
     }
-    let layers = doc.layers.len();
     let (width, height) = (board.width(), board.height());
     let art = doc
         .layers
@@ -109,15 +123,22 @@ pub fn export_ai_editing(doc: &Document, o: &AiEditingOptions) -> Result<AiEditi
         .filter(|b| b.is_finite())
         .reduce(|a, b| a.union(b))
         .unwrap_or(Rect::new(0.0, 0.0, width, height));
-    let header = header(doc, o, &w, art, (width, height), layers);
+    let header = header(doc, o, &w, art, (width, height));
     let mut s = header.clone();
-    s.push_str("%%BeginProlog\n%%EndProlog\n%%BeginSetup\n");
+    // No gradient definitions: gradients are written as their average color.
+    s.push_str("%%BeginProlog\n%%EndProlog\n%%BeginSetup\n0 Bn\n");
     w.palette(&mut s);
     artboards(&mut s, doc, to_art);
     s.push_str("%%EndSetup\n");
     s.push_str(&w.body);
     s.push_str("%%PageTrailer\ngsave annotatepage grestore showpage\n%%Trailer\n%%EOF\n");
-    Ok(AiEditingOutput { program: s.into_bytes(), header: header.into_bytes(), warnings: w.warnings })
+    // Lines end in CR LF, as in the files users sent; line breaks inside strings are escaped.
+    Ok(AiEditingOutput { program: crlf(&s), header: crlf(&header), warnings: w.warnings })
+}
+
+/// `s` with each line ending in CR LF.
+fn crlf(s: &str) -> Vec<u8> {
+    s.replace('\n', "\r\n").into_bytes()
 }
 
 /// `doc` with its geometry effects baked ([`vectorcraft_effects::bake_document`]), in its symbols'
@@ -163,17 +184,20 @@ pub fn private_data(doc: &Document, o: &AiEditingOptions) -> Result<(PrivateData
 
 /// The header comments, through `%%EndComments`. `art`: the visible art's bounds, `size` the first
 /// artboard's, in art space.
-fn header(doc: &Document, o: &AiEditingOptions, w: &Writer, art: Rect, (width, height): (f64, f64), layers: usize) -> String {
+fn header(doc: &Document, o: &AiEditingOptions, w: &Writer, art: Rect, (width, height): (f64, f64)) -> String {
     let mut s = String::new();
     s.push_str(PS_HEADER);
     s.push('\n');
     let _ = writeln!(s, "%%Creator: VectorCraft {}", env!("CARGO_PKG_VERSION"));
     let _ = writeln!(s, "%%AI8_CreatorVersion: {CREATOR_VERSION}");
+    // The user and the organization (§2.1.1).
+    let _ = writeln!(s, "%%For: {} ()", ps::bytes(doc.metadata.author.as_bytes()));
     let _ = writeln!(s, "%%Title: {}", ps::bytes(o.title.as_bytes()));
     if let Some(t) = o.created {
         let [y, mo, d, h, mi, _] = vectorcraft_doc::metadata::civil(t);
         let _ = writeln!(s, "%%CreationDate: ({mo}/{d}/{y:04}) ({h:02}:{mi:02})");
     }
+    let _ = writeln!(s, "%%Canvassize: {CANVAS_SIZE}");
     let _ = writeln!(s, "%%BoundingBox: {} {} {} {}", art.x0.floor() as i64, art.y0.floor() as i64, art.x1.ceil() as i64, art.y1.ceil() as i64);
     s.push_str("%%HiResBoundingBox: ");
     ps::push_nums(&mut s, &[art.x0, art.y0, art.x1, art.y1]);
@@ -181,6 +205,8 @@ fn header(doc: &Document, o: &AiEditingOptions, w: &Writer, art: Rect, (width, h
     s.push('\n');
     s.push_str("%%DocumentProcessColors: Cyan Magenta Yellow Black\n");
     s.push_str("%AI5_FileFormat 14.0\n%AI3_ColorUsage: Color\n");
+    // Linked images aren't embedded (the data holds no images).
+    s.push_str("%AI7_ImageSettings: 0\n");
     let spots = w.spot_swatches();
     for (i, (name, _)) in spots.iter().enumerate() {
         let _ = writeln!(s, "{} {}", if i == 0 { "%%DocumentCustomColors:" } else { "%%+" }, ps::bytes(name.as_bytes()));
@@ -201,7 +227,18 @@ fn header(doc: &Document, o: &AiEditingOptions, w: &Writer, art: Rect, (width, h
     s.push_str("%AI24_LargeCanvasScale: 1\n");
     let model = if doc.color_mode == vectorcraft_doc::ColorMode::Cmyk { 2 } else { 1 };
     let _ = writeln!(s, "%AI9_ColorModel: {model}");
-    let _ = writeln!(s, "%AI5_NumLayers: {layers}");
+    let _ = writeln!(s, "%AI5_ArtFlags: {ART_FLAGS}");
+    let _ = writeln!(s, "%AI5_TargetResolution: {TARGET_RESOLUTION}");
+    let _ = writeln!(s, "%AI5_NumLayers: {}", doc.layers.len());
+    // A digit for each layer: 7 shown, 6 hidden.
+    let views: String = doc.layers.iter().map(|l| if l.visible { '7' } else { '6' }).collect();
+    if !views.is_empty() {
+        let _ = writeln!(s, "%AI5_OpenViewLayers: {views}");
+    }
+    // Gridlines and subdivisions (§2.1.1, Table 6): in back, lines, in VectorCraft's grid gray.
+    let (space, subdiv) = (ps::num(doc.grid.spacing), doc.grid.subdivisions);
+    let gray = ps::num(GRID_GRAY);
+    let _ = writeln!(s, "%AI7_GridSettings: {space} {subdiv} {space} {subdiv} 1 0 {gray} {gray} {gray} {gray} {gray} {gray}");
     s.push_str("%%EndComments\n");
     s
 }

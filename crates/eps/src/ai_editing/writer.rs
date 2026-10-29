@@ -113,7 +113,7 @@ impl<'a> Writer<'a> {
         }
     }
 
-    /// A layer or sublayer: `%AI5_BeginLayer`, its options `Lb`, its name `Ln`, its art, then
+    /// A layer or sublayer: `%AI5_BeginLayer`, its options `Lb`, its name `Ln` and as an XML id, its art, then
     /// `after` (outside its clipping path when it clips), `LB`, `%AI5_EndLayer--`.
     fn write_layer(&mut self, n: &Node, after: &[Arc<Node>]) {
         let NodeKind::Layer { color, template, printable, children, clip, preview, dim_images } = &n.kind else { return };
@@ -131,6 +131,7 @@ impl<'a> Writer<'a> {
         self.transparency(n);
         let flag = |b: bool| u8::from(b);
         let dim = dim_images.unwrap_or(50);
+        let name = n.name.as_deref().unwrap_or("Layer");
         let _ = writeln!(
             self.body,
             "%AI5_BeginLayer\n{} {} {} {} {} 0 1 {index} {r} {g} {b} 0 {dim} 0 Lb\n{} Ln",
@@ -139,8 +140,9 @@ impl<'a> Writer<'a> {
             flag(!n.locked),
             flag(*printable && !*template),
             flag(dim_images.is_some() || *template),
-            ps::bytes(n.name.as_deref().unwrap_or("Layer").as_bytes()),
+            ps::bytes(name.as_bytes()),
         );
+        self.xml_id(if name.is_empty() { "Layer" } else { name });
         self.state = None;
         if *clip {
             self.warn(CLIPPING);
@@ -269,10 +271,15 @@ impl<'a> Writer<'a> {
         }
     }
 
-    /// `n`'s name, after it: an `/ArtDictionary` whose `AI10_ArtUID` is the name as an XML id,
-    /// numbered (`_` and 20 digits, `_`) when another object has that id.
+    /// `n`'s name, after it (see [`Self::xml_id`]).
     fn name(&mut self, n: &Node) {
         let Some(name) = n.name.as_deref().filter(|s| !s.is_empty()) else { return };
+        self.xml_id(name);
+    }
+
+    /// An `/ArtDictionary` whose `AI10_ArtUID` is `name` as an XML id, numbered (`_` and 20
+    /// digits, `_`) when a layer or another object has that id.
+    fn xml_id(&mut self, name: &str) {
         let base = vectorcraft_doc::xml_id::from_object_name(name);
         let mut id = base.clone();
         let next = self.next.entry(base.clone()).or_insert(0);
@@ -604,11 +611,12 @@ impl<'a> Writer<'a> {
 
     // ---------- swatches ----------
 
-    /// The swatches: `%AI5_BeginPalette`, `0 0 Pb`, each color swatch's color and `(name) Pc`
+    /// The swatches: `%AI5_BeginPalette`, `0 0 Pb`, the Registration swatch, each color swatch's color and `(name) Pc`
     /// (the ungrouped ones first, then each color group's after `0 (name) count Pg`), `PB`,
     /// `%AI5_EndPalette`.
     pub(super) fn palette(&mut self, s: &mut String) {
         s.push_str("%AI5_BeginPalette\n0 0 Pb\n");
+        self.registration_cell(s);
         let doc = self.doc;
         for sw in doc.swatches.iter() {
             self.swatch(s, sw);
@@ -621,6 +629,22 @@ impl<'a> Writer<'a> {
             }
         }
         s.push_str("PB\n%AI5_EndPalette\n");
+    }
+
+    /// The Registration swatch, which every palette in the files users sent starts with: in a
+    /// CMYK document `1 1 1 1 ([Registration]) 0 Xs`, in an RGB one black's CMYK equivalent,
+    /// `0 0 0 ([Registration]) 0 1 Xz`; then `([Registration]) Pc`.
+    fn registration_cell(&self, s: &mut String) {
+        let name = ps::bytes(REGISTRATION.as_bytes());
+        if self.doc.color_mode == vectorcraft_doc::ColorMode::Cmyk {
+            let _ = writeln!(s, "1 1 1 1 {name} 0 Xs");
+        } else {
+            let black = Color::rgb(0.0, 0.0, 0.0);
+            let cmyk = self.cms.to_cmyk(&black, self.cms.settings().intent).map(unit);
+            ps::push_nums(s, &cmyk.map(f64::from));
+            let _ = writeln!(s, "0 0 0 {name} 0 1 Xz");
+        }
+        let _ = writeln!(s, "{name} Pc");
     }
 
     /// One swatch of the palette: a color swatch's color and `(name) Pc`; gradient and pattern

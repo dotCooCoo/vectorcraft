@@ -72,10 +72,11 @@ fn stream(bytes: &[u8]) -> Vec<u8> {
     s
 }
 
-/// `at` (Unix seconds) as a PDF date string in UTC (ISO 32000-1 §7.9.4).
+/// `at` (Unix seconds) as a PDF date string in UTC (ISO 32000-1 §7.9.4), with the offset written
+/// as hours and minutes, as in the files users sent.
 fn pdf_date(at: i64) -> String {
     let [y, mo, d, h, mi, s] = vectorcraft_doc::metadata::civil(at);
-    format!("(D:{y:04}{mo:02}{d:02}{h:02}{mi:02}{s:02}Z)")
+    format!("(D:{y:04}{mo:02}{d:02}{h:02}{mi:02}{s:02}+00'00')")
 }
 
 #[cfg(test)]
@@ -120,7 +121,7 @@ mod tests {
 
     #[test]
     fn dates_are_in_utc() {
-        assert_eq!(pdf_date(0), "(D:19700101000000Z)");
-        assert_eq!(pdf_date(1_793_000_000), "(D:20261026073320Z)");
+        assert_eq!(pdf_date(0), "(D:19700101000000+00'00')");
+        assert_eq!(pdf_date(1_793_000_000), "(D:20261026073320+00'00')");
     }
 }

@@ -16,9 +16,9 @@ fn opts() -> AiEditingOptions {
     AiEditingOptions { title: "Sample".into(), created: Some(0) }
 }
 
-/// The program written from `doc`, as text.
+/// The program written from `doc`, as text with its CR LF line ends read as LF.
 fn program(doc: &Document) -> String {
-    String::from_utf8(export_ai_editing(doc, &opts()).unwrap().program).unwrap()
+    String::from_utf8(export_ai_editing(doc, &opts()).unwrap().program).unwrap().replace("\r\n", "\n")
 }
 
 /// `doc` written, then read back from the private data alone.
@@ -266,7 +266,8 @@ fn writing_again_gives_the_same_bytes() {
     assert_eq!(first.program, export_ai_editing(&doc, &opts()).unwrap().program);
     assert_eq!(private_data(&doc, &opts()).unwrap().0, private_data(&doc, &opts()).unwrap().0);
     // What the reader reads back is written as the same program.
-    assert_eq!(program(&read_back(&doc)), String::from_utf8(first.program).unwrap());
+    let read = export_ai_editing(&read_back(&doc), &opts()).unwrap();
+    assert_eq!(read.program, first.program);
     assert!(first.warnings.is_empty(), "{:?}", first.warnings);
 }
 
@@ -283,17 +284,18 @@ fn the_data_is_zstandard_compressed_with_the_header_as_metadata() {
     assert!(out.program.starts_with(&out.header));
     assert_eq!(p.metadata, out.header);
     let header = String::from_utf8(out.header).unwrap();
-    assert!(header.ends_with("%%EndComments\n"));
+    assert!(header.ends_with("%%EndComments\r\n"));
+    let header = header.replace("\r\n", "\n");
     for line in [
-        "%%AI8_CreatorVersion: 30.7.0\n",
-        "%AI5_FileFormat 14.0\n",
+        "%%AI8_CreatorVersion: 30.7.0\n%%For: () ()\n%%Title: (Sample)\n",
+        "%%Canvassize: 16383\n",
+        "%AI5_FileFormat 14.0\n%AI3_ColorUsage: Color\n%AI7_ImageSettings: 0\n%%DocumentCustomColors: (Gold)\n%%+ (Sky)\n%%+ (Mint)\n",
         "%AI3_Cropmarks: 0 0 200 100\n",
         "%AI5_ArtSize: 200 100\n",
-        "%AI9_ColorModel: 1\n",
-        "%AI5_NumLayers: 2\n",
-        "%%DocumentCustomColors: (Gold)\n%%+ (Sky)\n%%+ (Mint)\n",
+        "%AI9_ColorModel: 1\n%AI5_ArtFlags: 0 0 0 1 0 0 1 0 0\n%AI5_TargetResolution: 800\n%AI5_NumLayers: 2\n",
+        "%AI5_OpenViewLayers: 77\n%AI7_GridSettings: 72 8 72 8 1 0 0.7843 0.7843 0.7843 0.7843 0.7843 0.7843\n%%EndComments\n",
     ] {
-        assert!(header.contains(line), "{line}");
+        assert!(header.contains(line), "{line}\n{header}");
     }
     assert_eq!((p.container_version, p.creator_version, p.roundtrip_version, p.roundtrip_stream_type), (12, 30, 24, 2));
 }
@@ -328,7 +330,7 @@ fn many_objects_of_one_name_are_numbered_in_turn() {
         doc.insert(Some(layer), usize::MAX, n).unwrap();
     }
     let text = program(&doc);
-    let ids: std::collections::HashSet<&str> = text.lines().filter(|l| l.starts_with("%_/XMLUID")).collect();
+    let ids: std::collections::HashSet<&str> = text.lines().filter(|l| l.starts_with("%_/XMLUID : (Dot")).collect();
     assert_eq!(ids.len(), 20_000);
     assert!(text.contains("(Dot_00000000000000019999_)"));
 }
@@ -338,6 +340,61 @@ fn layers_have_fourteen_operands() {
     let text = program(&sample());
     assert!(text.contains("%AI5_BeginLayer\n1 1 1 1 0 0 1 0 79 128 255 0 50 0 Lb\n(Back) Ln\n"), "{text}");
     assert!(text.contains("%AI5_BeginLayer\n0 1 0 0 1 0 1 -1 10 200 30 0 70 0 Lb\n(Sub) Ln\n"), "{text}");
+}
+
+#[test]
+fn layers_are_named_as_xml_ids_after_their_names() {
+    let mut doc = sample();
+    let layer = doc.layers[0].id;
+    let mut n = Node::path(doc.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 1.0, 1.0)), Appearance::default());
+    n.name = Some("Back".into());
+    doc.insert(Some(layer), usize::MAX, n).unwrap();
+    let text = program(&doc);
+    assert!(text.contains("(Back) Ln\n%_/ArtDictionary :\n%_/XMLUID : (Back) ; (AI10_ArtUID) ,\n%_;\n%_\n"), "{text}");
+    assert!(text.contains("(Sub) Ln\n%_/ArtDictionary :\n%_/XMLUID : (Sub) ; (AI10_ArtUID) ,\n"), "{text}");
+    // An object named as a layer is numbered.
+    assert!(text.contains("%_/XMLUID : (Back_00000000000000000001_) ; (AI10_ArtUID) ,"), "{text}");
+    // The reader keeps the names where they were.
+    let read = read_back(&doc);
+    assert_eq!(read.layers[0].name.as_deref(), Some("Back"));
+    let names: Vec<Option<&str>> = read.layers[0].children().unwrap().iter().map(|c| c.name.as_deref()).collect();
+    assert_eq!(names.last(), Some(&Some("Back")));
+}
+
+#[test]
+fn lines_end_in_cr_lf() {
+    let mut doc = sample();
+    doc.metadata.author = "A\nB".into();
+    let out = export_ai_editing(&doc, &opts()).unwrap();
+    let text = String::from_utf8(out.program).unwrap();
+    assert_eq!(text.matches('\n').count(), text.matches("\r\n").count());
+    assert_eq!(text.matches('\r').count(), text.matches("\r\n").count());
+    // A line break in a string stays in the string, escaped.
+    assert!(text.contains("%%For: (A\\nB) ()\r\n"), "{text}");
+}
+
+#[test]
+fn the_palette_starts_with_registration() {
+    let mut doc = sample();
+    let rgb = program(&doc);
+    assert!(rgb.contains("0 0 Pb\n"), "{rgb}");
+    let cell = rgb.split("0 0 Pb\n").nth(1).unwrap().lines().take(2).collect::<Vec<_>>();
+    assert!(cell[0].ends_with(" 0 0 0 ([Registration]) 0 1 Xz") && cell[0].split(' ').count() == 11, "{cell:?}");
+    assert_eq!(cell[1], "([Registration]) Pc");
+    doc.color_mode = vectorcraft_doc::ColorMode::Cmyk;
+    assert!(program(&doc).contains("0 0 Pb\n1 1 1 1 ([Registration]) 0 Xs\n([Registration]) Pc\n"));
+    // It's the built-in swatch: reading back adds no swatch.
+    assert_eq!(swatches(&read_back(&doc)), swatches(&doc));
+}
+
+#[test]
+fn hidden_layers_open_hidden() {
+    let mut doc = sample();
+    let mut hidden = Node::layer(doc.alloc_id(), "Off", LayerColor::Preset(1));
+    hidden.visible = false;
+    doc.layers.push(Arc::new(hidden));
+    let text = program(&doc);
+    assert!(text.contains("%AI5_NumLayers: 3\n%AI5_OpenViewLayers: 776\n"), "{text}");
 }
 
 /// A 200 × 100 document of what slice 1 writes as plain paths: a gradient fill, a clipping group,
