@@ -1,6 +1,6 @@
 use super::run::normalize_panel;
 use super::slots::{perspective_grid, recent_slot, saved_selection_name, saved_selection_slot, saved_view, saved_view_slot};
-use super::*;
+use super::{Brightness, Value, VectorcraftApp};
 
 /// Checked state for toggle items.
 pub fn checked(app: &VectorcraftApp, id: &str, p: &Value) -> Option<bool> {

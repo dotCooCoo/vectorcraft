@@ -31,7 +31,7 @@ use std::collections::HashMap;
 use vectorcraft_doc::{CharPosition, CharStyle, Justify, ParaDirection, ParaStyle, ScriptMetrics, TextRun};
 
 use super::text::{self, Story};
-use super::*;
+use super::{Paint, Result, bad, fileio};
 
 /// RTF files as `file.place` reports them (not a format `document.open` reads).
 pub(super) const FORMAT: fileio::Format = fileio::Format {

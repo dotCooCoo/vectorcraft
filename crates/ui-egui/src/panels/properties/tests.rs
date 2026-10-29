@@ -828,6 +828,20 @@ fn artboard_history_key(app: &mut VectorcraftApp, ctx: &egui::Context, key: egui
     }
 }
 
+/// Duplicate the artboards, or add a new one, the way the test's history step needs.
+fn add_board(app: &mut crate::VectorcraftApp, ctx: &egui::Context, duplicate: bool) {
+    if duplicate {
+        let commands = app.run_count;
+        artboard_deletion_click(app, ctx, super::super::artboards::menu, Some("Duplicate Artboards"), egui::Modifiers::NONE);
+        assert_eq!(app.run_count, commands.wrapping_add(1));
+        assert_eq!(app.session.doc().unwrap().doc.artboards.len(), 3);
+        assert_eq!(app.session.tool_options()["active"], json!(2));
+        assert_eq!(app.view().unwrap().artboard, 2);
+    } else {
+        artboard_history_new(app, ctx);
+    }
+}
+
 fn artboard_history_delete_after_undo(key: Option<egui::Key>, duplicate: bool) {
     let mut app = artboard_deletion_app(2);
     app.session.set_tool_option("moveArt", &json!(false));
@@ -839,16 +853,7 @@ fn artboard_history_delete_after_undo(key: Option<egui::Key>, duplicate: bool) {
     assert!(!selection.is_empty(), "selected artwork catches a Clear fallthrough");
     let undo = st.history.undo.len();
     let ctx = egui::Context::default();
-    if duplicate {
-        let commands = app.run_count;
-        artboard_deletion_click(&mut app, &ctx, super::super::artboards::menu, Some("Duplicate Artboards"), egui::Modifiers::NONE);
-        assert_eq!(app.run_count, commands.wrapping_add(1));
-        assert_eq!(app.session.doc().unwrap().doc.artboards.len(), 3);
-        assert_eq!(app.session.tool_options()["active"], json!(2));
-        assert_eq!(app.view().unwrap().artboard, 2);
-    } else {
-        artboard_history_new(&mut app, &ctx);
-    }
+    add_board(&mut app, &ctx, duplicate);
     assert_eq!(app.session.doc().unwrap().history.undo.len(), undo + 1);
     artboard_history_key(&mut app, &ctx, egui::Key::Z, egui::Modifiers::COMMAND);
     let st = app.session.doc().unwrap();
@@ -856,20 +861,32 @@ fn artboard_history_delete_after_undo(key: Option<egui::Key>, duplicate: bool) {
     assert_eq!(st.selection, selection);
     assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo, 1));
     assert!(!st.is_dirty());
+    delete_again_after_undo(&mut app, &ctx, key, &before, &selection, undo);
+}
+
+/// Delete the normalized shown board after Undo, then verify its own Undo and Redo.
+fn delete_again_after_undo(
+    app: &mut crate::VectorcraftApp,
+    ctx: &egui::Context,
+    key: Option<egui::Key>,
+    before: &std::sync::Arc<vectorcraft_doc::Document>,
+    selection: &vectorcraft_doc::Selection,
+    undo: usize,
+) {
     // Capture the state before another panel or pointer can repair it. Still exercise deletion
     // on RED: keyboard deletion used to do nothing; Properties already clamped its own target.
     let after_undo = (app.view().unwrap().artboard, app.session.tool_options());
     if let Some(key) = key {
-        artboard_history_key(&mut app, &ctx, key, egui::Modifiers::NONE);
+        artboard_history_key(app, ctx, key, egui::Modifiers::NONE);
     } else {
-        let texts = panel_frame(&mut app, &ctx, vec![], show);
+        let texts = panel_frame(app, ctx, vec![], show);
         assert!(texts.iter().any(|(label, _)| label == &before.artboards[1].name));
-        artboard_deletion_click(&mut app, &ctx, show, Some("Delete Artboard"), egui::Modifiers::NONE);
+        artboard_deletion_click(app, ctx, show, Some("Delete Artboard"), egui::Modifiers::NONE);
     }
     let st = app.session.doc().unwrap();
     assert_eq!(st.doc.artboards, vec![before.artboards[0].clone()], "deletion after Undo removes the shown second board");
     assert_eq!(st.doc.layers, before.layers, "ordinary artwork survives without geometry or style changes");
-    assert_eq!(st.selection, selection, "deletion never falls through to Clear");
+    assert_eq!(&st.selection, selection, "deletion never falls through to Clear");
     assert_eq!(after_undo.0, 1, "Undo normalizes the navigator before another gesture");
     assert_eq!(after_undo.1, json!({"active": 1, "selected": [1], "moveArt": false, "scaleArt": true}));
     assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo + 1, 0));
@@ -879,18 +896,18 @@ fn artboard_history_delete_after_undo(key: Option<egui::Key>, duplicate: bool) {
     assert_eq!(app.session.tool_options(), json!({"active": 0, "selected": [0], "moveArt": false, "scaleArt": true}));
     let deleted = st.doc.clone();
 
-    artboard_history_key(&mut app, &ctx, egui::Key::Z, egui::Modifiers::COMMAND);
+    artboard_history_key(app, ctx, egui::Key::Z, egui::Modifiers::COMMAND);
     let st = app.session.doc().unwrap();
-    assert_eq!(st.doc, before);
-    assert_eq!(st.selection, selection);
+    assert_eq!(st.doc.as_ref(), before.as_ref());
+    assert_eq!(&st.selection, selection);
     assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo, 1));
     assert!(!st.is_dirty());
     // Valid current selection stays put; history does not restore an earlier artboard selection.
     assert_eq!(app.session.tool_options()["selected"], json!([0]));
-    artboard_history_key(&mut app, &ctx, egui::Key::Z, egui::Modifiers::COMMAND | egui::Modifiers::SHIFT);
+    artboard_history_key(app, ctx, egui::Key::Z, egui::Modifiers::COMMAND | egui::Modifiers::SHIFT);
     let st = app.session.doc().unwrap();
-    assert_eq!(st.doc, deleted);
-    assert_eq!(st.selection, selection);
+    assert_eq!(st.doc.as_ref(), deleted.as_ref());
+    assert_eq!(&st.selection, selection);
     assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo + 1, 0));
     assert!(st.is_dirty());
 }

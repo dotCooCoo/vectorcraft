@@ -1,7 +1,10 @@
 use super::output::{sanitize_id, valid_xml_value, xml_attr_escape};
 use super::paint::{StrokePlan, has_raster, pixel_gradient};
 use super::text::OUTLINE_TOLERANCE;
-use super::*;
+use super::{
+    Affine, AppearanceItem, BezPath, BlendMode, Document, FillRule, Node, NodeKind, Paint, PathData, Props, Rect, StrokeLayer, Writer, Written,
+    WrittenShape, blend_css, css, fmt_num, stroke, xml_escape,
+};
 
 /// A symbol's `<symbol>` def and the instance transforms that can `<use>` it.
 pub(super) struct SymbolDef {

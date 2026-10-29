@@ -1,5 +1,7 @@
 use super::prefs::save_prefs;
-use super::*;
+#[cfg(all(windows, not(target_vendor = "win7")))]
+use super::windows_stylus;
+use super::{App, VectorcraftApp, file_access, window};
 
 /// The parts of [`App::raw_input_hook`] that every window needs, for the OS windows of floating
 /// panels: a click or Escape that closes the macOS menu bar's open menu, and the pen barrel
@@ -10,12 +12,12 @@ pub(crate) fn native_input_hook(app: &VectorcraftApp) -> Option<vectorcraft_ui_e
     app.services.native_menu.is_some().then(|| std::sync::Arc::new(mac_menu::raw_input_hook) as vectorcraft_ui_egui::NativeInputHook)
 }
 
-#[cfg(all(windows, not(target_vendor = "win7")))]
+#[cfg(windows)]
 pub(crate) fn native_input_hook(_: &VectorcraftApp) -> Option<vectorcraft_ui_egui::NativeInputHook> {
     Some(std::sync::Arc::new(windows_stylus::raw_input_hook))
 }
 
-#[cfg(not(any(target_os = "macos", all(windows, not(target_vendor = "win7")))))]
+#[cfg(not(any(target_os = "macos", windows)))]
 pub(crate) fn native_input_hook(_: &VectorcraftApp) -> Option<vectorcraft_ui_egui::NativeInputHook> {
     None
 }
@@ -41,7 +43,7 @@ impl eframe::App for App {
             mac_menu::raw_input_hook(raw);
         }
         // A pen contact with the barrel button held presses the secondary button (Windows Ink).
-        #[cfg(all(windows, not(target_vendor = "win7")))]
+        #[cfg(windows)]
         windows_stylus::raw_input_hook(raw);
         file_access::unconfined(|| self.app.raw_input_hook(ctx, raw));
     }
@@ -65,14 +67,9 @@ impl eframe::App for App {
             discard_marked_text();
         }
     }
-    #[cfg(not(feature = "windows7"))]
     fn on_exit(&mut self) {
         file_access::unconfined(|| save_prefs(&self.app));
         end_before_teardown(self.frames);
-    }
-    #[cfg(feature = "windows7")]
-    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
-        file_access::unconfined(|| save_prefs(&self.app));
     }
 }
 

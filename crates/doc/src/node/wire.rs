@@ -3,7 +3,7 @@ use super::extras::{Extras, NO_EXTRAS, NodeExtras};
 use super::ids::NodeId;
 use super::kind::NodeKind;
 use super::opacity::{Knockout, OpacityMask};
-use super::*;
+use super::{Appearance, BlendMode, Deserialize, Node, PathData, Serialize, one, yes};
 
 /// How a [`Node`] is written: the flat field list of the file format, in its order, borrowed from
 /// the node and its extras (nothing is copied). The node reads back through `NodeWire`.

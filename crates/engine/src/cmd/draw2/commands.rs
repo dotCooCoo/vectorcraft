@@ -2,7 +2,7 @@ use super::anchors::{convert_anchor, curvature, curvature_edit, remove_anchor, r
 use super::cut::{erase_region, erase_segments, knife, split};
 use super::freehand::{blob, freehand};
 use super::smooth::{join_scrub, smooth_region};
-use super::*;
+use super::{CommandSpec, cmd, has_anchors, has_doc, has_selection};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![

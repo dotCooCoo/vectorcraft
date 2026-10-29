@@ -2,7 +2,10 @@ use super::common::{
     brush_region, path_kind, path_mut, path_of, points_param, poly_bounds, samples_param, stroke_paint, stroke_pressure, subpath_len, target_paths,
     within_input_bound,
 };
-use super::*;
+use super::{
+    Anchor, Appearance, BTreeSet, BoolOp, Color, EngineError, FillRule, NewArt, NodeId, NodeKind, Paint, PathData, Point, PressureProfile, Result,
+    Selection, Session, SimplifyOptions, SubPath, Value, bad, id_param, insert_look, json, number_or, po, remove_each, str_param, switch_or,
+};
 
 // ---------- Pencil / Paintbrush ----------
 

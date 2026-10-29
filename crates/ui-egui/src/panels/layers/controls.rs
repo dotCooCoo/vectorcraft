@@ -1,5 +1,8 @@
 use super::model::{ObjectKind, RowState, names, parse_names, toggled};
-use super::*;
+use super::{
+    Document, HashSet, LayersDrag, Node, NodeId, NodeKind, PanelDrag, Sense, Stroke, StrokeKind, Ui, Value, VectorcraftApp, View, json,
+    last_selected, see_selection, vec2, widgets,
+};
 
 /// The Filter button, lit while a filter is on, and its popup: Clear All, the object kinds under
 /// By Object and the row states under By Layer, each ticked or not. A tick, or Clear All, runs
