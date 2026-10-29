@@ -1564,3 +1564,50 @@ fn ime_surrounding_reports_the_document_when_it_changed_under_the_session() {
     assert_eq!(stale, ImeSurrounding::Available { text: "XYZ".into(), cursor: 3, anchor: 3 });
     assert!(!tool.ime_session_matches_document(&cx(&d, &sel, &p)), "the commit starts a fresh session");
 }
+
+#[test]
+fn shift_enter_inserts_soft_return() {
+    let (mut d, id, mut tool) = editing("Hello World");
+    let (sel, p) = (Selection::default(), paint());
+    tool.caret = 5;
+    tool.anchor = 5;
+    let snap = d.clone();
+    let shift = Mods { shift: true, ..Default::default() };
+    let acts = tool.key(&cx(&d, &sel, &p), ToolKey::Enter, shift);
+    apply(&mut d, &snap, &acts);
+    let NodeKind::Text(t) = &d.node(id).unwrap().kind else { panic!() };
+    assert_eq!(t.plain_text(), "Hello\u{2028} World");
+    // Plain Enter inserts standard newline
+    let acts = tool.key(&cx(&d, &sel, &p), ToolKey::Enter, Mods::default());
+    apply(&mut d, &snap, &acts);
+    let NodeKind::Text(t) = &d.node(id).unwrap().kind else { panic!() };
+    assert_eq!(t.plain_text(), "Hello\u{2028}\n World");
+}
+
+#[test]
+fn soft_return_in_a_list_item_keeps_tab_within_the_paragraph() {
+    use vectorcraft_doc::text::{Bullet, ParaList};
+
+    let (mut d, id, mut tool) = editing("One");
+    let NodeKind::Text(t) = &mut d.node_mut(id).unwrap().kind else { panic!("text") };
+    t.set_all_paras(vectorcraft_doc::ParaStyle { list: Some(ParaList::bulleted(Bullet::Dot)), ..Default::default() });
+    tool.caret = 3;
+    tool.anchor = 3;
+    let snapshot = d.clone();
+    let acts = key(&mut tool, &d, ToolKey::Enter, SHIFT);
+    apply(&mut d, &snapshot, &acts);
+    let NodeKind::Text(t) = &d.node(id).unwrap().kind else { panic!("text") };
+    assert_eq!(t.plain_text(), "One\u{2028}");
+    assert_eq!(t.paragraph_count(), 1);
+    assert_eq!(t.para_at(0).list, Some(ParaList::bulleted(Bullet::Dot)));
+
+    let acts = key(&mut tool, &d, ToolKey::Tab, Mods::default());
+    assert!(acts.iter().any(
+        |a| matches!(a, Action::Preview(cmd, p) if cmd == "text.editRange" && p["runs"][0]["text"].as_str().is_some_and(|s| s.ends_with('\t')))
+    ));
+
+    tool.caret = 0;
+    tool.anchor = 0;
+    let acts = key(&mut tool, &d, ToolKey::Tab, Mods::default());
+    assert!(acts.iter().any(|a| matches!(a, Action::Exec(cmd, p) if cmd == "text.setFormat" && p["listLevel"] == 2)));
+}

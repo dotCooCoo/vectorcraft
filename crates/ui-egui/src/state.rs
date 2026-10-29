@@ -555,6 +555,9 @@ pub struct UiState {
     /// them (#1732).
     #[serde(default)]
     pub transform_each: Value,
+    /// The spacing used the last time Rearrange All Artboards was confirmed.
+    #[serde(default)]
+    pub rearrange_artboards_spacing: Value,
     /// The DXF Import Options chosen last (fit, scaleLineweights, center, mergeLayers; null:
     /// never used).
     #[serde(default)]
@@ -878,6 +881,7 @@ impl Default for UiState {
             simplify: Value::Null,
             move_options: Value::Null,
             transform_each: Value::Null,
+            rearrange_artboards_spacing: Value::Null,
             dxf_import: Value::Null,
             home: None,
             trace_hold_source: None,

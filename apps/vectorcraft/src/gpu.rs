@@ -126,13 +126,45 @@ pub fn preferred_compositor(pref: Option<&str>, env: Option<PowerPreference>) ->
     if automatic(pref, env) { crate::compositor_gpu::compositor_gpu() } else { None }
 }
 
-/// The graphics backends the window starts with: on Windows Direct3D 12, falling back to OpenGL,
-/// unless `WGPU_BACKEND` names others (`env_set`; `default` then holds them). Creating a Vulkan
-/// instance loads every installed Vulkan driver into the process, and a faulty one (Intel's
-/// `igvk64.dll`, #806) crashed the app before its window appeared. DX12 is Windows' own backend,
-/// as in PdfCraft. Elsewhere, `default`.
-pub fn backends(default: Backends, env_set: bool) -> Backends {
-    if cfg!(windows) && !env_set { Backends::DX12 | Backends::GL } else { default }
+/// The graphics backends the window starts with: on Windows Direct3D 12, with OpenGL beside it
+/// only when `opengl` ([`windows_opengl`]), unless `WGPU_BACKEND` names others (`env_set`;
+/// `default` then holds them). Creating a Vulkan instance loads every installed Vulkan driver into
+/// the process, and a faulty one (Intel's `igvk64.dll`, #806) crashed the app before its window
+/// appeared. DX12 is Windows' own backend, as in PdfCraft. Elsewhere, `default`.
+pub fn backends(default: Backends, env_set: bool, opengl: bool) -> Backends {
+    match (cfg!(windows) && !env_set, opengl) {
+        (true, true) => Backends::DX12 | Backends::GL,
+        (true, false) => Backends::DX12,
+        (false, _) => default,
+    }
+}
+
+/// Whether a Windows start lists OpenGL's adapters beside Direct3D 12's: only when it leaves an
+/// adapter out (an earlier start crashed on it, or a restart failed on it) or DX12 lists none
+/// (Windows 7). wgpu's OpenGL backend keeps a hidden window on a thread that pumps no messages,
+/// and Windows waits on it when the input language changes, so the whole app hung on a switch to
+/// another keyboard layout (#4150, gfx-rs/wgpu#10504), even drawing with DX12.
+pub fn windows_opengl(left_out: &LeftOut) -> bool {
+    left_out.opengl_only || !left_out.adapters.is_empty() || !skipped().is_empty() || !dx12_lists_adapters()
+}
+
+/// Whether Direct3D 12 lists any adapter, WARP's software one included. A driver that crashes here
+/// crashes a start while it lists the adapters, which the next start answers with OpenGL alone.
+#[cfg(windows)]
+fn dx12_lists_adapters() -> bool {
+    let mut descriptor = wgpu::InstanceDescriptor::new_without_display_handle();
+    descriptor.backends = Backends::DX12;
+    // FXC is part of Windows, as for the window's own instance (#1194).
+    descriptor.backend_options.dx12.shader_compiler = wgpu::Dx12Compiler::Fxc;
+    let instance = wgpu::Instance::new(descriptor);
+    let found = pollster::block_on(instance.enumerate_adapters(Backends::DX12)).len();
+    log::info!("Direct3D 12 lists {found} graphics adapters");
+    found > 0
+}
+
+#[cfg(not(windows))]
+fn dx12_lists_adapters() -> bool {
+    false
 }
 
 /// The largest texture side to ask the device for, which bounds the window's surface: the

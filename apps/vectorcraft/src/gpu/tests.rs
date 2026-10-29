@@ -451,13 +451,25 @@ fn a_windows_gpu_renders_through_dx12_before_vulkan() {
 #[test]
 fn windows_never_loads_vulkan_drivers_unless_asked() {
     let all = Backends::all();
-    let start = backends(all, false);
+    let start = backends(all, false, false);
+    let fallback = backends(all, false, true);
     if cfg!(windows) {
-        assert_eq!(start, Backends::DX12 | Backends::GL, "#806");
+        assert_eq!(start, Backends::DX12, "#806, and no OpenGL unless needed (#4150)");
+        assert_eq!(fallback, Backends::DX12 | Backends::GL);
     } else {
-        assert_eq!(start, all);
+        assert_eq!((start, fallback), (all, all));
     }
-    assert_eq!(backends(Backends::VULKAN, true), Backends::VULKAN, "WGPU_BACKEND=vulkan still picks it");
+    assert_eq!(backends(Backends::VULKAN, true, false), Backends::VULKAN, "WGPU_BACKEND=vulkan still picks it");
+    assert_eq!(backends(Backends::GL, true, false), Backends::GL, "WGPU_BACKEND=gl still picks it");
+}
+
+#[test]
+fn windows_lists_opengl_once_a_start_leaves_an_adapter_out() {
+    let crashed = LeftOut { adapters: vec!["Dx12:8086:3ea0".into()], ..LeftOut::default() };
+    assert!(windows_opengl(&crashed), "#2243: the next start can fall back to OpenGL");
+    let listing = LeftOut { opengl_only: true, ..LeftOut::default() };
+    assert!(windows_opengl(&listing));
+    assert_eq!(listing.backends(backends(Backends::all(), false, true)), Backends::GL);
 }
 
 #[test]

@@ -354,9 +354,12 @@ fn canvas_input(app: &mut VectorcraftApp, ui: &Ui, resp: &egui::Response, rect: 
         handle_input(app, ui, resp, rect);
         // `hover_doc` is the document point under the pointer in the view `handle_input` left. The
         // wheel, a pan, a Rotate View drag, the Zoom tool and a Presentation Mode click move the view
-        // there.
+        // there. A dialog, floating panel or menu over the canvas hides it (Object Highlighting
+        // showed through them: #4518), unless a drag that began on the canvas goes on there.
         let moved = Xf::new(rect, app.view().unwrap_or(&View::default()));
-        app.hover_doc = ui.input(|i| i.pointer.hover_pos()).filter(|p| rect.contains(*p)).map(|p| moved.to_doc(p));
+        let dragging = ui.data(|d| d.get_temp::<Drag>(drag_id()).is_some());
+        app.hover_doc =
+            ui.input(|i| i.pointer.hover_pos()).filter(|p| rect.contains(*p) && (dragging || drag::on_canvas(ui, resp, *p))).map(|p| moved.to_doc(p));
     }
 }
 
@@ -370,9 +373,12 @@ fn canvas_cursor(app: &mut VectorcraftApp, ui: &Ui, view_info: vectorcraft_engin
     let space = ui.input(|i| i.key_down(egui::Key::Space));
     let drag = ui.data(|d| d.get_temp::<Drag>(drag_id()));
     let panning = matches!(drag, Some(Drag::Pan { .. }));
-    let zooming = if space { m.command } else { app.session.tool_id() == "zoom" };
+    // A zoom drag keeps its cursor when Space is pressed (with or without Shift) or Cmd is let go.
+    let zoom_drag = matches!(drag, Some(Drag::ZoomBox { .. } | Drag::ZoomScrub { .. }));
+    let zooming = zoom_drag || if space { m.command } else { app.session.tool_id() == "zoom" };
     // A rotating drag keeps its cursor when Shift is let go.
-    let rotating = matches!(drag, Some(Drag::RotateView { .. })) || if space { m.shift && !m.command } else { app.session.tool_id() == "rotateView" };
+    let rotating = matches!(drag, Some(Drag::RotateView { .. }))
+        || (!zoom_drag && if space { m.shift && !m.command } else { app.session.tool_id() == "rotateView" });
     // The hand and the magnifier are drawn like the tool cursors below: Windows has no
     // system cursor for them (winit shows the four-headed move cursor for Grab).
     let view_cursor = if panning {

@@ -202,6 +202,11 @@ pub struct Prefs {
     /// edit it.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub flattener_presets: Vec<cmd::FlattenerPreset>,
+    /// Image Trace panel › Manage Presets: the user's tracing presets (the built-in ones aren't
+    /// stored). Not a `prefs.set` key or group (resetting the preferences keeps them):
+    /// `imageTrace.presets.*` edit it.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub trace_presets: Vec<cmd::TracePreset>,
     /// Width profiles saved to the Stroke panel's Profile list (`stroke.widthProfile.*`). Not a
     /// Preferences dialog field, so it has no [`cmd::prefscmds::PREF_SPECS`] row.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -242,6 +247,12 @@ pub struct Prefs {
     /// Preferences dialog field: resetting the preferences keeps it; `webExport.presets.*` edit it.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub web_export_presets: Vec<cmd::webexport::WebPreset>,
+    /// The VectorCraft Options a native Save or Save As used last (Preview, Embed ICC Profiles,
+    /// Create PDF-Compatible File…; not the artboards it picked, nor Use Compression, which its
+    /// preference decides): `file.formatOptions` offers them for a document not yet saved as a
+    /// native file. Not a Preferences dialog field.
+    #[serde(skip_serializing_if = "serde_json::Map::is_empty")]
+    pub native_save_options: serde_json::Map<String, serde_json::Value>,
     /// Save for Web: the settings the dialog opens on (`webExport.settings`); none until set.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub web_export_settings: Option<cmd::webexport::WebSettings>,
@@ -424,6 +435,7 @@ impl Default for Prefs {
             eyedropper: Default::default(),
             pathfinder: Default::default(),
             flattener_presets: vec![],
+            trace_presets: vec![],
             width_profiles: vec![],
             japanese_crop_marks: false,
             new_art_basic: true,
@@ -436,6 +448,7 @@ impl Default for Prefs {
             append_converted: true,
             use_compression: false,
             web_export_presets: vec![],
+            native_save_options: serde_json::Map::new(),
             web_export_settings: None,
             print_presets: vec![],
             constrain_proportions: false,

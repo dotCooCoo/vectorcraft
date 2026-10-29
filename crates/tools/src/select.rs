@@ -37,7 +37,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::hit::{Hit, HitKind, hit_test, marquee, objects_at};
+use vectorcraft_doc::hit::{Hit, HitKind, hit_test, marquee, objects_at, selected_hidden_at};
 use vectorcraft_doc::{NodeId, OrientedBox};
 use vectorcraft_geom::{Affine, Point, Rect, Vec2};
 
@@ -740,7 +740,7 @@ impl Tool for SelectionTool {
                         out
                     }
                     None => {
-                        self.state = State::Marquee { start: p, cur: p, toggle: m.shift, enclosed: false };
+                        self.press_nothing(cx, p, grab, m);
                         vec![]
                     }
                 }
@@ -1191,6 +1191,17 @@ impl SelectionTool {
 }
 
 impl SelectionTool {
+    /// A press at `p` that hits no object starts a marquee, except where a clipping mask hides
+    /// the art of a selected object (picked in the Layers panel, say): there, without Shift, it
+    /// grabs the selection by that art (at `grab`), as a press on its visible part does.
+    fn press_nothing(&mut self, cx: &ToolContext, p: Point, grab: Point, m: Mods) {
+        self.state = if !m.shift && selected_hidden_at(cx.doc, p, cx.selection_hit_options(), &cx.selection.objects).is_some() {
+            State::Moving { start: grab, press: p, hold: grab, began: false, deselect: None, key: None }
+        } else {
+            State::Marquee { start: p, cur: p, toggle: m.shift, enclosed: false }
+        };
+    }
+
     fn drag_moving(&mut self, cx: &ToolContext, p: Point, m: Mods, (start, press, hold, began): (Point, Point, Point, bool)) -> Vec<Action> {
         let mut out = vec![];
         if !began {

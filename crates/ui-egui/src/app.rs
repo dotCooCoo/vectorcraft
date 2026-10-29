@@ -12,7 +12,7 @@ use super::{
     Arc, AutomationRoots, ControlRequest, Ordering, Receiver, Session, UiState, Value, VectorcraftApp, View, ViewInfo, background, canvas, chrome,
     clipboard_probe, dialogs, export_progress, file_access, fileio, font_menu, graphics, i18n, io, json, menus, native_menu, opening, palette,
     panel_docking, panels, picks, place, placing, plugin_runs, prefs_dialog, recovery, screen_color, scrub, shortcut_editor, shortcuts, theme,
-    titlebar, toolbar, tools_float, unsaved, updates_ui, widgets,
+    titlebar, toolbar, tools_float, trace_runs, unsaved, updates_ui, widgets,
 };
 
 mod clipboard;
@@ -79,6 +79,7 @@ impl VectorcraftApp {
             titlebar_inset: 0.0,
             last_effect: None,
             last_warp: None,
+            character_focus: None,
             run_count: 0,
             clipboard_out: None,
             clipboard_published: None,
@@ -120,6 +121,7 @@ impl VectorcraftApp {
             opening: Default::default(),
             plugin_runs: Default::default(),
             placing: Default::default(),
+            trace_runs: Default::default(),
             recovery: Default::default(),
             host_modifiers: Default::default(),
             forwarded: Vec::new(),
@@ -288,6 +290,7 @@ impl VectorcraftApp {
         screen_color::poll(self, ctx);
         opening::poll(self);
         plugin_runs::poll(self);
+        trace_runs::poll(self);
         placing::poll(self);
         #[cfg(not(target_arch = "wasm32"))]
         self.tick_link_updates(ctx, now);
@@ -486,6 +489,7 @@ impl VectorcraftApp {
         updates_ui::show(self, &ctx);
         export_progress::show(self, &ctx);
         plugin_runs::show(self, &ctx);
+        trace_runs::show(self, &ctx);
         palette::show(self, &ctx);
         if self.custom_titlebar {
             titlebar::resize_zones(ui);
