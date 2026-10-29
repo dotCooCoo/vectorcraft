@@ -1,7 +1,7 @@
 use super::{
-    Arc, Beside, BuilderMap, EngineError, FillRule, Node, NodeId, PathData, Point, Rect, Result, Session, SubPath, Touched, Value, b, bad,
-    check_numbers, f64_or, fill_param, finite, gap_param, ids_json, json, marquee_param, po, points_param, remnant, replace_roots,
-    replace_with_pieces, root_ids, shape_node, switch_or,
+    Arc, Beside, BuilderMap, EngineError, FillRule, Node, NodeId, PathData, Point, Rect, Result, Session, Touched, Value, b, bad, check_numbers,
+    f64_or, fill_param, finite, gap_param, ids_json, json, marquee_param, po, points_param, remnant, replace_roots, replace_with_pieces, root_ids,
+    shape_node, switch_or,
 };
 
 pub(super) fn sb_merge(s: &mut Session, p: &Value) -> Result<Value> {
