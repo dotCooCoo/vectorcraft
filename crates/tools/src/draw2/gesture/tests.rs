@@ -301,9 +301,7 @@ fn blob_brush_sends_its_fidelity() {
 }
 
 /// Shift keeps a Blob Brush stroke on the horizontal or vertical line through the press point,
-/// whichever is nearer to the pointer, at 90° steps from the Constrain Angle; the points
-/// dragged with Shift held move to the other line together, and each point follows the Shift
-/// state of its own event.
+/// with its axis chosen by the first clear axial movement. Crossing it never moves earlier samples.
 #[test]
 fn blob_brush_shift_keeps_the_stroke_horizontal_or_vertical() {
     let (d, _) = doc_with_rect();
@@ -311,46 +309,51 @@ fn blob_brush_shift_keeps_the_stroke_horizontal_or_vertical() {
     let p = paint();
     let mut cx = cx(&d, &s, &p);
     let shift = Mods { shift: true, ..Default::default() };
-    let blob = |acts: &[Vec<Action>]| -> Vec<(f64, f64)> {
-        let Some(Action::Exec(c, v)) = acts.last().and_then(|a| a.first()) else { panic!("{acts:?}") };
-        assert_eq!(c, "path.blob");
-        v["points"].as_array().unwrap().iter().map(|q| (q[0].as_f64().unwrap(), q[1].as_f64().unwrap())).collect()
-    };
     let mut t = GestureTool::new("blobBrush");
-    let pts = blob(&drag_held(&mut t, &cx, &[(0.0, 0.0), (30.0, 5.0), (50.0, 8.0)], shift));
-    assert_eq!(pts.len(), 3);
-    assert!(pts.iter().all(|q| q.1 == 0.0 && q.0 >= 0.0), "{pts:?}");
-    let pts = blob(&drag_held(&mut t, &cx, &[(0.0, 0.0), (5.0, 30.0), (8.0, 50.0)], shift));
-    assert!(pts.iter().all(|q| q.0.abs() < 1e-9 && q.1 >= 0.0), "{pts:?}");
-    // A pointer that crosses to the vertical line takes the points before it along, each on
-    // its own side of the press point and at its own distance.
-    let pts = blob(&drag_held(&mut t, &cx, &[(0.0, 0.0), (-40.0, -2.0), (100.0, 99.0), (90.0, 120.0)], shift));
-    assert_eq!(pts.len(), 4, "{pts:?}");
-    assert!(pts.iter().all(|q| q.0.abs() < 1e-9), "{pts:?}");
-    assert!((pts[1].1 + 1604f64.sqrt()).abs() < 1e-9 && (pts[2].1 - 19801f64.sqrt()).abs() < 1e-9 && (pts[3].1 - 150.0).abs() < 1e-9, "{pts:?}");
-    // Without Shift the stroke follows the pointer.
-    let pts = blob(&drag_held(&mut t, &cx, &[(0.0, 0.0), (30.0, 5.0), (50.0, 8.0)], Mods::default()));
-    assert_eq!(pts, vec![(0.0, 0.0), (30.0, 5.0), (50.0, 8.0)]);
-    // Shift pressed and let go mid-stroke constrains only the points dragged while it is down,
-    // and a later press of Shift leaves the points of the earlier one where they are.
     let ev = |k, x, y, m| PointerEvent::new(k, x, y).with_mods(m);
-    t.pointer(&cx, &ev(PointerKind::Down, 0.0, 0.0, Mods::default()));
-    t.pointer(&cx, &ev(PointerKind::Drag, 20.0, 10.0, Mods::default()));
-    t.pointer(&cx, &ev(PointerKind::Drag, 40.0, 10.0, shift));
-    t.pointer(&cx, &ev(PointerKind::Drag, 60.0, 10.0, Mods::default()));
-    let pts = blob(&[t.pointer(&cx, &ev(PointerKind::Up, 10.0, 80.0, shift))]);
-    assert_eq!((pts.len(), pts[1], pts[3]), (5, (20.0, 10.0), (60.0, 10.0)), "{pts:?}");
-    assert!(pts[2].1 == 0.0 && (pts[2].0 - 1700f64.sqrt()).abs() < 1e-9, "{pts:?}");
-    assert!(pts[4].0.abs() < 1e-9 && (pts[4].1 - 6500f64.sqrt()).abs() < 1e-9, "{pts:?}");
-    // The axes turn with the Constrain Angle.
-    cx.constrain_angle = 30.0;
-    let pts = blob(&drag_held(&mut t, &cx, &[(0.0, 0.0), (40.0, -20.0)], shift));
-    let a = (-pts[1].1).atan2(pts[1].0).to_degrees();
-    assert!((a - 30.0).abs() < 1e-9, "{pts:?}");
-    // A pointer back at the press point leaves the stroke on its line.
-    let pts = blob(&drag_held(&mut t, &cx, &[(0.0, 0.0), (40.0, -20.0), (0.0, 0.0)], shift));
-    let a = (-pts[1].1).atan2(pts[1].0).to_degrees();
-    assert!(pts.len() == 3 && pts[2] == (0.0, 0.0) && (a - 30.0).abs() < 1e-9, "{pts:?}");
+    for zoom in [0.5, 1.0, 4.0] {
+        cx.zoom = zoom;
+        t.pointer(&cx, &ev(PointerKind::Down, 0.0, 0.0, shift));
+        t.pointer(&cx, &ev(PointerKind::Drag, 4.0 / zoom, 4.0 / zoom, shift));
+        assert_eq!(t.points, vec![Point::ZERO]);
+        assert!(t.overlays(&cx).is_empty());
+        t.pointer(&cx, &ev(PointerKind::Drag, 1.0 / zoom, 0.5 / zoom, shift));
+        assert_eq!(t.points.len(), 1, "small component has a strict bound");
+        t.pointer(&cx, &ev(PointerKind::Drag, 1.0 / zoom, 0.0, shift));
+        let first = t.points[1];
+        t.pointer(&cx, &ev(PointerKind::Drag, 3.0 / zoom, 10.0 / zoom, shift));
+        assert_eq!(t.points[1], first);
+        assert!(t.points.iter().all(|p| p.y.abs() < 1e-9));
+        // Release Shift: freehand resumes without relocating the constrained points.
+        t.pointer(&cx, &ev(PointerKind::Drag, 8.0 / zoom, 12.0 / zoom, Mods::default()));
+        assert_eq!(t.points.last(), Some(&Point::new(8.0 / zoom, 12.0 / zoom)));
+        t.pointer(&cx, &ev(PointerKind::Drag, 0.0, 15.0 / zoom, shift));
+        assert_eq!(t.points[1], first);
+        assert!(t.points.last().unwrap().x.abs() < 1e-9);
+        t.pointer(&cx, &ev(PointerKind::Up, 0.0, 15.0 / zoom, shift));
+    }
+    // Exact quarter turns preserve the strict half-pixel boundary in either direction.
+    for angle in [-450.0, -180.0, -90.0, 90.0, 180.0, 450.0] {
+        cx.constrain_angle = angle;
+        cx.zoom = 1.0;
+        let axes = vectorcraft_geom::constrain_axes(angle).unwrap();
+        for (x, y) in [(1.0, 0.5), (0.5, 1.0), (-1.0, -0.5), (-0.5, -1.0)] {
+            t.pointer(&cx, &ev(PointerKind::Down, 0.0, 0.0, shift));
+            let at = axes * Point::new(x, y);
+            t.pointer(&cx, &ev(PointerKind::Drag, at.x, at.y, shift));
+            assert_eq!(t.points, vec![Point::ZERO], "angle {angle}, ({x}, {y}) stays pending");
+            assert!(t.shift_line.is_none());
+            let at = axes * Point::new(x, 0.0);
+            t.pointer(&cx, &ev(PointerKind::Drag, at.x, at.y, shift));
+            assert_eq!(t.shift_line.is_some(), x.abs() >= 1.0);
+            t.clear();
+        }
+    }
+    cx.constrain_angle = 0.0;
+    // A pending diagonal released without locking makes the ordinary dot at the press.
+    t.pointer(&cx, &ev(PointerKind::Down, 20.0, 20.0, shift));
+    let acts = t.pointer(&cx, &ev(PointerKind::Up, 30.0, 30.0, shift));
+    assert!(matches!(&acts[0], Action::Exec(c, v) if c == "path.blob" && v["points"] == json!([[20.0, 20.0]])), "{acts:?}");
 }
 
 /// Alt switches the Blob Brush to the Smooth tool: held before the press, or pressed before the

@@ -2987,6 +2987,7 @@ mark-style	Japanese	Japanisch
 	Show Original Path	Originalpfad einblenden
 	Open this dialog with these settings next time	Dieses Dialogfeld nächstes Mal mit diesen Einstellungen öffnen
 	Auto-Simplify	Automatisch vereinfachen
+	Auto-Smooth	Automatisch glätten
 	Color Panel Options	Optionen für das Farbbedienfeld
 	Show Package	Paket anzeigen
 	Show Panel	Bedienfeld einblenden
@@ -3023,6 +3024,7 @@ mark-style	Japanese	Japanisch
 	Simplify	Vereinfachen
 	Simplify:	Vereinfachen:
 	Simplify…	Vereinfachen…
+	Smooth…	Glätten…
 	Simulate Colored Paper	Farbiges Papier simulieren
 	Simulate Paper	Papier simulieren
 	Double Column	Zweispaltig
@@ -3930,6 +3932,7 @@ theme	Appearance	Erscheinungsbild
 @msg	videoRulerPixelAspectRatio must be a number from 0.1 to 10	videoRulerPixelAspectRatio muss eine Zahl von 0,1 bis 10 sein
 @msg	the Color Picker is not open	der Farbwähler ist nicht geöffnet
 @msg	the Simplify slider is not open	der Regler „Vereinfachen“ ist nicht geöffnet
+@msg	the Smooth slider is not open	der Regler „Glätten“ ist nicht geöffnet
 @msg	the screen color sampler is already open	die Farbaufnahme vom Bildschirm ist bereits geöffnet
 @msg	this system has no screen color sampler	dieses System hat keine Farbaufnahme vom Bildschirm
 @msg	bad colour `{hex}` (#rrggbb)	ungültige Farbe `{hex}` (#rrggbb)
@@ -4002,6 +4005,7 @@ theme	Appearance	Erscheinungsbild
 @msg	missing `id` (see plugin.list)	`id` fehlt (siehe plugin.list)
 @msg	missing `name`	`name` fehlt
 @msg	missing `tool`	`tool` fehlt
+@msg	missing id	id fehlt
 @msg	missing index	der Index fehlt
 @msg	missing number `{key}`	die Zahl `{key}` fehlt
 @msg	missing integer `{key}`	die ganze Zahl `{key}` fehlt
@@ -4035,6 +4039,7 @@ theme	Appearance	Erscheinungsbild
 @msg	no current layer	keine aktuelle Ebene
 @msg	no data	keine Daten
 @msg	no dialog open	kein Dialogfeld geöffnet
+@msg	the open dialog has no Reset	das geöffnete Dialogfeld hat keine Schaltfläche „Zurücksetzen“
 @msg	no document	kein Dokument
 @msg	no document open	kein Dokument geöffnet
 @msg	no effect applied yet	noch kein Effekt angewendet
@@ -4117,6 +4122,7 @@ theme	Appearance	Erscheinungsbild
 @msg	not in pattern editing mode	nicht im Musterbearbeitungsmodus
 @msg	nothing encoded	nichts kodiert
 @msg	nothing selected	nichts ausgewählt
+@msg	nothing selected is in a group	nichts Ausgewähltes befindet sich in einer Gruppe
 @msg	nothing to align	nichts auszurichten
 @msg	nothing to distort	nichts zu verzerren
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	nichts zu exportieren: Das Dokument enthält keine sichtbare Grafik (oder aktivieren Sie „Zeichenflächen verwenden“)
@@ -4243,10 +4249,14 @@ theme	Appearance	Erscheinungsbild
 @msg	the layer or group is locked	die Ebene oder Gruppe ist gesperrt
 @msg	the guide is on a hidden or locked layer	die Hilfslinie liegt auf einer ausgeblendeten oder gesperrten Ebene
 @msg	the target layer is locked or hidden	die Zielebene ist gesperrt oder ausgeblendet
+@msg	the object is hidden or locked	das Objekt ist ausgeblendet oder gesperrt
+@msg	the object is outside the isolated group	das Objekt liegt außerhalb der isolierten Gruppe
+@msg	type objects can't be isolated	Textobjekte können nicht isoliert werden
 @msg	the layer to flatten into is hidden	die Ebene, auf die reduziert werden soll, ist ausgeblendet
 @msg	the object already has an opacity mask	das Objekt hat bereits eine Deckkraftmaske
 @msg	the object has no geometry	das Objekt hat keine Geometrie
 @msg	the object has no opacity mask	das Objekt hat keine Deckkraftmaske
+@msg	stop editing the opacity mask first	beenden Sie zuerst die Bearbeitung der Deckkraftmaske
 @msg	the object has no stroke	das Objekt hat keine Kontur
 @msg	the object is beyond the plane's horizon	das Objekt liegt jenseits des Horizonts der Perspektivebene
 @msg	the object isn't in perspective	das Objekt ist nicht in der Perspektive
@@ -4532,6 +4542,10 @@ theme	Appearance	Erscheinungsbild
 	Side Tile	Seitenkachel
 	Outer Corner Tile	Äußere Eckkachel
 	Inner Corner Tile	Innere Eckkachel
+	Auto-Centered	Auto-zentriert
+	Auto-Between	Auto-dazwischen
+	Auto-Sliced	Auto-geschnitten
+	Auto-Overlap	Auto-überlappend
 	Start Tile	Anfangskachel
 	End Tile	Endkachel
 	Fit	Einpassen

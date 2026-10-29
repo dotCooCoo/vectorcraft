@@ -154,7 +154,15 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection_outside_isolation,
             lock
         ),
-        cmd!("object.unlockAll", "Unlock All", ["Object"], Some("Cmd+Alt+2"), "{}", outside_isolation, unlock_all),
+        cmd!(
+            "object.unlockAll",
+            "Unlock All",
+            ["Object"],
+            Some("Cmd+Alt+2"),
+            "{scope?: \"document\"|\"group\" (default document; group: only the objects inside the groups that hold the selected objects, a selected group holding its own; the in-window menu item chosen with Shift+Alt)} unlock the locked objects and select them → {count}",
+            outside_isolation,
+            unlock_all
+        ),
         cmd!(
             "object.hide",
             "Selection",
@@ -164,7 +172,15 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection_outside_isolation,
             hide
         ),
-        cmd!("object.showAll", "Show All", ["Object"], Some("Cmd+Alt+3"), "{}", outside_isolation, show_all),
+        cmd!(
+            "object.showAll",
+            "Show All",
+            ["Object"],
+            Some("Cmd+Alt+3"),
+            "{scope?: \"document\"|\"group\" (default document; group: only the objects inside the groups that hold the selected objects, a selected group holding its own; the in-window menu item chosen with Shift+Alt)} show the hidden objects and select them → {count}",
+            outside_isolation,
+            show_all
+        ),
         cmd!(
             "object.compoundPath.make",
             "Make",
@@ -224,8 +240,8 @@ pub fn specs() -> Vec<CommandSpec> {
             "Enter Isolation Mode",
             [],
             None,
-            "{id?} isolate a group, a layer or a single object (default: the first selected object); type, a hidden or locked object, an object in a hidden or locked group or layer, and a guide path while Lock Guides is on are refused",
-            has_doc,
+            "{id?} isolate a group, a layer or a single object (default: the first selected object); type, a hidden or locked object, an object in a hidden or locked group or layer, and a guide path while Lock Guides is on are refused, and so is every object while an opacity mask is edited",
+            crate::cmd::maskedit::outside_mask_editing,
             isolate
         ),
         cmd!("object.exitIsolation", "Exit Isolation Mode", [], None, "{}", has_doc, exit_isolation),

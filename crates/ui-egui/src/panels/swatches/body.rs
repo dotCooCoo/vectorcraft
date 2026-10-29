@@ -30,8 +30,10 @@ pub(super) fn body(app: &mut VectorcraftApp, ui: &mut Ui, salt: &'static str) {
         }
     });
     ui.add_space(4.0);
-    // A recent colour paints the active proxy (Alt: the inactive one), as a swatch does.
+    // A recent colour paints the active proxy (Alt: the inactive one), as a swatch does, and
+    // becomes the Color Guide's base color.
     if let Some(c) = crate::panels::recent_colors_row(app, ui) {
+        crate::panels::color_guide::choose_base(app, c);
         crate::panels::apply_click(app, ui, json!({"color": crate::panels::color_json(&c)}));
     }
     widgets::divider(ui);

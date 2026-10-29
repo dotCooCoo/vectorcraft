@@ -94,7 +94,7 @@ fn plural_polish(n: u64) -> usize {
 }
 
 /// The registry. English first: it is the fallback and the source language.
-pub static LANGUAGES: [LangInfo; 25] = [
+pub static LANGUAGES: [LangInfo; 26] = [
     LangInfo { code: "en", name: "English", source: "", plural: plural_one_other, complete_menus: false, catalog: OnceLock::new() },
     // Greek: the whole interface and the status and error messages, keeping the same names in
     // English as Spanish; every `el-*` locale (including `el-GR` and `el-CY`) resolves here.
@@ -317,6 +317,17 @@ pub static LANGUAGES: [LangInfo; 25] = [
     // `tr-*` locale (including `tr-TR` and `tr-CY`) resolves here.
     LangInfo {
         code: "tr", name: "Türkçe", source: include_str!("i18n/tr.tsv"), plural: plural_none, complete_menus: true, catalog: OnceLock::new()
+    },
+    // Catalan: the whole interface and the status and error messages, keeping the same names in
+    // English as Spanish; one/other plurals. Every `ca-*` locale (including `ca-ES`, `ca-AD`,
+    // `ca-FR`, `ca-IT` and `ca-ES-VALENCIA`) resolves here.
+    LangInfo {
+        code: "ca",
+        name: "Català",
+        source: include_str!("i18n/ca.tsv"),
+        plural: plural_one_other,
+        complete_menus: true,
+        catalog: OnceLock::new(),
     },
 ];
 

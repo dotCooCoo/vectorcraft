@@ -2504,6 +2504,7 @@
 	Show Original Path	Mostrar Caminho Original
 	Open this dialog with these settings next time	Abrir este diálogo com estas configurações na próxima vez
 	Auto-Simplify	Simplificar Automaticamente
+	Auto-Smooth	Suavizar Automaticamente
 	Show Package	Mostrar Pacote
 	Show Panel	Mostrar Painel
 	Show Perspective Grid	Mostrar Grade de Perspectiva
@@ -2541,6 +2542,7 @@
 	Simplify	Simplificar
 	Simplify:	Simplificar:
 	Simplify…	Simplificar…
+	Smooth…	Suavizar…
 	Simulate Colored Paper	Simular Papel Colorido
 	Simulate Paper	Simular Papel
 	Double Column	Coluna Dupla
@@ -3246,6 +3248,10 @@ font-technology	Variable	Variáveis
 	Outer Corner Tile	Ladrilho de canto externo
 	Side Tile	Ladrilho lateral
 	Inner Corner Tile	Ladrilho de canto interno
+	Auto-Centered	Auto-centralizado
+	Auto-Between	Auto-entre
+	Auto-Sliced	Auto-fatiado
+	Auto-Overlap	Auto-sobreposto
 	Start Tile	Ladrilho inicial
 	End Tile	Ladrilho final
 	Fit	Ajustar
@@ -3652,6 +3658,7 @@ axis	Both	Ambos
 @msg	missing `id` (see plugin.list)	falta `id` (veja plugin.list)
 @msg	missing `name`	falta `name`
 @msg	missing `tool`	falta `tool`
+@msg	missing id	falta o id
 @msg	missing index	falta o índice
 @msg	missing number `{key}`	falta o número `{key}`
 @msg	missing integer `{key}`	falta o número inteiro `{key}`
@@ -3684,6 +3691,7 @@ axis	Both	Ambos
 @msg	no current layer	nenhuma camada atual
 @msg	no data	sem dados
 @msg	no dialog open	nenhuma caixa de diálogo aberta
+@msg	the open dialog has no Reset	a caixa de diálogo aberta não tem o botão Redefinir
 @msg	no document	nenhum documento
 @msg	no document open	nenhum documento aberto
 @msg	no effect applied yet	nenhum efeito aplicado ainda
@@ -3765,6 +3773,7 @@ axis	Both	Ambos
 @msg	not in pattern editing mode	não está no modo de edição de padrão
 @msg	nothing encoded	nada codificado
 @msg	nothing selected	nada selecionado
+@msg	nothing selected is in a group	nada do que está selecionado está em um grupo
 @msg	nothing to align	nada para alinhar
 @msg	nothing to distort	nada para distorcer
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	nada para exportar: o documento não tem arte visível (ou ative Usar pranchetas)
@@ -3890,10 +3899,14 @@ axis	Both	Ambos
 @msg	the layer or group is locked	a camada ou o grupo está bloqueado
 @msg	the guide is on a hidden or locked layer	a guia está em uma camada oculta ou bloqueada
 @msg	the target layer is locked or hidden	a camada de destino está bloqueada ou oculta
+@msg	the object is hidden or locked	o objeto está oculto ou bloqueado
+@msg	the object is outside the isolated group	o objeto está fora do grupo isolado
+@msg	type objects can't be isolated	objetos de texto não podem ser isolados
 @msg	the layer to flatten into is hidden	a camada de destino do achatamento está oculta
 @msg	the object already has an opacity mask	o objeto já tem uma máscara de opacidade
 @msg	the object has no geometry	o objeto não tem geometria
 @msg	the object has no opacity mask	o objeto não tem máscara de opacidade
+@msg	stop editing the opacity mask first	pare de editar a máscara de opacidade primeiro
 @msg	the object has no stroke	o objeto não tem traço
 @msg	the object is beyond the plane's horizon	o objeto está além do horizonte do plano
 @msg	the object isn't in perspective	o objeto não está em perspectiva
@@ -5251,6 +5264,7 @@ mark-style	Japanese	Japonesas
 @msg	Unknown dimension option {k}	Opção de cota desconhecida {k}
 @msg	the Color Picker is not open	o Seletor de Cores não está aberto
 @msg	the Simplify slider is not open	o controle deslizante Simplificar não está aberto
+@msg	the Smooth slider is not open	o controle deslizante Suavizar não está aberto
 @msg	the screen color sampler is already open	o coletor de cores da tela já está aberto
 @msg	this system has no screen color sampler	este sistema não tem coletor de cores da tela
 	Darkness	Escuridão

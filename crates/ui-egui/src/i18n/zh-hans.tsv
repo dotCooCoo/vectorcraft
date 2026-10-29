@@ -1871,6 +1871,10 @@ file-filter	Templates	模板
 	Outer Corner Tile	外角拼贴
 	Side Tile	边线拼贴
 	Inner Corner Tile	内角拼贴
+	Auto-Centered	自动居中
+	Auto-Between	自动居间
+	Auto-Sliced	自动切片
+	Auto-Overlap	自动重叠
 	Start Tile	起点拼贴
 	End Tile	终点拼贴
 	Fit	适合
@@ -2884,6 +2888,7 @@ font-script	Japanese	汉字
 	Show Original Path	显示原始路径
 	Open this dialog with these settings next time	下次以这些设置打开此对话框
 	Auto-Simplify	自动简化
+	Auto-Smooth	自动平滑
 	Color Panel Options	颜色面板选项
 	Show Package	显示打包
 	Show Panel	显示面板
@@ -2920,6 +2925,7 @@ font-script	Japanese	汉字
 	Simplify	简化
 	Simplify:	简化：
 	Simplify…	简化…
+	Smooth…	平滑…
 	Simulate Colored Paper	模拟有色纸张
 	Simulate Paper	模拟纸张
 	Double Column	双列
@@ -3818,6 +3824,9 @@ imageTrace	Outline	轮廓
 @msg	the layer or group is locked	该图层或编组已锁定
 @msg	the guide is on a hidden or locked layer	该参考线位于隐藏或锁定的图层上
 @msg	the target layer is locked or hidden	目标图层已锁定或隐藏
+@msg	the object is hidden or locked	该对象已隐藏或锁定
+@msg	the object is outside the isolated group	该对象在隔离的编组之外
+@msg	type objects can't be isolated	无法隔离文字对象
 @msg	the layer to flatten into is hidden	要拼合到的图层已隐藏
 @msg	there are no objects to release	没有可释放的对象
 @msg	no library `{id}`	没有库 `{id}`
@@ -3829,6 +3838,7 @@ imageTrace	Outline	轮廓
 @msg	select a blend	请选择一个混合对象
 @msg	select a gradient mesh	请选择一个渐变网格
 @msg	the object has no opacity mask	该对象没有不透明度蒙版
+@msg	stop editing the opacity mask first	请先停止编辑不透明度蒙版
 @msg	Convert to Artboards: selection has no area	转换为画板：所选对象没有面积
 @msg	Convert to Shape: no rectangles or ellipses selected	转换为形状：未选择矩形或椭圆
 @msg	image would be too large; lower the resolution	图像将过大；请降低分辨率
@@ -4096,6 +4106,7 @@ imageTrace	Outline	轮廓
 @msg	videoRulerPixelAspectRatio must be a number from 0.1 to 10	videoRulerPixelAspectRatio 必须是 0.1 到 10 之间的数字
 @msg	the Color Picker is not open	拾色器未打开
 @msg	the Simplify slider is not open	简化滑块未打开
+@msg	the Smooth slider is not open	平滑滑块未打开
 @msg	the screen color sampler is already open	屏幕取色器已打开
 @msg	this system has no screen color sampler	此系统没有屏幕取色器
 @msg	Corners edits the corners of a path	转角用于编辑路径的转角
@@ -4209,6 +4220,7 @@ imageTrace	Outline	轮廓
 @msg	lang must be one of {_1}	lang 必须是 {_1} 之一
 @msg	missing `name`	缺少 `name`
 @msg	missing `tool`	缺少 `tool`
+@msg	missing id	缺少 id
 @msg	missing index	缺少 index
 @msg	New Window isn't available yet: a document opens in one window	新建窗口尚不可用：文档在一个窗口中打开
 @msg	no PNG encoder	没有 PNG 编码器
@@ -4271,6 +4283,7 @@ imageTrace	Outline	轮廓
 @msg	can't parse shortcut `{c}`	无法解析快捷键 `{c}`
 @msg	can't parse shortcut `{s}` for `{k}`	无法解析 `{k}` 的快捷键 `{s}`
 @msg	no dialog open	没有打开的对话框
+@msg	the open dialog has no Reset	打开的对话框没有重置按钮
 @msg	no file reader	没有文件读取器
 @msg	no file writer	没有文件写入器
 @msg	not a VectorCraft shortcut set (missing `overrides`)	不是 VectorCraft 快捷键组 (缺少 `overrides`)
@@ -4284,6 +4297,7 @@ imageTrace	Outline	轮廓
 @msg	Couldn't copy to the system clipboard: {e}	无法复制到系统剪贴板：{e}
 @msg	Couldn't paste from the clipboard: {e}	无法从剪贴板粘贴：{e}
 @msg	nothing selected	未选择任何对象
+@msg	nothing selected is in a group	所选对象均不在编组中
 @msg	the {tool} tool has no options	{tool} 工具没有选项
 @msg	unknown tool `{tool}`	未知工具 `{tool}`
 @msg	{tool} isn't in a toolbar group of several tools	{tool} 不在包含多个工具的工具栏组中

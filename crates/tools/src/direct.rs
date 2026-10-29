@@ -199,7 +199,7 @@ impl DirectSelectionTool {
 
 /// Whether `id` may be picked while `scope` is isolated: it is that object, or it sits inside it.
 /// With no isolation, everything may be picked.
-fn in_scope(doc: &vectorcraft_doc::Document, scope: Option<NodeId>, id: NodeId) -> bool {
+pub(crate) fn in_scope(doc: &vectorcraft_doc::Document, scope: Option<NodeId>, id: NodeId) -> bool {
     scope.is_none_or(|scope| doc.ancestry(id).is_some_and(|anc| anc.contains(&scope)))
 }
 
@@ -453,8 +453,9 @@ impl Tool for DirectSelectionTool {
     fn options(&self) -> Value {
         self.mesh.options()
     }
-    /// Escape during a drag (anchors, handles, segments, objects, type areas, blend spines, a
-    /// marquee) cancels it: what it moved goes back and the tool waits for the next press (#1743).
+    /// Escape during a drag (anchors, handles, segments, objects, type areas, blend spines, mesh
+    /// points, corner widgets, the brackets of type on a path, a marquee) cancels it: what it moved
+    /// goes back and the tool waits for the next press (#1743).
     /// With Group Selection, E during a marquee drag makes the marquee select only the objects
     /// entirely inside it, whole, and E pressed again makes it select what it selects by default.
     fn key(&mut self, _cx: &ToolContext, key: ToolKey, _mods: Mods) -> Vec<Action> {
@@ -467,9 +468,11 @@ impl Tool for DirectSelectionTool {
         if key == ToolKey::Escape && self.guide.busy() {
             return self.guide.cancel();
         }
-        if key != ToolKey::Escape || matches!(self.state, State::Idle | State::Mesh | State::Corner(_) | State::Bracket(_)) {
+        if key != ToolKey::Escape || matches!(self.state, State::Idle) {
             return vec![];
         }
+        // A mesh point drag ends here too; the `Action::Cancel` below undoes it.
+        self.mesh.cancel();
         self.state = State::Idle;
         self.guides.clear();
         (self.anchor_snap, self.copy_snap, self.move_snap) = (None, None, None);

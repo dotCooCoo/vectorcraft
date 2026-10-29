@@ -231,6 +231,7 @@
 	Offset Path…	Siirrä polkua…
 	Reverse Path Direction	Käännä polun suunta
 	Simplify…	Yksinkertaista…
+	Smooth…	Tasoita…
 	Add Anchor Points	Lisää ankkuripisteitä
 	Remove Anchor Points	Poista ankkuripisteitä
 	Divide Objects Below	Jaa alla olevat objektit
@@ -1724,6 +1725,7 @@ lighting	Light	Valo
 	Show Original Path	Näytä alkuperäinen polku
 	Open this dialog with these settings next time	Avaa tämä valintaikkuna näillä asetuksilla ensi kerralla
 	Auto-Simplify	Yksinkertaista automaattisesti
+	Auto-Smooth	Tasoita automaattisesti
 	Transparency Options	Läpinäkyvyysasetukset
 	Color Mixer (Shift-click the chip)	Värisekoitin (Vaihto-napsauta värilaattaa)
 	Fill: click for swatches, Shift-click for the color mixer	Täyttö: napsauta avataksesi värimallit, Vaihto-napsauta avataksesi värisekoittimen
@@ -2039,6 +2041,10 @@ lighting	Light	Valo
 	Outer Corner Tile	Ulkokulman ruutu
 	Side Tile	Sivuruutu
 	Inner Corner Tile	Sisäkulman ruutu
+	Auto-Centered	Autom. keskitetty
+	Auto-Between	Autom. välissä
+	Auto-Sliced	Autom. viistetty
+	Auto-Overlap	Autom. limittäin
 	Start Tile	Alkuruutu
 	End Tile	Loppuruutu
 	Fit	Sovita
@@ -4294,6 +4300,7 @@ imageTrace	Outline	Ääriviiva
 @msg	missing `id` (see plugin.list)	`id` puuttuu (ks. plugin.list)
 @msg	missing `name`	`name` puuttuu
 @msg	missing `tool`	`tool` puuttuu
+@msg	missing id	id puuttuu
 @msg	missing index	indeksi puuttuu
 @msg	missing number `{key}`	luku `{key}` puuttuu
 @msg	missing integer `{key}`	kokonaisluku `{key}` puuttuu
@@ -4326,6 +4333,7 @@ imageTrace	Outline	Ääriviiva
 @msg	no current layer	ei nykyistä tasoa
 @msg	no data	ei dataa
 @msg	no dialog open	valintaikkunaa ei ole auki
+@msg	the open dialog has no Reset	avoimessa valintaikkunassa ei ole Palauta-painiketta
 @msg	no document	ei asiakirjaa
 @msg	no document open	asiakirjaa ei ole auki
 @msg	no effect applied yet	tehostetta ei ole vielä käytetty
@@ -4407,6 +4415,7 @@ imageTrace	Outline	Ääriviiva
 @msg	not in pattern editing mode	ei kuvion muokkaustilassa
 @msg	nothing encoded	mitään ei koodattu
 @msg	nothing selected	mitään ei ole valittu
+@msg	nothing selected is in a group	mikään valituista ei ole ryhmässä
 @msg	nothing to align	ei tasattavaa
 @msg	nothing to distort	ei vääristettävää
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	ei vietävää: asiakirjassa ei ole näkyvää kuvitusta (tai ota Käytä piirtoalustoja käyttöön)
@@ -4527,10 +4536,14 @@ imageTrace	Outline	Ääriviiva
 @msg	the layer or group is locked	taso tai ryhmä on lukittu
 @msg	the guide is on a hidden or locked layer	apuviiva on piilotetulla tai lukitulla tasolla
 @msg	the target layer is locked or hidden	kohdetaso on lukittu tai piilotettu
+@msg	the object is hidden or locked	objekti on piilotettu tai lukittu
+@msg	the object is outside the isolated group	objekti on eristetyn ryhmän ulkopuolella
+@msg	type objects can't be isolated	tekstiobjekteja ei voi eristää
 @msg	the layer to flatten into is hidden	taso, johon litistetään, on piilotettu
 @msg	the object already has an opacity mask	objektilla on jo peittävyysmaski
 @msg	the object has no geometry	objektilla ei ole geometriaa
 @msg	the object has no opacity mask	objektilla ei ole peittävyysmaskia
+@msg	stop editing the opacity mask first	lopeta ensin peittävyysmaskin muokkaus
 @msg	the object has no stroke	objektilla ei ole viivaa
 @msg	the object is beyond the plane's horizon	objekti on tason horisontin takana
 @msg	the object isn't in perspective	objekti ei ole perspektiivissä
@@ -5308,6 +5321,7 @@ mark-style	Japanese	Japanilainen
 @msg	span: "selection" places the gradient itself: leave out `start` and `end` (they already place it in document coordinates)	span: "selection" sijoittaa itse liukuvärin: jätä pois `start` ja `end` (ne sijoittavat sen jo asiakirjan koordinaatteihin)
 @msg	the Color Picker is not open	värinvalitsin ei ole auki
 @msg	the Simplify slider is not open	Yksinkertaista-liukusäädin ei ole auki
+@msg	the Smooth slider is not open	Tasoita-liukusäädin ei ole auki
 @msg	the action has no steps	toiminnossa ei ole vaiheita
 @msg	the file's layers weren't read ({_1}): it comes in as its page, in one layer	tiedoston tasoja ei luettu ({_1}): se tuodaan sivunaan yhdelle tasolle
 @msg	the file's layers weren't read from its editing data ({_1}): they come from its PDF part	tiedoston tasoja ei luettu sen muokkaustiedoista ({_1}): ne tulevat sen PDF-osasta

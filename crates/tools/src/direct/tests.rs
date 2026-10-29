@@ -661,6 +661,41 @@ fn escape_cancels_a_drag() {
     assert_eq!(t.key(&cx, ToolKey::Escape, Mods::default()), vec![], "nothing to cancel");
 }
 
+/// Escape also cancels a corner widget drag and a drag of the brackets of type on a path, and
+/// the release after it does nothing. After a press on a widget that has not moved, Escape drops
+/// the press, so its release selects no corner.
+#[test]
+fn escape_cancels_a_corner_widget_or_bracket_drag() {
+    let p = paint();
+    let (d, rect) = doc_with_rect();
+    let mut s = Selection::default();
+    s.set([rect]);
+    let corners = cx(&d, &s, &p);
+    let (d2, text) = doc_with_path_type();
+    let mut s2 = Selection::default();
+    s2.add(text);
+    let brackets = cx(&d2, &s2, &p);
+    // (what, its context, the press, the drag's first step)
+    for (what, c, from, to) in [
+        ("corner widget", &corners, Point::new(110.0, 110.0), Point::new(120.0, 120.0)),
+        ("bracket", &brackets, Point::new(400.0, 290.0), Point::new(340.0, 290.0)),
+    ] {
+        let mut t = DirectSelectionTool::new(false);
+        assert!(t.pointer(c, &PointerEvent::new(PointerKind::Down, from.x, from.y)).is_empty(), "{what}");
+        let a = t.pointer(c, &PointerEvent::new(PointerKind::Drag, to.x, to.y));
+        assert!(matches!(a.first(), Some(Action::Begin(_))), "{what}: {a:?}");
+        assert!(t.busy(), "{what}");
+        assert_eq!(t.key(c, ToolKey::Escape, Mods::default()), vec![Action::Cancel], "{what}: Escape cancels the drag");
+        assert!(!t.busy(), "{what}");
+        assert!(t.pointer(c, &PointerEvent::new(PointerKind::Drag, to.x - 5.0, to.y)).is_empty(), "{what}: the drag is over");
+        assert!(t.pointer(c, &PointerEvent::new(PointerKind::Up, to.x - 5.0, to.y)).is_empty(), "{what}: the release does nothing");
+    }
+    let mut t = DirectSelectionTool::new(false);
+    t.pointer(&corners, &PointerEvent::new(PointerKind::Down, 110.0, 110.0));
+    assert_eq!(t.key(&corners, ToolKey::Escape, Mods::default()), vec![Action::Cancel]);
+    assert!(t.pointer(&corners, &PointerEvent::new(PointerKind::Up, 110.0, 110.0)).is_empty(), "the click selects no corner");
+}
+
 #[test]
 fn dragging_a_curved_segment_reshapes_it_and_a_straight_one_moves_its_anchors() {
     let (d, arch) = arch_doc();

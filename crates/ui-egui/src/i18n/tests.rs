@@ -3,6 +3,8 @@ use super::*;
 
 const ZH: fn() -> Lang = || Lang::from_code("zh-hant").expect("zh-hant registered");
 
+/// Locale tags name their language by region or script (in either case, with an encoding or
+/// modifier), and a tag that names no language resolves to none.
 #[test]
 fn tags_map_to_languages() {
     assert_eq!(lang_from_tag("en_US.UTF-8"), Some(Lang::EN));
@@ -42,7 +44,8 @@ fn tags_map_to_languages() {
     assert_eq!(lang_from_tag("_"), None);
 }
 
-/// The Georgian, Ukrainian, Hungarian, Korean, Vietnamese and Swedish tags of [`tags_map_to_languages`].
+/// The Georgian, Ukrainian, Hungarian, Korean, Vietnamese, Swedish and Catalan tags of
+/// [`tags_map_to_languages`].
 fn other_tags_map_to_languages() {
     for tag in ["ka", "ka-GE", "ka_GE.UTF-8", "KA-ge"] {
         assert_eq!(lang_from_tag(tag), Some(ka()), "{tag}");
@@ -62,10 +65,15 @@ fn other_tags_map_to_languages() {
     for tag in ["sv", "sv-SE", "sv-FI", "sv_SE.UTF-8", "SV-se"] {
         assert_eq!(lang_from_tag(tag), Lang::from_code("sv"), "{tag}");
     }
+    // Catalan: Catalonia, Andorra, Northern Catalonia, the Valencian Country and the rest share
+    // the one catalog.
+    for tag in ["ca", "ca-ES", "ca_AD.UTF-8", "CA-es", "ca-FR", "ca-IT", "ca-ES-VALENCIA"] {
+        assert_eq!(lang_from_tag(tag), Lang::from_code("ca"), "{tag}");
+    }
 }
 
-/// Italian, Brazilian Portuguese, Finnish, Turkish and Polish resolve from their locale tags and
-/// preferences, and each language names itself in its own language.
+/// Italian, Brazilian Portuguese, Finnish, Turkish, Catalan and Polish resolve from their locale
+/// tags and preferences, and each language names itself in its own language.
 #[test]
 fn languages_resolve_from_their_tags_and_name_themselves() {
     let lang = |code: &str| Lang::from_code(code).expect("registered");
@@ -74,6 +82,7 @@ fn languages_resolve_from_their_tags_and_name_themselves() {
         ("pt-br", &["pt-br", "pt_BR.UTF-8", "pt-BR", "pt_BR"]),
         ("fi", &["fi", "fi-FI", "fi_FI.UTF-8", "FI-fi"]),
         ("tr", &["tr", "tr-TR", "tr_TR.UTF-8", "TR-tr", "tr-CY"]),
+        ("ca", &["ca", "ca-ES", "ca_AD.UTF-8", "CA-es", "ca-FR", "ca-IT", "ca-ES-VALENCIA"]),
         ("pl", &["pl", "pl-PL", "pl_PL.UTF-8", "PL-pl"]),
     ] {
         for tag in tags {
@@ -83,12 +92,52 @@ fn languages_resolve_from_their_tags_and_name_themselves() {
     // Filipino (`fil`) and Swedish in Finland (`sv-FI`) don't pick Finnish.
     assert_ne!(lang_from_tag("fil"), Some(lang("fi")));
     assert_ne!(lang_from_tag("sv-FI"), Some(lang("fi")));
-    for (pref, code) in [("vi", "vi"), ("VI", "vi"), ("fi", "fi"), ("FI", "fi"), ("tr", "tr"), ("TR", "tr"), ("pt-br", "pt-br"), ("pt-BR", "pt-br")] {
+    for (pref, code) in [
+        ("vi", "vi"),
+        ("VI", "vi"),
+        ("fi", "fi"),
+        ("FI", "fi"),
+        ("tr", "tr"),
+        ("TR", "tr"),
+        ("ca", "ca"),
+        ("CA", "ca"),
+        ("pt-br", "pt-br"),
+        ("pt-BR", "pt-br"),
+    ] {
         assert_eq!(Lang::from_pref(pref), lang(code), "{pref}");
     }
-    for (code, name) in [("vi", "Tiếng Việt"), ("fi", "Suomi"), ("tr", "Türkçe"), ("pt-br", "Português (Brasil)")] {
+    for (code, name) in [("vi", "Tiếng Việt"), ("fi", "Suomi"), ("tr", "Türkçe"), ("ca", "Català"), ("pt-br", "Português (Brasil)")] {
         assert_eq!(lang(code).name(), name);
     }
+}
+
+/// The Catalan catalog registers under `ca`, claims complete menus and messages, and passes
+/// locale resolution, vocabulary and count formatting checks.
+#[test]
+fn catalan_reads_as_catalan() {
+    let ca = Lang::from_code("ca").expect("ca registered");
+    assert_eq!(ca.name(), "Català");
+    assert!(ca.complete_menus());
+    assert_eq!(Lang::from_pref("ca"), ca);
+    assert_eq!(Lang::from_pref("CA"), ca);
+    for (en, want) in [
+        ("Artboard Tool", "Eina de tauler"),
+        ("Swatches", "Mostres"),
+        ("Stroke", "Traç"),
+        ("Fill", "Farciment"),
+        ("Direct Selection Tool", "Eina de selecció directa"),
+        ("Save As…", "Desa com a…"),
+        ("Undo", "Desfés"),
+        ("Close", "Tanca"),
+    ] {
+        assert_eq!(tr(ca, en), want);
+    }
+    for n in [0, 1, 3, 21] {
+        let noun = if n == 1 { "capa" } else { "capes" };
+        assert_eq!(trn(ca, n, "{n} Layer", "{n} Layers"), format!("{n} {noun}"));
+    }
+    let nested = "command `object.group` is not available right now: nothing selected";
+    assert_eq!(message(ca, nested), "l’ordre `object.group` no està disponible ara mateix: no hi ha res seleccionat");
 }
 
 /// Each language counts with its own plural rule: the form a count picks (`one`, then `few`, then
@@ -97,7 +146,7 @@ fn languages_resolve_from_their_tags_and_name_themselves() {
 fn each_language_counts_with_its_plural_rule() {
     const COUNTS: [u64; 8] = [0, 1, 2, 3, 5, 11, 21, 22];
     for (codes, forms) in [
-        (&["de", "es", "it", "pt-br", "fi"][..], [1, 0, 1, 1, 1, 1, 1, 1]),
+        (&["de", "es", "it", "pt-br", "fi", "ca"][..], [1, 0, 1, 1, 1, 1, 1, 1]),
         (&["fr"], [0, 0, 1, 1, 1, 1, 1, 1]),
         (&["ja", "ka", "hu", "ko", "vi", "tr"], [0; 8]),
         (&["ru", "uk"], [2, 0, 1, 1, 2, 2, 0, 1]),
@@ -980,7 +1029,8 @@ fn cs() -> Lang {
 }
 
 /// Languages whose catalogs leave [`MENU_KEEP_AS_IS`] in English.
-const KEEPS_MENU_NAMES: [&str; 18] = ["cs", "de", "el", "es", "fr", "hu", "it", "ja", "ka", "ko", "pl", "pt-br", "ru", "sv", "uk", "vi", "fi", "tr"];
+const KEEPS_MENU_NAMES: [&str; 19] =
+    ["cs", "de", "el", "es", "fr", "hu", "it", "ja", "ka", "ko", "pl", "pt-br", "ru", "sv", "uk", "vi", "fi", "tr", "ca"];
 
 /// Menu labels the menu-complete catalogs (Czech, German, Spanish, Italian, Japanese, Brazilian Portuguese) show as they are: the product name, a format name, the built-in workspace
 /// names and the perspective grid presets (names, shown untranslated wherever else they appear).
@@ -1636,7 +1686,7 @@ fn shared_param_check_errors_show_their_values_as_given() {
 /// Languages whose catalogs translate status and error messages; [`untranslated_report`] lists
 /// the messages each one lacks.
 const COMPLETE_MESSAGES: &[&str] =
-    &["cs", "de", "el", "es", "fr", "hu", "it", "ja", "ka", "ko", "pl", "pt-br", "ru", "sv", "uk", "vi", "zh-hans", "zh-hant", "fi", "tr"];
+    &["cs", "de", "el", "es", "fr", "hu", "it", "ja", "ka", "ko", "pl", "pt-br", "ru", "sv", "uk", "vi", "zh-hans", "zh-hant", "fi", "tr", "ca"];
 
 /// Crates whose error and status messages reach the status bar.
 const MESSAGE_CRATES: &[&str] = &["ui-egui", "engine", "doc", "format", "svg", "pdf", "eps", "text", "plugins", "metafile", "cad", "trace"];
