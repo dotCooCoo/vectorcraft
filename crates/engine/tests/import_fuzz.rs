@@ -3791,6 +3791,26 @@ fn pdf_streams_the_reader_would_fail_on_are_refused() {
     }
 }
 
+/// A page drawing a thousand times one form that decodes to 64 MiB (of spaces, then a square):
+/// each drawing reads the form again, so the import stops at the page's form content instead of
+/// decoding 64 GB (#3569, which hung).
+#[test]
+fn pdf_a_huge_form_drawn_over_and_over_is_refused_in_bounded_time() {
+    use std::io::Write as _;
+    let mut e = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::best());
+    for _ in 0..64 {
+        e.write_all(&[b' '; 1 << 20]).unwrap();
+    }
+    e.write_all(b"0 0 5 5 re f").unwrap();
+    let form = packed_as_is(FORM, &e.finish().unwrap());
+    let bytes = pdf_with(&"/F Do ".repeat(1000), "<< /XObject << /F 5 0 R >> >>", &[form]);
+    let start = std::time::Instant::now();
+    let e = vectorcraft_engine::cmd::fileio::load("repeated.pdf", &bytes).err().map(|e| e.to_string());
+    let took = start.elapsed();
+    assert!(e.as_deref().is_some_and(|e| e.contains("no document was imported")), "{e:?}");
+    assert!(took < std::time::Duration::from_secs(60), "took {took:?}");
+}
+
 #[test]
 fn pdf_art_that_draws_itself() {
     let own = "<< /XObject << /F 5 0 R >> /Pattern << /P 5 0 R >> /Font << /F1 5 0 R >> /ExtGState << /G << /SMask << /S /Alpha /G 5 0 R >> >> >> >>";
