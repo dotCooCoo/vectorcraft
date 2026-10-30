@@ -1,6 +1,12 @@
 /// UI-level commands: (id, label, shortcut, params doc).
 pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
     (
+        crate::addons::pathtools::corner::COMMAND,
+        "Corner Tool",
+        "",
+        "{} choose the Corner Tool and show the Anchor Inspector panel with its radius and kind",
+    ),
+    (
         "app.language",
         "Interface Language",
         "",
@@ -575,6 +581,12 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "{} show a crop box on the selected image (tool `cropImage`): it starts on the part over the image's artboard; drag its handles or inside it, then Enter or the Control bar's Apply crops the image to it (object.cropImage {rect}), Escape or Cancel leaves it as it is, both back to the Selection tool. tool.setOption {key: \"rect\", value: [x, y, width, height]} sets the box",
     ),
     ("effect.applyLast", "Apply Last Effect", "Cmd+Shift+E", "{}"),
+    (
+        "pathfinder.repeat",
+        "Repeat Pathfinder",
+        "Cmd+4",
+        "{} repeat the last successful Pathfinder panel operation, direct object.pathfinder.* command or command.batch step on the selection with current Pathfinder Options; an error until one has run",
+    ),
     (
         "file.export.pdf",
         "Save as PDF…",

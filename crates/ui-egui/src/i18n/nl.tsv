@@ -1141,12 +1141,12 @@ lighting	Light	Licht
 	 to set spacing and orientation	 om de tussenruimte en de oriëntatie in te stellen
 	Apply	Toepassen
 	Change Screen Mode (F)	Schermmodus wisselen (F)
-	Color (,)	Kleur (,)
+	Color (, or <)	Kleur (, of <)
 	Draw Behind	Achter tekenen
 	Draw Inside	Binnen tekenen
 	Draw Normal	Normaal tekenen
 	Expand:	Uitvouwen:
-	Gradient (.)	Verloop (.)
+	Gradient (. or >)	Verloop (. of >)
 	H:	H:
 	Modify	Wijzigen
 	Navigate	Navigeren
@@ -4165,6 +4165,7 @@ imageTrace	Outline	Contour
 @msg	no document	geen document
 @msg	no document open	geen document geopend
 @msg	no effect applied yet	nog geen effect toegepast
+@msg	no Pathfinder operation applied yet	nog geen Pathfinder-bewerking toegepast
 @msg	no effect at index {k}	geen effect op index {k}
 @msg	no end record	geen eindrecord
 @msg	no file manager here	hier is geen bestandsbeheerder
@@ -5814,3 +5815,82 @@ anchor	Points:	Punten:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Puntkleur uit artwork
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duotoon…
+	Duotone	Duotoon
+	Print Ink Fixes…	Drukinktcorrecties…
+	Print Ink Fixes	Drukinktcorrecties
+	Inks	Inkten
+	Tone 1	Toon 1
+	Tone 2	Toon 2
+	Tone 3	Toon 3
+	Tone 4	Toon 4
+	Curve	Curve
+	Reset to Linear	Herstellen naar lineair
+	Reset to Inverse	Herstellen naar omgekeerd
+	Skip Objects with Spot Colors	Objecten met steunkleuren overslaan
+	Ink Limit	Inktlimiet
+	Exclude Pure Black	Puur zwart uitsluiten
+	Remove White Overprint	Overprint van wit verwijderen
+	Overprint Black	Zwart overprinten
+	Text Only	Alleen tekst
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	geef `inkLimit`, `removeWhiteOverprint` of `overprintBlack` op
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Drukinktcorrecties werken in CMYK-documenten: kies eerst Bestand › Documentkleurmodus › CMYK-kleur
+@msg	`{key}` must be 0..{max}	`{key}` moet 0..{max} zijn
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Hoekengereedschap
+	Slide Anchor Along Path	Ankerpunt langs pad schuiven
+	Set Corners	Hoeken instellen
+	Remove Corners	Hoeken verwijderen
+	Corners selected: {count}	Geselecteerde hoeken: {count}
+	Apply to Selected Anchors	Toepassen op geselecteerde ankerpunten
+@msg	`radius` must be from 0 to 1000000 pt	`radius` moet van 0 tot 1000000 pt zijn
+@msg	`t` must be a number from -0.98 to 0.98	`t` moet een getal van -0.98 tot 0.98 zijn
+@msg	choose anchors where two sides meet at an angle: only those take a corner	kies ankerpunten waar twee zijden elkaar in een hoek ontmoeten: alleen die kunnen een hoek krijgen
+@msg	give `anchor`, the index of the anchor to slide	geef `anchor` op, de index van het ankerpunt dat moet schuiven
+@msg	that anchor can't slide: an end of an open path has nowhere to go	dat ankerpunt kan niet schuiven: het einde van een open pad kan nergens heen
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Tekst splitsen
+	Combine Point Text	Punttekst combineren
+	Remove Breaks	Einden verwijderen
+	Split Text at Cursor	Tekst splitsen bij cursor
+	Set Alignment, Keep Position	Uitlijning instellen, positie behouden
+	Reset Text Transform	Teksttransformatie herstellen
+	Replace Missing Fonts…	Ontbrekende lettertypen vervangen…
+	Replace Missing Fonts	Ontbrekende lettertypen vervangen
+	Remove Line Breaks	Regeleinden verwijderen
+	Remove Paragraph Breaks	Alinea-einden verwijderen
+	Break Text into Lines	Tekst splitsen in regels
+	Break Text into Paragraphs	Tekst splitsen in alinea's
+	Break Text into Words	Tekst splitsen in woorden
+	Break Text into Glyphs	Tekst splitsen in glyphs
+	Reset Text Transform and Scale	Teksttransformatie en schaal herstellen
+	Set Alignment, Keep Position:	Uitlijning instellen, positie behouden:
+	Break Text into:	Tekst splitsen in:
+	Split at Cursor	Splitsen bij cursor
+	Reset Transform	Transformatie herstellen
+	Shift-click: break into paragraphs	Shift-klik: splitsen in alinea's
+	Alt-click: reset the horizontal scale too	Alt-klik: ook de horizontale schaal herstellen
+breakText	Lines	Regels
+breakText	Words	Woorden
+breakText	Glyphs	Glyphs
+@msg	Click in type with a Type tool to split it	Klik met een Type-gereedschap in tekst om deze te splitsen
+@msg	Too many type objects to change at once	Te veel tekstobjecten om in één keer te wijzigen
+@msg	Too many pieces to make at once	Te veel stukken om in één keer te maken
+@msg	Select horizontal point or area type whose text fits	Selecteer horizontale punt- of vlaktekst waarvan de tekst past
+@msg	Nothing to split at the cursor	Niets te splitsen bij de cursor
+@msg	Select two or more one-line point type objects on one baseline to combine	Selecteer twee of meer punttekstobjecten van één regel op één basislijn om ze te combineren
+@msg	No line breaks to remove	Geen regeleinden om te verwijderen
+@msg	No paragraph breaks to remove	Geen alinea-einden om te verwijderen
+@msg	Too many breaks to remove at once	Te veel einden om in één keer te verwijderen
+@msg	Select point type	Selecteer punttekst
+@msg	The point type is aligned that way already	De punttekst is al zo uitgelijnd
+@msg	The point type has no transform to reset	De punttekst heeft geen transformatie om te herstellen
+@msg	No fonts are missing	Er ontbreken geen lettertypen
+@msg	the replacement font is not available	het vervangende lettertype is niet beschikbaar
+@msg	missing `align`	`align` ontbreekt
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` moet lines, paragraphs, words of glyphs zijn, niet {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` moet "line" of "paragraph" zijn, niet {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` moet "left", "center" of "right" zijn, niet {other}

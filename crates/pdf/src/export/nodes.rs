@@ -1,4 +1,4 @@
-use super::exporter::{address, blend, color, constant_mask, cover, in_range, norm, rects_overlap, rule, to_path, writable, xf};
+use super::exporter::{UNDECODED, address, blend, color, constant_mask, cover, in_range, norm, rects_overlap, rule, to_path, writable, xf};
 use super::{
     Affine, AppearanceItem, BezPath, BlendMode, Exporter, Fill, FillRule, LineCap, LineJoin, Mark, Node, NodeKind, NormalizedF32, Paint, Path, Rect,
     Shape, Stroke, StrokeAlign, StrokeDash, StrokeLayer, Surface, WrittenShape, krilla, stroke,
@@ -182,10 +182,18 @@ impl Exporter<'_> {
                 self.shape(s, n, &bp, *rule, page);
             }
             NodeKind::Text(t) => self.text(s, n, t, page),
-            NodeKind::Image(im) => {
-                let colorized = n.extras().colorize.as_deref().and_then(|p| self.colorized_image(im, p, !n.extras().pixelated));
-                self.image(s, im, colorized.or(alpha), n.extras().pixelated)
-            }
+            NodeKind::Image(im) => match n.extras().colorize.as_deref() {
+                Some(p @ Paint::Solid { .. }) => {
+                    if writable(s, im.xf, Rect::new(0.0, 0.0, im.width.max(1).into(), im.height.max(1).into())) {
+                        if let Some(colorized) = self.colorized_image(im, p, !n.extras().pixelated) {
+                            self.image(s, im, Some(colorized), n.extras().pixelated);
+                        } else {
+                            self.warn(UNDECODED);
+                        }
+                    }
+                }
+                _ => self.image(s, im, alpha, n.extras().pixelated),
+            },
             NodeKind::SymbolInstance { symbol, xf } => {
                 // Within the objects a frame may draw of symbol instances, as on screen: nested
                 // instances multiply.

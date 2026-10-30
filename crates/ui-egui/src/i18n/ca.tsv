@@ -708,7 +708,7 @@
 	Collect in New Layer	Recull en una capa nova
 	Collect Links in a Separate Folder	Recull els enllaços en una carpeta a part
 	Color	Color
-	Color (,)	Color (,)
+	Color (, or <)	Color (, o <)
 	Color Adjustments	Ajustos de color
 	Color bars	Barres de color
 	Color blindness – Deuteranopia-type	Daltonisme – tipus deuteranòpsia
@@ -1691,7 +1691,7 @@
 	GPU Performance	Rendiment de la GPU
 	Grab bag	Calaix de sastre
 	Gradient	Degradat
-	Gradient (.)	Degradat (.)
+	Gradient (. or >)	Degradat (. o >)
 	Gradient across stroke	Degradat transversal al traç
 	Gradient along stroke	Degradat al llarg del traç
 	Gradient and Mesh Resolution:	Resolució de degradat i malla:
@@ -5107,6 +5107,7 @@
 @msg	no document	no hi ha document
 @msg	no document open	no hi ha cap document obert
 @msg	no effect applied yet	encara no s’ha aplicat cap efecte
+@msg	no Pathfinder operation applied yet	encara no s’ha aplicat cap operació del Cercador de traçats
 @msg	no effect at index {k}	no hi ha cap efecte a l’índex {k}
 @msg	no empty artboards to delete	no hi ha taulers buits per suprimir
 @msg	no end record	no hi ha registre final
@@ -5851,3 +5852,82 @@ anchor	Points:	Punts:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Color dels punts de la il·lustració
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Bitò…
+	Duotone	Bitò
+	Print Ink Fixes…	Correccions de tinta per a impressió…
+	Print Ink Fixes	Correccions de tinta per a impressió
+	Inks	Tintes
+	Tone 1	To 1
+	Tone 2	To 2
+	Tone 3	To 3
+	Tone 4	To 4
+	Curve	Corba
+	Reset to Linear	Restableix a lineal
+	Reset to Inverse	Restableix a invertida
+	Skip Objects with Spot Colors	Omet els objectes amb colors directes
+	Ink Limit	Límit de tinta
+	Exclude Pure Black	Exclou el negre pur
+	Remove White Overprint	Elimina la sobreimpressió del blanc
+	Overprint Black	Sobreimpressió del negre
+	Text Only	Només text
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	indiqueu `inkLimit`, `removeWhiteOverprint` o `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Les correccions de tinta per a impressió funcionen en documents CMYK: trieu primer Fitxer › Mode de color del document › Color CMYK
+@msg	`{key}` must be 0..{max}	`{key}` ha de ser 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Eina de cantonades
+	Slide Anchor Along Path	Llisca l’ancoratge pel traçat
+	Set Corners	Defineix les cantonades
+	Remove Corners	Elimina les cantonades
+	Corners selected: {count}	Cantonades seleccionades: {count}
+	Apply to Selected Anchors	Aplica als punts d’ancoratge seleccionats
+@msg	`radius` must be from 0 to 1000000 pt	`radius` ha de ser de 0 a 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` ha de ser un nombre de -0.98 a 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	trieu punts d’ancoratge on dos costats es troben formant un angle: només aquests admeten una cantonada
+@msg	give `anchor`, the index of the anchor to slide	indiqueu `anchor`, l’índex del punt d’ancoratge que voleu lliscar
+@msg	that anchor can't slide: an end of an open path has nowhere to go	aquest punt d’ancoratge no pot lliscar: l’extrem d’un traçat obert no té on anar
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Divideix el text
+	Combine Point Text	Combina el text de punt
+	Remove Breaks	Elimina els salts
+	Split Text at Cursor	Divideix el text al cursor
+	Set Alignment, Keep Position	Defineix l’alineació i manté la posició
+	Reset Text Transform	Restableix la transformació del text
+	Replace Missing Fonts…	Reemplaça els tipus de lletra que falten…
+	Replace Missing Fonts	Reemplaça els tipus de lletra que falten
+	Remove Line Breaks	Elimina els salts de línia
+	Remove Paragraph Breaks	Elimina els salts de paràgraf
+	Break Text into Lines	Divideix el text en línies
+	Break Text into Paragraphs	Divideix el text en paràgrafs
+	Break Text into Words	Divideix el text en paraules
+	Break Text into Glyphs	Divideix el text en glifs
+	Reset Text Transform and Scale	Restableix la transformació i l’escala del text
+	Set Alignment, Keep Position:	Defineix l’alineació i manté la posició:
+	Break Text into:	Divideix el text en:
+	Split at Cursor	Divideix al cursor
+	Reset Transform	Restableix la transformació
+	Shift-click: break into paragraphs	Maj+clic: divideix en paràgrafs
+	Alt-click: reset the horizontal scale too	Alt-clic: restableix també l’escala horitzontal
+breakText	Lines	Línies
+breakText	Words	Paraules
+breakText	Glyphs	Glifs
+@msg	Click in type with a Type tool to split it	Feu clic en un text amb una eina de text per dividir-lo
+@msg	Too many type objects to change at once	Massa objectes de text per canviar-los alhora
+@msg	Too many pieces to make at once	Massa peces per crear-les alhora
+@msg	Select horizontal point or area type whose text fits	Seleccioneu text de punt o d’àrea horitzontal el text del qual hi càpiga
+@msg	Nothing to split at the cursor	No hi ha res a dividir al cursor
+@msg	Select two or more one-line point type objects on one baseline to combine	Seleccioneu dos o més objectes de text de punt d’una línia sobre una mateixa línia de base per combinar-los
+@msg	No line breaks to remove	No hi ha salts de línia per eliminar
+@msg	No paragraph breaks to remove	No hi ha salts de paràgraf per eliminar
+@msg	Too many breaks to remove at once	Massa salts per eliminar-los alhora
+@msg	Select point type	Seleccioneu text de punt
+@msg	The point type is aligned that way already	El text de punt ja està alineat així
+@msg	The point type has no transform to reset	El text de punt no té cap transformació per restablir
+@msg	No fonts are missing	No falta cap tipus de lletra
+@msg	the replacement font is not available	el tipus de lletra de reemplaçament no està disponible
+@msg	missing `align`	falta `align`
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` ha de ser lines, paragraphs, words o glyphs, no {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` ha de ser "line" o "paragraph", no {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` ha de ser "left", "center" o "right", no {other}

@@ -1127,12 +1127,12 @@ lighting	Light	Lys
 	 to set spacing and orientation	 for at angive afstand og orientering
 	Apply	Anvend
 	Change Screen Mode (F)	Skift skærmtilstand (F)
-	Color (,)	Farve (,)
+	Color (, or <)	Farve (, eller <)
 	Draw Behind	Tegn bagved
 	Draw Inside	Tegn indeni
 	Draw Normal	Tegn normalt
 	Expand:	Udvid:
-	Gradient (.)	Gradient (.)
+	Gradient (. or >)	Gradient (. eller >)
 	H:	H:
 	Modify	Ændr
 	Navigate	Navigér
@@ -4153,6 +4153,7 @@ imageTrace	Outline	Kontur
 @msg	no document	intet dokument
 @msg	no document open	intet åbent dokument
 @msg	no effect applied yet	ingen effekt er anvendt endnu
+@msg	no Pathfinder operation applied yet	ingen Pathfinder-handling er anvendt endnu
 @msg	no effect at index {k}	ingen effekt ved indeks {k}
 @msg	no end record	ingen slutpost
 @msg	no file manager here	ingen filhåndtering her
@@ -5770,3 +5771,82 @@ anchor	Points:	Punkter:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Prikfarve fra grafik
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duotone…
+	Duotone	Duotone
+	Print Ink Fixes…	Trykfarverettelser…
+	Print Ink Fixes	Trykfarverettelser
+	Inks	Trykfarver
+	Tone 1	Tone 1
+	Tone 2	Tone 2
+	Tone 3	Tone 3
+	Tone 4	Tone 4
+	Curve	Kurve
+	Reset to Linear	Nulstil til lineær
+	Reset to Inverse	Nulstil til omvendt
+	Skip Objects with Spot Colors	Spring objekter med spotfarver over
+	Ink Limit	Farvegrænse
+	Exclude Pure Black	Udelad ren sort
+	Remove White Overprint	Fjern overprint af hvid
+	Overprint Black	Overprint sort
+	Text Only	Kun tekst
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	angiv `inkLimit`, `removeWhiteOverprint` eller `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Trykfarverettelser virker på CMYK-dokumenter: vælg først Filer › Dokumentets farvetilstand › CMYK-farve
+@msg	`{key}` must be 0..{max}	`{key}` skal være 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Hjørneværktøj
+	Slide Anchor Along Path	Skub ankerpunkt langs sti
+	Set Corners	Angiv hjørner
+	Remove Corners	Fjern hjørner
+	Corners selected: {count}	Valgte hjørner: {count}
+	Apply to Selected Anchors	Anvend på valgte ankerpunkter
+@msg	`radius` must be from 0 to 1000000 pt	`radius` skal være fra 0 til 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` skal være et tal fra -0.98 til 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	vælg ankerpunkter, hvor to sider mødes i en vinkel: kun de kan få et hjørne
+@msg	give `anchor`, the index of the anchor to slide	angiv `anchor`, indekset for det ankerpunkt, der skal skubbes
+@msg	that anchor can't slide: an end of an open path has nowhere to go	det ankerpunkt kan ikke skubbes: enden af en åben sti har ingen steder at gå hen
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Opdel tekst
+	Combine Point Text	Kombiner punkttekst
+	Remove Breaks	Fjern skift
+	Split Text at Cursor	Opdel tekst ved markøren
+	Set Alignment, Keep Position	Angiv justering, bevar placering
+	Reset Text Transform	Nulstil teksttransformation
+	Replace Missing Fonts…	Erstat manglende skrifttyper…
+	Replace Missing Fonts	Erstat manglende skrifttyper
+	Remove Line Breaks	Fjern linjeskift
+	Remove Paragraph Breaks	Fjern afsnitsskift
+	Break Text into Lines	Opdel tekst i linjer
+	Break Text into Paragraphs	Opdel tekst i afsnit
+	Break Text into Words	Opdel tekst i ord
+	Break Text into Glyphs	Opdel tekst i glyffer
+	Reset Text Transform and Scale	Nulstil teksttransformation og skalering
+	Set Alignment, Keep Position:	Angiv justering, bevar placering:
+	Break Text into:	Opdel tekst i:
+	Split at Cursor	Opdel ved markøren
+	Reset Transform	Nulstil transformation
+	Shift-click: break into paragraphs	Skift-klik: opdel i afsnit
+	Alt-click: reset the horizontal scale too	Alt-klik: nulstil også den vandrette skalering
+breakText	Lines	Linjer
+breakText	Words	Ord
+breakText	Glyphs	Glyffer
+@msg	Click in type with a Type tool to split it	Klik i tekst med et tekstværktøj for at opdele den
+@msg	Too many type objects to change at once	For mange tekstobjekter til at ændre på én gang
+@msg	Too many pieces to make at once	For mange dele til at oprette på én gang
+@msg	Select horizontal point or area type whose text fits	Vælg vandret punkt- eller områdetekst, hvis tekst kan være der
+@msg	Nothing to split at the cursor	Intet at opdele ved markøren
+@msg	Select two or more one-line point type objects on one baseline to combine	Vælg to eller flere punkttekstobjekter på én linje på samme grundlinje for at kombinere dem
+@msg	No line breaks to remove	Ingen linjeskift at fjerne
+@msg	No paragraph breaks to remove	Ingen afsnitsskift at fjerne
+@msg	Too many breaks to remove at once	For mange skift til at fjerne på én gang
+@msg	Select point type	Vælg punkttekst
+@msg	The point type is aligned that way already	Punktteksten er allerede justeret sådan
+@msg	The point type has no transform to reset	Punktteksten har ingen transformation at nulstille
+@msg	No fonts are missing	Ingen skrifttyper mangler
+@msg	the replacement font is not available	erstatningsskrifttypen er ikke tilgængelig
+@msg	missing `align`	`align` mangler
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` skal være lines, paragraphs, words eller glyphs, ikke {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` skal være "line" eller "paragraph", ikke {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` skal være "left", "center" eller "right", ikke {other}

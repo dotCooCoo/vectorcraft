@@ -382,6 +382,9 @@ pub struct UiState {
     pub docking: Option<craft_ui::docking::Layout<String>>,
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub docking_hidden: std::collections::BTreeMap<String, craft_ui::docking::Location<String>>,
+    /// Tabs closed together by panel shortcuts, kept with their workspace return locations.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub docking_hidden_groups: Vec<Vec<String>>,
     /// Panels dropped on the icon column, in older files (read only, like [`Self::floating_panels`]).
     #[serde(default, skip_serializing)]
     pub docking_icons: std::collections::BTreeSet<String>,
@@ -520,6 +523,10 @@ pub struct UiState {
     /// dialog is open.
     #[serde(skip)]
     pub dialog_file: Option<std::sync::Arc<crate::dialogs::import_pdf::DialogFile>>,
+    /// Pending new style highlights: document uid, paragraph-style flag, and name. Each document
+    /// and style kind has at most one pending highlight.
+    #[serde(skip)]
+    pub made_text_style: Vec<(u64, bool, String)>,
     /// The documents (uids) whose Missing Fonts dialog waits until no dialog is open, the next one to
     /// show first ([`crate::dialogs::settle`]).
     #[serde(skip)]
@@ -834,6 +841,7 @@ impl Default for UiState {
             floating_panels: vec![],
             docking: None,
             docking_hidden: Default::default(),
+            docking_hidden_groups: Vec::new(),
             docking_icons: Default::default(),
             docking_collapsed: Default::default(),
             docking_generation: 0,
@@ -879,6 +887,7 @@ impl Default for UiState {
             svg_options: Value::Null,
             place_link: true,
             dialog_file: None,
+            made_text_style: vec![],
             pending_fonts: vec![],
             fonts_dialog: None,
             dialog_search: None,
