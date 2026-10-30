@@ -393,9 +393,10 @@ fn by_color_param(cmd: &str, p: &Value) -> Result<bool> {
 /// tint with its percentage) or as `#rrggbb`, and gradient fills share one group, "Gradients". The
 /// groups stack in the order of the lowest item in each, and each keeps its items' order. When the
 /// paths meet, an item joins its paint's last group only if no item of a later group meets it
-/// (by the boxes of everything they paint, effects included); otherwise it starts
-/// another group of that paint, so the art draws as before. A group among `items` (Auto Grouping)
-/// is refused.
+/// (by the boxes of everything they paint, effects included, within one point); otherwise it
+/// starts another group of that paint, which keeps the stacking order of those items. Items
+/// farther apart can still share antialiased pixels at small view or raster-export scales, so
+/// their edge pixels may change. A group among `items` (Auto Grouping) is refused.
 fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>) -> Result<Vec<Arc<Node>>> {
     use std::collections::{BTreeMap, HashMap};
     use std::ops::Bound::{Excluded, Unbounded};
