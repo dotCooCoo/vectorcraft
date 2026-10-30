@@ -788,6 +788,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(windows)]
     fn dib_fallback_captures_both_formats_before_decoding() {
         use clipboard_win::formats::{CF_DIB, CF_DIBV5};
 
