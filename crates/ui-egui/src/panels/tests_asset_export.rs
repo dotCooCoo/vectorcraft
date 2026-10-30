@@ -357,6 +357,48 @@ fn asset_export_preserves_applied_preset_naming_and_folders_when_saving() {
 }
 
 #[test]
+fn asset_export_replaces_applied_format_choice_when_saving() {
+    let (mut app, _, _) = app(true);
+    app.run(
+        "document.exportPresets.save",
+        json!({
+            "name": "Named Rows",
+            "settings": {"formats": [{"format": "svg"}], "name": "<name>-###"}
+        }),
+    )
+    .unwrap();
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    menu_frame(&ctx, &mut app, vec![]);
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Named Rows")));
+    app.run("assets.settings.set", json!({"preset": "mobile"})).unwrap();
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Save Changes")));
+
+    let saved = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Named Rows").expect("saved");
+    assert_eq!(saved.settings.get("preset"), Some(&json!("mobile")));
+    assert!(saved.settings.get("formats").is_none(), "{:?}", saved.settings);
+    assert_eq!(saved.settings.get("name"), Some(&json!("<name>-###")));
+
+    app.run("assets.settings.set", json!({"exportPreset": "Named Rows"})).unwrap();
+    app.run("file.exportForScreens", json!({})).unwrap();
+    assert_eq!(app.ui.dialog.as_ref().unwrap().fields["formats"], json!(vectorcraft_engine::cmd::fileio::screen_preset_rows("mobile").unwrap()));
+    crate::dialogs::cancel(&mut app);
+
+    app.run("document.exportPresets.save", json!({"name": "Mobile First", "settings": {"preset": "mobile", "name": "<name>-###"}})).unwrap();
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Mobile First")));
+    app.run("assets.settings.set", json!({"formats": [{"format": "svg"}]})).unwrap();
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Save Changes")));
+    let saved = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Mobile First").expect("saved");
+    assert_eq!(saved.settings.get("formats"), Some(&json!([{"format": "svg"}])));
+    assert!(saved.settings.get("preset").is_none(), "{:?}", saved.settings);
+    assert_eq!(saved.settings.get("name"), Some(&json!("<name>-###")));
+}
+
+#[test]
 fn asset_export_saves_changed_rows_with_applied_preset_fields() {
     let (mut app, _, _) = app(true);
     let original = json!({

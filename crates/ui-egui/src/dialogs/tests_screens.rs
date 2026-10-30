@@ -987,6 +987,32 @@ fn a_preset_saved_with_full_document_chooses_it_again() {
     assert_eq!(field(&app, "select"), "full");
 }
 
+#[test]
+fn saving_applied_screen_preset_keeps_uncontrolled_keys_and_clears_name() {
+    use export_for_screens::PresetPick;
+    let (mut app, _) = app(2, false);
+    app.run(
+        "document.exportPresets.save",
+        json!({
+            "name": "Repeat",
+            "settings": {"formats": [{"format": "png"}], "name": "<name>-###", "counterPer": "file", "antiAlias": "none"}
+        }),
+    )
+    .unwrap();
+    open(&mut app);
+    let preset = export_for_screens::export_presets(&mut app).as_array().unwrap().iter().find(|p| p["name"] == "Repeat").cloned().unwrap();
+    export_for_screens::apply_preset(app.ui.dialog.as_mut().unwrap(), &preset);
+    set(&mut app, "name", json!(""));
+    let mut d = app.ui.dialog.take().unwrap();
+    export_for_screens::preset_pick(&mut app, &mut d, PresetPick::Save("Repeat".into()));
+    app.ui.dialog = Some(d);
+
+    let saved = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Repeat").unwrap_or_else(|| panic!("{}", app.ui.status));
+    assert_eq!(saved.settings.get("counterPer"), Some(&json!("file")));
+    assert_eq!(saved.settings.get("antiAlias"), Some(&json!("none")));
+    assert!(saved.settings.get("name").is_none(), "{:?}", saved.settings);
+}
+
 /// A preset saved without Full Document chooses All again after a Full Document preset, or Range
 /// when the checked artboards are not all of them.
 #[test]

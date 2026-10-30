@@ -457,7 +457,8 @@ pub(crate) fn preset(app: &mut VectorcraftApp, ctx: &egui::Context, doc: u64, pi
 }
 
 /// What Save Preset saves for document `doc` (uid): the preset the panel applied to this document,
-/// with the document's current shared settings over it; else the shared settings alone.
+/// with the document's current shared settings over it, replacing its format choice; else the
+/// shared settings alone.
 fn preset_settings(app: &VectorcraftApp, ctx: &egui::Context, doc: u64) -> Value {
     let shared = shared_settings(app).as_object().cloned().unwrap_or_default();
     let (shown_doc, current): (u64, String) = pstate(ctx, PRESET);
@@ -473,6 +474,12 @@ fn preset_settings(app: &VectorcraftApp, ctx: &egui::Context, doc: u64) -> Value
         return Value::Object(shared);
     }
     let mut settings = applied.clone();
+    if shared.contains_key("preset") {
+        settings.remove("formats");
+    }
+    if shared.contains_key("formats") {
+        settings.remove("preset");
+    }
     settings.extend(shared);
     Value::Object(settings)
 }

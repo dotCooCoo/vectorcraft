@@ -818,10 +818,26 @@ pub(super) fn preset_pick(app: &mut VectorcraftApp, d: &mut Dialog, pick: Preset
             Ok(())
         }
         // The name as saved (trimmed and capped).
-        PresetPick::Save(name) => app.run("document.exportPresets.save", json!({"name": name, "settings": preset_settings(app, d)})).map(|r| {
-            d.fields.remove("__savePreset");
-            d.fields.insert("exportPreset".into(), r["name"].clone());
-        }),
+        PresetPick::Save(name) => {
+            let mut settings = fileio::screen_export_preset_list(&app.session.prefs.screen_export_presets)
+                .as_array()
+                .and_then(|rows| rows.iter().find(|p| p["name"] == d.str("exportPreset")))
+                .and_then(|p| p["settings"].as_object())
+                .cloned()
+                .unwrap_or_default();
+            for key in
+                ["formats", "preset", "settings", "fullDocument", "name", "prefix", "counterStart", "folders", "subfolders", "includeBleed", "folder"]
+            {
+                settings.remove(key);
+            }
+            if let Some(current) = preset_settings(app, d).as_object() {
+                settings.extend(current.clone());
+            }
+            app.run("document.exportPresets.save", json!({"name": name, "settings": settings})).map(|r| {
+                d.fields.remove("__savePreset");
+                d.fields.insert("exportPreset".into(), r["name"].clone());
+            })
+        }
         PresetPick::Delete(name) => app.run("document.exportPresets.delete", json!({ "name": name })).map(|_| {
             d.fields.insert("exportPreset".into(), json!(""));
         }),
