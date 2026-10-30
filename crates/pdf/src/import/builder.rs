@@ -661,8 +661,9 @@ impl<'p> Builder<'p> {
     }
 
     /// Mesh shadings filling `region` (document space): gradient meshes, clipped to the region
-    /// when they reach past it.
-    pub(super) fn draw_meshes(&mut self, meshes: Vec<vectorcraft_doc::live::GradientMesh>, region: &BezPath, opacity: f32) {
+    /// when they reach past it, or always (`clip`: a stroke's outline, which a mesh can lie
+    /// within the box of without filling it).
+    pub(super) fn draw_meshes(&mut self, meshes: Vec<vectorcraft_doc::live::GradientMesh>, region: &BezPath, opacity: f32, clip: bool) {
         let nodes: Vec<Arc<Node>> = meshes.into_iter().map(|m| Arc::new(Node::new(self.id(), NodeKind::Mesh(m)))).collect();
         let Some(art) = bounds(&nodes) else { return };
         let mut content = match <[Arc<Node>; 1]>::try_from(nodes) {
@@ -670,7 +671,7 @@ impl<'p> Builder<'p> {
             Err(all) => Node::group(self.id(), all),
         };
         content.opacity *= opacity;
-        if !contains(region.bounding_box().inflate(0.5, 0.5), art) {
+        if clip || !contains(region.bounding_box().inflate(0.5, 0.5), art) {
             let clip = self.clip_node(region, FillRule::NonZero);
             content = clipped(clip, content, self.id());
         }

@@ -1,6 +1,6 @@
 # Gaps
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-30 · **Change:** minor (G1: Average & Join with a corner or smooth choice, Cmd+Alt+Shift+J, done; estimate unchanged) · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-30 · **Change:** minor (G13: gradient presets done; G1: Average & Join with a corner or smooth choice, Cmd+Alt+Shift+J, done; estimate unchanged) · **Target:** Adobe Illustrator 2026 (30.x)
 
 ## Feature submission evidence
 
@@ -459,7 +459,11 @@ from G14 and the budget run of G15: **~170–270 h** one agent, ~50–80 h wall 
   segments for drawn lines. Controls are saved under Preferences › Smart Guides › Geometric Guides
   and available from Control bar › Snapping; both default to on. Existing-line endpoint editing and
   other tool cases remain unverified. [Public source](https://helpx.adobe.com/illustrator/desktop/measure-and-align/plot-and-measure/snap-to-perpendicular.html).
-- **Missing:** gradient presets (30.0); remaining tangent/perpendicular snapping cases and the consolidated
+- **Done (2026-10-30):** gradient presets (30.0): the Gradient panel's Presets menu applies one of the
+  built-in gradient libraries' presets (by theme) or a saved one to the gradient behind the active proxy, keeping
+  its placement, as one undo step; the panel menu saves the gradient as a preset (kept with the preferences) and
+  deletes saved ones; `gradient.presets.*` commands.
+- **Missing:** remaining tangent/perpendicular snapping cases and the consolidated
   snapping options (30.0); artboard colors in exports and print, and managing artboards from the canvas other
   than locking and unlocking them from the Artboard tool's right-click menu (30.0); the Blend panel with ease
   in/out and separate colour acceleration (30.7);
