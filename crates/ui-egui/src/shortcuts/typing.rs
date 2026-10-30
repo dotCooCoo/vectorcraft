@@ -53,7 +53,7 @@ enum Seq {
     InterruptCommand,
     ResetCompleted(egui::ImeResetId),
     /// Enter, which types a line break.
-    Enter,
+    Enter(Mods),
     /// An editing key with modifiers, an arrow, Home, End, Tab or a clipboard event.
     Edit(TextInput),
 }
@@ -181,7 +181,7 @@ fn type_sequence(ctx: &egui::Context) -> Vec<Seq> {
                 // shortcuts after this.
                 egui::Event::Key { key: Key::Enter, pressed, modifiers: m, .. } if !chord_runs_a_command(Key::Enter, m, true) => {
                     if pressed {
-                        seq.push(Seq::Enter);
+                        seq.push(Seq::Enter(crate::canvas::mods(m, false)));
                     }
                 }
                 e @ egui::Event::PointerButton { button: egui::PointerButton::Primary, pressed, .. } => {
@@ -344,11 +344,11 @@ fn apply_type_event(
             r
         }
         // An Enter that confirms the composition types no line break.
-        Seq::Enter if was_composing || app.session.tool_composing() => Ok(vec![]),
-        Seq::Enter => {
+        Seq::Enter(_) if was_composing || app.session.tool_composing() => Ok(vec![]),
+        Seq::Enter(m) => {
             let target_before = crate::ime::target(&mut app.session, view);
             let before = crate::ime::stamp(&mut app.session, view);
-            let r = app.session.tool_key(ToolKey::Enter, Mods::default(), view);
+            let r = app.session.tool_key(ToolKey::Enter, m, view);
             if r.is_ok() {
                 crate::ime::note_application_edit(app, ctx, view, target_before, before);
             }

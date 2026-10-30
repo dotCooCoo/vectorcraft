@@ -5840,6 +5840,24 @@ fn the_type_tool_takes_text_and_editing_keys_in_the_order_they_came() {
     assert_eq!(plain(&app, id), "0abx9t\tupq1\n\nk2");
 }
 
+/// Enter keeps each key event's modifiers while sharing a frame with typed text.
+#[test]
+fn shift_enter_types_a_soft_return_in_order_with_plain_enter() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.prefs.placeholder_text = false;
+    let ctx = egui::Context::default();
+    let id = start_typing(&mut app, &ctx);
+    let text = |t: &str| egui::Event::Text(t.into());
+    let enter =
+        |modifiers| [true, false].map(|pressed| egui::Event::Key { key: egui::Key::Enter, physical_key: None, pressed, repeat: false, modifiers });
+    typing_frame(
+        &mut app,
+        &ctx,
+        [vec![text("a")], enter(egui::Modifiers::SHIFT).to_vec(), vec![text("b")], enter(egui::Modifiers::NONE).to_vec(), vec![text("c")]].concat(),
+    );
+    assert_eq!(plain(&app, id), "a\u{2028}b\nc");
+}
+
 /// In a frame that began composing, an editing key after the IME's commit applies before the text
 /// that follows it; a key before the commit and an Enter after it stay the IME's.
 #[test]
