@@ -465,6 +465,9 @@ pub(crate) fn parent(d: &Dialog) -> Option<Dialog> {
 pub fn cancel(app: &mut VectorcraftApp) {
     missing_fonts::requeue_replaced(app);
     if let Some(d) = app.ui.dialog.take() {
+        if d.kind == swatch_conflict::KIND {
+            crate::placing::cancel_swatch_paste(app);
+        }
         // Toolbar-only Flare options start no preview and must not cancel a gesture
         // that was already active before opening them.
         let owns_preview = d.kind != flare_options::KIND || d.fields.contains_key(form::PREVIEWED);
@@ -508,6 +511,7 @@ pub fn confirm(app: &mut VectorcraftApp) -> DialogResult {
 /// that dialog is gone, and with no dialog open the next document's Missing Fonts dialog opens
 /// (one dialog at a time).
 pub(crate) fn settle(app: &mut VectorcraftApp) {
+    crate::placing::settle_swatch_paste(app);
     missing_fonts::requeue_replaced(app);
     missing_fonts::stop_when_closed(app);
     find_links::stop_when_closed(app);

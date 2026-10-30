@@ -296,6 +296,240 @@ fn a_copy_or_a_close_while_a_pasted_bitmap_is_read() {
     assert!(app.placing.chains.is_empty() && app.placing.latest_chain.is_empty(), "no paste waits");
 }
 
+#[test]
+fn deferred_fallback_keeps_its_swatch_dialog_art_and_later_copy() {
+    for confirm in [true, false] {
+        let (mut app, _) = pasting_app(true, None, None, true);
+        app.run("swatch.new", json!({"name": "Brand", "color": "#ff0000", "global": true})).unwrap();
+        let source = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        app.run("paint.setFill", json!({"ids": [source], "swatch": "Brand"})).unwrap();
+        app.run("edit.copy", json!({})).unwrap();
+        let requested = app.session.clipboard.clone();
+        app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+        app.run("swatch.new", json!({"name": "Brand", "color": "#0000ff", "global": true})).unwrap();
+        crate::menus::invoke(&mut app, "edit.pasteInPlace", json!({}));
+        assert_eq!(app.placing.pending.len(), 1);
+        let newer = app.run("shape.rectangle", json!({"x": 200, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        app.run("edit.copy", json!({})).unwrap();
+        let copied = app.session.clipboard.clone();
+        assert!(requested != copied);
+        placed(&mut app);
+        assert_eq!(app.ui.dialog.as_ref().unwrap().kind, crate::dialogs::swatch_conflict::KIND);
+        assert_eq!(app.ui.dialog.as_ref().unwrap().fields["conflicts"][0]["clipboard"], "#ff0000");
+        assert!(app.session.clipboard == copied);
+        let latest = app.run("shape.rectangle", json!({"x": 250, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        app.run("edit.copy", json!({})).unwrap();
+        let latest_copy = app.session.clipboard.clone();
+        if confirm {
+            app.ui.dialog.as_mut().unwrap().fields.insert("choice".into(), json!("add"));
+            crate::dialogs::confirm(&mut app).unwrap();
+            assert!(app.ui.dialog.is_none());
+            let st = app.session.doc().unwrap();
+            let pasted = st.doc.node(st.selection.objects[0]).unwrap();
+            assert_eq!(pasted.geometric_bounds().unwrap().x0, 10.0);
+            assert_eq!(pasted.appearance.fill_paint().color(), Some(vectorcraft_color::Color::from_hex("#ff0000").unwrap()));
+        } else {
+            crate::dialogs::cancel(&mut app);
+            assert!(app.ui.dialog.is_none());
+            assert_eq!(app.session.doc().unwrap().doc.layers[0].children().unwrap().len(), 2);
+        }
+        assert!(app.session.clipboard == latest_copy);
+        app.run("edit.pasteInPlace", json!({})).unwrap();
+        let st = app.session.doc().unwrap();
+        assert_eq!(st.doc.node(st.selection.objects[0]).unwrap().geometric_bounds().unwrap().x0, 250.0);
+        assert!(st.doc.node(NodeId(newer)).is_some() && st.doc.node(NodeId(latest)).is_some());
+    }
+}
+
+#[test]
+fn a_synchronous_paste_replaces_a_deferred_swatch_dialog() {
+    let (mut app, _) = pasting_app(true, None, None, true);
+    app.run("swatch.new", json!({"name": "Brand", "color": "#ff0000", "global": true})).unwrap();
+    let first = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
+    app.run("paint.setFill", json!({"ids": [first], "swatch": "Brand"})).unwrap();
+    app.run("edit.copy", json!({})).unwrap();
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    app.run("swatch.new", json!({"name": "Brand", "color": "#0000ff", "global": true})).unwrap();
+    crate::menus::invoke(&mut app, "edit.pasteInPlace", json!({}));
+    placed(&mut app);
+    assert_eq!(app.ui.dialog.as_ref().unwrap().fields["conflicts"][0]["clipboard"], "#ff0000");
+    app.run("swatch.new", json!({"name": "Other", "color": "#ffff00", "global": true})).unwrap();
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    app.run("swatch.new", json!({"name": "Other", "color": "#00ff00", "global": true})).unwrap();
+    let second = app.run("shape.rectangle", json!({"x": 200, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
+    app.run("paint.setFill", json!({"ids": [second], "swatch": "Other"})).unwrap();
+    app.run("edit.copy", json!({})).unwrap();
+    app.session.set_active(1);
+    app.sync_views();
+    let result = crate::control::handle(
+        &mut app,
+        &egui::Context::default(),
+        &crate::control::ControlRequest::new("engine.execute", json!({"command": "edit.pasteInPlace", "params": {}})).0,
+    );
+    let crate::control::Outcome::Done(result) = result else { panic!("expected command result") };
+    assert_eq!(result["ok"], true, "{result}");
+    assert_eq!(app.ui.dialog.as_ref().unwrap().fields["conflicts"][0]["clipboard"], "#00ff00");
+    app.ui.dialog.as_mut().unwrap().fields.insert("choice".into(), json!("add"));
+    crate::dialogs::confirm(&mut app).unwrap();
+    let st = app.session.doc().unwrap();
+    assert_eq!(st.doc.node(st.selection.objects[0]).unwrap().geometric_bounds().unwrap().x0, 200.0);
+    assert!(app.placing.chains.is_empty());
+}
+
+#[test]
+fn a_find_font_dialog_releases_a_deferred_swatch_paste_before_queued_work() {
+    for id in ["edit.pasteInFront", "edit.pasteInBack"] {
+        let (mut app, _) = pasting_app(true, None, None, true);
+        app.run("swatch.new", json!({"name": "Brand", "color": "#ff0000", "global": true})).unwrap();
+        let source = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
+        app.run("paint.setFill", json!({"ids": [source], "swatch": "Brand"})).unwrap();
+        app.run("edit.copy", json!({})).unwrap();
+        let requested = app.session.clipboard.clone();
+        app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+        app.run("swatch.new", json!({"name": "Brand", "color": "#0000ff", "global": true})).unwrap();
+        let anchor = app.run("shape.rectangle", json!({"x": 100, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        app.run("select.set", json!({"ids": [anchor]})).unwrap();
+        crate::menus::invoke(&mut app, id, json!({}));
+        crate::menus::invoke(&mut app, id, json!({}));
+        let start = std::time::Instant::now();
+        while app.ui.dialog.is_none() && start.elapsed().as_secs() < 60 {
+            poll(&mut app);
+            std::thread::yield_now();
+        }
+        assert_eq!(app.ui.dialog.as_ref().unwrap().kind, crate::dialogs::swatch_conflict::KIND);
+        assert_eq!(app.placing.pending.len(), 1);
+        let later = app.run("shape.rectangle", json!({"x": 200, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        app.run("edit.copy", json!({})).unwrap();
+        let newer = app.session.clipboard.clone();
+        assert!(requested != newer);
+        let result = crate::control::handle(
+            &mut app,
+            &egui::Context::default(),
+            &crate::control::ControlRequest::new("engine.execute", json!({"command": "type.findFont", "params": {}})).0,
+        );
+        let crate::control::Outcome::Done(result) = result else { panic!("expected command result") };
+        assert_eq!(result["ok"], true, "{result}");
+        assert_eq!(app.ui.dialog.as_ref().unwrap().kind, "findFont");
+        assert!(app.placing.swatch_paste.is_none());
+        assert_eq!(app.placing.chains.values().map(|ch| ch.waiting).collect::<Vec<_>>(), [1]);
+        assert_eq!(app.session.doc().unwrap().doc.layers[0].children().unwrap().len(), 2);
+        crate::dialogs::cancel(&mut app);
+        placed(&mut app);
+        assert_eq!(app.ui.dialog.as_ref().unwrap().kind, crate::dialogs::swatch_conflict::KIND);
+        app.ui.dialog.as_mut().unwrap().fields.insert("choice".into(), json!("add"));
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert!(app.ui.dialog.is_none());
+        let st = app.session.doc().unwrap();
+        let pasted_id = st.selection.objects[0];
+        let pasted = st.doc.node(pasted_id).unwrap();
+        assert_eq!(pasted.geometric_bounds().unwrap().x0, 10.0, "{id}");
+        assert_eq!(pasted.appearance.fill_paint().color(), Some(vectorcraft_color::Color::from_hex("#ff0000").unwrap()));
+        let order: Vec<_> = st.doc.layers[0].children().unwrap().iter().map(|n| n.id).collect();
+        let anchor_pos = order.iter().position(|n| *n == NodeId(anchor)).unwrap();
+        let pasted_pos = order.iter().position(|n| *n == pasted_id).unwrap();
+        assert_eq!(pasted_pos, if id.ends_with("Front") { anchor_pos + 1 } else { anchor_pos - 1 }, "{id}");
+        assert!(st.doc.node(NodeId(later)).is_some());
+        assert!(app.session.clipboard == newer);
+        assert!(app.placing.chains.is_empty() && app.placing.latest_chain.is_empty());
+    }
+}
+
+#[test]
+fn a_deferred_swatch_paste_rejects_a_changed_token_or_closed_document() {
+    for close_document in [false, true] {
+        let (mut app, _) = pasting_app(true, None, None, true);
+        app.run("swatch.new", json!({"name": "Brand", "color": "#ff0000", "global": true})).unwrap();
+        let source = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
+        app.run("paint.setFill", json!({"ids": [source], "swatch": "Brand"})).unwrap();
+        app.run("edit.copy", json!({})).unwrap();
+        let clipboard = app.session.clipboard.clone();
+        app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+        app.run("swatch.new", json!({"name": "Brand", "color": "#0000ff", "global": true})).unwrap();
+        crate::menus::invoke(&mut app, "edit.pasteInPlace", json!({}));
+        placed(&mut app);
+        assert_eq!(app.ui.dialog.as_ref().unwrap().kind, crate::dialogs::swatch_conflict::KIND);
+        if close_document {
+            app.session.execute("file.close", &json!({})).unwrap();
+        } else {
+            let result = crate::control::handle(
+                &mut app,
+                &egui::Context::default(),
+                &crate::control::ControlRequest::new("ui.dialog.set", json!({"field": "__deferredPaste", "value": 999999})).0,
+            );
+            let crate::control::Outcome::Done(result) = result else { panic!("expected dialog result") };
+            assert_eq!(result["ok"], true, "{result}");
+        }
+        let error = crate::dialogs::confirm(&mut app).unwrap_err();
+        assert!(
+            error.contains(if close_document { "document it was pasted in was closed" } else { "deferred paste is no longer available" }),
+            "{error}"
+        );
+        assert!(app.ui.dialog.is_none());
+        assert!(app.placing.swatch_paste.is_none());
+        assert!(app.placing.chains.is_empty() && app.placing.latest_chain.is_empty());
+        assert!(app.session.clipboard == clipboard);
+        let st = app.session.doc().unwrap();
+        assert_eq!(st.doc.layers[0].children().unwrap().len(), if close_document { 1 } else { 0 });
+    }
+}
+
+#[test]
+fn a_deferred_swatch_paste_uses_its_original_layer() {
+    let (mut app, _) = pasting_app(true, None, None, true);
+    app.run("swatch.new", json!({"name": "Brand", "color": "#ff0000", "global": true})).unwrap();
+    let source = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
+    app.run("paint.setFill", json!({"ids": [source], "swatch": "Brand"})).unwrap();
+    app.run("edit.copy", json!({})).unwrap();
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    app.run("swatch.new", json!({"name": "Brand", "color": "#0000ff", "global": true})).unwrap();
+    let first = app.session.doc().unwrap().doc.layers[0].id;
+    let selected = app.run("shape.rectangle", json!({"x": 100, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
+    app.run("select.set", json!({"ids": [selected]})).unwrap();
+    crate::menus::invoke(&mut app, "edit.pasteInPlace", json!({}));
+    app.run("layer.new", json!({})).unwrap();
+    let second = app.session.doc().unwrap().current_layer().unwrap();
+    placed(&mut app);
+    assert_eq!(app.ui.dialog.as_ref().unwrap().kind, crate::dialogs::swatch_conflict::KIND);
+    app.ui.dialog.as_mut().unwrap().fields.insert("choice".into(), json!("add"));
+    crate::dialogs::confirm(&mut app).unwrap();
+    let st = app.session.doc().unwrap();
+    assert_eq!(st.doc.layer_containing(st.selection.objects[0]), Some(first));
+    assert_eq!(st.current_layer(), Some(second));
+}
+
+#[test]
+fn a_queued_paste_stacks_after_a_deferred_swatch_confirmation() {
+    for id in ["edit.pasteInFront", "edit.pasteInBack"] {
+        let (mut app, _) = pasting_app(true, None, None, true);
+        app.run("swatch.new", json!({"name": "Brand", "color": "#ff0000", "global": true})).unwrap();
+        let source = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
+        app.run("paint.setFill", json!({"ids": [source], "swatch": "Brand"})).unwrap();
+        app.run("edit.copy", json!({})).unwrap();
+        app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+        app.run("swatch.new", json!({"name": "Brand", "color": "#0000ff", "global": true})).unwrap();
+        let anchor = app.run("shape.rectangle", json!({"x": 100, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
+        app.run("select.set", json!({"ids": [anchor]})).unwrap();
+        crate::menus::invoke(&mut app, id, json!({}));
+        crate::menus::invoke(&mut app, id, json!({}));
+        let start = std::time::Instant::now();
+        while app.ui.dialog.is_none() && start.elapsed().as_secs() < 60 {
+            poll(&mut app);
+            std::thread::yield_now();
+        }
+        assert_eq!(app.placing.pending.len(), 1);
+        app.ui.dialog.as_mut().unwrap().fields.insert("choice".into(), json!("add"));
+        crate::dialogs::confirm(&mut app).unwrap();
+        placed(&mut app);
+        assert_eq!(app.ui.dialog.as_ref().unwrap().kind, crate::dialogs::swatch_conflict::KIND);
+        app.ui.dialog.as_mut().unwrap().fields.insert("choice".into(), json!("add"));
+        crate::dialogs::confirm(&mut app).unwrap();
+        let st = app.session.doc().unwrap();
+        let xs: Vec<_> = st.doc.layers[0].children().unwrap().iter().map(|n| n.geometric_bounds().unwrap().x0).collect();
+        let expected = if id.ends_with("Front") { vec![100.0, 10.0, 10.0] } else { vec![10.0, 10.0, 100.0] };
+        assert_eq!(xs, expected, "{id}");
+    }
+}
+
 /// A paste given while a pasted bitmap is read waits for it, also when it pastes the internal
 /// clipboard or another app's text at once: it is pasted above the picture, and what it pasted
 /// stays on the internal clipboard.

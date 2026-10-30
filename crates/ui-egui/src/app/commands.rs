@@ -6,11 +6,14 @@ impl VectorcraftApp {
     /// Run a UI or engine command by id. The single entry point for every frontend path.
     pub fn run(&mut self, id: &str, params: Value) -> Result<Value, String> {
         // A file dialog it shows off the UI thread runs it again with the path picked.
-        if self.picks.is_entry_free() {
+        let result = if self.picks.is_entry_free() {
             let entry = picks::Entry::Command(id.to_string(), params.clone());
-            return picks::as_entry(self, move || entry, |app| app.run_now(id, params));
-        }
-        self.run_now(id, params)
+            picks::as_entry(self, move || entry, |app| app.run_now(id, params))
+        } else {
+            self.run_now(id, params)
+        };
+        placing::settle_swatch_paste(self);
+        result
     }
 
     /// [`Self::run`] it, inside what asks for file dialogs.

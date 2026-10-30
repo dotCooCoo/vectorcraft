@@ -146,6 +146,8 @@ type Job = Box<dyn FnOnce() + Send>;
 #[derive(Default)]
 pub struct Placing {
     pub pending: Vec<Pending>,
+    /// A deferred paste awaiting its own Swatch Conflict dialog.
+    swatch_paste: Option<PendingSwatch>,
     /// Set by unit tests whose app reads the files the user places off the UI thread.
     pub(crate) off_the_ui_thread: bool,
     /// Set while [`crate::menus::invoke`] runs a Paste the user gave.
@@ -165,6 +167,14 @@ pub struct Placing {
     /// Unit tests: how many reads run now, and the most that ran at once.
     #[cfg(test)]
     pub(crate) reading: std::sync::Arc<[std::sync::atomic::AtomicUsize; 2]>,
+}
+
+struct PendingSwatch {
+    clipboard: Clipboard,
+    insertion: Insertion,
+    selection: Vec<vectorcraft_doc::NodeId>,
+    doc: u64,
+    chain: u64,
 }
 
 /// Does `app` read a file the user places off the UI thread? Where documents open off it
@@ -358,6 +368,7 @@ fn spawn_labeled(
 /// button is not held is waiting between its clicks (the Dimension tool after its first point):
 /// the file is placed unless the tool has a preview open (the Flare tool after its center drag).
 pub fn poll(app: &mut VectorcraftApp) {
+    settle_swatch_paste(app);
     while app.ui.dialog.is_none()
         && !app.session.in_interaction()
         && !(app.session.tool_busy() && app.session.pointer_held())
@@ -374,15 +385,10 @@ pub fn poll(app: &mut VectorcraftApp) {
             app.ui.status.clear();
         }
         finish(app, &p, r);
-        // A chain none of whose pastes waits any more is dropped, whether its pastes ran or not.
         if let Some(chain) = p.chain
-            && let Some(ch) = app.placing.chains.get_mut(&chain)
+            && !app.placing.swatch_paste.as_ref().is_some_and(|waiting| waiting.chain == chain)
         {
-            ch.waiting = ch.waiting.saturating_sub(1);
-            if ch.waiting == 0 {
-                app.placing.chains.remove(&chain);
-                app.placing.latest_chain.retain(|_, c| *c != chain);
-            }
+            finish_chain(app, chain);
         }
     }
 }
@@ -436,6 +442,7 @@ fn finish_paste(app: &mut VectorcraftApp, paste: Paste) {
     };
     let chain = paste.chain;
     let selection = paste.selection.or_else(|| app.placing.chains.get_mut(&chain).and_then(|ch| ch.left.take()));
+    let mut deferred = false;
     let left = match adopted {
         Err(e) => {
             app.status(e);
@@ -457,11 +464,25 @@ fn finish_paste(app: &mut VectorcraftApp, paste: Paste) {
             // group, the object Draw Inside draws into), and what the user changed meanwhile is
             // kept.
             paste.insertion.clone().set(app);
+            let requested_selection = app.session.doc().map(|st| st.selection.objects.clone()).unwrap_or_default();
             app.placing.adopted = true;
             // `run` shows an error in the status bar.
             let _ = app.run(&paste.id, paste.params);
             // Also when the paste did not reach the clipboard (the Type tool took it).
             app.placing.adopted = false;
+            if let Some(d) = app.ui.dialog.as_mut().filter(|d| d.kind == crate::dialogs::swatch_conflict::KIND) {
+                d.fields.insert("__deferredPaste".into(), json!(chain));
+                if let Ok(st) = app.session.doc() {
+                    app.placing.swatch_paste = Some(PendingSwatch {
+                        clipboard: app.session.clipboard.clone(),
+                        insertion: paste.insertion.clone(),
+                        selection: requested_selection,
+                        doc: st.uid,
+                        chain,
+                    });
+                    deferred = true;
+                }
+            }
             if let Some(current) = current {
                 current.restore_changed(&paste.insertion, app);
             }
@@ -471,7 +492,7 @@ fn finish_paste(app: &mut VectorcraftApp, paste: Paste) {
     // The chain's next paste takes the selection this one left, and a paste given with it and the
     // insertion context joins the chain while a paste of it waits ([`poll`] drops the chain).
     let context = app.session.doc().ok().map(|st| st.selection.objects.clone()).zip(Insertion::of(app));
-    if let Some(ch) = app.placing.chains.get_mut(&chain) {
+    if !deferred && let Some(ch) = app.placing.chains.get_mut(&chain) {
         ch.left = left;
         if let Some(context) = context {
             ch.context = context;
@@ -480,6 +501,83 @@ fn finish_paste(app: &mut VectorcraftApp, paste: Paste) {
     if let Some(kept) = kept {
         app.session.clipboard = kept;
     }
+}
+
+fn finish_chain(app: &mut VectorcraftApp, chain: u64) {
+    if let Some(ch) = app.placing.chains.get_mut(&chain) {
+        ch.waiting = ch.waiting.saturating_sub(1);
+        if ch.waiting == 0 {
+            app.placing.chains.remove(&chain);
+            app.placing.latest_chain.retain(|_, c| *c != chain);
+        }
+    }
+}
+
+/// Release a deferred paste when its Swatch Conflict dialog is canceled or replaced.
+pub(crate) fn cancel_swatch_paste(app: &mut VectorcraftApp) {
+    if let Some(waiting) = app.placing.swatch_paste.take() {
+        if let Some(ch) = app.placing.chains.get_mut(&waiting.chain) {
+            ch.left = Some(waiting.selection);
+        }
+        finish_chain(app, waiting.chain);
+    }
+}
+
+/// Release a deferred paste once its dialog is no longer the active dialog.
+pub(crate) fn settle_swatch_paste(app: &mut VectorcraftApp) {
+    let active = app.placing.swatch_paste.as_ref().is_some_and(|waiting| {
+        app.ui.dialog.as_ref().is_some_and(|d| {
+            d.kind == crate::dialogs::swatch_conflict::KIND && d.fields.get("__deferredPaste").and_then(Value::as_u64) == Some(waiting.chain)
+        })
+    });
+    if app.placing.swatch_paste.is_some() && !active {
+        cancel_swatch_paste(app);
+    }
+}
+
+/// Run the command confirmed by the deferred paste's Swatch Conflict dialog.
+pub(crate) fn confirm_swatch_paste(app: &mut VectorcraftApp, id: &str, params: Value, token: Option<u64>) -> Result<Value, String> {
+    if !app.placing.swatch_paste.as_ref().is_some_and(|waiting| Some(waiting.chain) == token) {
+        if token.is_some() || app.placing.swatch_paste.is_some() {
+            cancel_swatch_paste(app);
+            return Err("the deferred paste is no longer available".into());
+        }
+        return app.run(id, params);
+    }
+    let Some(waiting) = app.placing.swatch_paste.take() else { return app.run(id, params) };
+    let Some(index) = app.session.documents().iter().position(|st| st.uid == waiting.doc) else {
+        finish_chain(app, waiting.chain);
+        return Err("Couldn't paste: the document it was pasted in was closed".into());
+    };
+    app.session.set_active(index);
+    app.sync_views();
+    let current = std::mem::replace(&mut app.session.clipboard, waiting.clipboard);
+    let changed = Insertion::of(app);
+    let now = app.session.doc().map(|st| st.selection.objects.clone()).unwrap_or_default();
+    let selected: Vec<u64> =
+        waiting.selection.iter().filter(|id| app.session.doc().is_ok_and(|st| st.doc.node(**id).is_some())).map(|id| id.0).collect();
+    if selected != now.iter().map(|id| id.0).collect::<Vec<_>>() {
+        let _ = app.session.execute("select.set", &json!({"ids": selected}));
+    }
+    let insertion = waiting.insertion.clone();
+    insertion.clone().set(app);
+    app.placing.adopted = true;
+    let result = app.run(id, params);
+    app.placing.adopted = false;
+    if let Some(changed) = changed {
+        changed.restore_changed(&insertion, app);
+    }
+    app.session.clipboard = current;
+    let left = if result.is_ok() { app.session.doc().ok().map(|st| st.selection.objects.clone()) } else { Some(waiting.selection) };
+    let context = app.session.doc().ok().map(|st| st.selection.objects.clone()).zip(Insertion::of(app));
+    if let Some(ch) = app.placing.chains.get_mut(&waiting.chain) {
+        ch.left = left;
+        if let Some(context) = context {
+            ch.context = context;
+        }
+    }
+    finish_chain(app, waiting.chain);
+    result
 }
 
 #[cfg(test)]
