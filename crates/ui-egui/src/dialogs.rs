@@ -130,7 +130,7 @@ pub use export_for_screens::open as open_export_for_screens;
 pub(crate) use export_for_screens::{
     KIND as EXPORT_FOR_SCREENS, PresetPick as ScreenPresetPick, export_preset as screen_export_preset, formats as screen_formats,
     import_presets as screen_import_presets, open_assets as open_export_for_screens_assets, preset_list as screen_preset_list,
-    preset_row as screen_preset_row, saved_options as screen_saved_options, saved_rows as screen_saved_rows,
+    saved_options as screen_saved_options, saved_rows as screen_saved_rows,
 };
 pub(crate) use form::{humanize, number_list_text, read_number_list, unit_suffix};
 pub(crate) use new_document::preset_name;

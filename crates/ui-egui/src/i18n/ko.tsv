@@ -2719,6 +2719,7 @@ mark-style	Japanese	일본식
 	Saturate	채도 높이기
 	Saturation	채도
 	Save As	다른 이름으로 저장
+	Save As Preset…	사전 설정으로 저장…
 	Save Colors as Swatches	색상을 견본으로 저장
 	Save Document	문서 저장
 	Save Document Info…	문서 정보 저장…
@@ -2742,6 +2743,7 @@ mark-style	Japanese	일본식
 	Save a Copy	사본 저장
 	Save as Template	템플릿으로 저장
 	Save as preset:	사전 설정으로 저장:
+	Save Changes	변경 사항 저장
 	Save changes to {name}	{name}의 변경 내용 저장
 	Save color group to Swatch panel	색상 그룹을 견본 패널에 저장
 	Save each artboard to a separate file	아트보드별로 별도 파일에 저장

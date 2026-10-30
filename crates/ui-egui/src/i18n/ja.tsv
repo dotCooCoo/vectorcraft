@@ -2732,6 +2732,7 @@ mark-style	Japanese	日本式
 	Saturate	彩度を調整
 	Saturation	彩度
 	Save As	別名で保存
+	Save As Preset…	プリセットとして保存…
 	Save Colors as Swatches	カラーをスウォッチとして保存
 	Save Document	ドキュメントを保存
 	Save Document Info…	ドキュメント情報を保存…
@@ -2755,6 +2756,7 @@ mark-style	Japanese	日本式
 	Save a Copy	コピーを保存
 	Save as Template	テンプレートとして保存
 	Save as preset:	プリセットとして保存:
+	Save Changes	変更を保存
 	Save changes to {name}	{name} への変更を保存
 	Save color group to Swatch panel	カラーグループをスウォッチパネルに保存
 	Save each artboard to a separate file	アートボードごとに別のファイルに保存

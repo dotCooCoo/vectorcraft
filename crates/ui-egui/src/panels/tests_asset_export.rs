@@ -53,6 +53,23 @@ fn frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>
     v
 }
 
+/// One frame of the panel menu, including its item positions.
+fn menu_frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> Vec<(String, Rect)> {
+    let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(236.0, 700.0))), events, ..Default::default() };
+    let mut out = ctx.run_ui(raw, |ui| menu(app, ui));
+    out.textures_delta.clear();
+    fn texts(s: &egui::Shape, out: &mut Vec<(String, Rect)>) {
+        match s {
+            egui::Shape::Text(t) => out.push((t.galley.text().to_string(), t.visual_bounding_rect())),
+            egui::Shape::Vec(v) => v.iter().for_each(|s| texts(s, out)),
+            _ => {}
+        }
+    }
+    let mut labels = vec![];
+    out.shapes.iter().for_each(|s| texts(&s.shape, &mut labels));
+    labels
+}
+
 fn click(at: Pos2) -> Vec<egui::Event> {
     let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
     vec![egui::Event::PointerMoved(at), button(true), button(false)]
@@ -218,45 +235,50 @@ fn the_rows_are_the_shared_export_settings() {
     assert_eq!(log[0].0, "Untitled-1.zip");
 }
 
-/// The panel's Export Preset row applies a preset to the shared settings, saves them as a preset,
-/// and lists presets imported while it is open.
+/// The panel menu applies and saves presets, and lists presets imported while it is open.
 #[test]
-fn the_export_preset_row_applies_saves_and_lists_presets() {
+fn the_preset_menu_applies_saves_and_lists_presets() {
     let (mut app, _, [a, _]) = app(true);
     app.run("assets.add", json!({"ids": [a]})).unwrap();
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     frame(&ctx, &mut app, vec![], false);
     let texts = frame(&ctx, &mut app, vec![], false);
-    assert!(has(&texts, "Export Preset:"));
-    // The first Custom is the preset dropdown (the format rows' preset dropdown follows it).
-    frame(&ctx, &mut app, click(at(&texts, "Custom")), false);
-    let texts = frame(&ctx, &mut app, vec![], false);
-    frame(&ctx, &mut app, click(at(&texts, "Logo Package")), false);
+    assert!(!has(&texts, "Export Preset:"));
+    menu_frame(&ctx, &mut app, vec![]);
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Logo Package")));
     let settings = app.run("document.exportSettings", json!({})).unwrap()["settings"].clone();
     assert_eq!(settings["formats"].as_array().map(Vec::len), Some(5), "{settings}");
-    let texts = frame(&ctx, &mut app, vec![], false);
-    assert!(has(&texts, "Logo Package"), "the dropdown shows the preset applied");
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    assert!(has(&texts, "✓ Logo Package"), "the menu checks the applied preset");
     // Save: the shared settings under a name of their own.
-    let doc = app.session.active().unwrap().uid;
-    super::asset_export::preset(&mut app, &ctx, doc, crate::dialogs::ScreenPresetPick::Save("Mine".into()));
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Save As Preset…")));
+    let texts = frame(&ctx, &mut app, vec![], false);
+    assert!(has(&texts, "Name:"));
+    super::set_pstate(&ctx, "asset-export-save-preset", Some("Mine".to_string()));
+    let texts = frame(&ctx, &mut app, vec![], false);
+    frame(&ctx, &mut app, click(at(&texts, "Save")), false);
     let mine = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Mine").expect("saved").clone();
     assert_eq!(mine.settings["formats"], settings["formats"]);
     // Create Sub-folders, off after a preset that sorts by format, is saved with it.
     assert_eq!((mine.settings.get("folders"), mine.settings.get("subfolders")), (None, Some(&json!(false))), "{:?}", mine.settings);
-    let texts = frame(&ctx, &mut app, vec![], false);
-    assert!(has(&texts, "Mine"), "the dropdown shows the preset saved");
-    // A preset file opened while the panel shows (the web's Import) is in its dropdown.
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    assert!(has(&texts, "✓ Mine"), "the menu checks the saved preset");
+    // A preset file opened while the panel shows (the web's Import) is in its menu.
     let data = app.run("document.exportPresets.export", json!({"names": ["Mine"]})).unwrap()["data"].as_str().unwrap().to_string();
     crate::io::open_bytes(&mut app, "pack.vcexportpresets", data.as_bytes(), None).unwrap();
-    let texts = frame(&ctx, &mut app, vec![], false);
-    frame(&ctx, &mut app, click(at(&texts, "Mine")), false);
-    let texts = frame(&ctx, &mut app, vec![], false);
-    assert!(has(&texts, "Mine 2"), "{:?}", texts.iter().map(|t| &t.0).collect::<Vec<_>>());
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    assert!(has(&texts, "   Mine 2"), "{:?}", texts.iter().map(|t| &t.0).collect::<Vec<_>>());
     // A mobile preset with no sub-folders is saved again with no sub-folders.
     app.run("document.exportPresets.save", json!({"name": "Flat", "settings": {"preset": "mobile", "folders": "none"}})).unwrap();
-    app.run("assets.settings.set", json!({"exportPreset": "Flat"})).unwrap();
-    super::asset_export::preset(&mut app, &ctx, doc, crate::dialogs::ScreenPresetPick::Save("Flat Again".into()));
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Flat")));
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Save As Preset…")));
+    super::set_pstate(&ctx, "asset-export-save-preset", Some("Flat Again".to_string()));
+    let texts = frame(&ctx, &mut app, vec![], false);
+    frame(&ctx, &mut app, click(at(&texts, "Save")), false);
     let again = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Flat Again").expect("saved").clone();
     assert_eq!(
         (again.settings.get("preset"), again.settings.get("subfolders")),
@@ -274,14 +296,41 @@ fn the_panel_builds_the_preset_list_again_only_when_the_presets_change() {
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     frame(&ctx, &mut app, vec![], false);
+    menu_frame(&ctx, &mut app, vec![]);
     app.asset_export_presets[0]["mark"] = json!(true);
     frame(&ctx, &mut app, vec![], false);
-    frame(&ctx, &mut app, vec![], false);
+    menu_frame(&ctx, &mut app, vec![]);
     assert_eq!(app.asset_export_presets[0]["mark"], true, "the list was not built again");
     app.run("document.exportPresets.save", json!({"name": "Mine", "settings": {"formats": [{"format": "svg"}]}})).unwrap();
-    frame(&ctx, &mut app, vec![], false);
+    menu_frame(&ctx, &mut app, vec![]);
     let list = &app.asset_export_presets;
     assert!(list[0].get("mark").is_none() && list.as_array().unwrap().iter().any(|p| p["name"] == "Mine"), "{list}");
+}
+
+#[test]
+fn the_preset_menu_saves_changes_and_opens_import_and_export() {
+    let (mut app, log, _) = app(true);
+    app.run("document.exportPresets.save", json!({"name": "Pack", "settings": {"formats": [{"format": "svg"}]}})).unwrap();
+    let opened = Rc::new(RefCell::new(0));
+    let opened_for_picker = opened.clone();
+    app.services.open_async = Some(Box::new(move || *opened_for_picker.borrow_mut() += 1));
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    menu_frame(&ctx, &mut app, vec![]);
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Pack")));
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    assert!(has(&texts, "✓ Pack"));
+    app.run("assets.settings.set", json!({"formats": [{"format": "png", "scale": "2x"}]})).unwrap();
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Save Changes")));
+    let pack = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Pack").unwrap();
+    assert_eq!(pack.settings["formats"][0]["format"], "png");
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Export Preset…")));
+    assert_eq!(log.borrow()[0].0, "Pack.vcexportpresets");
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Import Preset…")));
+    assert_eq!(*opened.borrow(), 1);
 }
 
 #[cfg(not(target_arch = "wasm32"))]

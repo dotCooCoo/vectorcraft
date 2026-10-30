@@ -2292,6 +2292,7 @@
 	Saturation	Saturação
 	Save	Salvar
 	Save As	Salvar Como
+	Save As Preset…	Salvar como predefinição…
 	Save As…	Salvar Como…
 	Save Colors as Swatches	Salvar Cores como Amostras
 	Save Document	Salvar Documento
@@ -2323,6 +2324,7 @@
 	Save as Template	Salvar como Modelo
 	Save as Template…	Salvar como Modelo…
 	Save as preset:	Salvar como predefinido:
+	Save Changes	Salvar alterações
 	Save changes to {name}	Salvar alterações em {name}
 	Save color group to Swatch panel	Salvar grupo de cores no painel Amostras
 	Save each artboard to a separate file	Salvar cada mesa de trabalho em um arquivo separado

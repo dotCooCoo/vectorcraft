@@ -1033,7 +1033,7 @@ fn a_preset_with_empty_folders_uses_its_subfolders() {
     assert_eq!((field(&app, "folders"), field(&app, "subfolders")), (json!("none"), json!(false)));
 }
 
-/// The Asset Export panel's Export Preset… writes a preset to a file and its Import Preset… adds
+/// The Asset Export panel menu's Export Preset… writes a preset to a file and its Import Preset… adds
 /// the presets of a file, which the open dialog's dropdown then lists, as it does after opening
 /// the file (the web's Import).
 #[cfg(not(target_arch = "wasm32"))]
@@ -1186,7 +1186,7 @@ fn the_subfolders_field_follows_the_folders() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
-/// The Asset Export panel's Import Preset… and Export Preset… show their file dialogs off the UI
+/// The Asset Export panel menu's Import Preset… and Export Preset… show their file dialogs off the UI
 /// thread (as sheets on macOS) and read or write the file when the dialog answers.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]

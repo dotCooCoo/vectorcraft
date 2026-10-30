@@ -3983,7 +3983,8 @@ Batch exports (#1935):
   name that already ends in a number gets the next free one, so `Web 2` comes in as `Web 3`; a file with settings
   `.save` refuses, or with more than 1000 presets, adds none). A preset name, saved or imported, keeps its first 255
   characters. Opening a `.vcexportpresets` file imports it.
-  `assets.settings.set {exportPreset}` applies a preset to the settings the Asset Export panel shares: its rows or
+  The Asset Export panel menu lists presets and holds Save As Preset…, Save Changes, Delete Preset, Import Preset…
+  and Export Preset…. `assets.settings.set {exportPreset}` applies a preset to the settings the panel shares: its rows or
   `preset`, its format settings, its prefix (none when it has none), its `folders` (Create Sub-folders is on for `rows`
   only) and anti-aliasing. With Create Sub-folders off, `assets.export` writes every file into the folder itself,
   mobile and density rows included.
