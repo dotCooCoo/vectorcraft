@@ -4153,6 +4153,49 @@ fn cmd_wheel_scrolls_sideways_preference() {
     assert!(zooms_in(turn(&mut app, "")), "with Zoom with Mouse Wheel: the wheel zooms in about the pointer");
 }
 
+/// With Scroll Sideways with Cmd/Ctrl + Wheel on and Animated Zoom off, Alt + Cmd-wheel zooms
+/// about the pointer by egui's Cmd-wheel zoom, as Cmd-wheel does with the option off, and
+/// Cmd-wheel alone scrolls sideways.
+#[test]
+fn cmd_wheel_sideways_alt_cmd_zooms_without_animated_zoom() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    for (key, value) in [("ctrlWheelScrollsSideways", true), ("zoomWithMouseWheel", false), ("animatedZoom", false)] {
+        app.session.execute("prefs.set", &json!({"key": key, "value": value})).unwrap();
+    }
+    let ctx = egui::Context::default();
+    let run = |app: &mut VectorcraftApp| {
+        let mut raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), ..Default::default() };
+        app.raw_input_hook(&ctx, &mut raw);
+        let mut out = ctx.run_ui(raw, |ui| show(app, ui));
+        out.textures_delta.clear();
+    };
+    run(&mut app);
+    let rect = app.canvas_rect.unwrap();
+    let at = rect.center() + vec2(60.0, 40.0);
+    let before = *app.view().unwrap();
+    crate::tests_synthetic::control(&mut app, &ctx, "ui.wheel", json!({"x": at.x, "y": at.y, "dy": 1, "alt": true, "cmd": true}));
+    for _ in 0..40 {
+        run(&mut app);
+    }
+    let after = *app.view().unwrap();
+    let expected = ctx.options(|o| f64::from(o.input_options.line_scroll_speed * o.input_options.scroll_zoom_speed).exp());
+    let zoom = after.zoom / before.zoom;
+    assert!((zoom - expected).abs() < 1e-3, "Alt + Cmd-wheel zooms in by one notch ({zoom}, expected {expected})");
+    assert!(Xf::new(rect, &after).to_doc(at).distance(Xf::new(rect, &before).to_doc(at)) < 1e-6, "Alt + Cmd-wheel zooms about the pointer");
+
+    let before = after;
+    crate::tests_synthetic::control(&mut app, &ctx, "ui.wheel", json!({"x": at.x, "y": at.y, "dy": 1, "cmd": true}));
+    for _ in 0..40 {
+        run(&mut app);
+    }
+    let after = *app.view().unwrap();
+    let scroll = (after.center - before.center) * after.zoom;
+    let line = f64::from(ctx.options(|o| o.input_options.line_scroll_speed));
+    assert!((after.zoom / before.zoom - 1.0).abs() < 1e-9, "Cmd-wheel does not zoom");
+    assert!((scroll.x + line).abs() < 0.5 && scroll.y == 0.0, "Cmd-wheel scrolls sideways ({scroll:?})");
+}
+
 /// #888: with Zoom with Mouse Wheel, a wheel notch's zoom glides in over a few frames, as a
 /// scroll does, instead of jumping on the frame it arrives; it ends at the same zoom.
 #[test]
