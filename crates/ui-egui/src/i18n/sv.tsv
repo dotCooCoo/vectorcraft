@@ -184,7 +184,7 @@
 	Anti-aliased Artwork	Kantutjämnad grafik
 	Anti-aliasing:	Kantutjämning:
 	Any Kind	Alla typer
-	Font Technology	Teckensnittsteknik
+	Font Technology	Typsnittsteknik
 font-technology	Variable	Variabla
 	Appearance	Utseende
 	Appearance Attribute	Utseendeattribut
@@ -1382,6 +1382,7 @@ font-technology	Variable	Variabla
 	Delete Guides	Radera stödlinjer
 	Delete Slice	Radera skiva
 	Delete Style	Radera stil
+	Delete Styles	Radera stilar
 	Delete Variables	Radera variabler
 	Delete View	Radera vy
 	Done Editing Pattern	Avsluta mönsterredigering
@@ -2262,7 +2263,7 @@ font-technology	Variable	Variabla
 	Percent:	Procent:
 	Perceptual Scales	Perceptuella skalor
 	Performance	Prestanda
-	Plug-ins & Scratch Disks	Insticksprogram & Arbetsdiskar
+	Plug-ins & Scratch Disks	Plugins & arbetsdiskar
 	Permissions	Behörigheter
 	Permissions password:	Lösenord för behörigheter:
 	Perspective	Perspektiv
@@ -5506,7 +5507,7 @@ swatch	Yellow Green	Gulgrön
 @msg	“{name}” is not a file	”{name}” är inte en fil
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	Bilden är {_1} × {_2} pixlar, mer än {LARGE_TRACE_SIDE} på en sida: den vektoriseras, men långsammare. En förinställning med lägre återgivning eller en mindre kopia av bilden går snabbare.
 @msg	The image was traced at {_1} × {_2} pixels, scaled down from {_3} × {_4} ({_5} megapixels at most).	Bilden vektoriserades vid {_1} × {_2} pixlar, nedskalad från {_3} × {_4} (högst {_5} megapixlar).
-	Snapping	Fästning
+	Snapping	Fäst
 	Snap to Tangent	Fäst mot tangent
 	Snap to Perpendicular	Fäst mot vinkelrät
 @msg	unknown snap option `{key}` (use {options})	okänt fästalternativ `{key}` (använd {options})
@@ -5603,19 +5604,19 @@ axis	Y Axis	Y-axel
 	{count} file(s) in {folder}. Show the package folder?	{count} fil(er) i {folder}. Visa paketmappen?
 	Clockwise	Medurs
 	Dither	Dithering
-	Fine noise hides banding in the gradient fill	Fint brus döljer bandningen i övertoningsfyllningen
-@msg	`dither` applies to gradient fills (stroke: false)	`dither` gäller övertoningsfyllningar (stroke: false)
-@msg	`dither` applies to gradient fills (paint.setFill)	`dither` gäller övertoningsfyllningar (paint.setFill)
+	Fine noise hides banding in the gradient fill	Fint brus döljer bandningen i gradientfyllningen
+@msg	`dither` applies to gradient fills (stroke: false)	`dither` gäller gradientfyllningar (stroke: false)
+@msg	`dither` applies to gradient fills (paint.setFill)	`dither` gäller gradientfyllningar (paint.setFill)
 @msg	`dither` must be true or false	`dither` måste vara true eller false
 @msg	`method` must be classic or perceptual	`method` måste vara classic eller perceptual
 # Heavy plug-in filters (plugin.inspect, plug-in runs)
 	Install “{name}”, which asks for a heavy budget?	Installera ”{name}”, som begär en stor beräkningsbudget?
-	Each run may take up to {minutes} minutes and do {times} times the work other plug-ins may. It runs in the background, and you can cancel it.	Varje körning kan ta upp till {minutes} minuter och göra {times} gånger så mycket arbete som andra insticksprogram får. Den körs i bakgrunden och du kan avbryta den.
+	Each run may take up to {minutes} minutes and do {times} times the work other plug-ins may. It runs in the background, and you can cancel it.	Varje körning kan ta upp till {minutes} minuter och göra {times} gånger så mycket arbete som andra plugins får. Den körs i bakgrunden och du kan avbryta den.
 	It may take minutes, so it runs in the background, where you can cancel it.	Det kan ta flera minuter, så det körs i bakgrunden, där du kan avbryta det.
-	The plug-in is computing…	Insticksprogrammet räknar…
-	Inspect Plug-in	Granska insticksprogram
-	Cancel Plug-in Run	Avbryt körning av insticksprogram
-@msg	{_1} finished, but the document or the plug-in changed meanwhile: run it again	{_1} är klar, men dokumentet eller insticksprogrammet ändrades under tiden: kör det igen
+	The plug-in is computing…	Pluginet räknar…
+	Inspect Plug-in	Granska plugin
+	Cancel Plug-in Run	Avbryt körning av plugin
+@msg	{_1} finished, but the document or the plug-in changed meanwhile: run it again	{_1} är klar, men dokumentet eller pluginet ändrades under tiden: kör det igen
 @msg	Running “{name}”…	Kör ”{name}”…
 @msg	a live effect runs while the document is drawn, so it can't be `heavy`	en live-effekt körs medan dokumentet ritas, så den kan inte vara `heavy`
 @msg	an exporter always gets an export's budget: leave `budget` out	ett exportinsticksprogram får alltid en exports budget: utelämna `budget`
@@ -5823,6 +5824,32 @@ anchor	Points:	Punkter:
 @msg	select open paths to close	markera öppna banor att stänga
 @msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	för många eller för trassliga banor för att hitta deras korsningar (högst 10000 segment)
 @msg	the paths have too many anchors to edit at once	banorna har för många ankarpunkter för att redigeras på en gång
+# Path Precision Tools add-on: the Parametric Shape Tool, its panel, commands and messages.
+	Parametric Shape Tool	Parametrisk form-verktyget
+	Parametric Shape	Parametrisk form
+	Edit Parametric Shape	Redigera parametrisk form
+	Convert to Parametric Shape	Konvertera till parametrisk form
+	Ring	Ring
+	Heart	Hjärta
+	Gear	Kugghjul
+	Speech Bubble	Pratbubbla
+	Count:	Antal:
+	Thickness:	Tjocklek:
+	Inner Radius:	Inre radie:
+	Head:	Huvud:
+	Shaft:	Skaft:
+	Point:	Spets:
+	Tooth Height:	Tandhöjd:
+	Tail:	Svans:
+	Tip:	Spets:
+	Open a document to draw parametric shapes.	Öppna ett dokument för att rita parametriska former.
+	Select a parametric shape to edit it. With none selected, these set the next shape.	Markera en parametrisk form för att redigera den. Utan markering gäller värdena nästa form.
+@msg	the object is not an editable parametric shape	objektet är inte en redigerbar parametrisk form
+@msg	select plain rectangles, ellipses or regular polygons to convert	markera vanliga rektanglar, ellipser eller regelbundna polygoner att konvertera
+@msg	the shape's numbers are out of range	formens värden ligger utanför intervallet
+@msg	`kind` must be one of: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble	`kind` måste vara något av: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble
+@msg	`count` must be a whole number from 3 to 1000	`count` måste vara ett heltal från 3 till 1000
+@msg	`{key}` must be from {lo} to {hi}	`{key}` måste vara från {lo} till {hi}
 # Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
 	Smart Pen	Smart penna
 	Smart Pen Tool	Smart penna-verktyget
@@ -5845,6 +5872,38 @@ anchor	Points:	Punkter:
 @msg	`segment` must be "straight" or "curved"	`segment` måste vara "straight" eller "curved"
 @msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` måste vara "free", "keepAngles" eller "symmetric"
 @msg	`{key}` must be [x, y]	`{key}` måste vara [x, y]
+	 on the canvas to create one	 på arbetsytan för att skapa en
+	Arrow Scale:	Pilskala:
+	Arrow Style:	Pilstil:
+	Check for Updates…	Sök efter uppdateringar…
+	Checking for updates…	Söker efter uppdateringar…
+	Could not check for updates:\n{error}	Det gick inte att söka efter uppdateringar:\n{error}
+	Dimension Lines	Måttlinjer
+	Dimension Text	Måttal
+	Extension Lines	Måttgränslinjer
+	Extension:	Förlängning:
+	Hide Extension Lines	Dölj måttgränslinjer
+	Hide Units	Dölj enheter
+	Invalid panel layout; restored the default dock	Ogiltig panellayout; standarddockningen har återställts
+	Japanese Double Postcard	Japanskt dubbelvykort
+	Japanese Envelope #3	Japanskt kuvert #3
+	Japanese Envelope #4	Japanskt kuvert #4
+	Japanese Postcard	Japanskt vykort
+	Kaku #2	Kaku #2
+	Kaku #3	Kaku #3
+	Line Type:	Linjetyp:
+	Line Weight:	Linjetjocklek:
+	Load Variable Library	Läs in variabelbibliotek
+	Preparing the image…	Förbereder bilden…
+	Right-click an item to move it into this group.	Högerklicka på ett objekt för att flytta det till den här gruppen.
+	Tracing the colors…	Vektoriserar färgerna…
+	Units & Scale	Enheter & skala
+	VectorCraft Updates	Uppdateringar för VectorCraft
+	VectorCraft {version} is currently the newest version available.	VectorCraft {version} är för närvarande den senaste tillgängliga versionen.
+	Yonroku-ban	Yonroku-ban
+@msg	image '{key}' has no pixels and was left out	bilden '{key}' har inga pixlar och utelämnades
+@msg	not an RTF file: it doesn't start with {\\rtf	inte en RTF-fil: den börjar inte med {\\rtf
+shape	Open	Öppen
 
 # Color Effects add-on: Select by Color Kind.
 	Select by Color Kind	Markera efter färgtyp
@@ -5854,3 +5913,6 @@ anchor	Points:	Punkter:
 	CMYK Images	CMYK-bilder
 	Grayscale Images	Gråskalebilder
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` måste vara spotColors, colorEffects, rgbImages, cmykImages eller grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Punktfärg från objekt

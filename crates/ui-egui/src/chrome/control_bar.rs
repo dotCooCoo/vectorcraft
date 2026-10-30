@@ -244,6 +244,12 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                     return;
                 }
                 crate::panels::align::align_buttons(app, ui, 24.0);
+                // Two or more objects get the six Distribute Objects buttons too; a single
+                // object keeps the bar as it was.
+                if sel.len() > 1 {
+                    ui.add_space(4.0);
+                    crate::panels::align::distribute_buttons(app, ui, 24.0);
+                }
                 ui.separator();
                 // The Transform link opens the whole Transform panel (reference point, rotate,
                 // shear, options) in a popover; X/Y/W/H follow inline while the bar has room.
