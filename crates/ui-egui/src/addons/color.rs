@@ -1,7 +1,8 @@
 //! Color Effects' panel and submenu (Object › Plug-ins › Color Effects). The panel picks a colour
 //! adjustment and its values, then adds it to the selection as a live effect or applies it as a
 //! filter, into the colours themselves (`addon.color.filter`). The submenu applies the add-on's
-//! live effects (Effect › Color Effects has them too) and opens the panel.
+//! live effects, Vector Halftone among them (Effect › Color Effects has them too), and opens the
+//! panel.
 
 use egui::Ui;
 use serde_json::{Map, Value, json};
@@ -75,6 +76,7 @@ pub fn menu() -> Vec<Item> {
         Item::Cmd("Exposure…", "effect.dialog", json!({ "effect": "addon.color.exposure" })),
         Item::Cmd("Desaturate", "effect.apply", json!({ "effect": "addon.color.desaturate" })),
         Item::Cmd("Invert Colors", "effect.apply", json!({ "effect": "addon.color.invert" })),
+        Item::Cmd("Vector Halftone…", "effect.dialog", json!({ "effect": "addon.color.halftone" })),
         Item::Sep,
         Item::Sub(
             "Select by Color Kind",
