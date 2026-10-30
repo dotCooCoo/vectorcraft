@@ -5060,6 +5060,7 @@ lighting	Light	광원
 @msg	The image was traced at {_1} × {_2} pixels, scaled down from {_3} × {_4} ({_5} megapixels at most).	이미지를 {_3} × {_4}에서 축소한 {_1} × {_2}픽셀로 추적했습니다(최대 {_5}메가픽셀).
 @msg	byColor must be true or false	byColor는 true 또는 false여야 합니다
 @msg	byColor can't split Auto Grouping groups: trace without Auto Grouping	byColor는 자동 그룹화 그룹을 나눌 수 없습니다. 자동 그룹화 없이 추적하세요
+@msg	byColor can't regroup a trace with a live Pathfinder effect: expand without byColor	byColor는 라이브 Pathfinder 효과가 있는 추적을 다시 그룹화할 수 없습니다. byColor 없이 확장하세요
 	Snapping	스냅
 	Snap to Tangent	접선에 스냅
 	Snap to Perpendicular	수직선에 스냅

@@ -5483,6 +5483,7 @@ theme	Appearance	Görünüm
 @msg	The image was traced at {_1} × {_2} pixels, scaled down from {_3} × {_4} ({_5} megapixels at most).	Görüntü {_3} × {_4} boyutundan küçültülerek {_1} × {_2} pikselde izlendi (en fazla {_5} megapiksel).
 @msg	byColor must be true or false	byColor true veya false olmalıdır
 @msg	byColor can't split Auto Grouping groups: trace without Auto Grouping	byColor, Otomatik Gruplama gruplarını bölemez: Otomatik Gruplama olmadan izleyin
+@msg	byColor can't regroup a trace with a live Pathfinder effect: expand without byColor	byColor, canlı Pathfinder efekti olan bir izlemeyi yeniden gruplayamaz: byColor olmadan genişletin
 	Gap Length:	Boşluk Uzunluğu:
 @msg	`colorGroup` needs `library: "document"`	`colorGroup` için `library: "document"` gerekir
 @msg	`colorGroup` needs `palette: "documentLibrary"`	`colorGroup` için `palette: "documentLibrary"` gerekir

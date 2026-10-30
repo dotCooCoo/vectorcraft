@@ -5077,6 +5077,7 @@ lighting	Light	Світло
 @msg	The image was traced at {_1} × {_2} pixels, scaled down from {_3} × {_4} ({_5} megapixels at most).	Зображення трасовано в розмірі {_1} × {_2} пікселів, зменшене з {_3} × {_4} (щонайбільше {_5} мегапікселів).
 @msg	byColor must be true or false	byColor має мати значення true або false
 @msg	byColor can't split Auto Grouping groups: trace without Auto Grouping	byColor не може розділити групи автогрупування: трасуйте без автогрупування
+@msg	byColor can't regroup a trace with a live Pathfinder effect: expand without byColor	byColor не може перегрупувати трасування з активним ефектом Pathfinder: розгорніть без byColor
 	Snapping	Прив’язка
 	Snap to Tangent	Прив’язати до дотичної
 	Snap to Perpendicular	Прив’язати до перпендикуляра

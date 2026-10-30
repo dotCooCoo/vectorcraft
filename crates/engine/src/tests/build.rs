@@ -3234,6 +3234,40 @@ fn image_trace_expand_by_color_groups_each_colors_paths() {
 }
 
 #[test]
+fn image_trace_expand_by_color_preserves_live_pathfinder_art() {
+    let mut s = session();
+    let art = vectorcraft_trace::Raster::from_fn(100, 60, |x, y| {
+        if (10..40).contains(&y) && ((10..35).contains(&x) || (65..90).contains(&x)) { [0, 0, 0, 255] } else { [255, 255, 255, 255] }
+    });
+    add_image(&mut s, &art, Affine::IDENTITY);
+    let g = NodeId(s.execute("imageTrace.make", &json!({"params": {"ignoreWhite": true}})).unwrap()["id"].as_u64().unwrap());
+    let paths: Vec<NodeId> = node(&s, g).children().unwrap().iter().filter(|c| c.path_data().is_some()).map(|c| c.id).collect();
+    assert_eq!(paths.len(), 2);
+    s.execute("select.set", &json!({"ids": [paths[1].0]})).unwrap();
+    s.execute("object.move", &json!({"dx": -45, "dy": 0})).unwrap();
+    s.execute("effect.apply", &json!({"ids": [g.0], "effect": "pathfinder.subtract"})).unwrap();
+    let before = render_doc(&s, false);
+    let before_pixels: Vec<_> = (0..100).flat_map(|x| (0..60).map(move |y| (x, y))).map(|(x, y)| before.pixel(x, y)).collect();
+    let original = node(&s, g);
+    let steps = s.doc().unwrap().history.undo.len();
+    let result = s.execute("imageTrace.expand", &json!({"id": g.0, "byColor": true}));
+    if let Err(e) = &result {
+        assert!(e.to_string().contains("Pathfinder"), "{e}");
+        assert_eq!(node(&s, g), original);
+        assert_eq!(s.doc().unwrap().history.undo.len(), steps);
+    }
+    let after = render_doc(&s, false);
+    let after_pixels: Vec<_> = (0..100).flat_map(|x| (0..60).map(move |y| (x, y))).map(|(x, y)| after.pixel(x, y)).collect();
+    let changed = after_pixels.iter().zip(&before_pixels).filter(|(a, b)| a != b).count();
+    assert_eq!(changed, 0, "byColor changed {changed} live Pathfinder pixels: {result:?}");
+    assert!(result.is_err(), "byColor must refuse a live Pathfinder operand group");
+    let error = s.execute("imageTrace.makeAndExpand", &json!({"id": g.0, "params": {"ignoreWhite": true}, "byColor": true})).unwrap_err();
+    assert!(error.to_string().contains("Pathfinder"), "{error}");
+    assert_eq!(node(&s, g), original);
+    assert_eq!(s.doc().unwrap().history.undo.len(), steps);
+}
+
+#[test]
 fn image_trace_make_and_expand_and_color_presets() {
     let mut s = session();
     let r = vectorcraft_trace::Raster::from_fn(60, 60, |x, y| match (x < 30, y < 30) {

@@ -1596,7 +1596,8 @@ already walks Image Trace. Short agent entry points:
   included) starts another group of its color instead of joining an earlier one, and the renderer
   draws the art unchanged. In a Flat Logo trace of a black ring
   around a white disc around a black dot, black gets two groups. `layer.releaseToLayers` on the expanded group then
-  gives each group a sublayer. A trace made with `autoGrouping` is refused.
+  gives each group a sublayer. A trace made with `autoGrouping` is refused. Expanding by color also refuses a trace
+  with a live Pathfinder effect.
   `imageTrace.presets.save {name?, newName?, preset?, enhanced?, params?}` saves tracing settings as a preset kept with
   the preferences: `params` over `preset`'s (default: the saved preset `name`, else Default), checked as `imageTrace.make`
   checks them; without `name` it is a new "Tracing Preset N", and `newName` renames a saved preset (the reply's

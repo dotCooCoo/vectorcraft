@@ -20,6 +20,8 @@ fn is_trace_group(n: &Node) -> bool {
         && n.children().is_some_and(|c| c.first().is_some_and(|i| matches!(i.kind, NodeKind::Image(_))))
 }
 
+const LIVE_PATHFINDER_BY_COLOR: &str = "byColor can't regroup a trace with a live Pathfinder effect: expand without byColor";
+
 /// The `view` param ([`TraceView`] id), if given.
 fn view_param(cmd: &str, p: &Value) -> Result<Option<TraceView>> {
     let Some(v) = p.get("view").filter(|v| !v.is_null()) else { return Ok(None) };
@@ -573,6 +575,9 @@ fn prepare(s: &Session, c: &str, p: &Value) -> Result<Prepared> {
             })
             .ok_or_else(|| bad(c, "select an image (or an Image Trace group)"))?
     };
+    if by_color && s.doc()?.doc.node(target).is_some_and(vectorcraft_render::effects::has_pathfinder) {
+        return Err(bad(c, LIVE_PATHFINDER_BY_COLOR));
+    }
     let blob = s.doc()?.doc.images.get(&image.key).ok_or_else(|| EngineError::Other(format!("image data `{}` is missing", image.key)))?;
     let bytes = Arc::clone(&blob.bytes);
     let library = trace_library(c, s, &mut params)?;
@@ -862,6 +867,9 @@ pub(super) fn trace_expand(s: &mut Session, p: &Value) -> Result<Value> {
         let grouped = |n: &Node| n.extras().trace.as_deref().and_then(|t| t.pointer("/params/autoGrouping")).and_then(Value::as_bool) == Some(true);
         if targets.iter().any(|g| d.node(*g).is_some_and(grouped)) {
             return Err(bad(C, "byColor can't split Auto Grouping groups: trace without Auto Grouping"));
+        }
+        if targets.iter().any(|g| d.node(*g).is_some_and(vectorcraft_render::effects::has_pathfinder)) {
+            return Err(bad(C, LIVE_PATHFINDER_BY_COLOR));
         }
     }
     s.edit("Expand Image Trace", |d, sel| {
