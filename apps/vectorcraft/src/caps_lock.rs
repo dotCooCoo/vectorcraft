@@ -32,20 +32,27 @@ impl HostCapsLock {
         #[cfg(target_os = "linux")]
         let current = match self.x11.as_mut() {
             Some(state) => match state.poll() {
-                Some(locked) => locked,
+                Some(locked) => Some(locked),
                 None => {
                     self.x11 = None;
-                    false
+                    None
                 }
             },
             None => {
                 // Native Wayland does not expose the seat's XKB lock bit through winit or egui.
-                false
+                None
             }
         };
-        #[cfg(not(target_os = "linux"))]
-        let current = read();
-        self.observe(current)
+        #[cfg(any(target_os = "macos", windows))]
+        let current = Some(read());
+        // This platform has no lock-state reader.
+        #[cfg(not(any(target_os = "macos", windows, target_os = "linux")))]
+        let current = None;
+        self.transition(current)
+    }
+
+    fn transition(&mut self, reading: Option<bool>) -> Option<bool> {
+        reading.and_then(|current| self.observe(current))
     }
 
     fn observe(&mut self, current: bool) -> Option<bool> {
@@ -143,16 +150,28 @@ pub fn read() -> bool {
     windows_state_has_caps_lock(unsafe { GetKeyState(i32::from(VK_CAPITAL.0)) })
 }
 
-#[cfg(not(any(target_os = "macos", windows, target_os = "linux")))]
-pub fn read() -> bool {
-    // This platform has no lock-state reader.
-    false
-}
-
 // Querying XWayland for a native Wayland window would read a different keyboard.
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn no_host_reader_preserves_scripted_value_and_next_reading_transitions() {
+        let mut host = super::HostCapsLock::default();
+        let mut session = vectorcraft_engine::Session::new();
+        session.execute("view.capsLock", &serde_json::json!({"on": true})).unwrap();
+        if let Some(on) = host.transition(None) {
+            session.execute("view.capsLock", &serde_json::json!({"on": on})).unwrap();
+        }
+        assert!(session.caps_lock);
+        assert_eq!(host.transition(Some(false)), Some(false));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn no_x11_reader_has_no_transition() {
+        assert_eq!(super::HostCapsLock::default().read_transition(), None);
+    }
+
     #[test]
     fn scripted_value_survives_unchanged_host_until_transition() {
         let mut host = super::HostCapsLock::default();
