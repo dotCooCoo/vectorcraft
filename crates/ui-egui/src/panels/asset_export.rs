@@ -464,7 +464,9 @@ fn shared_settings(app: &VectorcraftApp) -> Value {
     let mut settings: serde_json::Map<String, Value> =
         SCREEN_SETTINGS_KEYS.iter().filter_map(|k| Some((k.to_string(), saved.get(*k).filter(|v| !v.is_null())?.clone()))).collect();
     let (rows, preset) = screen_saved_rows(saved);
-    if preset.is_none() {
+    if preset.is_some() && settings.get("subfolders").and_then(Value::as_bool) == Some(false) {
+        settings.insert("folders".into(), json!("none"));
+    } else if preset.is_none() {
         settings.remove("preset");
         if !settings.get("formats").and_then(Value::as_array).is_some_and(|a| a.iter().any(Value::is_object)) {
             settings.insert("formats".into(), json!(rows));
