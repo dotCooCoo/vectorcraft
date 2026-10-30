@@ -160,7 +160,27 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
     // Taken before anything returns, so a press in a field or a dialog ends a pair of Escapes.
     let mut escape_pair = escape_press(ctx);
     // Followed before anything returns, so a key typed in a field isn't taken for a paste.
-    let textless_paste = ctx.input(|i| app.paste_chord.textless_paste(&i.events));
+    let grid_claims_v = app.session.tool_busy()
+        && matches!(app.session.tool_id(), "rectangularGrid" | "polarGrid")
+        && app.session.tool_claims_key(ToolKey::Letter('v'), app.view_info());
+    let chord_events = ctx.input(|i| {
+        i.events
+            .iter()
+            .map(|event| {
+                if grid_claims_v
+                    && (i.modifiers.command || i.modifiers.ctrl)
+                    && !i.modifiers.alt
+                    && matches!(event, egui::Event::Paste(_) | egui::Event::PasteImage(_))
+                {
+                    // The grid takes this V chord, including when egui reports only a clipboard event.
+                    egui::Event::Key { key: Key::V, physical_key: None, pressed: true, repeat: false, modifiers: i.modifiers }
+                } else {
+                    event.clone()
+                }
+            })
+            .collect::<Vec<_>>()
+    });
+    let textless_paste = app.paste_chord.textless_paste(&chord_events);
     // A numeric field being scrubbed has the keyboard: Escape cancels the drag.
     if crate::scrub::phase(ctx) != crate::scrub::Phase::Idle {
         crate::ime::controls_without_editor(app, ctx);
@@ -287,6 +307,10 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
         return;
     }
     crate::ime::controls_without_editor(app, ctx);
+    if busy {
+        grid_command_letters(app, ctx, view);
+    }
+    let textless_paste = grid_textless_paste(app, busy, view, textless_paste);
     handle_clipboard(app, ctx, textless_paste);
     if busy {
         busy_tool_keys(app, ctx, view);
@@ -310,6 +334,67 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
     }
     nudge_and_clear(app, ctx);
     single_key_shortcuts(app, ctx);
+}
+
+/// Suppress a clipboard paste triggered by a key release during a grid drag.
+fn grid_textless_paste(app: &mut VectorcraftApp, busy: bool, view: ViewInfo, textless_paste: Option<Modifiers>) -> Option<Modifiers> {
+    if busy && matches!(app.session.tool_id(), "rectangularGrid" | "polarGrid") && app.session.tool_claims_key(ToolKey::Letter('v'), view) {
+        None
+    } else {
+        textless_paste
+    }
+}
+
+/// Send command-modified grid letters to a dragging grid and consume any clipboard event from
+/// the same press before clipboard commands run.
+fn grid_command_letters(app: &mut VectorcraftApp, ctx: &egui::Context, view: ViewInfo) {
+    if !matches!(app.session.tool_id(), "rectangularGrid" | "polarGrid") {
+        return;
+    }
+    let (held, events) = ctx.input(|i| (i.modifiers, i.events.clone()));
+    let mut claimed = |c| app.session.tool_claims_key(ToolKey::Letter(c), view);
+    let key_letters: Vec<char> = events
+        .iter()
+        .filter_map(|e| match e {
+            egui::Event::Key { key, pressed: true, repeat: false, modifiers, .. } if (modifiers.command || modifiers.ctrl) && !modifiers.alt => {
+                letter_of(*key).filter(|c| matches!(c, 'f' | 'v' | 'x' | 'c') && claimed(*c))
+            }
+            _ => None,
+        })
+        .collect();
+    let mut letters = key_letters.clone();
+    for event in &events {
+        let c = match event {
+            egui::Event::Paste(_) | egui::Event::PasteImage(_) => Some('v'),
+            egui::Event::Copy => Some('c'),
+            egui::Event::Cut => Some('x'),
+            _ => None,
+        };
+        if let Some(c) = c
+            && ((held.command || held.ctrl) && !held.alt || key_letters.contains(&c))
+            && claimed(c)
+            && !letters.contains(&c)
+        {
+            letters.push(c);
+        }
+    }
+    if letters.is_empty() {
+        return;
+    }
+    ctx.input_mut(|i| {
+        i.events.retain(|e| match e {
+            egui::Event::Key { key, pressed: true, repeat: false, modifiers, .. } if (modifiers.command || modifiers.ctrl) && !modifiers.alt => {
+                !letter_of(*key).is_some_and(|c| letters.contains(&c))
+            }
+            egui::Event::Paste(_) | egui::Event::PasteImage(_) => !letters.contains(&'v'),
+            egui::Event::Copy => !letters.contains(&'c'),
+            egui::Event::Cut => !letters.contains(&'x'),
+            _ => true,
+        });
+    });
+    for c in letters {
+        let _ = app.session.tool_key(ToolKey::Letter(c), Mods::default(), view);
+    }
 }
 
 /// Dispatch unmodified text keys to command bindings or tools.

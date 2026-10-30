@@ -502,8 +502,9 @@ the new values, and they stay as the Spiral tool's `segments` and `decay` option
 While a grid is being dragged out with the Rectangular Grid or Polar Grid tool, `press_key {key: "f"}` and
 `{key: "v"}` lower and raise the skew of the horizontal dividers (`rowSkew`) or the radial dividers (`radialSkew`) by
 10, and `{key: "x"}` and `{key: "c"}` lower and raise that of the vertical dividers (`columnSkew`) or the concentric
-dividers (`concentricSkew`), within ±500. The grid drawn on release uses these skews, and they stay as the tool's
-options for the next grid. With nothing being dragged, the four letters run their shortcuts as before.
+dividers (`concentricSkew`), within ±500. Plain, Shift and Ctrl/Cmd presses change the skew; Alt presses do not.
+The grid drawn on release uses these skews, and they stay as the tool's options for the next grid. With nothing
+being dragged, the four letters run their shortcuts as before.
 
 Appearance stacks: an object can carry several fills and strokes (`appearance.addFill`, `appearance.addStroke`), indexed
 in paint order (0 is painted first, the bottom row of the Appearance panel). Cmd+/ runs `appearance.addFill` and
