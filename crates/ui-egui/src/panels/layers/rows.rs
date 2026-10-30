@@ -250,7 +250,9 @@ pub(super) fn row(ui: &mut Ui, view: &View, item: &Row, out: &mut Out) {
             let field = rename_id().with("field");
             let kept = crate::widgets::own_field_shift_enter(ui, field, &mut buf, &name);
             let mut child = ui.new_child(egui::UiBuilder::new().max_rect(name_rect));
-            let te = child.add(egui::TextEdit::singleline(&mut buf).id(field).desired_width(name_rect.width()).font(font.clone()));
+            let te = child.add(
+                egui::TextEdit::singleline(&mut buf).id(field).align(egui::Align2::LEFT_CENTER).desired_width(name_rect.width()).font(font.clone()),
+            );
             // Focus the field as it opens. Asking every frame took the focus back from Enter,
             // Escape or a click elsewhere, so the rename never ended.
             if !te.has_focus() && !te.lost_focus() {
@@ -310,15 +312,21 @@ pub(super) fn row(ui: &mut Ui, view: &View, item: &Row, out: &mut Out) {
         egui::DragAndDrop::set_payload(ui.ctx(), LayersDrag::Art);
     }
     let m = ui.input(|i| i.modifiers);
+    let on_name = ui.input(|i| i.pointer.interact_pos()).is_some_and(|p| p.x <= name_end.max(name_rect.left() + 20.0) && p.x >= name_rect.left());
     if tresp.clicked() {
         out.actions.push(("layer.target".into(), json!({"id": n.id.0, "add": m.shift})));
     } else if sq_resp.clicked() {
         out.actions.push(("layer.selectAll".into(), json!({"id": n.id.0, "add": m.shift})));
     } else if resp.clicked() {
         out.click = Some((n.id, m));
+        // Alt-click on a layer's or sublayer's name also selects its art, as its selection square does.
+        // Only the drawn text counts, not the wider rename target of a short name.
+        let on_text = ui.input(|i| i.pointer.interact_pos()).is_some_and(|p| p.x >= name_rect.left() && p.x <= name_end.min(name_rect.right()));
+        if m.alt && !m.shift && !m.command && n.is_layer() && on_text {
+            out.actions.push(("layer.selectAll".into(), json!({"id": n.id.0})));
+        }
     }
     if resp.double_clicked() {
-        let on_name = ui.input(|i| i.pointer.interact_pos()).is_some_and(|p| p.x <= name_end.max(name_rect.left() + 20.0) && p.x >= name_rect.left());
         let on_thumb = thumb_rect.is_some_and(|th| ui.input(|i| i.pointer.interact_pos()).is_some_and(|p| th.contains(p)));
         if on_name && !on_thumb {
             ui.data_mut(|d| d.insert_temp(rename_id(), (n.id.0, n.identify_label(view.identify_xml_id))));

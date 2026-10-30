@@ -26,6 +26,8 @@ mod gpu;
 #[cfg(target_os = "linux")]
 mod linux_stylus;
 mod logging;
+#[cfg(all(target_os = "macos", feature = "wgpu"))]
+mod mac_color_space;
 #[cfg(target_os = "macos")]
 mod mac_fonts;
 #[cfg(target_os = "macos")]
@@ -126,7 +128,7 @@ Without a window (converting, scripting, the MCP server), use vectorcraft-cli:
 fn main() -> std::process::ExitCode {
     // Windows: the update helper is a copy of this program started with `--finish-update`.
     #[cfg(windows)]
-    if let Some(result) = craft_update::self_update::finish(&craft_update::suite::VECTORCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
+    if let Some(result) = craft_update::self_update::finish(&vectorcraft_ui_egui::UPDATE_APP, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
         std::process::exit(i32::from(result.is_err()));
     }
     // Before any thread starts: the pointer must find a cursor theme on Wayland (#2450).
@@ -311,8 +313,9 @@ fn main() -> std::process::ExitCode {
             // Metal on an Iris Pro, #651). `WGPU_VALIDATION_INDIRECT_CALL=1` turns it back on.
             create.instance_descriptor.flags =
                 (eframe::wgpu::InstanceFlags::from_build_config() - eframe::wgpu::InstanceFlags::VALIDATION_INDIRECT_CALL).with_env();
-            create.instance_descriptor.backends =
-                left_out.backends(gpu::backends(create.instance_descriptor.backends, std::env::var_os("WGPU_BACKEND").is_some()));
+            let env_set = std::env::var_os("WGPU_BACKEND").is_some();
+            let opengl = cfg!(windows) && !env_set && gpu::windows_opengl(&left_out);
+            create.instance_descriptor.backends = left_out.backends(gpu::backends(create.instance_descriptor.backends, env_set, opengl));
             // DX12 shaders compile with FXC, part of Windows: wgpu's default loads whichever
             // dxcompiler.dll the search path finds, and one without its dxil.dll fails every shader,
             // losing the device before the first frame (#1194). `WGPU_DX12_COMPILER` picks another.
@@ -481,6 +484,29 @@ fn main() -> std::process::ExitCode {
             std::process::ExitCode::FAILURE
         }
     }
+}
+
+/// Tests only: while a test starts another program, the child briefly holds a copy of every file
+/// this process has open, until it runs that program. A file lock held through such a copy outlives
+/// its own handle, so a GPU start test that released the start file and opened it again found it
+/// still locked, as if another copy of the app were running, and failed. A test that starts a
+/// program holds [`spawning`]; a test that depends on the start file's lock holds [`no_spawns`].
+#[cfg(all(
+    test,
+    any(feature = "wgpu", any(target_os = "linux", target_os = "freebsd", target_os = "dragonfly", target_os = "netbsd", target_os = "openbsd"))
+))]
+static CHILD_SPAWN: std::sync::RwLock<()> = std::sync::RwLock::new(());
+
+/// Held while a test starts another program (see [`CHILD_SPAWN`]).
+#[cfg(all(test, any(target_os = "linux", target_os = "freebsd", target_os = "dragonfly", target_os = "netbsd", target_os = "openbsd")))]
+fn spawning() -> std::sync::RwLockWriteGuard<'static, ()> {
+    CHILD_SPAWN.write().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// Held by a test that releases a locked file and opens it again (see [`CHILD_SPAWN`]).
+#[cfg(all(test, feature = "wgpu"))]
+fn no_spawns() -> std::sync::RwLockReadGuard<'static, ()> {
+    CHILD_SPAWN.read().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 #[cfg(all(test, feature = "wgpu"))]
