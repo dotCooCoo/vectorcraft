@@ -253,6 +253,93 @@ fn a_pasted_bitmap_that_cant_be_read_off_the_ui_thread_reports_as_at_once() {
     }
 }
 
+#[test]
+fn a_failed_bitmap_paste_keeps_the_document_the_user_switched_to() {
+    let (mut app, _) = pasting_app(true, None, None, true);
+    let (go, hold) = channel();
+    let clip = OtherApps {
+        bitmap: Some(Flavour { mime: PNG, data: b"not a picture".to_vec() }),
+        text: None,
+        converts: true,
+        thread: Arc::new(Mutex::new(None)),
+        holds: vec![Some(hold)],
+    };
+    app.services.system_clipboard = Some(Box::new(clip));
+    let first = app.session.doc().unwrap();
+    let first = (first.doc.clone(), first.selection.objects.clone(), first.history.undo.len());
+    crate::menus::invoke(&mut app, "edit.paste", json!({}));
+    assert_eq!(app.placing.pending.len(), 1);
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    let selected = app.run("shape.rectangle", json!({"x": 30, "y": 40, "width": 25, "height": 35})).unwrap()["id"].as_u64().unwrap();
+    app.run("layer.new", json!({})).unwrap();
+    app.run("select.set", json!({"ids": [selected]})).unwrap();
+    let second = state(&app);
+    let insertion = Insertion::of(&app);
+    let clipboard = app.session.clipboard.clone();
+    let view = app.view_mut().unwrap();
+    (view.center, view.zoom, view.rotation, view.fitted) = (vectorcraft_geom::Point::new(70.0, 90.0), 2.0, 15.0, true);
+    let view = *app.view().unwrap();
+    assert!(go.send(()).is_ok());
+    placed(&mut app);
+    assert_eq!(app.session.active_index(), Some(1));
+    assert!(state(&app) == second);
+    assert!(Insertion::of(&app) == insertion);
+    assert!(app.session.clipboard == clipboard);
+    let current_view = app.view().unwrap();
+    assert_eq!(
+        (current_view.center, current_view.zoom, current_view.rotation, current_view.fitted),
+        (view.center, view.zoom, view.rotation, view.fitted)
+    );
+    assert!(app.ui.status.starts_with("Couldn't paste from the clipboard: "), "{}", app.ui.status);
+    assert!(app.session.set_active(0));
+    let after = app.session.doc().unwrap();
+    assert!(after.doc == first.0 && after.selection.objects == first.1 && after.history.undo.len() == first.2);
+    assert!(app.placing.chains.is_empty() && app.placing.latest_chain.is_empty());
+}
+
+#[test]
+fn a_paste_queued_after_a_failed_bitmap_uses_the_original_selection() {
+    for id in ["edit.pasteInFront", "edit.pasteInBack"] {
+        let (mut app, _) = pasting_app(true, None, None, true);
+        let source = app.run("shape.rectangle", json!({"x": 150, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        app.run("edit.copy", json!({})).unwrap();
+        let clipboard = app.session.clipboard.clone();
+        let rect = |app: &mut VectorcraftApp, x: u32| {
+            app.run("shape.rectangle", json!({"x": x, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap()
+        };
+        let (a, b, c) = (rect(&mut app, 10), rect(&mut app, 40), rect(&mut app, 70));
+        app.run("select.set", json!({"ids": [b]})).unwrap();
+        let (go, hold) = channel();
+        app.services.system_clipboard = Some(Box::new(OtherApps {
+            bitmap: Some(Flavour { mime: PNG, data: b"not a picture".to_vec() }),
+            text: None,
+            converts: true,
+            thread: Arc::new(Mutex::new(None)),
+            holds: vec![Some(hold)],
+        }));
+        crate::menus::invoke(&mut app, id, json!({}));
+        app.services.system_clipboard = None;
+        crate::menus::invoke(&mut app, id, json!({}));
+        assert_eq!(app.placing.pending.len(), 2, "{id}: both pastes wait");
+        assert_eq!(app.placing.chains.len(), 1, "{id}: the second paste joined the first");
+        app.run("select.set", json!({"ids": [if id.ends_with("Front") { a } else { c }]})).unwrap();
+        assert!(go.send(()).is_ok());
+        placed(&mut app);
+        let st = app.session.doc().unwrap();
+        let selected = st.selection.objects[0];
+        let order: Vec<_> = st.doc.layers[0].children().unwrap().iter().map(|n| n.id).collect();
+        let expected = if id.ends_with("Front") {
+            vec![NodeId(source), NodeId(a), NodeId(b), selected, NodeId(c)]
+        } else {
+            vec![NodeId(source), NodeId(a), selected, NodeId(b), NodeId(c)]
+        };
+        assert_eq!(order, expected, "{id}: the internal paste stays beside the original anchor");
+        assert!(matches!(st.doc.node(selected).map(|n| &n.kind), Some(vectorcraft_doc::NodeKind::Path { .. })), "{id}");
+        assert!(app.session.clipboard == clipboard, "{id}: the failed bitmap did not replace the clipboard");
+        assert!(app.placing.chains.is_empty() && app.placing.latest_chain.is_empty(), "{id}: the queue was released");
+    }
+}
+
 /// A Copy made while a pasted bitmap is read keeps the internal clipboard it made, and a paste
 /// whose document was closed meanwhile pastes nothing, with a message.
 #[test]

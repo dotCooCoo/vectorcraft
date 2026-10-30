@@ -408,12 +408,34 @@ fn finish(app: &mut VectorcraftApp, p: &Pending, r: Result<Read, String>) {
         }
         return;
     };
+    if p.paste {
+        let error = match &r {
+            Ok(Read::Paste(paste)) => match &paste.pasted {
+                Some(Pasted::Image(_, Err(e))) => Some(e.as_str()),
+                _ => None,
+            },
+            Err(e) => Some(e.as_str()),
+            _ => None,
+        };
+        if let Some(e) = error {
+            if let Some(ch) = p.chain.and_then(|chain| app.placing.chains.get_mut(&chain))
+                && ch.left.is_none()
+            {
+                let selection = match &r {
+                    Ok(Read::Paste(paste)) => paste.selection.clone(),
+                    _ => None,
+                };
+                ch.left = Some(selection.unwrap_or_else(|| ch.context.0.clone()));
+            }
+            app.status(format!("Couldn't paste from the clipboard: {e}"));
+            return;
+        }
+    }
     app.session.set_active(i);
     let r = match r {
         Ok(Read::Place(read)) => app.session.place_read(*read).map(|_| ()).map_err(|e| e.to_string()),
         Ok(Read::Queue(read)) => app.session.place_queue_read(read).map(|r| crate::place::show_thumbnails(app, &r)).map_err(|e| e.to_string()),
         Ok(Read::Paste(paste)) => return finish_paste(app, *paste),
-        Err(e) if p.paste => return app.status(format!("Couldn't paste from the clipboard: {e}")),
         Err(e) => Err(e),
     };
     app.sync_views();
