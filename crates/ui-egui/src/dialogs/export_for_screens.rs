@@ -664,10 +664,9 @@ pub(crate) enum PresetPick {
     Export(String),
 }
 
-/// The Export Preset row, the dialog's and the Asset Export panel's: the built-in and saved presets
-/// (`list`, as [`preset_list`] keeps it; `exportPreset` names the current one), Save Preset… (then
-/// a name in `__savePreset`), Delete Preset (a saved one), and with `files` (the panel's) Import
-/// Preset… and Export Preset… (the current one).
+/// The dialog's Export Preset row lists built-in and saved presets (`list`, as [`preset_list`]
+/// keeps it; `exportPreset` names the current one), Save Preset… (then a name in `__savePreset`)
+/// and Delete Preset. With `files`, it also shows Import Preset… and Export Preset….
 pub(crate) fn preset_row(ui: &mut egui::Ui, d: &mut Dialog, list: &Value, files: bool) -> Option<PresetPick> {
     let list: &[Value] = list.as_array().map_or(&[], Vec::as_slice);
     let names: Vec<&str> = list.iter().filter_map(|p| p["name"].as_str()).collect();
@@ -675,7 +674,7 @@ pub(crate) fn preset_row(ui: &mut egui::Ui, d: &mut Dialog, list: &Value, files:
     let known = names.contains(&current.as_str());
     let saved = list.iter().any(|p| p["name"] == current && p["builtIn"] == false);
     let mut pick = None;
-    // In a narrow column (the panel) the label goes above the dropdown.
+    // In a narrow column the label goes above the dropdown.
     let narrow = ui.available_width() < 320.0;
     if narrow {
         widgets::dim_label(ui, tl!("Export Preset:"));
@@ -826,7 +825,7 @@ pub(super) fn preset_pick(app: &mut VectorcraftApp, d: &mut Dialog, pick: Preset
         PresetPick::Delete(name) => app.run("document.exportPresets.delete", json!({ "name": name })).map(|_| {
             d.fields.insert("exportPreset".into(), json!(""));
         }),
-        // The dialog's row has no Import Preset… or Export Preset… (the Asset Export panel's has).
+        // The dialog's row has no Import Preset… or Export Preset….
         PresetPick::Import | PresetPick::Export(_) => Ok(()),
     };
     if let Err(e) = done

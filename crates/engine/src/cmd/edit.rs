@@ -43,6 +43,15 @@ pub fn specs() -> Vec<CommandSpec> {
             set_units
         ),
         cmd!(
+            "document.switchUnits",
+            "Switch Units",
+            [],
+            Some("Cmd+Alt+Shift+U"),
+            "{} the document's units become the next of Points, Picas, Inches, Millimeters, Centimeters, Pixels, Feet & Inches, Meters, Yards and Feet (the order a right-click on a ruler lists them), Feet going back to Points; one undo step → {units}",
+            has_doc,
+            switch_units
+        ),
+        cmd!(
             query "document.rulerOrigin",
             "Ruler Origin",
             [],
@@ -330,6 +339,14 @@ fn set_units(s: &mut Session, p: &Value) -> Result<Value> {
     let u = str_param(p, "units").and_then(Unit::named).ok_or_else(|| bad("document.setUnits", "unknown units"))?;
     s.set_document_units(u)?;
     ok()
+}
+
+/// Switch Units: the unit after the document's in [`Unit::ALL`], wrapping around.
+fn switch_units(s: &mut Session, _: &Value) -> Result<Value> {
+    let now = s.doc()?.doc.units;
+    let next = Unit::ALL.iter().position(|u| *u == now).and_then(|i| Unit::ALL.get((i + 1) % Unit::ALL.len())).copied().unwrap_or_default();
+    s.set_document_units(next)?;
+    Ok(json!({ "units": next.label() }))
 }
 
 /// The `artboard` param of the ruler origin commands: an artboard index, 0 when not given.

@@ -92,6 +92,15 @@ impl Tool for PerspectiveGridTool {
         }
         .turned(cx.view_angle())
     }
+    /// Escape during a handle or plane widget drag cancels it: the grid and the plane go back to
+    /// the start of the drag.
+    fn key(&mut self, _cx: &ToolContext, key: ToolKey, _mods: Mods) -> Vec<Action> {
+        if key != ToolKey::Escape || !self.busy() {
+            return vec![];
+        }
+        (self.drag, self.plane) = (None, None);
+        vec![Action::Cancel]
+    }
     fn busy(&self) -> bool {
         self.drag.is_some() || self.plane.is_some()
     }
@@ -270,7 +279,16 @@ impl Tool for PerspectiveSelectionTool {
             }
         }
     }
+    /// Escape during a move, a resize or a plane widget drag cancels it: the objects and the plane
+    /// go back to the start of the drag.
     fn key(&mut self, cx: &ToolContext, key: ToolKey, mods: Mods) -> Vec<Action> {
+        if key == ToolKey::Escape && self.busy() {
+            self.measure = None;
+            return match std::mem::take(&mut self.drag) {
+                SelDrag::Move { began: false, .. } => vec![],
+                _ => vec![Action::Cancel],
+            };
+        }
         if let (ToolKey::Digit(5), SelDrag::Move { perp, began, .. }) = (key, &mut self.drag) {
             *perp = !*perp;
             return if *began { self.move_preview(cx).into_iter().collect() } else { vec![] };
