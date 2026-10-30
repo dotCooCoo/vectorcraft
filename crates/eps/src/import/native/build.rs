@@ -4,7 +4,7 @@ use super::slots::{
     ART_LEFT_OUT, Content, MAX_PAIRS, MAX_SLOTS, MAX_TEXT, OUTLINE_REACH, TEXT_LEFT_OUT, TYPE_LEFT_OUT, collect_slots, extent, few, fill_slots,
     text_objects,
 };
-use super::*;
+use super::{Affine, Arc, BTreeSet, Document, Node, NodeId, NodeKind, PathData, Rect, Scaling, Story, Structure, Texts, Unit, Vec2, ai};
 
 /// Which box of the editing copy is the page.
 #[derive(Clone, Copy)]
@@ -44,12 +44,28 @@ pub(super) fn build(
 ) -> Result<(Document, Vec<String>), String> {
     // An EPS (its page is its art) draws a Large Canvas page at full size; a `.ai` keeps its art
     // space, as its PDF part may (#2031).
-    let Structure { mut doc, to_doc, bbox, artboard, template, hidden_unread, slot_names, restyled, warnings } =
-        ai::read(data, matches!(page, Page::Art))?;
+    build_from(ai::read(data, matches!(page, Page::Art))?, data, visible, page, outlined, trust, unit)
+}
+
+/// [`build`] from `structure`, the editing copy `data` already read.
+pub(super) fn build_from(
+    structure: Structure,
+    data: &[u8],
+    visible: Option<&Document>,
+    page: Page,
+    outlined: bool,
+    trust: bool,
+    unit: f64,
+) -> Result<(Document, Vec<String>), String> {
+    let Structure { mut doc, to_doc, bbox, artboard, template, hidden_unread, slot_names, restyled, placed_elsewhere, warnings } = structure;
     // Editing data in the units of the page's user space ([`in_units`]) is compared with the page
     // scaled down to those units, and the document read from it is scaled up by `unit`.
     let board = artboard.map(|a| to_doc.transform_rect_bbox(a));
-    let small = visible.filter(|v| matches!(page, Page::Artboard) && in_units(board, v, unit)).map(|v| {
+    // A page cropped to the art (see below) is in those units as well, when the art's box is and
+    // the artboard isn't the page in points.
+    let art = bbox.map(|[a, b, c, d]| to_doc.transform_rect_bbox(Rect::new(a, b, c, d)));
+    let units = |v: &Document| in_units(board, v, unit) || (!same_size(board, v) && in_units(art, v, unit));
+    let small = visible.filter(|v| matches!(page, Page::Artboard) && units(v)).map(|v| {
         let mut v = v.clone();
         scale_document(&mut v, 1.0 / unit);
         v
@@ -67,8 +83,21 @@ pub(super) fn build(
         let page_rect = visible.artboards.first().map(|a| a.rect).ok_or("it has no page")?;
         // The layers' art in the document's terms: a Large Canvas editing copy is written at 1/N
         // scale, which `to_doc` carries, so its art and the page reach the same size (#2031).
-        let rect = to_doc.transform_rect_bbox(art_box);
-        if (rect.width() - page_rect.width()).abs() > 0.5 || (rect.height() - page_rect.height()).abs() > 0.5 {
+        let fits = |r: &Rect| (r.width() - page_rect.width()).abs() <= 0.5 && (r.height() - page_rect.height()).abs() <= 0.5;
+        let mut rect = to_doc.transform_rect_bbox(art_box);
+        // A `.ai` whose PDF part's pages are cropped to its art (each page the box of all of it,
+        // the editing data's bounding box) rather than to its artboards: the layers are compared
+        // with the page on that box, and keep their artboards. Each page then holds all the art
+        // again, so every page must be that box.
+        let mut cropped = false;
+        if matches!(page, Page::Artboard)
+            && !fits(&rect)
+            && visible.artboards.iter().all(|a| fits(&a.rect))
+            && let Some(art) = art.filter(fits)
+        {
+            (rect, cropped) = (art, true);
+        }
+        if !fits(&rect) {
             // Both sizes in points as the fields show them, and the editing data's page to the
             // file's as a scale (1:10 is a tenth of its size) when its sides are in proportion and
             // the scale doesn't round to 1:1.
@@ -101,12 +130,21 @@ pub(super) fn build(
         let same =
             |(a, p): (&vectorcraft_doc::Artboard, &Rect)| (a.rect.width() - p.width()).abs() <= 0.5 && (a.rect.height() - p.height()).abs() <= 0.5;
         let boards = (pages.len() == doc.artboards.len() && doc.artboards.iter().zip(&pages).all(same)).then_some(&doc.artboards);
-        for object in shown.iter_mut().chain(hidden.iter_mut()).chain(lone.iter_mut()) {
-            // The page with most of it, the first for what is on none.
-            let on = extent(object).and_then(|r| {
+        // The page with most of an object, the first for what is on none.
+        let page_of = |object: &[Arc<Node>]| {
+            extent(object).and_then(|r| {
                 let inside = |p: &Rect| p.intersect(r).area().max(0.0);
                 pages.iter().enumerate().skip(1).filter(|(_, p)| inside(p) > inside(&page_rect)).max_by(|a, b| inside(a.1).total_cmp(&inside(b.1)))
-            });
+            })
+        };
+        // Pages cropped to the art are copies of one another: the type is the first page's.
+        if cropped {
+            for objects in [&mut shown, &mut hidden, &mut lone] {
+                objects.retain(|o| page_of(o).is_none());
+            }
+        }
+        for object in shown.iter_mut().chain(hidden.iter_mut()).chain(lone.iter_mut()) {
+            let on = page_of(object);
             let shift = match on.and_then(|(i, page)| Some((boards?.get(i)?, page))) {
                 Some((board, page)) => Affine::translate(board.rect.origin() - page.origin()),
                 None => shift,
@@ -197,14 +235,28 @@ pub(super) fn build(
         Some(frame) => {
             let mut view = PageView::new(&frame);
             view.restyled(&restyled, frame.rect);
+            // The placed files' other placement starts from the layers as read: which text the page
+            // doesn't draw is weighed again with the images there, since an image that covered a
+            // text object at the first placement may not cover it at the other.
+            let other = elsewhere(&doc, &placed_elsewhere);
             let unseen = prune_unseen(&frame, &mut view, &mut doc);
-            if unseen > 0 {
-                notes.push(format!("{unseen} {UNSEEN_TEXT}"));
-            }
+            let unseen_note = |n: usize| (n > 0).then(|| format!("{n} {UNSEEN_TEXT}"));
             match compare(&frame, &mut view, &doc) {
-                Ok(note) => notes.extend(note),
-                Err(why) if trust => notes.push(format!("{why}: they come from its editing data all the same")),
-                Err(why) => return Err(why),
+                Ok(note) => notes.extend(unseen_note(unseen).into_iter().chain(note)),
+                // Placed files at the other point their data gives, where that draws as the page.
+                Err(why) => match other.map(|mut other| {
+                    let unseen = prune_unseen(&frame, &mut view, &mut other);
+                    (compare(&frame, &mut view, &other), other, unseen)
+                }) {
+                    Some((Ok(note), other, unseen)) => {
+                        doc = other;
+                        notes.extend(unseen_note(unseen).into_iter().chain(note));
+                    }
+                    _ if trust => {
+                        notes.extend(unseen_note(unseen).into_iter().chain([format!("{why}: they come from its editing data all the same")]))
+                    }
+                    _ => return Err(why),
+                },
             }
         }
         None => unmark(&mut doc.layers, true, true, &mut vec![]),
@@ -214,6 +266,28 @@ pub(super) fn build(
         scale_document(&mut doc, unit);
     }
     Ok((doc, notes))
+}
+
+/// `doc` with the placed files `placed` lists at their other placement (see
+/// [`ai::Structure::placed_elsewhere`]): each image's transform followed by its move. `None` when
+/// none is listed.
+fn elsewhere(doc: &Document, placed: &[(NodeId, Affine)]) -> Option<Document> {
+    if placed.is_empty() {
+        return None;
+    }
+    let mut doc = doc.clone();
+    for (id, shift) in placed {
+        if let Some(NodeKind::Image(im)) = doc.node_mut(*id).map(|n| &mut n.kind) {
+            im.xf *= *shift;
+        }
+    }
+    Some(doc)
+}
+
+/// Has `r` the size of `page`'s first artboard (in points)?
+fn same_size(r: Option<Rect>, page: &Document) -> bool {
+    let (Some(r), Some(p)) = (r, page.artboards.first().map(|a| a.rect)) else { return false };
+    (r.width() - p.width()).abs() <= 0.5 && (r.height() - p.height()).abs() <= 0.5
 }
 
 /// Does the editing data's first artboard `board` (in the document read from it: art space through
