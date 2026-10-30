@@ -5683,3 +5683,4 @@ anchor	Points:	Punkty:
 	CMYK Images	Obrazy CMYK
 	Grayscale Images	Obrazy w skali szarości
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` musi mieć wartość spotColors, colorEffects, rgbImages, cmykImages lub grayImages
+@msg	{_1}: they came in as the page's art	{_1}: zaimportowano je jako grafikę strony

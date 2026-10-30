@@ -33,6 +33,13 @@ fn read_ok(body: &str) -> Structure {
     }
 }
 
+fn assert_unread(r: &Structure, kind: &str) {
+    assert_eq!(r.unread.len(), 1);
+    let (id, kinds) = &r.unread[0];
+    assert_eq!(kinds, &[kind]);
+    assert!(r.doc.node(*id).is_some(), "the unread object has a placeholder");
+}
+
 #[test]
 fn ruler_units_from_the_header_set_the_documents_units() {
     let body = layer("");
@@ -286,12 +293,12 @@ fn a_pattern_it_cant_read_is_an_error_only_where_it_fills() {
     let s = read_ok(&format!("{unread}{}", layer(&(rect_path(0.0, 0.0, 1.0, 1.0) + "f\n"))));
     assert!(s.doc.patterns.is_empty() && s.doc.swatches.iter().all(|w| !matches!(w.paint, Paint::Pattern { .. })));
     for name in ["Old", "Odd", "Flat"] {
-        let e = read(
+        let r = read(
             stream(&format!("{unread}{}", layer(&format!("({name}) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n{}f\n", rect_path(0.0, 0.0, 1.0, 1.0)))))
                 .as_bytes(),
         )
-        .unwrap_err();
-        assert!(e.contains("pattern fills"), "{name}: {e}");
+        .unwrap();
+        assert_unread(&r, "pattern fills");
     }
     // Type in a pattern isn't read either.
     let typed = "%AI3_BeginPattern: (Words)\n(Words) 0 0 8 8\n%_/AI11Text :\n%_0 /StoryIndex ,\n%_;\nE\n%AI3_EndPattern\n";
@@ -870,6 +877,17 @@ fn a_placed_file_on_commented_lines_is_read() {
 }
 
 #[test]
+fn hidden_placed_file_ended_by_comment_stays_hidden() {
+    let mut data = hide_placed(&placed(true, "[5 0 0 -5 0 200]", "/pics/photo.png", None, ""));
+    let end = data.windows(4).position(|w| w == b"%_~\r").unwrap();
+    data.drain(end..end + 4);
+    let r = read(&data).unwrap();
+    assert!(art(&r.doc).is_empty());
+    assert!(r.unread.is_empty(), "hidden placement has no shown placeholder");
+    assert!(r.hidden_unread.contains("placed files"));
+}
+
+#[test]
 fn placed_files_are_linked_images_showing_their_preview() {
     // A 2×1 preview (premultiplied ARGB, a padded row) of a file of 4×2 pixels.
     let preview = [&b"2 1 12 32 17 "[..], &[255, 255, 0, 0, 128, 0, 64, 0, 9, 9, 9, 9]].concat();
@@ -898,8 +916,7 @@ fn placed_files_are_linked_images_showing_their_preview() {
     let xf = pixels(&r.doc).1;
     assert_eq!((xf * Point::ZERO, xf * Point::new(2.0, 1.0)), (Point::new(100.0, 50.0), Point::new(110.0, 30.0)));
 
-    // Without a preview it can read (none, cut short, not 32 bits, absurd sizes), without a path or
-    // a matrix, the file isn't read from its editing data.
+    // A placed file with a box but no usable preview is marked for page-art replacement.
     let cut = &preview[..preview.len() - 6];
     let huge = b"70000 70000 280000 32 17 \0\0\0\0";
     let overflow = b"1 2 18446744073709551615 32 17 \0\0\0\0\0\0\0\0";
@@ -914,8 +931,13 @@ fn placed_files_are_linked_images_showing_their_preview() {
         ("[0 0 0 0 0 0]", "a.png", Some(&preview[..])),
         ("[1 2 3]", "a.png", Some(&preview[..])),
     ] {
-        let e = read(&placed(true, matrix, path, preview, "")).unwrap_err();
-        assert!(e.contains("placed files"), "{matrix} {path} {preview:?}: {e}");
+        let result = read(&placed(true, matrix, path, preview, ""));
+        if matrix == "[0 0 0 0 0 0]" || matrix == "[1 2 3]" {
+            let e = result.err().unwrap_or_else(|| panic!("expected missing bounds for {matrix} {path}"));
+            assert!(e.contains("placed files"), "{matrix} {path} {preview:?}: {e}");
+        } else {
+            assert_unread(&result.unwrap(), "placed files");
+        }
     }
     // On a layer that doesn't show, such a file is left out of it.
     let r = read(&placed(false, "[5 0 0 -5 0 200]", "a.png", None, "")).unwrap();
@@ -957,8 +979,8 @@ fn text_objects_are_slots_named_after_their_story() {
 fn what_it_doesnt_read_is_an_error_where_it_shows() {
     let e = read(stream(&layer("1 2 frobnicate\n")).as_bytes()).unwrap_err();
     assert!(e.contains("`frobnicate`"), "{e}");
-    let e = read(stream(&layer("(Jive) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n")).as_bytes()).unwrap_err();
-    assert!(e.contains("pattern fills"), "{e}");
+    let r = read(stream(&layer(&format!("(Jive) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n{}f\n", rect_path(0.0, 0.0, 1.0, 1.0)))).as_bytes()).unwrap();
+    assert_unread(&r, "pattern fills");
     let e = read(stream(&layer("/SymbolInstance :\n(Dot) /SymbolRef ,\n;\n")).as_bytes()).unwrap_err();
     assert!(e.contains("symbols"), "{e}");
     // A mask with no owner must still be reported (#2004).
@@ -978,6 +1000,116 @@ fn what_it_doesnt_read_is_an_error_where_it_shows() {
     assert!(read(stream("").as_bytes()).is_err());
     // The setup's procedures and what follows the page don't count.
     read_ok(&format!("Adobe_level2_AI5 /initialize get exec\n{}", layer("")));
+}
+
+#[test]
+fn unresolved_pattern_reset_before_group_path_keeps_live_art() {
+    for (operator, draw, reset) in [("p", "f", "0 0 0 1 k"), ("P", "S", "0 0 0 1 K")] {
+        let body = format!("u\n(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] {operator}\n{reset}\n{}{draw}\nU\n", rect_path(0.0, 0.0, 4.0, 4.0),);
+        let result = read_ok(&layer(&body));
+        assert!(result.unread.is_empty(), "{operator}: {:?}", result.unread);
+        let children = art(&result.doc);
+        assert_eq!(children.len(), 1, "{operator}: group count");
+        let group_art = children[0].children().expect("group children");
+        assert_eq!(group_art.len(), 1, "{operator}: live path count");
+        assert!(matches!(group_art[0].kind, NodeKind::Path { .. }));
+    }
+}
+
+#[test]
+fn unresolved_pattern_in_dictionary_does_not_mark_following_path_unread() {
+    for (operator, draw) in [("p", "f"), ("P", "S")] {
+        let body = format!("/Unused :\n(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] {operator}\n;\n{}{draw}\n", rect_path(0.0, 0.0, 4.0, 4.0),);
+        let result = read_ok(&layer(&body));
+        assert!(result.unread.is_empty(), "{operator}: {:?}", result.unread);
+        let children = art(&result.doc);
+        assert_eq!(children.len(), 1, "{operator}: live path count");
+        assert!(matches!(children[0].kind, NodeKind::Path { .. }));
+    }
+}
+
+#[test]
+fn color_in_dictionary_does_not_clear_outer_unresolved_pattern() {
+    for (operator, draw, color) in [("p", "f", "0 0 0 1 k"), ("P", "S", "0 0 0 1 K")] {
+        let body = format!("(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] {operator}\n/Unused :\n{color}\n;\n{}{draw}\n", rect_path(0.0, 0.0, 4.0, 4.0),);
+        let result = read_ok(&layer(&body));
+        assert_unread(&result, "pattern fills");
+        assert_eq!(art(&result.doc).len(), 1, "{operator}: unread path placeholder");
+    }
+}
+
+#[test]
+fn hidden_unread_art_beside_drawn_look_needs_no_page_replacement() {
+    let hidden_path = rect_path(0.0, 0.0, 4.0, 4.0).lines().map(|line| format!("%_{line}\n")).collect::<String>();
+    for (operator, draw, reset) in [("p", "f", "0 0 0 1 k"), ("P", "S", "0 0 0 1 K")] {
+        let body = format!(
+            "u\n%_(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] {operator}\n{hidden_path}%_{draw}\n{reset}\n{}{draw}\nU\n",
+            rect_path(10.0, 0.0, 14.0, 4.0),
+        );
+        let result = read_ok(&layer(&body));
+        assert!(result.unread.is_empty(), "{operator}: {:?}", result.unread);
+        assert!(result.hidden_unread.contains("pattern fills"));
+        let children = art(&result.doc);
+        let group_art = children[0].children().expect("group children");
+        assert_eq!(group_art.len(), 2);
+        assert!(matches!(group_art[1].kind, NodeKind::Path { .. }));
+    }
+}
+
+#[test]
+fn unknown_operator_on_hidden_line_does_not_mark_drawn_group_unread() {
+    let body = format!("u\n%_1 2 frobnicate\n{RED}{}f\nU\n", rect_path(10.0, 0.0, 14.0, 4.0));
+    let result = read_ok(&layer(&body));
+    assert!(result.unread.is_empty(), "{:?}", result.unread);
+    assert!(result.hidden_unread.contains("`frobnicate`"));
+    assert_eq!(art(&result.doc)[0].children().expect("group children").len(), 1);
+}
+
+#[test]
+fn hidden_unread_symbol_does_not_mark_drawn_group_unread() {
+    let body = format!("u\n%_/SymbolInstance :\n%_(Absent) /SymbolRef ,\n%_;\n{RED}{}f\nU\n", rect_path(10.0, 0.0, 14.0, 4.0));
+    let result = read_ok(&layer(&body));
+    assert!(result.unread.is_empty(), "{:?}", result.unread);
+    assert!(result.hidden_unread.contains("symbols"));
+    assert_eq!(art(&result.doc)[0].children().expect("group children").len(), 1);
+}
+
+#[test]
+fn unresolved_pattern_paint_persists_past_plain_group_until_replaced() {
+    for (operator, draw, reset) in [("p", "f", "0 0 0 1 k"), ("P", "S", "0 0 0 1 K")] {
+        let body = format!(
+            "u\n(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] {operator}\n{}{draw}\nU\n{}{draw}\n{reset}\n{}{draw}\n",
+            rect_path(0.0, 0.0, 4.0, 4.0),
+            rect_path(10.0, 0.0, 14.0, 4.0),
+            rect_path(20.0, 0.0, 24.0, 4.0),
+        );
+        let result = read_ok(&layer(&body));
+        assert_eq!(result.unread.len(), 2, "{operator}: {:?}", result.unread);
+        assert_eq!(art(&result.doc).len(), 3);
+    }
+}
+
+#[test]
+fn unresolved_pattern_paint_inside_clip_restores_at_q() {
+    for (operator, draw, reset) in [("p", "f", "0 0 0 1 k"), ("P", "S", "0 0 0 1 K")] {
+        let body = format!(
+            "q\n(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] {operator}\n{}{draw}\nQ\n{}{draw}\n",
+            rect_path(0.0, 0.0, 4.0, 4.0),
+            rect_path(10.0, 0.0, 14.0, 4.0),
+        );
+        let result = read_ok(&layer(&body));
+        assert_eq!(result.unread.len(), 1, "{operator}: {:?}", result.unread);
+        assert_eq!(art(&result.doc).len(), 2);
+
+        let body = format!(
+            "(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] {operator}\nq\n{reset}\n{}{draw}\nQ\n{}{draw}\n",
+            rect_path(0.0, 0.0, 4.0, 4.0),
+            rect_path(10.0, 0.0, 14.0, 4.0),
+        );
+        let result = read_ok(&layer(&body));
+        assert_eq!(result.unread.len(), 1, "{operator}: {:?}", result.unread);
+        assert_eq!(result.unread[0].0, art(&result.doc)[1].id);
+    }
 }
 
 #[test]

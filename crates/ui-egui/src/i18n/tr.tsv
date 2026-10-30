@@ -5786,3 +5786,4 @@ anchor	Points:	Noktalar:
 	CMYK Images	CMYK Görüntüler
 	Grayscale Images	Gri Tonlamalı Görüntüler
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` değeri spotColors, colorEffects, rgbImages, cmykImages veya grayImages olmalıdır
+@msg	{_1}: they came in as the page's art	{_1}: sayfanın çizimi olarak içe aktarıldılar

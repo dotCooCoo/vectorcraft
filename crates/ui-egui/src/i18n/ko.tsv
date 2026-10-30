@@ -5408,3 +5408,4 @@ anchor	Points:	포인트:
 	CMYK Images	CMYK 이미지
 	Grayscale Images	회색 음영 이미지
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind`는 spotColors, colorEffects, rgbImages, cmykImages 또는 grayImages여야 합니다
+@msg	{_1}: they came in as the page's art	{_1}: 페이지의 아트로 가져왔습니다

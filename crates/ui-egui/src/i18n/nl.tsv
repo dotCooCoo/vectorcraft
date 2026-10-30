@@ -5777,3 +5777,4 @@ anchor	Points:	Punten:
 	CMYK Images	CMYK-afbeeldingen
 	Grayscale Images	Grijswaardenafbeeldingen
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` moet spotColors, colorEffects, rgbImages, cmykImages of grayImages zijn
+@msg	{_1}: they came in as the page's art	{_1}: ze zijn geïmporteerd als pagina-afbeelding

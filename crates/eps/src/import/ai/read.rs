@@ -101,6 +101,8 @@ pub struct Structure {
     pub template: Option<[f64; 4]>,
     /// What layers that don't show have that isn't read (operators, objects): left out of them.
     pub hidden_unread: BTreeSet<String>,
+    /// Top-level object ids and the unread kinds within them.
+    pub unread: Vec<(NodeId, Vec<String>)>,
     /// The names of text objects, by their slot's id.
     pub slot_names: HashMap<NodeId, String>,
     /// Where the drawn looks lay that objects read with their art style took the place of (the
@@ -162,6 +164,12 @@ struct Reader<'a> {
     unknown: BTreeSet<String>,
     /// What layers that don't show have that this reader doesn't read.
     hidden_unread: BTreeSet<String>,
+    unread: Vec<(NodeId, Vec<String>)>,
+    symbol_bounds: HashMap<String, Rect>,
+    /// Depth shared by pattern and symbol readers.
+    subreader_depth: usize,
+    pending_unread_fill: bool,
+    pending_unread_stroke: bool,
     /// The header's bounding boxes and template box.
     bbox: Option<[f64; 4]>,
     hires: Option<[f64; 4]>,
@@ -271,6 +279,11 @@ impl<'a> Reader<'a> {
             unsupported: BTreeSet::new(),
             unknown: BTreeSet::new(),
             hidden_unread: BTreeSet::new(),
+            unread: Vec::new(),
+            symbol_bounds: HashMap::new(),
+            subreader_depth: 0,
+            pending_unread_fill: false,
+            pending_unread_stroke: false,
             bbox: None,
             hires: None,
             template: None,
@@ -324,7 +337,7 @@ impl<'a> Reader<'a> {
                     let w = std::str::from_utf8(w).unwrap_or("?");
                     self.op(w, hidden)?;
                 }
-                Tok::Comment(c) => self.comment(c)?,
+                Tok::Comment(c) => self.comment(c, hidden)?,
                 Tok::Data(d) => self.image(d)?,
                 Tok::Preview(d) => {
                     if let Some(p) = self.place.as_mut() {

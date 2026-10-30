@@ -5746,3 +5746,4 @@ anchor	Points:	Pontos:
 	CMYK Images	Imagens CMYK
 	Grayscale Images	Imagens em escala de cinza
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` deve ser spotColors, colorEffects, rgbImages, cmykImages ou grayImages
+@msg	{_1}: they came in as the page's art	{_1}: foram importados como arte da página

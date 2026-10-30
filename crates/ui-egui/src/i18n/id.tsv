@@ -5733,3 +5733,4 @@ anchor	Points:	Titik:
 	CMYK Images	Gambar CMYK
 	Grayscale Images	Gambar Skala Abu-abu
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` harus spotColors, colorEffects, rgbImages, cmykImages, atau grayImages
+@msg	{_1}: they came in as the page's art	{_1}: diimpor sebagai gambar halaman

@@ -5828,3 +5828,4 @@ anchor	Points:	Body:
 	CMYK Images	Obrazy CMYK
 	Grayscale Images	Obrazy ve stupních šedi
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` musí být spotColors, colorEffects, rgbImages, cmykImages nebo grayImages
+@msg	{_1}: they came in as the page's art	{_1}: byly načteny jako kresba ze stránky

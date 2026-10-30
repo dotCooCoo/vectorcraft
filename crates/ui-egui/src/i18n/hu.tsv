@@ -5815,3 +5815,4 @@ anchor	Points:	Pontok:
 	CMYK Images	CMYK-képek
 	Grayscale Images	Szürkeárnyalatos képek
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	A `kind` értéke spotColors, colorEffects, rgbImages, cmykImages vagy grayImages lehet
+@msg	{_1}: they came in as the page's art	{_1}: az oldal rajzaként lettek importálva

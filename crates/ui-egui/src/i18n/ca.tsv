@@ -5819,3 +5819,4 @@ anchor	Points:	Punts:
 	CMYK Images	Imatges CMYK
 	Grayscale Images	Imatges en escala de grisos
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` ha de ser spotColors, colorEffects, rgbImages, cmykImages o grayImages
+@msg	{_1}: they came in as the page's art	{_1}: han entrat com a art de la pàgina

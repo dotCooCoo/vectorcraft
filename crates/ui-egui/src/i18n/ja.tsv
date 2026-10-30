@@ -5514,3 +5514,4 @@ anchor	Points:	ポイント:
 	CMYK Images	CMYK 画像
 	Grayscale Images	グレースケール画像
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` は spotColors、colorEffects、rgbImages、cmykImages、grayImages のいずれかにしてください
+@msg	{_1}: they came in as the page's art	{_1}: ページのアートとして読み込みました

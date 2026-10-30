@@ -26,6 +26,8 @@ pub(super) struct Frame<'a> {
     /// The page holds all the art that prints (an EPS's page is its art's box, unless it was
     /// saved as its artboard): the layers print nothing outside it.
     pub(super) whole: bool,
+    /// The PDF page areas and their moves into the editing document.
+    pub(super) pages: Vec<(Rect, Affine)>,
 }
 
 /// The document of the editing copy `data`, with the text (and strokes round it) of `visible`, the
@@ -57,7 +59,7 @@ pub(super) fn build_from(
     trust: bool,
     unit: f64,
 ) -> Result<(Document, Vec<String>), String> {
-    let Structure { mut doc, to_doc, bbox, artboard, template, hidden_unread, slot_names, restyled, placed_elsewhere, warnings } = structure;
+    let Structure { mut doc, to_doc, bbox, artboard, template, hidden_unread, unread, slot_names, restyled, placed_elsewhere, warnings } = structure;
     // Editing data in the units of the page's user space ([`in_units`]) is compared with the page
     // scaled down to those units, and the document read from it is scaled up by `unit`.
     let board = artboard.map(|a| to_doc.transform_rect_bbox(a));
@@ -123,6 +125,15 @@ pub(super) fn build_from(
         let same =
             |(a, p): (&vectorcraft_doc::Artboard, &Rect)| (a.rect.width() - p.width()).abs() <= 0.5 && (a.rect.height() - p.height()).abs() <= 0.5;
         let boards = (pages.len() == doc.artboards.len() && doc.artboards.iter().zip(&pages).all(same)).then_some(&doc.artboards);
+        let page_moves: Vec<(Rect, Affine)> = pages
+            .iter()
+            .enumerate()
+            .map(|(i, page)| {
+                let move_to_doc =
+                    boards.and_then(|boards| boards.get(i)).map(|board| Affine::translate(board.rect.origin() - page.origin())).unwrap_or(shift);
+                (*page, move_to_doc)
+            })
+            .collect();
         for object in shown.iter_mut().chain(hidden.iter_mut()).chain(lone.iter_mut()) {
             // The page with most of it, the first for what is on none.
             let on = extent(object).and_then(|r| {
@@ -149,7 +160,7 @@ pub(super) fn build_from(
                 a.rect = rect;
             }
         }
-        frame = Some(Frame { page: visible, page_rect, rect, whole });
+        frame = Some(Frame { page: visible, page_rect, rect, whole, pages: page_moves });
     }
     let mut infos = vec![];
     collect_slots(&doc.layers, true, &mut infos);
@@ -199,6 +210,11 @@ pub(super) fn build_from(
     let mut made = vec![];
     fill_slots(&mut doc, &mut layers, &mut content.into_iter(), &slot_names, &mut empty, &mut made, &mut vec![]);
     doc.layers = layers;
+    if !unread.is_empty() {
+        let Some(frame) = frame.as_ref() else { return Err("its unread objects have no page art to use".into()) };
+        let kinds = replace_unread(&mut doc, frame, &unread)?;
+        notes.push(format!("{}: they came in as the page's art", kinds.join(", ")));
+    }
     // A story in several frames is threaded type: its frames in order (the first holds the story).
     made.sort();
     for thread in made.chunk_by(|a, b| a.0 == b.0) {
@@ -243,6 +259,292 @@ pub(super) fn build_from(
         scale_document(&mut doc, unit);
     }
     Ok((doc, notes))
+}
+
+/// A visible page node, with its source order and subtree range.
+struct PageArt {
+    node: Arc<Node>,
+    bounds: Rect,
+    page: usize,
+    end: usize,
+    stateful_ancestor: bool,
+}
+
+const ART_MARGIN: f64 = 1.0;
+
+fn inside(art: Rect, bounds: Rect) -> bool {
+    art.x0 >= bounds.x0 - ART_MARGIN && art.y0 >= bounds.y0 - ART_MARGIN && art.x1 <= bounds.x1 + ART_MARGIN && art.y1 <= bounds.y1 + ART_MARGIN
+}
+
+/// Pick the page holding the most of a box. The first page wins a tie.
+fn page_for(bounds: Rect, pages: &[Rect]) -> usize {
+    let mut best = (0, 0.0);
+    for (i, page) in pages.iter().enumerate() {
+        let area = page.intersect(bounds).area().max(0.0);
+        if area > best.1 {
+            best = (i, area);
+        }
+    }
+    best.0
+}
+
+fn collect_live(node: &Node, unread: &BTreeSet<NodeId>, live: &mut Vec<Rect>) {
+    if !node.visible || unread.contains(&node.id) {
+        return;
+    }
+    if let Some(children) = node.children() {
+        for child in children {
+            collect_live(child, unread, live);
+        }
+    } else if let Some(bounds) = node.visual_bounds() {
+        live.push(bounds);
+    }
+}
+
+fn page_node_has_drawing_state(node: &Node) -> bool {
+    node.clips()
+        || matches!(node.kind, NodeKind::Path { clipping: true, .. })
+        || node.opacity < 1.0
+        || node.blend != super::BlendMode::Normal
+        || node.isolate
+        || node.knockout != vectorcraft_doc::Knockout::Neutral
+        || node.extras().mask.is_some()
+        || !node.appearance.items.is_empty()
+        || !node.appearance.effects.is_empty()
+}
+
+fn index_page(node: &Arc<Node>, pages: &[Rect], moves: &[Affine], art: &mut Vec<PageArt>, stateful_ancestor: bool) {
+    if !node.visible {
+        return;
+    }
+    let start = art.len();
+    let mut indexed = false;
+    if let Some(bounds) = node.visual_bounds() {
+        let page = page_for(bounds, pages);
+        if let Some(shift) = moves.get(page) {
+            art.push(PageArt { node: Arc::clone(node), bounds: shift.transform_rect_bbox(bounds), page, end: start + 1, stateful_ancestor });
+            indexed = true;
+        }
+    }
+    if let Some(children) = node.children() {
+        for child in children {
+            index_page(child, pages, moves, art, stateful_ancestor || page_node_has_drawing_state(node));
+        }
+    }
+    let end = art.len();
+    if indexed && let Some(entry) = art.get_mut(start) {
+        entry.end = end;
+    }
+}
+
+/// Node IDs belong to the importing document, not to the pattern's drawing.
+fn same_pattern_art(existing: &vectorcraft_doc::PatternDef, source: &vectorcraft_doc::PatternDef) -> bool {
+    fn clear_ids(node: &mut Node) {
+        node.id = NodeId(0);
+        if let Some(children) = node.children_mut() {
+            for child in children {
+                clear_ids(Arc::make_mut(child));
+            }
+        }
+        if let Some(mask) = &mut node.extras_mut().mask {
+            clear_ids(Arc::make_mut(&mut mask.art));
+        }
+    }
+
+    let mut a = existing.clone();
+    let mut b = source.clone();
+    for pattern in [&mut a, &mut b] {
+        for node in &mut pattern.art {
+            clear_ids(Arc::make_mut(node));
+        }
+    }
+    a == b
+}
+
+/// Bring document resources used by page art across before reassigning its node IDs.
+fn copy_page_resources(doc: &mut Document, page: &Document, nodes: &[&Node]) -> Result<(), String> {
+    fn collect(node: &Node, images: &mut BTreeSet<String>, patterns: &mut BTreeSet<String>, swatches: &mut BTreeSet<String>) {
+        if let NodeKind::Image(im) = &node.kind {
+            images.insert(im.key.clone());
+        }
+        for item in &node.appearance.items {
+            match item.paint() {
+                vectorcraft_color::Paint::Solid { swatch: Some(name), .. } => {
+                    swatches.insert(name.clone());
+                }
+                vectorcraft_color::Paint::Gradient(gradient) => {
+                    if let Some(name) = &gradient.swatch {
+                        swatches.insert(name.clone());
+                    }
+                    for stop in &gradient.gradient.stops {
+                        if let Some(name) = &stop.swatch {
+                            swatches.insert(name.clone());
+                        }
+                    }
+                }
+                vectorcraft_color::Paint::Pattern { pattern, .. } => {
+                    patterns.insert(pattern.clone());
+                }
+                _ => {}
+            }
+        }
+        if let Some(mask) = &node.extras().mask {
+            collect(&mask.art, images, patterns, swatches);
+        }
+        for child in node.children().into_iter().flatten() {
+            collect(child, images, patterns, swatches);
+        }
+    }
+
+    let (mut images, mut patterns, mut swatches) = (BTreeSet::new(), BTreeSet::new(), BTreeSet::new());
+    for node in nodes {
+        collect(node, &mut images, &mut patterns, &mut swatches);
+    }
+    let mut copied = BTreeSet::new();
+    while let Some(name) = patterns.pop_first() {
+        if !copied.insert(name.clone()) {
+            continue;
+        }
+        let Some(source) = page.pattern(&name) else { return Err(format!("page art is missing pattern {name}")) };
+        if let Some(existing) = doc.pattern(&name) {
+            if !same_pattern_art(existing, source) {
+                return Err(format!("page art conflicts with pattern {name}"));
+            }
+        } else {
+            for node in &source.art {
+                collect(node, &mut images, &mut patterns, &mut swatches);
+            }
+            let mut pattern = source.clone();
+            pattern.art = pattern.art.iter().map(|node| Arc::new(doc.reid(node))).collect();
+            doc.patterns.push(pattern);
+        }
+    }
+    for key in images {
+        let Some(blob) = page.images.get(&key) else { return Err(format!("page art is missing image data for {key}")) };
+        if doc.images.get(&key).is_some_and(|existing| existing != blob) {
+            return Err(format!("page art conflicts with image data for {key}"));
+        }
+        doc.images.entry(key).or_insert_with(|| blob.clone());
+    }
+    for name in swatches {
+        let Some(source) = page.swatch(&name) else { return Err(format!("page art is missing swatch {name}")) };
+        if let Some(existing) = doc.swatch(&name) {
+            if existing != source {
+                return Err(format!("page art conflicts with swatch {name}"));
+            }
+        } else {
+            doc.swatches.push(source.clone());
+        }
+    }
+    Ok(())
+}
+
+/// The PDF importer keeps group transparency on a group, or folds it into its only child.
+/// If the editing object's state cannot be located in that art, use the PDF page as a whole.
+fn page_carries_state(editing: &Node, page: &[&Node]) -> bool {
+    fn any(node: &Node, matches: &dyn Fn(&Node) -> bool) -> bool {
+        matches(node) || node.children().into_iter().flatten().any(|child| any(child, matches))
+    }
+    let has = |matches: &dyn Fn(&Node) -> bool| page.iter().any(|node| any(node, matches));
+    let opacity = editing.opacity >= 0.999 || has(&|node: &Node| (node.opacity - editing.opacity).abs() < 0.001);
+    let blend = editing.blend == super::BlendMode::Normal || has(&|node: &Node| node.blend == editing.blend);
+    let isolate = !editing.isolate || has(&|node: &Node| node.isolate);
+    let knockout = matches!(editing.knockout, vectorcraft_doc::Knockout::Neutral | vectorcraft_doc::Knockout::Off)
+        || has(&|node: &Node| node.knockout == editing.knockout);
+    let appearance = !matches!(editing.kind, NodeKind::Group { .. }) || *editing.appearance == vectorcraft_doc::Appearance::default();
+    opacity && blend && isolate && knockout && appearance
+}
+
+/// Replace each unread top-level object with painted page objects inside its readable bounds.
+fn replace_unread(doc: &mut Document, frame: &Frame<'_>, unread: &[(NodeId, Vec<String>)]) -> Result<Vec<String>, String> {
+    let unread_ids: BTreeSet<NodeId> = unread.iter().map(|(id, _)| *id).collect();
+    let mut live = Vec::new();
+    for layer in &doc.layers {
+        collect_live(layer, &unread_ids, &mut live);
+    }
+    live.sort_by(|a, b| a.x0.total_cmp(&b.x0));
+
+    let source_pages: Vec<Rect> = frame.pages.iter().map(|(page, _)| *page).collect();
+    let moves: Vec<Affine> = frame.pages.iter().map(|(_, shift)| *shift).collect();
+    let destination_pages: Vec<Rect> = frame.pages.iter().map(|(page, shift)| shift.transform_rect_bbox(*page)).collect();
+    let mut art = Vec::new();
+    for layer in &frame.page.layers {
+        if layer.visible
+            && let Some(children) = layer.children()
+        {
+            for child in children {
+                index_page(child, &source_pages, &moves, &mut art, false);
+            }
+        }
+    }
+    let mut by_x: Vec<usize> = (0..art.len()).collect();
+    by_x.sort_by(|a, b| art[*a].bounds.x0.total_cmp(&art[*b].bounds.x0));
+    let mut claimed = std::collections::BTreeMap::<usize, usize>::new();
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for (id, kinds) in unread {
+        let Some((bounds, name, visible, locked, editing)) =
+            doc.node(*id).and_then(|n| n.visual_bounds().map(|b| (b, n.name.clone(), n.visible, n.locked, n.clone())))
+        else {
+            return Err("an unread object has no readable bounds".into());
+        };
+        if !bounds.area().is_finite() || bounds.area() <= 0.0 {
+            return Err("an unread object has no readable bounds".into());
+        }
+        let live_start = live.partition_point(|b| b.x0 < bounds.x0 - ART_MARGIN);
+        let live_end = live.partition_point(|b| b.x0 <= bounds.x1 + ART_MARGIN);
+        if live[live_start..live_end].iter().any(|art| inside(*art, bounds)) {
+            return Err("an unread object's bounds also contain live art".into());
+        }
+        let page = page_for(bounds, &destination_pages);
+        let candidates_start = by_x.partition_point(|i| art[*i].bounds.x0 < bounds.x0 - ART_MARGIN);
+        let candidates_end = by_x.partition_point(|i| art[*i].bounds.x0 <= bounds.x1 + ART_MARGIN);
+        let mut candidates: Vec<usize> =
+            by_x[candidates_start..candidates_end].iter().copied().filter(|i| art[*i].page == page && inside(art[*i].bounds, bounds)).collect();
+        candidates.sort_unstable();
+        let mut selected = Vec::new();
+        let mut covered_until = 0;
+        for i in candidates {
+            if i < covered_until || matches!(art[i].node.kind, NodeKind::Path { clipping: true, .. }) {
+                continue;
+            }
+            if art[i].stateful_ancestor {
+                return Err("an unread object's page art depends on a clipping or appearance ancestor".into());
+            }
+            covered_until = art[i].end;
+            selected.push(i);
+        }
+        if selected.is_empty() {
+            return Err("an unread object's page art wasn't found in its bounds".into());
+        }
+        if !page_carries_state(&editing, &selected.iter().map(|&i| art[i].node.as_ref()).collect::<Vec<_>>()) {
+            return Err("an unread object's appearance is not identifiable in the page art".into());
+        }
+        copy_page_resources(doc, frame.page, &selected.iter().map(|&i| art[i].node.as_ref()).collect::<Vec<_>>())?;
+        for &i in &selected {
+            if claimed.range(..art[i].end).next_back().is_some_and(|(_, end)| *end > i) {
+                return Err("one page object matches more than one unread object".into());
+            }
+        }
+        let mut found = Vec::new();
+        for &i in &selected {
+            let mut copy = Node::clone(&art[i].node);
+            if let Some(shift) = moves.get(page) {
+                copy.transform(*shift, false);
+            }
+            found.push(Arc::new(doc.reid(&copy)));
+            claimed.insert(i, art[i].end);
+        }
+        let mut replacement = Node::group(*id, found);
+        replacement.name = name;
+        replacement.visible = visible;
+        replacement.locked = locked;
+        let Some(target) = doc.node_mut(*id) else { return Err("an unread object is missing from its layer".into()) };
+        *target = replacement;
+        for kind in kinds {
+            *counts.entry(kind.clone()).or_default() += 1;
+        }
+    }
+    Ok(counts.into_iter().map(|(kind, count)| format!("{kind} ({count})")).collect())
 }
 
 /// `doc` with the placed files `placed` lists at their other placement (see

@@ -12,7 +12,7 @@ impl<'a> Reader<'a> {
     /// A text object (`/AI11Text`): an empty group standing for it, named after its story.
     pub(super) fn text_slot(&mut self, o: &Obj) -> Result<(), String> {
         if self.pattern.is_some() {
-            self.unreadable("type in a pattern");
+            self.unreadable("type in a pattern", false);
         }
         // `1 /FreeUndo`: the type in the drawn look of a text object that has an appearance. Its
         // story is one of another text document (`/AI11UndoFreeTextDocument`), which counts its
@@ -212,7 +212,24 @@ impl<'a> Reader<'a> {
             .into();
             copy
         });
+        let unread = (fill && self.pending_unread_fill) || (stroke && self.pending_unread_stroke);
+        let unread_bounds = unread.then(|| node.visual_bounds()).flatten();
+        let unread_id = node.id;
         self.add(node, hidden)?;
+        if unread && hidden {
+            self.hidden_unread.insert("pattern fills".into());
+        } else if unread {
+            match unread_bounds {
+                Some(b) if sane(b) && b.area() > 0.0 => {
+                    if !self.mark_unread("pattern fills".into()) {
+                        self.unread.push((unread_id, vec!["pattern fills".into()]));
+                    }
+                }
+                _ => {
+                    self.unsupported.insert("pattern fills".into());
+                }
+            }
+        }
         if let Some(copy) = copy {
             self.clip_fills.insert(copy.id);
             self.add(copy, hidden)?;
@@ -224,7 +241,7 @@ impl<'a> Reader<'a> {
     pub(super) fn end_mesh(&mut self) -> Result<(), String> {
         let Some((m, hidden)) = self.mesh.take() else { return Ok(()) };
         if m.unread || m.patches.is_empty() {
-            self.unreadable("gradient meshes it can't read");
+            self.unreadable("gradient meshes it can't read", hidden && self.pattern.is_none());
             return Ok(());
         }
         let gs = self.gs.clone();
@@ -457,10 +474,31 @@ impl<'a> Reader<'a> {
     /// shows the preview the data keeps of it, as a linked image whose file is missing does. One
     /// without a preview, a path or a matrix isn't read.
     pub(super) fn end_place(&mut self, hidden: bool) -> Result<(), String> {
-        let Some(Place { matrix: Some(m), bounds: Some(b), path, preview: Some((png, w, h)) }) = self.place.take().filter(|p| !p.path.is_empty())
-        else {
-            self.unreadable("placed files");
-            return Ok(());
+        let (m, b, path, png, w, h) = match self.place.take() {
+            Some(Place { matrix: Some(m), bounds: Some(b), path, preview: Some((png, w, h)) }) if !path.is_empty() => (m, b, path, png, w, h),
+            other => {
+                let boxed = other.as_ref().and_then(|p| Some((p.matrix?, p.bounds?))).filter(|(_, b)| sane(*b) && b.area() > 0.0);
+                let mut have_bounds = false;
+                if self.shown()
+                    && let Some((m, b)) = boxed
+                {
+                    let centre = self.template.map(|t| ((t[0] + t[2]) / 2.0, (t[1] + t[3]) / 2.0));
+                    let origin = centre.map_or(b.origin(), |(x, y)| Point::new(CANVAS_CENTRE - x, CANVAS_CENTRE + y));
+                    let box_at_canvas = Rect::new(origin.x, origin.y, origin.x + b.width(), origin.y + b.height());
+                    let bounds = (self.space() * m).transform_rect_bbox(box_at_canvas);
+                    have_bounds = sane(bounds) && bounds.area() > 0.0;
+                    if have_bounds {
+                        self.unread_box("placed files", bounds, hidden)?;
+                        return Ok(());
+                    }
+                }
+                if self.shown() && !hidden && !have_bounds {
+                    self.unsupported.insert("placed files".into());
+                } else {
+                    self.unreadable("placed files", hidden);
+                }
+                return Ok(());
+            }
         };
         // The file's pixels (y down) start at the canvas point of art space's origin (the box's own
         // corner when the file doesn't say where the canvas is); the preview's are spread over them.
@@ -477,7 +515,7 @@ impl<'a> Reader<'a> {
             .filter(|a| a.as_coeffs().iter().all(|v| v.is_finite()));
         let xf = self.space() * m * over_file;
         if !xf.as_coeffs().iter().all(|v| v.is_finite()) || xf.determinant().abs() < 1e-12 {
-            self.unreadable("placed files");
+            self.unreadable("placed files", hidden);
             return Ok(());
         }
         // The preview is all the document has of the file: what a missing link shows.

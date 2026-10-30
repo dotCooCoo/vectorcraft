@@ -5780,3 +5780,4 @@ anchor	Points:	Σημεία:
 	CMYK Images	Εικόνες CMYK
 	Grayscale Images	Εικόνες σε κλίμακα του γκρι
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	Το `kind` πρέπει να είναι spotColors, colorEffects, rgbImages, cmykImages ή grayImages
+@msg	{_1}: they came in as the page's art	{_1}: εισήχθησαν ως γραφικά της σελίδας

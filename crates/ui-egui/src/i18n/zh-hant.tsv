@@ -5464,3 +5464,4 @@ anchor	Points:	點：
 	CMYK Images	CMYK 影像
 	Grayscale Images	灰階影像
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` 必須是 spotColors、colorEffects、rgbImages、cmykImages 或 grayImages
+@msg	{_1}: they came in as the page's art	{_1}：已作為頁面圖稿匯入

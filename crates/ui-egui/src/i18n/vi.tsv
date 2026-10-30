@@ -5427,3 +5427,4 @@ anchor	Points:	Điểm:
 	CMYK Images	Ảnh CMYK
 	Grayscale Images	Ảnh thang độ xám
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` phải là spotColors, colorEffects, rgbImages, cmykImages hoặc grayImages
+@msg	{_1}: they came in as the page's art	{_1}: đã được nhập dưới dạng hình vẽ của trang

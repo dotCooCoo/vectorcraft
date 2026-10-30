@@ -5827,3 +5827,4 @@ anchor	Points:	Points :
 	CMYK Images	Images CMJN
 	Grayscale Images	Images en niveaux de gris
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` doit être spotColors, colorEffects, rgbImages, cmykImages ou grayImages
+@msg	{_1}: they came in as the page's art	{_1} : ils ont été importés comme le dessin de la page

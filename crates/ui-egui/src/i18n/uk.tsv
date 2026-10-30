@@ -5425,3 +5425,4 @@ anchor	Points:	Точки:
 	CMYK Images	Зображення CMYK
 	Grayscale Images	Зображення у відтінках сірого
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` має бути spotColors, colorEffects, rgbImages, cmykImages або grayImages
+@msg	{_1}: they came in as the page's art	{_1}: їх імпортовано як графіку сторінки
