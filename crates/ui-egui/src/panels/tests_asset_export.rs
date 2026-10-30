@@ -243,7 +243,7 @@ fn the_export_preset_row_applies_saves_and_lists_presets() {
     let mine = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Mine").expect("saved").clone();
     assert_eq!(mine.settings["formats"], settings["formats"]);
     // Create Sub-folders, off after a preset that sorts by format, is saved with it.
-    assert_eq!((mine.settings.get("folders"), mine.settings.get("subfolders")), (None, Some(&json!(false))), "{:?}", mine.settings);
+    assert_eq!((mine.settings.get("folders"), mine.settings.get("subfolders")), (Some(&json!("format")), Some(&json!(false))), "{:?}", mine.settings);
     let texts = frame(&ctx, &mut app, vec![], false);
     assert!(has(&texts, "Mine"), "the dropdown shows the preset saved");
     // A preset file opened while the panel shows (the web's Import) is in its dropdown.
@@ -289,6 +289,54 @@ fn the_panel_saves_mobile_preset_without_subfolders() {
     let settings = app.run("document.exportSettings", json!({})).unwrap();
     assert_eq!(settings["settings"]["folders"], "none");
     assert_eq!(settings["settings"]["subfolders"], false);
+}
+
+#[test]
+fn asset_export_preserves_applied_preset_naming_and_folders_when_saving() {
+    let (mut app, _, [a, _]) = app(true);
+    app.run("assets.add", json!({"ids": [a]})).unwrap();
+    let asset = app.run("assets.list", json!({})).unwrap()["assets"][0]["id"].as_u64().unwrap();
+    let original = json!({
+        "formats": [{"format": "svg"}],
+        "name": "<name>-###",
+        "folders": "format",
+        "counterStart": 7,
+        "counterPer": "file",
+        "includeBleed": true,
+    });
+    app.run("document.exportPresets.save", json!({"name": "Named Assets", "settings": original})).unwrap();
+    let before = app.run("document.exportForScreens", json!({"exportPreset": "Named Assets", "assets": [asset]})).unwrap();
+
+    let ctx = egui::Context::default();
+    let doc = app.session.active().unwrap().uid;
+    let pick = json!({"name": "Named Assets"});
+    super::asset_export::preset(&mut app, &ctx, doc, crate::dialogs::ScreenPresetPick::Apply(pick));
+    super::asset_export::preset(&mut app, &ctx, doc, crate::dialogs::ScreenPresetPick::Save("Named Assets".into()));
+
+    let saved = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Named Assets").expect("saved");
+    for key in ["name", "folders", "counterStart", "counterPer", "includeBleed"] {
+        assert_eq!(saved.settings.get(key), original.get(key), "{key}: {:?}", saved.settings);
+    }
+    let file = app.run("document.exportPresets.export", json!({"names": ["Named Assets"]})).unwrap();
+    let data: Value = serde_json::from_str(file["data"].as_str().unwrap()).unwrap();
+    for key in ["name", "folders", "counterStart", "counterPer", "includeBleed"] {
+        assert_eq!(data["presets"][0]["settings"].get(key), original.get(key), "{key}: {data}");
+    }
+    let after = app.run("document.exportForScreens", json!({"exportPreset": "Named Assets", "assets": [asset]})).unwrap();
+    assert_eq!(after["files"][0]["name"], before["files"][0]["name"]);
+}
+
+#[test]
+fn asset_export_preserves_applied_mobile_preset_folder_choice() {
+    let (mut app, _, _) = app(true);
+    app.run("document.exportPresets.save", json!({"name": "Mobile by Format", "settings": {"preset": "mobile", "folders": "format"}})).unwrap();
+    let ctx = egui::Context::default();
+    let doc = app.session.active().unwrap().uid;
+    super::asset_export::preset(&mut app, &ctx, doc, crate::dialogs::ScreenPresetPick::Apply(json!({"name": "Mobile by Format"})));
+    super::asset_export::preset(&mut app, &ctx, doc, crate::dialogs::ScreenPresetPick::Save("Mobile by Format".into()));
+    let saved = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Mobile by Format").expect("saved");
+    assert_eq!(saved.settings.get("folders"), Some(&json!("format")));
+    assert_eq!(saved.settings.get("subfolders"), Some(&json!(false)));
 }
 
 /// The panel keeps its list of export presets from frame to frame, and builds it again when the
