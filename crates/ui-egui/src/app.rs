@@ -79,6 +79,7 @@ impl VectorcraftApp {
             dock_rt: Default::default(),
             titlebar_inset: 0.0,
             last_effect: None,
+            last_pathfinder: None,
             last_warp: None,
             character_focus: None,
             run_count: 0,
@@ -499,6 +500,9 @@ impl VectorcraftApp {
             titlebar::resize_zones(ui);
         }
         self.ui_fonts.frame(&ctx);
+        if self.ui.dialog.is_none() && !self.ui.palette_open {
+            shortcuts::remember_text_focus(&ctx);
+        }
         scrub::end_frame(self, &ctx);
         native_menu::sync(self, &ctx);
         // Observe once, after all of this pass's input, dialogs, floating panels, palette and

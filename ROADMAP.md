@@ -110,6 +110,7 @@ Weights, evidence and the missing items per area: [target-app-parity.md](docs/ta
 | Japanese | `ja` | full | 100% |
 | German | `de` | full | 98% |
 | Korean | `ko` | full | 100% |
+| Bosnian | `bs` | full (AI-assisted, native review pending) | 100% |
 | Vietnamese | `vi` | full | 100% |
 
 Also shipped: Traditional Chinese (partial, 80%), Bulgarian, Finnish, Greek, Hungarian, Italian, Polish, Russian, Swedish, Ukrainian and Georgian (full), Catalan (full; AI-drafted, native review welcome), Czech (catalog complete; render-site gaps reduced; native review pending).

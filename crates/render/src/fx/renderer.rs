@@ -370,8 +370,13 @@ impl Renderer {
         let kept = cache && self.fx_arts.get(&(Arc::as_ptr(a) as usize), self.stamp).is_some_and(|e| Arc::ptr_eq(&e.1, &art));
         let outer = self.made_again;
         self.made_again = outer || !kept;
-        // With Crop Marks, the object inside the art paints its own raster effects.
-        let rfx = if effects::has_crop_marks(a) { vec![] } else { effects::raster_effects(&a.appearance.effects) };
+        // With Crop Marks, the object inside the art paints its own raster effects; Vector
+        // Halftone samples them with the object.
+        let rfx = if effects::has_crop_marks(a) || effects::addons::halftone::has_halftone(a) {
+            vec![]
+        } else {
+            effects::raster_effects(&a.appearance.effects)
+        };
         match cull_bounds(f.symbols, &art) {
             Some(reach) if !f.opts.outline && !rfx.is_empty() => {
                 // Feather, Inner Glow and Rasterize with Create Clipping Mask clip to the art's outline.
@@ -426,6 +431,7 @@ impl Renderer {
         };
         let container = is_container(a);
         let art = match effects::crop_marks_art(a)
+            .or_else(|| crate::addons::halftone::art(doc, a))
             .or_else(|| effects::revolve_art(a))
             .or_else(|| effects::solid_art(a))
             .or_else(|| effects::reshape(Some(doc), a, symbol.as_ref()))
@@ -436,7 +442,9 @@ impl Renderer {
             None => effects::outline_art(Some(doc), a, symbol.as_ref()).unwrap_or_else(|| Node::group(a.id, vec![])),
         };
         let art = if effects::has_revolve(a) || effects::has_solid(a) { effects::evaluate_container(Some(doc), &art).unwrap_or(art) } else { art };
-        let mut art = self.adjusted_art(art, effects::color_map(&a.appearance.effects).as_ref());
+        // Vector Halftone samples the object with its colour adjustments: its dots keep their inks.
+        let outer = if effects::addons::halftone::has_halftone(a) { None } else { effects::color_map(&a.appearance.effects) };
+        let mut art = self.adjusted_art(doc, art, outer.as_ref());
         // A path's geometry effects still apply when it is drawn.
         let path = matches!(art.kind, NodeKind::Path { .. } | NodeKind::Compound { .. });
         art.appearance.effects.retain(|e| path && effects::is_geometry(&e.id));
@@ -469,12 +477,15 @@ impl Renderer {
     }
 
     /// `art` with the colour adjustments inside it applied, then `outer` (its object's own) on
-    /// everything ([`effects::adjust`]). Embedded images become recoloured copies, cached with the
-    /// decoded images under a key naming the adjustment.
-    fn adjusted_art(&mut self, mut art: Node, outer: Option<&effects::ColorMap>) -> Node {
+    /// everything ([`effects::adjust`]), with `doc`'s swatches. Embedded images become recoloured
+    /// copies, cached with the decoded images under a key naming the adjustment.
+    fn adjusted_art(&mut self, doc: &vectorcraft_doc::Document, mut art: Node, outer: Option<&effects::ColorMap>) -> Node {
         art.appearance.effects.retain(|e| !effects::is_adjustment(&e.id));
         let mut wanted: Vec<(String, String, u64, effects::ColorMap)> = vec![];
-        let adjusted = effects::adjust(&art, outer, &mut |key, map| {
+        // shortcut: art kept by `fx_arts` isn't made again when only a swatch's kind (spot or
+        // process) changes, which Duotone reads; editing the object makes it again.
+        let swatches = |name: &str| effects::addons::duotone::swatch_kind(doc, name);
+        let adjusted = effects::adjust(&art, outer, &swatches, &mut |key, map| {
             let mut h = std::hash::DefaultHasher::new();
             std::hash::Hash::hash(&format!("{map:?}"), &mut h);
             let hash = std::hash::Hasher::finish(&h);

@@ -1187,12 +1187,12 @@ lighting	Light	Valo
 	 to set spacing and orientation	 asettaaksesi välit ja suunnan
 	Apply	Käytä
 	Change Screen Mode (F)	Vaihda näyttötilaa (F)
-	Color (,)	Väri (,)
+	Color (, or <)	Väri (, tai <)
 	Draw Behind	Piirrä taakse
 	Draw Inside	Piirrä sisään
 	Draw Normal	Piirrä normaalisti
 	Expand:	Laajenna:
-	Gradient (.)	Liukuväri (.)
+	Gradient (. or >)	Liukuväri (. tai >)
 	H:	K:
 	Modify	Muokkaa
 	Navigate	Siirry
@@ -1567,6 +1567,7 @@ lighting	Light	Valo
 	Delete Guides	Poista apuviivat
 	Delete Slice	Poista siivu
 	Delete Style	Poista tyyli
+	Delete Styles	Poista tyylit
 	Delete Variables	Poista muuttujat
 	Delete View	Poista näkymä
 	Done Editing Pattern	Lopeta kuvion muokkaus
@@ -4372,6 +4373,7 @@ imageTrace	Outline	Ääriviiva
 @msg	no document	ei asiakirjaa
 @msg	no document open	asiakirjaa ei ole auki
 @msg	no effect applied yet	tehostetta ei ole vielä käytetty
+@msg	no Pathfinder operation applied yet	polunetsimen toimintoa ei ole vielä käytetty
 @msg	no effect at index {k}	ei tehostetta indeksissä {k}
 @msg	no end record	ei loppumerkintää
 @msg	no file manager here	täällä ei ole tiedostonhallintaa
@@ -5828,6 +5830,32 @@ anchor	Points:	Pisteet:
 @msg	select open paths to close	valitse suljettavat avoimet polut
 @msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	liian monta tai liian sotkuista polkua niiden risteyskohtien löytämiseen (enintään 10000 osaa)
 @msg	the paths have too many anchors to edit at once	poluissa on liian monta ankkuripistettä muokattavaksi kerralla
+# Path Precision Tools add-on: the Parametric Shape Tool, its panel, commands and messages.
+	Parametric Shape Tool	Parametrinen muoto -työkalu
+	Parametric Shape	Parametrinen muoto
+	Edit Parametric Shape	Muokkaa parametrista muotoa
+	Convert to Parametric Shape	Muunna parametriseksi muodoksi
+	Ring	Rengas
+	Heart	Sydän
+	Gear	Hammaspyörä
+	Speech Bubble	Puhekupla
+	Count:	Määrä:
+	Thickness:	Paksuus:
+	Inner Radius:	Sisäsäde:
+	Head:	Kärki:
+	Shaft:	Varsi:
+	Point:	Kärki:
+	Tooth Height:	Hampaan korkeus:
+	Tail:	Häntä:
+	Tip:	Kärki:
+	Open a document to draw parametric shapes.	Avaa asiakirja piirtääksesi parametrisia muotoja.
+	Select a parametric shape to edit it. With none selected, these set the next shape.	Valitse parametrinen muoto muokataksesi sitä. Ilman valintaa nämä arvot koskevat seuraavaa muotoa.
+@msg	the object is not an editable parametric shape	objekti ei ole muokattava parametrinen muoto
+@msg	select plain rectangles, ellipses or regular polygons to convert	valitse muunnettavat tavalliset suorakulmiot, ellipsit tai säännölliset monikulmiot
+@msg	the shape's numbers are out of range	muodon arvot ovat sallitun alueen ulkopuolella
+@msg	`kind` must be one of: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble	`kind` on oltava jokin seuraavista: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble
+@msg	`count` must be a whole number from 3 to 1000	`count` on oltava kokonaisluku 3–1000
+@msg	`{key}` must be from {lo} to {hi}	`{key}` on oltava {lo}–{hi}
 # Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
 	Smart Pen	Älykynä
 	Smart Pen Tool	Älykynätyökalu
@@ -5859,4 +5887,86 @@ anchor	Points:	Pisteet:
 	CMYK Images	CMYK-kuvat
 	Grayscale Images	Harmaasävykuvat
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` on oltava spotColors, colorEffects, rgbImages, cmykImages tai grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Pisteiden väri kuvituksesta
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duotone…
+	Duotone	Duotone
+	Print Ink Fixes…	Painovärien korjaukset…
+	Print Ink Fixes	Painovärien korjaukset
+	Inks	Painovärit
+	Tone 1	Sävy 1
+	Tone 2	Sävy 2
+	Tone 3	Sävy 3
+	Tone 4	Sävy 4
+	Curve	Käyrä
+	Reset to Linear	Palauta lineaariseksi
+	Reset to Inverse	Palauta käänteiseksi
+	Skip Objects with Spot Colors	Ohita objektit, joissa on spottivärejä
+	Ink Limit	Värirajoitus
+	Exclude Pure Black	Jätä puhdas musta pois
+	Remove White Overprint	Poista valkoisen päällepainatus
+	Overprint Black	Päällepainata musta
+	Text Only	Vain teksti
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	anna `inkLimit`, `removeWhiteOverprint` tai `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Painovärien korjaukset toimivat CMYK-asiakirjoissa: valitse ensin Tiedosto › Asiakirjan väritila › CMYK-väri
+@msg	`{key}` must be 0..{max}	`{key}` on oltava 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Kulmatyökalu
+	Slide Anchor Along Path	Liu’uta ankkuripistettä polkua pitkin
+	Set Corners	Aseta kulmat
+	Remove Corners	Poista kulmat
+	Corners selected: {count}	Valittuja kulmia: {count}
+	Apply to Selected Anchors	Käytä valittuihin ankkuripisteisiin
+@msg	`radius` must be from 0 to 1000000 pt	`radius` on oltava 0–1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` on oltava luku väliltä -0.98–0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	valitse ankkuripisteet, joissa kaksi sivua kohtaa kulmassa: vain niihin voi tehdä kulman
+@msg	give `anchor`, the index of the anchor to slide	anna `anchor`, liu’utettavan ankkuripisteen indeksi
+@msg	that anchor can't slide: an end of an open path has nowhere to go	tätä ankkuripistettä ei voi liu’uttaa: avoimen polun päällä ei ole minne mennä
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Jaa teksti
+	Combine Point Text	Yhdistä pisteteksti
+	Remove Breaks	Poista vaihdot
+	Split Text at Cursor	Jaa teksti kohdistimen kohdalta
+	Set Alignment, Keep Position	Aseta tasaus, säilytä sijainti
+	Reset Text Transform	Palauta tekstin muunnos
+	Replace Missing Fonts…	Korvaa puuttuvat fontit…
+	Replace Missing Fonts	Korvaa puuttuvat fontit
+	Remove Line Breaks	Poista rivinvaihdot
+	Remove Paragraph Breaks	Poista kappaleenvaihdot
+	Break Text into Lines	Jaa teksti riveiksi
+	Break Text into Paragraphs	Jaa teksti kappaleiksi
+	Break Text into Words	Jaa teksti sanoiksi
+	Break Text into Glyphs	Jaa teksti merkeiksi
+	Reset Text Transform and Scale	Palauta tekstin muunnos ja skaalaus
+	Set Alignment, Keep Position:	Aseta tasaus, säilytä sijainti:
+	Break Text into:	Jaa teksti:
+	Split at Cursor	Jaa kohdistimen kohdalta
+	Reset Transform	Palauta muunnos
+	Shift-click: break into paragraphs	Vaihto-napsautus: jaa kappaleiksi
+	Alt-click: reset the horizontal scale too	Alt-napsautus: palauta myös vaakaskaalaus
+breakText	Lines	Rivit
+breakText	Words	Sanat
+breakText	Glyphs	Merkit
+@msg	Click in type with a Type tool to split it	Napsauta tekstiä tekstityökalulla jakaaksesi sen
+@msg	Too many type objects to change at once	Liian monta tekstiobjektia muutettavaksi kerralla
+@msg	Too many pieces to make at once	Liian monta osaa luotavaksi kerralla
+@msg	Select horizontal point or area type whose text fits	Valitse vaakasuora piste- tai alueteksti, jonka teksti mahtuu
+@msg	Nothing to split at the cursor	Kohdistimen kohdalla ei ole jaettavaa
+@msg	Select two or more one-line point type objects on one baseline to combine	Valitse kaksi tai useampia yksirivisiä pistetekstiobjekteja samalla perusviivalla yhdistääksesi ne
+@msg	No line breaks to remove	Ei poistettavia rivinvaihtoja
+@msg	No paragraph breaks to remove	Ei poistettavia kappaleenvaihtoja
+@msg	Too many breaks to remove at once	Liian monta vaihtoa poistettavaksi kerralla
+@msg	Select point type	Valitse pisteteksti
+@msg	The point type is aligned that way already	Pisteteksti on jo tasattu näin
+@msg	The point type has no transform to reset	Pistetekstillä ei ole palautettavaa muunnosta
+@msg	No fonts are missing	Fontteja ei puutu
+@msg	the replacement font is not available	korvaava fontti ei ole käytettävissä
+@msg	missing `align`	`align` puuttuu
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` on oltava lines, paragraphs, words tai glyphs, ei {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` on oltava "line" tai "paragraph", ei {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` on oltava "left", "center" tai "right", ei {other}
 @msg	{_1}: they came in as the page's art	{_1}: ne tuotiin sivun piirroksena

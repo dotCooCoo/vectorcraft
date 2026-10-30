@@ -1209,12 +1209,12 @@ lighting	Light	Světlo
 	 to set spacing and orientation	 nastaví rozestupy a orientaci
 	Apply	Použít
 	Change Screen Mode (F)	Změnit režim obrazovky (F)
-	Color (,)	Barva (,)
+	Color (, or <)	Barva (, nebo <)
 	Draw Behind	Kreslit za
 	Draw Inside	Kreslit dovnitř
 	Draw Normal	Kreslit normálně
 	Expand:	Rozložit:
-	Gradient (.)	Přechod (.)
+	Gradient (. or >)	Přechod (. nebo >)
 	H:	V:
 	Modify	Úpravy
 	Navigate	Pohled
@@ -1593,6 +1593,7 @@ lighting	Light	Světlo
 	Delete Guides	Odstranit vodítka
 	Delete Slice	Odstranit řez
 	Delete Style	Odstranit styl
+	Delete Styles	Odstranit styly
 	Delete Variables	Odstranit proměnné
 	Delete View	Odstranit zobrazení
 	Done Editing Pattern	Dokončit úpravy vzorku
@@ -4463,6 +4464,7 @@ imageTrace	Outline	Obrys
 @msg	no document	žádný dokument
 @msg	no document open	není otevřen žádný dokument
 @msg	no effect applied yet	zatím nebyl použit žádný efekt
+@msg	no Pathfinder operation applied yet	zatím nebyla použita žádná operace s cestami
 @msg	no effect at index {k}	na indexu {k} není žádný efekt
 @msg	no end record	chybí koncový záznam
 @msg	no file manager here	zde není správce souborů
@@ -5797,6 +5799,32 @@ anchor	Points:	Body:
 @msg	select open paths to close	vyberte otevřené cesty k uzavření
 @msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	příliš mnoho nebo příliš spletených cest pro nalezení jejich křížení (nejvýše 10000 segmentů)
 @msg	the paths have too many anchors to edit at once	cesty mají příliš mnoho kotevních bodů na úpravu najednou
+# Path Precision Tools add-on: the Parametric Shape Tool, its panel, commands and messages.
+	Parametric Shape Tool	Nástroj Parametrický tvar
+	Parametric Shape	Parametrický tvar
+	Edit Parametric Shape	Upravit parametrický tvar
+	Convert to Parametric Shape	Převést na parametrický tvar
+	Ring	Prstenec
+	Heart	Srdce
+	Gear	Ozubené kolo
+	Speech Bubble	Bublina
+	Count:	Počet:
+	Thickness:	Tloušťka:
+	Inner Radius:	Vnitřní poloměr:
+	Head:	Hrot:
+	Shaft:	Dřík:
+	Point:	Špička:
+	Tooth Height:	Výška zubu:
+	Tail:	Ocásek:
+	Tip:	Špička:
+	Open a document to draw parametric shapes.	Otevřete dokument a kreslete parametrické tvary.
+	Select a parametric shape to edit it. With none selected, these set the next shape.	Vyberte parametrický tvar a upravte ho. Bez výběru tyto hodnoty platí pro další tvar.
+@msg	the object is not an editable parametric shape	objekt není upravitelný parametrický tvar
+@msg	select plain rectangles, ellipses or regular polygons to convert	vyberte k převodu obyčejné obdélníky, elipsy nebo pravidelné mnohoúhelníky
+@msg	the shape's numbers are out of range	hodnoty tvaru jsou mimo rozsah
+@msg	`kind` must be one of: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble	`kind` musí být jedno z: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble
+@msg	`count` must be a whole number from 3 to 1000	`count` musí být celé číslo od 3 do 1000
+@msg	`{key}` must be from {lo} to {hi}	`{key}` musí být od {lo} do {hi}
 # Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
 	Smart Pen	Chytré pero
 	Smart Pen Tool	Nástroj Chytré pero
@@ -5828,4 +5856,86 @@ anchor	Points:	Body:
 	CMYK Images	Obrazy CMYK
 	Grayscale Images	Obrazy ve stupních šedi
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` musí být spotColors, colorEffects, rgbImages, cmykImages nebo grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Barva bodů podle kresby
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Dvoutón…
+	Duotone	Dvoutón
+	Print Ink Fixes…	Opravy tiskových barev…
+	Print Ink Fixes	Opravy tiskových barev
+	Inks	Barvy
+	Tone 1	Tón 1
+	Tone 2	Tón 2
+	Tone 3	Tón 3
+	Tone 4	Tón 4
+	Curve	Křivka
+	Reset to Linear	Obnovit lineární
+	Reset to Inverse	Obnovit obrácenou
+	Skip Objects with Spot Colors	Vynechat objekty s přímými barvami
+	Ink Limit	Limit barvy
+	Exclude Pure Black	Vyloučit čistou černou
+	Remove White Overprint	Odebrat přetisk bílé
+	Overprint Black	Přetisk černé
+	Text Only	Pouze text
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	zadejte `inkLimit`, `removeWhiteOverprint` nebo `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Opravy tiskových barev fungují v dokumentech CMYK: nejprve zvolte Soubor › Barevný režim dokumentu › Barvy CMYK
+@msg	`{key}` must be 0..{max}	`{key}` musí být 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Nástroj Rohy
+	Slide Anchor Along Path	Posunout kotevní bod po cestě
+	Set Corners	Nastavit rohy
+	Remove Corners	Odstranit rohy
+	Corners selected: {count}	Vybrané rohy: {count}
+	Apply to Selected Anchors	Použít na vybrané kotevní body
+@msg	`radius` must be from 0 to 1000000 pt	`radius` musí být od 0 do 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` musí být číslo od -0.98 do 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	vyberte kotevní body, kde se dvě strany setkávají pod úhlem: jen ty mohou mít roh
+@msg	give `anchor`, the index of the anchor to slide	zadejte `anchor`, index kotevního bodu k posunutí
+@msg	that anchor can't slide: an end of an open path has nowhere to go	tento kotevní bod nelze posunout: konec otevřené cesty nemá kam jít
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Rozdělit text
+	Combine Point Text	Sloučit bodový text
+	Remove Breaks	Odstranit zalomení
+	Split Text at Cursor	Rozdělit text u kurzoru
+	Set Alignment, Keep Position	Nastavit zarovnání, zachovat polohu
+	Reset Text Transform	Obnovit transformaci textu
+	Replace Missing Fonts…	Nahradit chybějící písma…
+	Replace Missing Fonts	Nahradit chybějící písma
+	Remove Line Breaks	Odstranit zalomení řádků
+	Remove Paragraph Breaks	Odstranit zalomení odstavců
+	Break Text into Lines	Rozdělit text na řádky
+	Break Text into Paragraphs	Rozdělit text na odstavce
+	Break Text into Words	Rozdělit text na slova
+	Break Text into Glyphs	Rozdělit text na glyfy
+	Reset Text Transform and Scale	Obnovit transformaci a měřítko textu
+	Set Alignment, Keep Position:	Nastavit zarovnání, zachovat polohu:
+	Break Text into:	Rozdělit text na:
+	Split at Cursor	Rozdělit u kurzoru
+	Reset Transform	Obnovit transformaci
+	Shift-click: break into paragraphs	Shift+kliknutí: rozdělit na odstavce
+	Alt-click: reset the horizontal scale too	Alt+kliknutí: obnovit i vodorovné měřítko
+breakText	Lines	Řádky
+breakText	Words	Slova
+breakText	Glyphs	Glyfy
+@msg	Click in type with a Type tool to split it	Klikněte do textu nástrojem Text, abyste jej rozdělili
+@msg	Too many type objects to change at once	Příliš mnoho textových objektů ke změně najednou
+@msg	Too many pieces to make at once	Příliš mnoho částí k vytvoření najednou
+@msg	Select horizontal point or area type whose text fits	Vyberte vodorovný bodový text nebo text v oblasti, jehož text se vejde
+@msg	Nothing to split at the cursor	U kurzoru není co rozdělit
+@msg	Select two or more one-line point type objects on one baseline to combine	Vyberte dva nebo více jednořádkových objektů bodového textu na jednom účaří, abyste je sloučili
+@msg	No line breaks to remove	Žádná zalomení řádků k odstranění
+@msg	No paragraph breaks to remove	Žádná zalomení odstavců k odstranění
+@msg	Too many breaks to remove at once	Příliš mnoho zalomení k odstranění najednou
+@msg	Select point type	Vyberte bodový text
+@msg	The point type is aligned that way already	Bodový text je již takto zarovnán
+@msg	The point type has no transform to reset	Bodový text nemá žádnou transformaci k obnovení
+@msg	No fonts are missing	Žádná písma nechybějí
+@msg	the replacement font is not available	náhradní písmo není k dispozici
+@msg	missing `align`	chybí `align`
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` musí být lines, paragraphs, words nebo glyphs, ne {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` musí být "line" nebo "paragraph", ne {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` musí být "left", "center" nebo "right", ne {other}
 @msg	{_1}: they came in as the page's art	{_1}: byly načteny jako kresba ze stránky

@@ -1127,12 +1127,12 @@ lighting	Light	Lys
 	 to set spacing and orientation	 for at angive afstand og orientering
 	Apply	Anvend
 	Change Screen Mode (F)	Skift skærmtilstand (F)
-	Color (,)	Farve (,)
+	Color (, or <)	Farve (, eller <)
 	Draw Behind	Tegn bagved
 	Draw Inside	Tegn indeni
 	Draw Normal	Tegn normalt
 	Expand:	Udvid:
-	Gradient (.)	Gradient (.)
+	Gradient (. or >)	Gradient (. eller >)
 	H:	H:
 	Modify	Ændr
 	Navigate	Navigér
@@ -4151,6 +4151,7 @@ imageTrace	Outline	Kontur
 @msg	no document	intet dokument
 @msg	no document open	intet åbent dokument
 @msg	no effect applied yet	ingen effekt er anvendt endnu
+@msg	no Pathfinder operation applied yet	ingen Pathfinder-handling er anvendt endnu
 @msg	no effect at index {k}	ingen effekt ved indeks {k}
 @msg	no end record	ingen slutpost
 @msg	no file manager here	ingen filhåndtering her
@@ -5330,6 +5331,7 @@ swatch	Bright Violet	Kraftig violet
 	Delete Guides	Slet hjælpelinjer
 	Delete Slice	Slet udsnit
 	Delete Style	Slet typografi
+	Delete Styles	Slet typografier
 	Delete Variables	Slet variabler
 	Delete View	Slet visning
 	Done Editing Pattern	Redigering af mønster udført
@@ -5702,6 +5704,32 @@ anchor	Points:	Punkter:
 @msg	select open paths to close	vælg åbne stier at lukke
 @msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	for mange eller for sammenfiltrede stier til at finde deres krydsninger (højst 10000 segmenter)
 @msg	the paths have too many anchors to edit at once	stierne har for mange ankerpunkter til at blive redigeret på én gang
+# Path Precision Tools add-on: the Parametric Shape Tool, its panel, commands and messages.
+	Parametric Shape Tool	Parametrisk form-værktøj
+	Parametric Shape	Parametrisk form
+	Edit Parametric Shape	Rediger parametrisk form
+	Convert to Parametric Shape	Konverter til parametrisk form
+	Ring	Ring
+	Heart	Hjerte
+	Gear	Tandhjul
+	Speech Bubble	Taleboble
+	Count:	Antal:
+	Thickness:	Tykkelse:
+	Inner Radius:	Indre radius:
+	Head:	Hoved:
+	Shaft:	Skaft:
+	Point:	Spids:
+	Tooth Height:	Tandhøjde:
+	Tail:	Hale:
+	Tip:	Spids:
+	Open a document to draw parametric shapes.	Åbn et dokument for at tegne parametriske former.
+	Select a parametric shape to edit it. With none selected, these set the next shape.	Vælg en parametrisk form for at redigere den. Uden valg gælder disse værdier for den næste form.
+@msg	the object is not an editable parametric shape	objektet er ikke en redigerbar parametrisk form
+@msg	select plain rectangles, ellipses or regular polygons to convert	vælg almindelige rektangler, ellipser eller regulære polygoner at konvertere
+@msg	the shape's numbers are out of range	formens værdier er uden for området
+@msg	`kind` must be one of: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble	`kind` skal være en af: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble
+@msg	`count` must be a whole number from 3 to 1000	`count` skal være et heltal fra 3 til 1000
+@msg	`{key}` must be from {lo} to {hi}	`{key}` skal være fra {lo} til {hi}
 # Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
 	Smart Pen	Smart pen
 	Smart Pen Tool	Smart pen-værktøj
@@ -5733,4 +5761,86 @@ anchor	Points:	Punkter:
 	CMYK Images	CMYK-billeder
 	Grayscale Images	Gråtonebilleder
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` skal være spotColors, colorEffects, rgbImages, cmykImages eller grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Prikfarve fra grafik
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duotone…
+	Duotone	Duotone
+	Print Ink Fixes…	Trykfarverettelser…
+	Print Ink Fixes	Trykfarverettelser
+	Inks	Trykfarver
+	Tone 1	Tone 1
+	Tone 2	Tone 2
+	Tone 3	Tone 3
+	Tone 4	Tone 4
+	Curve	Kurve
+	Reset to Linear	Nulstil til lineær
+	Reset to Inverse	Nulstil til omvendt
+	Skip Objects with Spot Colors	Spring objekter med spotfarver over
+	Ink Limit	Farvegrænse
+	Exclude Pure Black	Udelad ren sort
+	Remove White Overprint	Fjern overprint af hvid
+	Overprint Black	Overprint sort
+	Text Only	Kun tekst
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	angiv `inkLimit`, `removeWhiteOverprint` eller `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Trykfarverettelser virker på CMYK-dokumenter: vælg først Filer › Dokumentets farvetilstand › CMYK-farve
+@msg	`{key}` must be 0..{max}	`{key}` skal være 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Hjørneværktøj
+	Slide Anchor Along Path	Skub ankerpunkt langs sti
+	Set Corners	Angiv hjørner
+	Remove Corners	Fjern hjørner
+	Corners selected: {count}	Valgte hjørner: {count}
+	Apply to Selected Anchors	Anvend på valgte ankerpunkter
+@msg	`radius` must be from 0 to 1000000 pt	`radius` skal være fra 0 til 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` skal være et tal fra -0.98 til 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	vælg ankerpunkter, hvor to sider mødes i en vinkel: kun de kan få et hjørne
+@msg	give `anchor`, the index of the anchor to slide	angiv `anchor`, indekset for det ankerpunkt, der skal skubbes
+@msg	that anchor can't slide: an end of an open path has nowhere to go	det ankerpunkt kan ikke skubbes: enden af en åben sti har ingen steder at gå hen
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Opdel tekst
+	Combine Point Text	Kombiner punkttekst
+	Remove Breaks	Fjern skift
+	Split Text at Cursor	Opdel tekst ved markøren
+	Set Alignment, Keep Position	Angiv justering, bevar placering
+	Reset Text Transform	Nulstil teksttransformation
+	Replace Missing Fonts…	Erstat manglende skrifttyper…
+	Replace Missing Fonts	Erstat manglende skrifttyper
+	Remove Line Breaks	Fjern linjeskift
+	Remove Paragraph Breaks	Fjern afsnitsskift
+	Break Text into Lines	Opdel tekst i linjer
+	Break Text into Paragraphs	Opdel tekst i afsnit
+	Break Text into Words	Opdel tekst i ord
+	Break Text into Glyphs	Opdel tekst i glyffer
+	Reset Text Transform and Scale	Nulstil teksttransformation og skalering
+	Set Alignment, Keep Position:	Angiv justering, bevar placering:
+	Break Text into:	Opdel tekst i:
+	Split at Cursor	Opdel ved markøren
+	Reset Transform	Nulstil transformation
+	Shift-click: break into paragraphs	Skift-klik: opdel i afsnit
+	Alt-click: reset the horizontal scale too	Alt-klik: nulstil også den vandrette skalering
+breakText	Lines	Linjer
+breakText	Words	Ord
+breakText	Glyphs	Glyffer
+@msg	Click in type with a Type tool to split it	Klik i tekst med et tekstværktøj for at opdele den
+@msg	Too many type objects to change at once	For mange tekstobjekter til at ændre på én gang
+@msg	Too many pieces to make at once	For mange dele til at oprette på én gang
+@msg	Select horizontal point or area type whose text fits	Vælg vandret punkt- eller områdetekst, hvis tekst kan være der
+@msg	Nothing to split at the cursor	Intet at opdele ved markøren
+@msg	Select two or more one-line point type objects on one baseline to combine	Vælg to eller flere punkttekstobjekter på én linje på samme grundlinje for at kombinere dem
+@msg	No line breaks to remove	Ingen linjeskift at fjerne
+@msg	No paragraph breaks to remove	Ingen afsnitsskift at fjerne
+@msg	Too many breaks to remove at once	For mange skift til at fjerne på én gang
+@msg	Select point type	Vælg punkttekst
+@msg	The point type is aligned that way already	Punktteksten er allerede justeret sådan
+@msg	The point type has no transform to reset	Punktteksten har ingen transformation at nulstille
+@msg	No fonts are missing	Ingen skrifttyper mangler
+@msg	the replacement font is not available	erstatningsskrifttypen er ikke tilgængelig
+@msg	missing `align`	`align` mangler
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` skal være lines, paragraphs, words eller glyphs, ikke {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` skal være "line" eller "paragraph", ikke {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` skal være "left", "center" eller "right", ikke {other}
 @msg	{_1}: they came in as the page's art	{_1}: de blev importeret som sidens grafik

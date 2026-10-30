@@ -294,3 +294,68 @@ fn the_brush_kernel_removes_only_marked_anchors() {
     assert_eq!(simplify_anchors_keep_shape(&bump, 0.1, &[true; 5]).anchors.len(), 4, "only the anchor on the straight run goes");
     assert_eq!(simplify_anchors_keep_shape(&bump, f64::INFINITY, &[true; 5]).anchors.len(), 2, "unless tolerance is ignored");
 }
+
+/// A circle about (0, 0) of radius 100 with `n` smooth anchors, each arc a cubic.
+fn circle(n: usize) -> SubPath {
+    let step = std::f64::consts::TAU / n as f64;
+    let k = 4.0 / 3.0 * (step / 4.0).tan() * 100.0;
+    let anchors = (0..n).map(|i| {
+        let a = i as f64 * step;
+        let (p, tan) = (pt(a.cos() * 100.0, a.sin() * 100.0), Vec2::new(-a.sin(), a.cos()));
+        Anchor { p, h_in: p - tan * k, h_out: p + tan * k, kind: AnchorKind::Smooth }
+    });
+    SubPath::new(anchors.collect(), true)
+}
+
+#[test]
+fn a_slid_anchor_keeps_the_shape_its_count_and_its_index() {
+    let sp = circle(8);
+    for (index, t) in [(2, 0.5), (2, -0.5), (0, -0.25), (0, 0.25), (7, 0.9), (7, -0.9)] {
+        let (out, strayed) = slide_anchor(&sp, index, t).unwrap();
+        let seg = if t > 0.0 { sp.segment(index) } else { sp.segment((index + 7) % 8) };
+        let want = seg.eval(if t > 0.0 { t } else { 1.0 + t });
+        assert_eq!(out.anchors.len(), 8, "{index} {t}");
+        assert!(out.anchors[index].p.distance(want) < 1e-9, "{index} {t}: the anchor is where it was sent");
+        assert!(strayed < 0.05 && off_circle(&out, pt(0.0, 0.0), 100.0) < 0.05, "{index} {t}: {strayed}");
+        // The other anchors stay.
+        assert!((0..8).filter(|i| *i != index).all(|i| out.anchors[i].p == sp.anchors[i].p), "{index} {t}");
+    }
+}
+
+#[test]
+fn sliding_along_straight_runs_stays_straight_and_ends_do_not_slide() {
+    let sp = line(&[(0.0, 0.0), (100.0, 0.0), (200.0, 0.0), (200.0, 100.0)], false);
+    let (out, strayed) = slide_anchor(&sp, 1, 0.5).unwrap();
+    assert_eq!(out.anchors[1].p, pt(150.0, 0.0));
+    assert!(strayed < 1e-9 && out.segment_is_line(0) && out.segment_is_line(1));
+    assert_eq!(slide_anchor(&sp, 1, 0.0).unwrap().0, sp, "no move");
+    assert_eq!(slide_anchor(&sp, 1, 1e-9).unwrap().0, sp, "too small a move");
+    for (i, t) in [(0, 0.5), (3, -0.5), (9, 0.5), (1, 0.99), (1, -1.0), (1, f64::NAN), (1, f64::INFINITY)] {
+        assert!(slide_anchor(&sp, i, t).is_none(), "{i} {t}");
+    }
+    let mut bad = sp.clone();
+    bad.anchors[1].h_out = pt(f64::NAN, 0.0);
+    assert!(slide_anchor(&bad, 1, 0.5).is_none());
+}
+
+#[test]
+fn the_slide_a_pointer_asks_for_and_where_the_tangent_stops() {
+    let sp = line(&[(0.0, 0.0), (100.0, 0.0), (200.0, 0.0)], false);
+    assert!(near(slide_t_at(&sp, 1, pt(150.0, 30.0)).unwrap(), 0.5, 1e-6));
+    let back = slide_t_at(&sp, 1, pt(75.0, -30.0)).unwrap();
+    assert!(back < 0.0 && sp.segment(0).eval(1.0 + back).distance(pt(75.0, 0.0)) < 1e-3, "{back}");
+    assert!(near(slide_t_at(&sp, 1, pt(900.0, 0.0)).unwrap(), MAX_SLIDE, 1e-9), "held short of the next anchor");
+    assert!(slide_t_at(&sp, 0, pt(50.0, 0.0)).is_none());
+    assert!(slide_stops(&sp, 1, 0.0).is_empty(), "a straight run has no tangent to reach");
+    let slanted = line(&[(0.0, 0.0), (100.0, 100.0), (250.0, 250.0)], false);
+    assert!(slide_stops(&slanted, 1, 0.0).is_empty(), "nor one that lies on a multiple of 45°");
+    // Round a circle of 4 anchors the tangent is at a multiple of 45° at each anchor and half way.
+    let round = circle(4);
+    let stops = slide_stops(&round, 0, 0.0);
+    assert_eq!(stops.len(), 2, "{stops:?}");
+    assert!(near(stops[0], -0.5, 1e-6) && near(stops[1], 0.5, 1e-6), "{stops:?}");
+    // From a constrain angle of 22.5°, between those.
+    let stops = slide_stops(&round, 0, 22.5);
+    assert_eq!(stops.len(), 4, "{stops:?}");
+    assert!(stops.windows(2).all(|w| w[0] < w[1]));
+}

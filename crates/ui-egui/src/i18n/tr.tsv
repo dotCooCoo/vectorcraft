@@ -491,7 +491,7 @@ font-technology	Variable	Değişken
 	Collect in New Layer	Yeni Katmanda Topla
 	Collect Links in a Separate Folder	Bağlantıları Ayrı Bir Klasörde Toplayın
 	Color	Renk
-	Color (,)	Renk (,)
+	Color (, or <)	Renk (, veya <)
 	Color Adjustments	Renk Ayarlamaları
 	Color bars	Renk çubukları
 	Color blindness – Deuteranopia-type	Renk körlüğü – Döteranopi tipi
@@ -1215,7 +1215,7 @@ font-technology	Variable	Değişken
 	GPL palettes keep solid colours only, as RGB.	GPL paletleri yalnızca düz renkleri RGB olarak tutar.
 	GPU Performance	GPU Performansı
 	Gradient	Degrade
-	Gradient (.)	Gradyan (.)
+	Gradient (. or >)	Gradyan (. veya >)
 	Gradient across stroke	Kontur boyunca gradyan
 	Gradient along stroke	Kontur boyunca gradyan
 	Gradient and Mesh Resolution:	Gradyan ve Mesh Çözünürlüğü:
@@ -3931,6 +3931,7 @@ axis	Both	Her İkisi
 @msg	no document	belge yok
 @msg	no document open	hiçbir belge açık değil
 @msg	no effect applied yet	henüz hiçbir efekt uygulanmadı
+@msg	no Pathfinder operation applied yet	henüz hiçbir Yol Bulucu işlemi uygulanmadı
 @msg	no effect at index {k}	{k} endeksinde etkisi yok
 @msg	no end record	son kayıt yok
 @msg	no file manager here	burada dosya yöneticisi yok
@@ -5147,6 +5148,7 @@ theme	Appearance	Görünüm
 	Delete Guides	Kılavuzları Sil
 	Delete Slice	Dilimi Sil
 	Delete Style	Stili Sil
+	Delete Styles	Stilleri Sil
 	Delete Variables	Değişkenleri Sil
 	Delete View	Görünümü Sil
 	Done Editing Pattern	Desen Düzenlemeyi Bitir
@@ -5755,6 +5757,32 @@ anchor	Points:	Noktalar:
 @msg	select open paths to close	kapatılacak açık yolları seçin
 @msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	kesişimlerini bulmak için yollar çok fazla veya çok karışık (en fazla 10000 bölüm)
 @msg	the paths have too many anchors to edit at once	yolların aynı anda düzenlenemeyecek kadar çok bağlantı noktası var
+# Path Precision Tools add-on: the Parametric Shape Tool, its panel, commands and messages.
+	Parametric Shape Tool	Parametrik Şekil Aracı
+	Parametric Shape	Parametrik Şekil
+	Edit Parametric Shape	Parametrik Şekli Düzenle
+	Convert to Parametric Shape	Parametrik Şekle Dönüştür
+	Ring	Halka
+	Heart	Kalp
+	Gear	Dişli
+	Speech Bubble	Konuşma Balonu
+	Count:	Sayı:
+	Thickness:	Kalınlık:
+	Inner Radius:	İç Yarıçap:
+	Head:	Uç:
+	Shaft:	Gövde:
+	Point:	Sivri Uç:
+	Tooth Height:	Diş Yüksekliği:
+	Tail:	Kuyruk:
+	Tip:	Uç:
+	Open a document to draw parametric shapes.	Parametrik şekiller çizmek için bir belge açın.
+	Select a parametric shape to edit it. With none selected, these set the next shape.	Düzenlemek için bir parametrik şekil seçin. Seçim yokken bu değerler bir sonraki şekle uygulanır.
+@msg	the object is not an editable parametric shape	nesne düzenlenebilir bir parametrik şekil değil
+@msg	select plain rectangles, ellipses or regular polygons to convert	dönüştürülecek düz dikdörtgenleri, elipsleri veya düzgün çokgenleri seçin
+@msg	the shape's numbers are out of range	şeklin değerleri aralığın dışında
+@msg	`kind` must be one of: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble	`kind` şunlardan biri olmalıdır: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble
+@msg	`count` must be a whole number from 3 to 1000	`count` 3 ile 1000 arasında bir tam sayı olmalıdır
+@msg	`{key}` must be from {lo} to {hi}	`{key}` {lo} ile {hi} arasında olmalıdır
 # Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
 	Smart Pen	Akıllı Kalem
 	Smart Pen Tool	Akıllı Kalem Aracı
@@ -5786,4 +5814,86 @@ anchor	Points:	Noktalar:
 	CMYK Images	CMYK Görüntüler
 	Grayscale Images	Gri Tonlamalı Görüntüler
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` değeri spotColors, colorEffects, rgbImages, cmykImages veya grayImages olmalıdır
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Nokta Rengini Sanattan Al
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Çift Ton…
+	Duotone	Çift Ton
+	Print Ink Fixes…	Baskı Mürekkebi Düzeltmeleri…
+	Print Ink Fixes	Baskı Mürekkebi Düzeltmeleri
+	Inks	Mürekkepler
+	Tone 1	Ton 1
+	Tone 2	Ton 2
+	Tone 3	Ton 3
+	Tone 4	Ton 4
+	Curve	Eğri
+	Reset to Linear	Doğrusala sıfırla
+	Reset to Inverse	Terse sıfırla
+	Skip Objects with Spot Colors	Spot renkli nesneleri atla
+	Ink Limit	Mürekkep sınırı
+	Exclude Pure Black	Saf siyahı hariç tut
+	Remove White Overprint	Beyazın üst baskısını kaldır
+	Overprint Black	Üst Baskı Siyah
+	Text Only	Yalnızca metin
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	`inkLimit`, `removeWhiteOverprint` veya `overprintBlack` verin
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Baskı Mürekkebi Düzeltmeleri CMYK belgelerinde çalışır: önce Dosya › Belge Renk Modu › CMYK Rengi'ni seçin
+@msg	`{key}` must be 0..{max}	`{key}` 0..{max} olmalıdır
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Köşe Aracı
+	Slide Anchor Along Path	Bağlantı Noktasını Yol Boyunca Kaydır
+	Set Corners	Köşeleri Ayarla
+	Remove Corners	Köşeleri Kaldır
+	Corners selected: {count}	Seçili köşeler: {count}
+	Apply to Selected Anchors	Seçili Bağlantı Noktalarına Uygula
+@msg	`radius` must be from 0 to 1000000 pt	`radius` 0 ile 1000000 pt arasında olmalıdır
+@msg	`t` must be a number from -0.98 to 0.98	`t` -0.98 ile 0.98 arasında bir sayı olmalıdır
+@msg	choose anchors where two sides meet at an angle: only those take a corner	iki kenarın açıyla birleştiği bağlantı noktalarını seçin: yalnızca onlara köşe uygulanır
+@msg	give `anchor`, the index of the anchor to slide	kaydırılacak bağlantı noktasının dizini `anchor` değerini verin
+@msg	that anchor can't slide: an end of an open path has nowhere to go	bu bağlantı noktası kaydırılamaz: açık yolun ucunun gidecek yeri yok
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Metni Böl
+	Combine Point Text	Nokta Metnini Birleştir
+	Remove Breaks	Kesmeleri Kaldır
+	Split Text at Cursor	Metni İmleçte Böl
+	Set Alignment, Keep Position	Hizalamayı Ayarla, Konumu Koru
+	Reset Text Transform	Metin Dönüşümünü Sıfırla
+	Replace Missing Fonts…	Eksik Yazı Tiplerini Değiştir…
+	Replace Missing Fonts	Eksik Yazı Tiplerini Değiştir
+	Remove Line Breaks	Satır Sonlarını Kaldır
+	Remove Paragraph Breaks	Paragraf Sonlarını Kaldır
+	Break Text into Lines	Metni Satırlara Böl
+	Break Text into Paragraphs	Metni Paragraflara Böl
+	Break Text into Words	Metni Sözcüklere Böl
+	Break Text into Glyphs	Metni Gliflere Böl
+	Reset Text Transform and Scale	Metin Dönüşümünü ve Ölçeğini Sıfırla
+	Set Alignment, Keep Position:	Hizalamayı Ayarla, Konumu Koru:
+	Break Text into:	Metni Böl:
+	Split at Cursor	İmleçte Böl
+	Reset Transform	Dönüşümü Sıfırla
+	Shift-click: break into paragraphs	Shift tuşuyla tıklayın: paragraflara böl
+	Alt-click: reset the horizontal scale too	Alt tuşuyla tıklayın: yatay ölçeği de sıfırla
+breakText	Lines	Satırlar
+breakText	Words	Sözcükler
+breakText	Glyphs	Glifler
+@msg	Click in type with a Type tool to split it	Bölmek için bir Yazım Aracıyla metnin içine tıklayın
+@msg	Too many type objects to change at once	Bir kerede değiştirilecek çok fazla metin nesnesi var
+@msg	Too many pieces to make at once	Bir kerede oluşturulacak çok fazla parça var
+@msg	Select horizontal point or area type whose text fits	Metni sığan yatay nokta veya alan metni seçin
+@msg	Nothing to split at the cursor	İmleçte bölünecek bir şey yok
+@msg	Select two or more one-line point type objects on one baseline to combine	Birleştirmek için aynı taban çizgisinde iki veya daha fazla tek satırlı nokta metni nesnesi seçin
+@msg	No line breaks to remove	Kaldırılacak satır sonu yok
+@msg	No paragraph breaks to remove	Kaldırılacak paragraf sonu yok
+@msg	Too many breaks to remove at once	Bir kerede kaldırılacak çok fazla kesme var
+@msg	Select point type	Nokta metni seçin
+@msg	The point type is aligned that way already	Nokta metni zaten bu şekilde hizalı
+@msg	The point type has no transform to reset	Nokta metninin sıfırlanacak dönüşümü yok
+@msg	No fonts are missing	Eksik yazı tipi yok
+@msg	the replacement font is not available	yedek yazı tipi kullanılamıyor
+@msg	missing `align`	`align` eksik
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by`, lines, paragraphs, words veya glyphs olmalı, {other} değil
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind`, "line" veya "paragraph" olmalı, {other} değil
+@msg	`align` must be "left", "center" or "right", not {other}	`align`, "left", "center" veya "right" olmalı, {other} değil
 @msg	{_1}: they came in as the page's art	{_1}: sayfanın çizimi olarak içe aktarıldılar

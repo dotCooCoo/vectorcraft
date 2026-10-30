@@ -1,8 +1,12 @@
 //! Path Precision Tools (`addon.pathtools.*`), a built-in add-on: the Anchor Eraser Brush's stroke,
 //! the Extend Path tool's extension, the Measure & Inspect tool's readouts, the Anchor Inspector's
-//! anchor edits and Split / Add Points at Crossings. Its tools, panel and submenu (Object ›
-//! Plug-ins › Path Precision Tools) are the tools crate's and the UI's.
+//! anchor edits, Split / Add Points at Crossings, Slide Anchor Along Path, the Corner Tool's corners
+//! ([`corners`]) and the Parametric Shape Tool's shapes ([`shape`]).
+//! Its tools, panels and submenu (Object › Plug-ins › Path Precision Tools) are the tools crate's
+//! and the UI's.
 
+mod corners;
+mod shape;
 #[cfg(test)]
 mod tests;
 
@@ -37,7 +41,7 @@ const MAX_EXTEND: f64 = 1e6;
 const MAX_ADD: u64 = pt::MAX_ADDED_PER_SEGMENT as u64;
 
 pub fn specs() -> Vec<CommandSpec> {
-    vec![
+    let mut v = vec![
         cmd!(
             "addon.pathtools.erase",
             "Anchor Eraser Brush",
@@ -137,7 +141,19 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection,
             crossings
         ),
-    ]
+        cmd!(
+            "addon.pathtools.slideAnchor",
+            "Slide Anchor Along Path",
+            [],
+            None,
+            "{id, subpath?: index (0), anchor: index, t: -0.98..0.98 (where to: positive, a curve parameter on the segment after the anchor; negative, back from the end of the one before)} move an anchor along its path, the segments beside it refitted so the outline stays, as one undo step; ends of open paths don't slide → {id, strayed (pt)}",
+            has_doc,
+            slide_anchor
+        ),
+    ];
+    v.extend(shape::specs());
+    v.extend(corners::specs());
+    v
 }
 
 /// The editable paths (not guides) under `roots`, compound path members included.
@@ -284,8 +300,8 @@ fn edit_whole(s: &mut Session, label: &str, changed: Vec<(NodeId, PathData)>) ->
 
 // ---------- Extend Path ----------
 
-/// The open subpath an `extend` request names: (path id, subpath index, its data).
-fn open_subpath(s: &Session, p: &Value, cmd: &str) -> Result<(NodeId, usize, SubPath)> {
+/// The subpath a request names: (path id, subpath index, its data).
+fn named_subpath(s: &Session, p: &Value, cmd: &str) -> Result<(NodeId, usize, SubPath)> {
     let id = checked_id(s, p.get("id").unwrap_or(&Value::Null), cmd)?;
     let si = usize_opt(p, "subpath", cmd)?.unwrap_or(0);
     let d = &s.doc()?.doc;
@@ -294,15 +310,33 @@ fn open_subpath(s: &Session, p: &Value, cmd: &str) -> Result<(NodeId, usize, Sub
     }
     let path = d.node(id).and_then(|n| n.path_data()).ok_or_else(|| bad(cmd, "`id` is not a path"))?;
     let sp = path.subpaths.get(si).ok_or_else(|| bad(cmd, "no such subpath"))?;
-    if sp.closed || sp.anchors.len() < 2 {
-        return Err(bad(cmd, "the subpath has no ends to extend (it is closed or a single point)"));
-    }
     Ok((id, si, sp.clone()))
+}
+
+/// Put `new` in place of the subpath `old` (from [`named_subpath`]) as one step labelled `label`
+/// (none when it is the same); the path's direct selection goes.
+fn set_subpath(s: &mut Session, label: &str, (id, si, old): (NodeId, usize, SubPath), new: SubPath) -> Result<()> {
+    if new == old {
+        return Ok(());
+    }
+    s.edit(label, |d, sel| {
+        let mut np = d.node(id).and_then(|n| n.path_data()).cloned().ok_or(EngineError::NoNode(id))?;
+        if let Some(slot) = np.subpaths.get_mut(si) {
+            *slot = new;
+        }
+        sel.anchors.remove(&id);
+        sel.segments.remove(&id);
+        set_path(d, id, np);
+        Ok(())
+    })
 }
 
 fn extend(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "addon.pathtools.extend";
-    let (id, si, sp) = open_subpath(s, p, C)?;
+    let (id, si, sp) = named_subpath(s, p, C)?;
+    if sp.closed || sp.anchors.len() < 2 {
+        return Err(bad(C, "the subpath has no ends to extend (it is closed or a single point)"));
+    }
     let at_start = match text_param(p, "end", C)? {
         Some("start") => true,
         Some("end") => false,
@@ -324,20 +358,24 @@ fn extend(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(C, "`length` must be a number of at most 1000000 pt either way"));
     }
     let new = pt::extend_open(&sp, at_start, length, mode).ok_or_else(|| bad(C, "the path is too short to shorten that much"))?;
-    if new != sp {
-        s.edit("Extend Path", |d, sel| {
-            let n = d.node(id).and_then(|n| n.path_data()).cloned().ok_or(EngineError::NoNode(id))?;
-            let mut np = n;
-            if let Some(slot) = np.subpaths.get_mut(si) {
-                *slot = new;
-            }
-            sel.anchors.remove(&id);
-            sel.segments.remove(&id);
-            set_path(d, id, np);
-            Ok(())
-        })?;
-    }
+    set_subpath(s, "Extend Path", (id, si, sp), new)?;
     Ok(json!({ "id": id.0, "length": length }))
+}
+
+// ---------- Slide Anchor Along Path ----------
+
+fn slide_anchor(s: &mut Session, p: &Value) -> Result<Value> {
+    const C: &str = "addon.pathtools.slideAnchor";
+    let (id, si, sp) = named_subpath(s, p, C)?;
+    let anchor = usize_opt(p, "anchor", C)?.ok_or_else(|| bad(C, "give `anchor`, the index of the anchor to slide"))?;
+    let t = number_or(p, "t", f64::NAN, C)?;
+    if t.is_nan() || t.abs() > pt::MAX_SLIDE {
+        return Err(bad(C, "`t` must be a number from -0.98 to 0.98"));
+    }
+    let (new, strayed) =
+        pt::slide_anchor(&sp, anchor, t).ok_or_else(|| bad(C, "that anchor can't slide: an end of an open path has nowhere to go"))?;
+    set_subpath(s, "Slide Anchor Along Path", (id, si, sp), new)?;
+    Ok(json!({ "id": id.0, "strayed": strayed }))
 }
 
 // ---------- Measure & Inspect ----------
@@ -351,7 +389,7 @@ fn inspect(s: &mut Session, p: &Value) -> Result<Value> {
     let id = checked_id(s, p.get("id").unwrap_or(&Value::Null), C)?;
     let (x, y) = (number_or(p, "x", f64::NAN, C)?, number_or(p, "y", f64::NAN, C)?);
     let tolerance = number_or(p, "tolerance", 3.0, C)?;
-    if !(x.is_finite() && y.is_finite()) || !(tolerance >= 0.0 && tolerance.is_finite()) {
+    if !(x.is_finite() && y.is_finite() && tolerance >= 0.0 && tolerance.is_finite()) {
         return Err(bad(C, "give `x` and `y` (and a `tolerance` of 0 or more)"));
     }
     let path = s.doc()?.doc.node(id).and_then(|n| n.path_data()).ok_or_else(|| bad(C, "`id` is not a path"))?;

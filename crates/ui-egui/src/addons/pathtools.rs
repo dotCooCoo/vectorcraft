@@ -1,13 +1,17 @@
 //! Path Precision Tools in the interface: its submenu (Object › Plug-ins › Path Precision Tools),
-//! which selects its tools, opens the Anchor Inspector and runs Split / Add Points at Crossings;
-//! the Anchor Inspector panel (the selected anchor's position and handles as numbers, and the
-//! add-on's anchor edits); and its tools' options dialog (a double-click on the tool). Everything
+//! which selects its tools, opens its panels and runs Split / Add Points at Crossings and Convert
+//! to Parametric Shape; the Anchor Inspector panel (the selected anchor's position and handles as
+//! numbers, the add-on's anchor edits and the Corner Tool's values, [`corner`]); the Parametric
+//! Shape panel ([`shape`]); and its tools' options dialog (a double-click on the tool). Everything
 //! acts through `addon.pathtools.*` and `tool.setOption`.
+
+pub mod corner;
+pub mod shape;
 
 use egui::Ui;
 use serde_json::{Map, Value, json};
 use vectorcraft_geom::Point;
-use vectorcraft_tools::addons::{anchor_eraser, extend_path, measure_inspect};
+use vectorcraft_tools::addons::{anchor_eraser, extend_path, measure_inspect, parametric_shape, slide_anchor};
 
 use crate::VectorcraftApp;
 use crate::dialogs::DialogSpec;
@@ -33,11 +37,16 @@ pub fn menu() -> Vec<Item> {
         tool("Anchor Eraser Brush", anchor_eraser::ID),
         tool("Extend Path Tool", extend_path::ID),
         tool("Measure & Inspect Tool", measure_inspect::ID),
+        tool("Parametric Shape Tool", parametric_shape::ID),
+        Item::Cmd("Corner Tool", corner::COMMAND, json!({})),
+        tool("Slide Anchor Along Path", slide_anchor::ID),
         Item::Sep,
         Item::Cmd("Anchor Inspector", "window.panel", json!({ "panel": ID })),
+        Item::Cmd("Parametric Shape", "window.panel", json!({ "panel": shape::ID })),
         Item::Sep,
         Item::Cmd("Add Points at Crossings", "addon.pathtools.crossings", json!({})),
         Item::Cmd("Split at Crossings", "addon.pathtools.crossings", json!({ "cut": true })),
+        Item::Cmd("Convert to Parametric Shape", "addon.pathtools.shape.convert", json!({})),
     ]
 }
 
@@ -148,6 +157,8 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     if let Some((id, p)) = action {
         run(app, id, p);
     }
+    widgets::divider(ui);
+    corner::section(app, ui);
 }
 
 // ---------- the tools' options ----------
