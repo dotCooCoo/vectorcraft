@@ -1968,7 +1968,7 @@ fn select_from_none(s: &mut Session, c: &str) -> Vec<NodeId> {
 }
 
 /// In isolation mode Select All, All on Active Artboard and Inverse select nothing while the
-/// isolated group is hidden or locked, or the layer it is on is hidden or a template.
+/// isolated group or its layer is hidden or locked. An unlocked template layer remains selectable.
 #[test]
 fn select_all_leaves_out_an_isolated_group_hidden_or_locked_since() {
     let mut s = session();
@@ -1983,16 +1983,17 @@ fn select_all_leaves_out_an_isolated_group_hidden_or_locked_since() {
         assert_eq!(select_from_none(&mut s, c), vec![a, b], "{c}");
     }
     let changes = [
-        ("object.setProps", json!({"ids": [g.0], "visible": false}), json!({"ids": [g.0], "visible": true})),
-        ("object.setProps", json!({"ids": [g.0], "locked": true}), json!({"ids": [g.0], "locked": false})),
-        ("layer.setProps", json!({"ids": [layer.0], "visible": false}), json!({"ids": [layer.0], "visible": true})),
+        ("object.setProps", json!({"ids": [g.0], "visible": false}), json!({"ids": [g.0], "visible": true}), vec![]),
+        ("object.setProps", json!({"ids": [g.0], "locked": true}), json!({"ids": [g.0], "locked": false}), vec![]),
+        ("layer.setProps", json!({"ids": [layer.0], "visible": false}), json!({"ids": [layer.0], "visible": true}), vec![]),
         // A template layer that has been unlocked again.
-        ("layer.setProps", json!({"ids": [layer.0], "template": true, "locked": false}), json!({"ids": [layer.0], "template": false})),
+        ("layer.setProps", json!({"ids": [layer.0], "template": true, "locked": false}), json!({"ids": [layer.0], "template": false}), vec![a, b]),
+        ("layer.setProps", json!({"ids": [layer.0], "template": true}), json!({"ids": [layer.0], "template": false}), vec![]),
     ];
-    for (cmd, on, off) in changes {
+    for (cmd, on, off, want) in changes {
         s.execute(cmd, &on).unwrap();
         for c in commands {
-            assert_eq!(select_from_none(&mut s, c), vec![], "{c} after {cmd} {on}");
+            assert_eq!(select_from_none(&mut s, c), want, "{c} after {cmd} {on}");
         }
         s.execute(cmd, &off).unwrap();
         for c in commands {

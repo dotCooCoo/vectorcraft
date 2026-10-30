@@ -87,11 +87,11 @@ impl Node {
 
     /// The art objects of this container: its children, looking through sublayers, which are not
     /// objects (bottom first). With `editable`, only the visible, unlocked objects in visible,
-    /// unlocked, non-template sublayers.
+    /// unlocked sublayers.
     pub fn layer_art(&self, editable: bool) -> Vec<NodeId> {
         fn visit(n: &Node, editable: bool, out: &mut Vec<NodeId>) {
             for c in n.children().into_iter().flatten() {
-                if editable && (!c.visible || c.locked || c.is_template()) {
+                if editable && (!c.visible || c.locked) {
                     continue;
                 }
                 if c.is_layer() {

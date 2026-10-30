@@ -5,6 +5,20 @@ mod lookups;
 mod slices;
 mod units;
 
+#[test]
+fn select_all_includes_art_on_an_unlocked_template_layer() {
+    let mut d = Document::new(100.0, 100.0);
+    let layer = d.layers[0].id;
+    let art = d.alloc_id();
+    d.insert(Some(layer), 0, Node::path(art, shapes::rectangle(Rect::new(0.0, 0.0, 20.0, 20.0)), Appearance::default_art())).unwrap();
+    if let NodeKind::Layer { template, .. } = &mut d.node_mut(layer).unwrap().kind {
+        *template = true;
+    }
+    assert_eq!(d.selectable_art(), vec![art]);
+    d.node_mut(layer).unwrap().locked = true;
+    assert!(d.selectable_art().is_empty());
+}
+
 /// Zooming in on an inch ruler divided the inch into tenths (#2827). Its steps below an inch
 /// are binary fractions now, and the minor ticks between them stay binary too; every other
 /// unit is still read in tenths.

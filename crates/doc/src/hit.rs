@@ -115,7 +115,7 @@ pub fn hit_test_visible(doc: &Document, p: Point, opt: HitOptions) -> Option<Hit
 /// click there hits nothing ([`hit_test`]), so the selection tools grab the selection by that
 /// art instead of starting a marquee: an image in a mask, picked in the Layers panel, can be
 /// dragged by its hidden part, whose frame shows while it is selected. An object that a click
-/// can't hit anyway doesn't count: hidden, locked, a template, a guide while guides are locked
+/// can't hit anyway doesn't count: hidden, locked, a guide while guides are locked
 /// or hidden, in a Shaper group's part a click can't reach, outside the isolated container
 /// (`opt.scope`) or on a locked artboard. On a layer whose Preview is off it counts by its
 /// outline, as a click there hits it.
@@ -126,7 +126,7 @@ pub fn selected_hidden_at(doc: &Document, p: Point, opt: HitOptions, selected: &
         let Some(chain) = doc.ancestry(id) else { return false };
         let nodes: Vec<&Node> = chain.iter().filter_map(|a| doc.node(*a)).collect();
         if nodes.len() != chain.len()
-            || nodes.iter().any(|n| !n.visible || n.locked || n.is_template())
+            || nodes.iter().any(|n| !n.visible || n.locked)
             || opt.scope.is_some_and(|s| !chain.contains(&s))
             || locks.holds_id(id)
         {
@@ -190,7 +190,7 @@ pub fn objects_at(doc: &Document, p: Point, opt: HitOptions, scope: Option<NodeI
         if !layer.is_layer() {
             return objects_at_repeated(doc, p, opt, scope);
         }
-        if !layer.visible || layer.locked || layer.is_template() || doc.pattern_edit.as_ref().is_some_and(|e| e.layer != layer.id) {
+        if !layer.visible || layer.locked || doc.pattern_edit.as_ref().is_some_and(|e| e.layer != layer.id) {
             continue;
         }
         if !objects_at_layer(layer, p, opt, &symbols, &mut tops, &mut seen) {
@@ -276,7 +276,7 @@ pub const MAX_LOCKED_AT: usize = 20;
 
 /// The locked objects under `p`, topmost first, at most [`MAX_LOCKED_AT`]: each object whose own
 /// lock is on and that a click at `p` would hit if it were not locked. A locked group is listed,
-/// not what it holds. Hidden objects and everything on hidden, locked and template layers are left
+/// not what it holds. Hidden objects and everything on hidden or locked layers are left
 /// out. While a pattern is edited only its tile layer is searched, and in isolation mode
 /// (`opt.scope`) only what is inside the isolated group or object.
 pub fn locked_objects_at(doc: &Document, p: Point, opt: HitOptions) -> Vec<NodeId> {
@@ -293,7 +293,7 @@ pub fn locked_objects_at(doc: &Document, p: Point, opt: HitOptions) -> Vec<NodeI
         return out;
     }
     for layer in doc.layers.iter().rev() {
-        if !layer.visible || layer.locked || layer.is_template() || doc.pattern_edit.as_ref().is_some_and(|e| e.layer != layer.id) {
+        if !layer.visible || layer.locked || doc.pattern_edit.as_ref().is_some_and(|e| e.layer != layer.id) {
             continue;
         }
         let opt = if matches!(layer.kind, NodeKind::Layer { preview: false, .. }) { HitOptions { outline: true, ..opt } } else { opt };
@@ -314,7 +314,7 @@ fn locked_children(parent: &Node, p: Point, opt: HitOptions, symbols: &SymbolBox
             return;
         }
         let Some(c) = children.get(i) else { continue };
-        if !may_hit(parent, i, c, p, opt, symbols, false) || c.is_layer() && (c.locked || c.is_template()) {
+        if !may_hit(parent, i, c, p, opt, symbols, false) || c.is_layer() && c.locked {
             continue;
         }
         if c.locked {
@@ -342,7 +342,7 @@ fn locked_hit(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes) -> boo
 
 /// Would a click at `p` hit the object `n`, wherever it is? A container is hit by its contents as
 /// [`hit_test`] tries them (its own clipping mask, and with `editable_only` none of its hidden,
-/// locked or template contents).
+/// locked contents).
 fn object_hit(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes, editable_only: bool) -> bool {
     let inside = || hit_children(n, p, opt, symbols, &|_| false, &mut Vec::new(), editable_only).is_some();
     match &n.kind {
@@ -392,7 +392,7 @@ fn hit_test_skipping(doc: &Document, p: Point, opt: HitOptions, skip: &dyn Fn(No
     }
     let mut chain = Vec::new();
     for layer in doc.layers.iter().rev() {
-        if !layer.visible || editable_only && (layer.locked || layer.is_template()) {
+        if !layer.visible || editable_only && layer.locked {
             continue;
         }
         // Pattern editing mode: only the tile art is editable.
@@ -437,8 +437,8 @@ fn may_hit(parent: &Node, i: usize, c: &Node, p: Point, opt: HitOptions, symbols
     if shaper_hides(parent, i, opt.scope) {
         return false;
     }
-    // Read-only samples can read locked/template art; hidden art never participates.
-    if !c.visible || editable_only && (c.locked || c.is_template()) {
+    // Read-only samples can read locked art; hidden art never participates.
+    if !c.visible || editable_only && c.locked {
         return false;
     }
     if opt.skip_guides && matches!(c.kind, NodeKind::Path { guide: true, .. }) {
@@ -691,12 +691,12 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
                 .flat_map(|(c, r)| c.iter().filter(|c| c.id == s.id).map(move |c| (c, r)))
                 .collect(),
         },
-        // The objects of the layers, looking through sublayers (hidden, locked and template ones
+        // The objects of the layers, looking through sublayers (hidden and locked ones
         // are left out).
         None => doc
             .layers
             .iter()
-            .filter(|l| l.visible && !l.locked && !l.is_template() && doc.pattern_edit.as_ref().is_none_or(|e| e.layer == l.id))
+            .filter(|l| l.visible && !l.locked && doc.pattern_edit.as_ref().is_none_or(|e| e.layer == l.id))
             .flat_map(|l| layer_objects(l, r))
             .collect(),
     };
@@ -707,7 +707,7 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
         let Some(r) = marquee_in(l, r) else { return out };
         for c in l.children().into_iter().flatten() {
             if c.is_layer() {
-                if c.visible && !c.locked && !c.is_template() {
+                if c.visible && !c.locked {
                     out.extend(layer_objects(c, r));
                 }
             } else {

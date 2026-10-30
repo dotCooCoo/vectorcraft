@@ -1,5 +1,20 @@
 use super::*;
 
+#[test]
+fn editable_layer_art_includes_unlocked_template_sublayers() {
+    let mut layer = Node::layer(NodeId(1), "Top", crate::LayerColor::Preset(1));
+    let mut sub = Node::layer(NodeId(2), "Template", crate::LayerColor::Preset(2));
+    if let NodeKind::Layer { template, .. } = &mut sub.kind {
+        *template = true;
+    }
+    let art = Node::path(NodeId(3), shapes::rectangle(Rect::new(0.0, 0.0, 20.0, 20.0)), Appearance::default_art());
+    sub.children_mut().unwrap().push(Arc::new(art));
+    layer.children_mut().unwrap().push(Arc::new(sub));
+    assert_eq!(layer.layer_art(true), vec![NodeId(3)]);
+    Arc::make_mut(&mut layer.children_mut().unwrap()[0]).locked = true;
+    assert!(layer.layer_art(true).is_empty());
+}
+
 /// A node writes its rarely set parts among the others, in the file's field order, and reads
 /// them back into its extras; a node without any keeps none.
 #[test]

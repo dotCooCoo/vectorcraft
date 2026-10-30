@@ -766,13 +766,13 @@ impl Document {
     }
 
     /// Every art object the Selection tool can reach (Select All): the visible, unlocked objects
-    /// of the visible, unlocked, non-template layers, looking through sublayers (bottom first),
+    /// of the visible, unlocked layers, looking through sublayers (bottom first),
     /// except those on a locked artboard.
     pub fn selectable_art(&self) -> Vec<NodeId> {
         let locks = self.locked_artboards();
         self.layers
             .iter()
-            .filter(|l| l.visible && !l.locked && !l.is_template())
+            .filter(|l| l.visible && !l.locked)
             .flat_map(|l| l.layer_art(true))
             .filter(|id| locks.is_empty() || !self.node(*id).is_some_and(|n| locks.holds(n)))
             .collect()

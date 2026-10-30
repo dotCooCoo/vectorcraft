@@ -201,10 +201,10 @@ pub fn specs() -> Vec<CommandSpec> {
 /// Selectable objects: children of visible, unlocked layers (or of the isolation container).
 /// The objects Select All takes: those of the isolated container, else of every layer (looking
 /// through sublayers, which are not objects). In isolation mode there are none while the isolated
-/// container, or a group or layer it is in, is hidden, locked or a template layer.
+/// container, or a group or layer it is in, is hidden or locked.
 pub(crate) fn selectable(d: &Document, iso: Option<NodeId>) -> Vec<NodeId> {
     match iso.and_then(|i| d.node(i)) {
-        Some(c) if d.ancestry(c.id).is_some_and(|a| a.iter().all(|i| d.node(*i).is_some_and(|n| n.visible && !n.locked && !n.is_template()))) => {
+        Some(c) if d.ancestry(c.id).is_some_and(|a| a.iter().all(|i| d.node(*i).is_some_and(|n| n.visible && !n.locked))) => {
             // A single object isolated is all there is to select.
             if c.is_container() { c.layer_art(true) } else { vec![c.id] }
         }

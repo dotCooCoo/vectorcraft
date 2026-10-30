@@ -24,6 +24,23 @@ fn hits_topmost() {
 }
 
 #[test]
+fn selection_click_and_select_behind_find_unlocked_template_art() {
+    let mut d = Document::new(100.0, 100.0);
+    let layer = d.layers[0].id;
+    let art = d.alloc_id();
+    d.insert(Some(layer), 0, Node::path(art, shapes::rectangle(Rect::new(0.0, 0.0, 50.0, 50.0)), Appearance::default_art())).unwrap();
+    if let NodeKind::Layer { template, .. } = &mut d.node_mut(layer).unwrap().kind {
+        *template = true;
+    }
+    let p = Point::new(25.0, 25.0);
+    assert_eq!(hit_test(&d, p, HitOptions::default()).map(|h| h.leaf), Some(art));
+    assert_eq!(objects_at(&d, p, HitOptions::default(), None), vec![art]);
+    d.node_mut(layer).unwrap().locked = true;
+    assert!(hit_test(&d, p, HitOptions::default()).is_none());
+    assert!(objects_at(&d, p, HitOptions::default(), None).is_empty());
+}
+
+#[test]
 fn unfilled_interior_misses() {
     let mut d = Document::new(200.0, 200.0);
     let l = d.layers[0].id;
@@ -117,6 +134,25 @@ fn a_selected_objects_art_hidden_by_a_mask_is_found_under_the_pointer() {
     d.insert(Some(l), 1, art).unwrap();
     d.node_mut(l).unwrap().set_clips(true);
     assert_eq!(selected_hidden_at(&d, hidden, opt, &[art_id]), Some(art_id));
+}
+
+#[test]
+fn selected_hidden_art_on_an_unlocked_template_layer_can_be_dragged() {
+    let mut d = Document::new(300.0, 200.0);
+    let layer = d.layers[0].id;
+    let (mask, art) = half_clipped(&mut d);
+    let art_id = art.id;
+    d.insert(Some(layer), 0, mask).unwrap();
+    d.insert(Some(layer), 1, art).unwrap();
+    let node = d.node_mut(layer).unwrap();
+    node.set_clips(true);
+    if let NodeKind::Layer { template, .. } = &mut node.kind {
+        *template = true;
+    }
+    let hidden = Point::new(150.0, 50.0);
+    assert_eq!(selected_hidden_at(&d, hidden, HitOptions::default(), &[art_id]), Some(art_id));
+    d.node_mut(layer).unwrap().locked = true;
+    assert_eq!(selected_hidden_at(&d, hidden, HitOptions::default(), &[art_id]), None);
 }
 
 /// A selected group's own art is what a click would hit in it: not a hidden or locked child, nor
@@ -505,7 +541,7 @@ fn select_behind_takes_a_layer_masks_outline_first() {
 }
 
 /// Art in a sublayer is an object of its own: a click or a marquee takes it, not the
-/// sublayer; hidden, locked and template sublayers block both.
+/// sublayer; hidden and locked sublayers block both.
 #[test]
 fn sublayers_are_not_objects() {
     let mut d = Document::new(200.0, 200.0);
@@ -529,21 +565,24 @@ fn sublayers_are_not_objects() {
     assert_eq!(d.layer_containing(a), Some(inner));
     assert_eq!(d.layer_color(a), crate::LayerColor::Preset(3).rgb(), "the sublayer's own colour");
     assert_eq!(d.selectable_art(), vec![a, g]);
-    for f in [
-        |n: &mut Node| n.visible = false,
-        |n: &mut Node| n.locked = true,
-        |n: &mut Node| {
-            if let NodeKind::Layer { template, .. } = &mut n.kind {
-                *template = true;
-            }
-        },
-    ] {
+    for f in [|n: &mut Node| n.visible = false, |n: &mut Node| n.locked = true] {
         let mut d2 = d.clone();
         f(d2.node_mut(inner).unwrap());
         assert!(hit_test(&d2, Point::new(10.0, 10.0), HitOptions::default()).is_none());
         assert_eq!(marquee(&d2, all, None, false), vec![g]);
         assert_eq!(d2.selectable_art(), vec![g]);
     }
+    let mut template = d.clone();
+    if let NodeKind::Layer { template: flag, .. } = &mut template.node_mut(inner).unwrap().kind {
+        *flag = true;
+    }
+    assert_eq!(hit_test(&template, Point::new(10.0, 10.0), HitOptions::default()).map(|h| h.leaf), Some(a));
+    assert_eq!(marquee(&template, all, None, false), vec![a, g]);
+    assert_eq!(template.selectable_art(), vec![a, g]);
+    template.node_mut(inner).unwrap().locked = true;
+    assert!(hit_test(&template, Point::new(10.0, 10.0), HitOptions::default()).is_none());
+    assert_eq!(marquee(&template, all, None, false), vec![g]);
+    assert_eq!(template.selectable_art(), vec![g]);
     // A sublayer whose Preview is off is clicked in outline: its fill no longer hits.
     if let NodeKind::Layer { preview, .. } = &mut d.node_mut(inner).unwrap().kind {
         *preview = false;
@@ -938,6 +977,25 @@ fn locked_objects_at_lists_the_locked_stack() {
     d.node_mut(l).unwrap().locked = false;
     d.node_mut(l).unwrap().visible = false;
     assert!(at(&d, 30.0, None).is_empty());
+}
+
+#[test]
+fn locked_art_is_found_on_an_unlocked_template_sublayer() {
+    let mut d = Document::new(100.0, 100.0);
+    let root = d.layers[0].id;
+    let sub = d.alloc_id();
+    d.insert(Some(root), 0, Node::layer(sub, "Template", crate::LayerColor::Preset(2))).unwrap();
+    let mut art = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 50.0, 50.0)), Appearance::default_art());
+    art.locked = true;
+    let art_id = art.id;
+    d.insert(Some(sub), 0, art).unwrap();
+    if let NodeKind::Layer { template, .. } = &mut d.node_mut(sub).unwrap().kind {
+        *template = true;
+    }
+    let p = Point::new(25.0, 25.0);
+    assert_eq!(locked_objects_at(&d, p, HitOptions::default()), vec![art_id]);
+    d.node_mut(sub).unwrap().locked = true;
+    assert!(locked_objects_at(&d, p, HitOptions::default()).is_empty());
 }
 
 /// `locked_objects_at` lists at most `MAX_LOCKED_AT` objects, the topmost ones.
