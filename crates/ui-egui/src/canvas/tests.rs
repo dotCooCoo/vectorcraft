@@ -75,6 +75,23 @@ fn system_cursors_show_the_same_crosshair_with_precise_cursors_on_or_off() {
     }
 }
 
+#[test]
+fn command_cursor_settings_refresh_hover_cursor_while_view_moves() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    app.session.select_tool("pen", vectorcraft_engine::ViewInfo::default()).unwrap();
+    app.hover_doc = Some(Point::new(200.0, 150.0));
+    let mods = Mods::default();
+    let view = vectorcraft_engine::ViewInfo::default();
+    assert_eq!(hover_cursor(&mut app, mods, view, false), Some(Cursor::Pen));
+
+    // Control and MCP commands enter through app.run, without set_caps_lock.
+    app.run("view.capsLock", json!({"on": true})).unwrap();
+    assert_eq!(hover_cursor(&mut app, mods, view, false), Some(Cursor::Crosshair));
+    app.run("prefs.set", json!({"key": "usePreciseCursors", "value": true})).unwrap();
+    assert_eq!(hover_cursor(&mut app, mods, view, false), Some(Cursor::Pen));
+}
+
 /// #826: in a turned view each ruler still has ticks along its whole length; at 0° the top one
 /// reads x where the canvas has it.
 #[test]

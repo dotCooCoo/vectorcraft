@@ -552,7 +552,7 @@ mod cursor_tests {
             ("mesh", Cursor::MeshAdd),
         ] {
             assert_eq!(cursor_at(id, &d, away), c, "{id}");
-            assert_eq!(c.precise(), Cursor::Crosshair, "{id}");
+            assert_eq!(c.precise(), if id == "eraser" { c } else { Cursor::Crosshair }, "{id}");
             assert_eq!(c.stand_in(), Some(if id == "mesh" { Cursor::PenAdd } else { Cursor::Crosshair }), "{id}");
         }
         // Away from a selected path the Pencil shows its new-path cursor, drawn with a star; its

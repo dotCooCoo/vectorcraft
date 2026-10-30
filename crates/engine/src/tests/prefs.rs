@@ -389,6 +389,26 @@ fn use_precise_cursors_makes_drawing_cursors_crosshairs() {
     assert_eq!(cursor(&mut s, "eyedropper"), Cursor::Eyedropper);
 }
 
+#[test]
+fn caps_lock_reverses_preference_without_changing_it() {
+    use vectorcraft_tools::{Cursor, Mods};
+    let mut s = Session::new();
+    s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
+    for (pref, caps) in [(false, false), (false, true), (true, false), (true, true)] {
+        s.execute("prefs.set", &json!({"key": "usePreciseCursors", "value": pref})).unwrap();
+        assert_eq!(s.execute("view.capsLock", &json!({"on": caps})).unwrap(), json!({"on": caps}));
+        assert_eq!(s.prefs.use_precise_cursors, pref, "preference after Caps Lock");
+        for (tool, standard) in [("lasso", Cursor::Lasso), ("pen", Cursor::Pen)] {
+            s.select_tool(tool, ViewInfo::default()).unwrap();
+            let actual = s.cursor(vectorcraft_geom::Point::new(300.0, 300.0), Mods::default(), ViewInfo::default());
+            assert_eq!(actual, if pref != caps { Cursor::Crosshair } else { standard }, "{tool}, pref {pref}, caps {caps}");
+        }
+    }
+    assert_eq!(s.execute("view.capsLock", &json!({"on": false})).unwrap(), json!({"on": false}));
+    assert_eq!(s.execute("view.capsLock", &json!({})).unwrap(), json!({"on": false}));
+    assert!(s.execute("view.capsLock", &json!({"on": 1})).is_err());
+}
+
 /// Use Precise Cursors changes the pointer of the tools that have one of their own: off, each shows its own
 /// pointer; on, a crosshair. Every other drawing tool shows a crosshair either way, and the Type tool and the
 /// Scissors over no path keep theirs.
@@ -412,7 +432,6 @@ fn use_precise_cursors_swaps_the_tools_own_pointers_for_a_crosshair() {
         ("mesh", Cursor::MeshAdd),
         ("eyedropper", Cursor::Eyedropper),
         ("slice", Cursor::Slice),
-        ("blend", Cursor::Blend),
         ("shapeBuilder", Cursor::ShapeBuilder),
         ("paintbrush", Cursor::Paintbrush),
         ("blobBrush", Cursor::BlobBrush),
@@ -421,7 +440,6 @@ fn use_precise_cursors_swaps_the_tools_own_pointers_for_a_crosshair() {
         ("smooth", Cursor::Smooth),
         ("pathEraser", Cursor::PathEraser),
         ("join", Cursor::Join),
-        ("eraser", Cursor::Eraser),
         ("knife", Cursor::Knife),
     ];
     for (tool, c) in own {
@@ -452,6 +470,16 @@ fn use_precise_cursors_swaps_the_tools_own_pointers_for_a_crosshair() {
     for (tool, _) in own {
         assert_eq!(cursor(&mut s, tool), Cursor::Crosshair, "{tool} on");
     }
+    for (tool, own_cursor) in [("width", Cursor::Width), ("blend", Cursor::Blend), ("eraser", Cursor::Eraser)] {
+        assert_eq!(cursor(&mut s, tool), own_cursor, "{tool} preference on");
+    }
+    s.execute("prefs.set", &json!({"key": "usePreciseCursors", "value": false})).unwrap();
+    s.execute("view.capsLock", &json!({"on": true})).unwrap();
+    for (tool, own_cursor) in [("width", Cursor::Width), ("blend", Cursor::Blend), ("eraser", Cursor::Eraser)] {
+        assert_eq!(cursor(&mut s, tool), own_cursor, "{tool} Caps Lock on");
+    }
+    s.execute("view.capsLock", &json!({"on": false})).unwrap();
+    s.execute("prefs.set", &json!({"key": "usePreciseCursors", "value": true})).unwrap();
     for tool in always {
         assert_eq!(cursor(&mut s, tool), Cursor::Crosshair, "{tool} on");
     }
@@ -499,9 +527,6 @@ fn precise_cursors_replace_every_pen_state() {
         Cursor::PenConvert,
         Cursor::Eyedropper,
         Cursor::Slice,
-        Cursor::Blend,
-        Cursor::BlendObject,
-        Cursor::BlendAnchor,
         Cursor::ShapeBuilder,
         Cursor::ShapeBuilderErase,
         Cursor::AnchorPoint,
@@ -509,7 +534,22 @@ fn precise_cursors_replace_every_pen_state() {
     ] {
         assert_eq!(c.precise(), Cursor::Crosshair, "{c:?}");
     }
-    for c in [Cursor::Arrow, Cursor::Move, Cursor::Text, Cursor::Hand, Cursor::NotAllowed, Cursor::SliceSelect] {
+    for c in [
+        Cursor::Arrow,
+        Cursor::Move,
+        Cursor::Text,
+        Cursor::Hand,
+        Cursor::NotAllowed,
+        Cursor::SliceSelect,
+        Cursor::Width,
+        Cursor::WidthAdd,
+        Cursor::WidthPoint,
+        Cursor::Blend,
+        Cursor::BlendObject,
+        Cursor::BlendAnchor,
+        Cursor::Eraser,
+        Cursor::ObjectsOnPath,
+    ] {
         assert_eq!(c.precise(), c, "{c:?}");
     }
 }

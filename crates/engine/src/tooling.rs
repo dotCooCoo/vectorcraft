@@ -604,7 +604,7 @@ impl Session {
             }
             None => self.with_tool_cx(view, |t, cx| t.cursor(cx, p, mods)),
         };
-        if self.prefs.use_precise_cursors { c.precise() } else { c }
+        if self.prefs.use_precise_cursors != self.caps_lock { c.precise() } else { c }
     }
 
     pub fn tool_options(&self) -> Value {

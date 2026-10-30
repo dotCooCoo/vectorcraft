@@ -16,6 +16,7 @@
 #![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
 
 mod automation_args;
+mod caps_lock;
 mod clipboard;
 #[cfg(feature = "wgpu")]
 mod compositor_gpu;
@@ -87,6 +88,7 @@ use titlebar::{custom_titlebar, native_options};
 
 struct App {
     app: VectorcraftApp,
+    host_caps_lock: caps_lock::HostCapsLock,
     /// Reported by wgpu when the window's graphics device is lost (a driver reset).
     graphics_loss: GraphicsLoss,
     /// The graphics device was lost and the unsaved changes are kept for Data Recovery.
@@ -461,6 +463,7 @@ fn main() -> std::process::ExitCode {
                 // The content and the pointer stay aligned on Windows (#1758).
                 let window_frame = window_frame::service(cc, custom_titlebar);
                 Ok(Box::new(App {
+                    host_caps_lock: caps_lock::HostCapsLock::new(winit_window.as_deref()),
                     app,
                     graphics_loss,
                     graphics_lost: false,

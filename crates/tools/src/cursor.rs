@@ -224,7 +224,9 @@ impl Cursor {
     }
 
     /// General › Use Precise Cursors: the drawing tools' pointers (the Pen's in every state, the
-    /// Anchor Point and Curvature tools', the Eyedropper's, the Slice and Blend tools') become a plain crosshair at the hotspot.
+    /// Anchor Point and Curvature tools', the Eyedropper's, the Slice tool's) become a plain crosshair
+    /// at the hotspot; the Width, Blend and Eraser tools keep theirs. While Caps Lock is on, the
+    /// session reverses the preference for this mapping without changing the saved value.
     pub fn precise(self) -> Self {
         match self {
             Cursor::Pen
@@ -239,9 +241,6 @@ impl Cursor {
             | Cursor::Curvature
             | Cursor::Eyedropper
             | Cursor::Slice
-            | Cursor::Blend
-            | Cursor::BlendObject
-            | Cursor::BlendAnchor
             | Cursor::ShapeBuilder
             | Cursor::ShapeBuilderErase
             | Cursor::Lasso
@@ -254,7 +253,6 @@ impl Cursor {
             | Cursor::Paintbrush
             | Cursor::PaintbrushClose
             | Cursor::BlobBrush
-            | Cursor::Eraser
             | Cursor::Smooth
             | Cursor::PathEraser
             | Cursor::Join
