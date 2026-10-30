@@ -456,10 +456,10 @@ pub(crate) fn preset(app: &mut VectorcraftApp, ctx: &egui::Context, doc: u64, pi
     }
 }
 
-/// What Save Preset saves for document `doc` (uid): the preset the panel applied, when the document
-/// still has its rows, with the shared settings over it; else the shared settings alone.
+/// What Save Preset saves for document `doc` (uid): the preset the panel applied to this document,
+/// with the document's current shared settings over it; else the shared settings alone.
 fn preset_settings(app: &VectorcraftApp, ctx: &egui::Context, doc: u64) -> Value {
-    let mut shared = shared_settings(app).as_object().cloned().unwrap_or_default();
+    let shared = shared_settings(app).as_object().cloned().unwrap_or_default();
     let (shown_doc, current): (u64, String) = pstate(ctx, PRESET);
     if shown_doc != doc || current.is_empty() {
         return Value::Object(shared);
@@ -469,31 +469,28 @@ fn preset_settings(app: &VectorcraftApp, ctx: &egui::Context, doc: u64) -> Value
         return Value::Object(shared);
     };
     let Some(st) = app.session.active() else { return Value::Object(shared) };
-    if ["formats", "preset"].iter().any(|k| applied.get(*k).is_some_and(|v| st.doc.export_settings.get(*k) != Some(v))) {
+    if st.uid != doc {
         return Value::Object(shared);
-    }
-    if shared.get("folders") == Some(&json!("none"))
-        && applied.get("folders").is_some_and(|f| f != "none")
-        && st.doc.export_settings.get("folders") == applied.get("folders")
-    {
-        shared.remove("folders");
     }
     let mut settings = applied.clone();
     settings.extend(shared);
     Value::Object(settings)
 }
 
-/// The settings the panel shows, as a preset keeps them: the shared settings, with the row shown
-/// when the document has no rows or mobile/density preset of its own.
+/// The settings the panel shows, as a preset keeps them: the shared settings and effective folder
+/// choice, with the row shown when the document has no rows or mobile/density preset of its own.
 fn shared_settings(app: &VectorcraftApp) -> Value {
     let Some(st) = app.session.active() else { return json!({}) };
     let saved = &st.doc.export_settings;
     let mut settings: serde_json::Map<String, Value> =
         SCREEN_SETTINGS_KEYS.iter().filter_map(|k| Some((k.to_string(), saved.get(*k).filter(|v| !v.is_null())?.clone()))).collect();
     let (rows, preset) = screen_saved_rows(saved);
-    if preset.is_some() && settings.get("subfolders").and_then(Value::as_bool) == Some(false) {
+    if let Some(folders) = saved.get("folders").filter(|v| !v.is_null()) {
+        settings.insert("folders".into(), folders.clone());
+    } else if preset.is_some() && settings.get("subfolders").and_then(Value::as_bool) == Some(false) {
         settings.insert("folders".into(), json!("none"));
-    } else if preset.is_none() {
+    }
+    if preset.is_none() {
         settings.remove("preset");
         if !settings.get("formats").and_then(Value::as_array).is_some_and(|a| a.iter().any(Value::is_object)) {
             settings.insert("formats".into(), json!(rows));
