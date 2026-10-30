@@ -36,6 +36,7 @@ pub(crate) use load::{MAX_RASTER_ALLOC, size_note};
 mod metafile;
 mod naming;
 mod native;
+mod pcxread;
 pub mod pdf;
 mod pdfimport;
 pub mod pngtext;
@@ -191,6 +192,9 @@ mod tests_pdfx;
 mod tests_psd;
 #[cfg(test)]
 mod tests_psdread;
+
+#[cfg(test)]
+mod tests_pcxread;
 
 #[cfg(test)]
 mod tests_epsimport;

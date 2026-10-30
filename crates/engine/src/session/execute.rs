@@ -121,7 +121,10 @@ impl Session {
         }
         if self.depth == 0 {
             self.journal_in_undo_groups(doc, &grouped, journal);
-            self.after_command();
+            self.after_command(Some(id));
+        } else if matches!(id, "edit.undo" | "edit.redo") {
+            // A step of `command.batch`: the tool hears of it as it does of the command alone.
+            self.notify_text_tool(id);
         }
         Ok(r)
     }

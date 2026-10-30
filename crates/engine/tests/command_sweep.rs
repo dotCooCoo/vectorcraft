@@ -510,6 +510,36 @@ fn structured_junk() {
         ("shapeBuilder.regions", json!({"ids": [2, 3], "gap": "x"})),
         ("shapeBuilder.regions", json!({"gap": true})),
         ("shapeBuilder.regions", json!({"gap": 12, "ids": [u64::MAX]})),
+        // Path Precision Tools: the Parametric Shape Tool.
+        ("addon.pathtools.shape.create", json!({"center": [1e308, -1e308], "width": 1e308, "count": 1e308})),
+        (
+            "addon.pathtools.shape.create",
+            json!({"center": [0, 0], "kind": "gear", "count": 1000, "a": 0.9, "radius": 16384, "width": 16384, "height": 0.01}),
+        ),
+        ("addon.pathtools.shape.create", json!({"center": [0, 0], "kind": "star", "count": 1000, "a": 0.01, "radius": 1e-300})),
+        ("addon.pathtools.shape.create", json!({"center": ["x", null], "kind": ["star"], "rotation": f64::NAN})),
+        ("addon.pathtools.shape.create", json!({"center": [5, 5], "kind": "bubble", "a": -1e308, "b": 1e308, "rotation": 1e308})),
+        ("addon.pathtools.shape.set", json!({"id": 2, "count": 1000, "kind": "gear"})),
+        ("addon.pathtools.shape.set", json!({"id": u64::MAX, "width": -1})),
+        ("addon.pathtools.shape.set", json!({"id": 2, "center": [1, 2, 3], "radius": "big"})),
+        ("addon.pathtools.shape.convert", json!({"ids": [0, 1, 2, 3, u64::MAX]})),
+        ("addon.pathtools.shape.convert", json!({"ids": "all"})),
+        // Smart Pen add-on.
+        ("addon.pen.append", json!({"id": 2, "x": 1e308, "y": 0, "in": [1e308, -1e308]})),
+        ("addon.pen.append", json!({"id": 2, "subpath": u64::MAX, "x": 0, "y": 0, "segment": "curved"})),
+        ("addon.pen.append", json!({"id": 2, "x": 9.9e8, "y": -9.9e8, "in": [-9.9e8, 9.9e8], "out": [9.9e8, 9.9e8], "segment": "curved"})),
+        ("addon.pen.close", json!({"id": 2, "subpath": u64::MAX, "segment": "curved"})),
+        ("addon.pen.close", json!({"id": 3, "segment": "straight"})),
+        ("addon.pen.segment", json!({"id": 2, "segment": u64::MAX, "curved": true})),
+        ("addon.pen.segment", json!({"id": 2, "subpath": 0, "segment": 0, "curved": "yes"})),
+        ("addon.pen.removePoint", json!({"id": 2, "anchor": u64::MAX, "plain": true})),
+        ("addon.pen.removePoint", json!({"id": 2, "anchor": 0})),
+        ("addon.pen.togglePoint", json!({"id": 2, "anchor": 0, "ratio": 1e308})),
+        ("addon.pen.togglePoint", json!({"id": 2, "subpath": 0, "anchor": 1})),
+        ("addon.pen.reshape", json!({"id": 2, "segment": 0, "t": 0.0, "dx": 9.9e8, "dy": -9.9e8, "mode": "keepAngles"})),
+        ("addon.pen.reshape", json!({"id": 2, "segment": 0, "t": "x", "dx": 1, "dy": 1, "mode": "symmetric"})),
+        ("addon.pen.nextSegment", json!({"curved": "yes"})),
+        ("addon.pen.closeJoin", json!({"ids": [u64::MAX]})),
     ];
     let mut failures = vec![];
     for fx in Fixture::ALL {
