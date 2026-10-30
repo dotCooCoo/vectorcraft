@@ -266,6 +266,31 @@ fn the_export_preset_row_applies_saves_and_lists_presets() {
     );
 }
 
+#[test]
+fn the_panel_saves_mobile_preset_without_subfolders() {
+    let (mut app, _, [a, _]) = app(true);
+    app.run("assets.add", json!({"ids": [a]})).unwrap();
+    let asset = app.run("assets.list", json!({})).unwrap()["assets"][0]["id"].as_u64().unwrap();
+    app.run("assets.settings.set", json!({"preset": "mobile", "subfolders": false})).unwrap();
+    let ctx = egui::Context::default();
+    let doc = app.session.active().unwrap().uid;
+    super::asset_export::preset(&mut app, &ctx, doc, crate::dialogs::ScreenPresetPick::Save("Flat Mobile".into()));
+
+    let saved = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Flat Mobile").expect("saved");
+    assert_eq!(saved.settings.get("folders"), Some(&json!("none")));
+    assert_eq!(saved.settings.get("subfolders"), Some(&json!(false)));
+
+    let out = app.run("document.exportForScreens", json!({"exportPreset": "Flat Mobile", "assets": [asset]})).unwrap();
+    let files = out["files"].as_array().unwrap();
+    assert_eq!(files.len(), 3, "{out}");
+    assert!(files.iter().all(|f| !f["name"].as_str().unwrap().contains('/')), "{out}");
+
+    app.run("assets.settings.set", json!({"exportPreset": "Flat Mobile"})).unwrap();
+    let settings = app.run("document.exportSettings", json!({})).unwrap();
+    assert_eq!(settings["settings"]["folders"], "none");
+    assert_eq!(settings["settings"]["subfolders"], false);
+}
+
 /// The panel keeps its list of export presets from frame to frame, and builds it again when the
 /// saved presets change.
 #[test]
