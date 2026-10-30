@@ -189,6 +189,15 @@ fn pattern_fill<'a, 'd>(d: &'d Document, i: &'a AppearanceItem) -> Option<(&'a F
 }
 
 fn expand(s: &mut Session, p: &Value) -> Result<Value> {
+    let scope = s.begin_undo_scope();
+    let result = expand_steps(s, p);
+    if let Some(scope) = scope {
+        s.end_undo_scope(scope, result.is_err());
+    }
+    result
+}
+
+fn expand_steps(s: &mut Session, p: &Value) -> Result<Value> {
     let object = bool_or(p, "object", true);
     let fill = bool_or(p, "fill", true);
     let stroke = bool_or(p, "stroke", true);
@@ -218,7 +227,13 @@ fn expand(s: &mut Session, p: &Value) -> Result<Value> {
         s.edit("Expand", |d, _| super::patterncmds::expand_repeats(d, &roots).map(|_| ()))?;
     }
     if object && e.effects {
-        let _ = run_raw(s, "effect.expandAppearance", &json!({}));
+        // Effects that Expand Appearance can't expand are left as they are. When it refuses to
+        // leave a process color on a grayscale image with transparency, Expand fails as a whole.
+        if let Err(e) = run_raw(s, "effect.expandAppearance", &json!({}))
+            && super::paint::is_colorize_refusal(&e)
+        {
+            return Err(e);
+        }
         // What is left to expand is in the baked art: Expand Appearance leaves strokes strokes
         // (#3089), a group's own as stroked paths among its members, which Stroke outlines below.
         e = Expandable::of(&s.doc()?.doc, &selected_roots(s)?);

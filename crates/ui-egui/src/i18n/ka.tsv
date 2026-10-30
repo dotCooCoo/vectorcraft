@@ -1061,12 +1061,12 @@ lighting	Light	სინათლე
 	 to set spacing and orientation	 — ინტერვალისა და ორიენტაციის დასაყენებლად
 	Apply	გამოყენება
 	Change Screen Mode (F)	ეკრანის რეჟიმის შეცვლა (F)
-	Color (,)	ფერი (,)
+	Color (, or <)	ფერი (, ან <)
 	Draw Behind	უკან ხატვა
 	Draw Inside	შიგნით ხატვა
 	Draw Normal	ჩვეულებრივი ხატვა
 	Expand:	გაშლა:
-	Gradient (.)	გრადიენტი (.)
+	Gradient (. or >)	გრადიენტი (. ან >)
 	H:	სიმ.:
 	Modify	შეცვლა
 	Navigate	ნავიგაცია
@@ -3934,6 +3934,7 @@ font-technology	Variable	ცვლადი
 @msg	no document	დოკუმენტი არ არის
 @msg	no document open	გახსნილი დოკუმენტი არ არის
 @msg	no effect applied yet	ეფექტი ჯერ არ გამოყენებულა
+@msg	no Pathfinder operation applied yet	ტრაექტორიების ოპერაცია ჯერ არ გამოყენებულა
 @msg	no effect at index {k}	ინდექსზე {k} ეფექტი არ არის
 @msg	no end record	დასასრულის ჩანაწერი არ არის
 @msg	no file manager here	აქ ფაილების მენეჯერი არ არის
@@ -5851,3 +5852,82 @@ anchor	Points:	წერტილები:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	წერტილების ფერი ნახატიდან
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	დუოტონი…
+	Duotone	დუოტონი
+	Print Ink Fixes…	საბეჭდი მელნის შესწორებები…
+	Print Ink Fixes	საბეჭდი მელნის შესწორებები
+	Inks	მელნები
+	Tone 1	ტონი 1
+	Tone 2	ტონი 2
+	Tone 3	ტონი 3
+	Tone 4	ტონი 4
+	Curve	მრუდი
+	Reset to Linear	წრფივზე დაბრუნება
+	Reset to Inverse	შებრუნებულზე დაბრუნება
+	Skip Objects with Spot Colors	სპოტ-ფერების მქონე ობიექტების გამოტოვება
+	Ink Limit	მელნის ზღვარი
+	Exclude Pure Black	სუფთა შავის გამორიცხვა
+	Remove White Overprint	თეთრის ზედდაბეჭდვის მოხსნა
+	Overprint Black	შავის ზედდაბეჭდვა
+	Text Only	მხოლოდ ტექსტი
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	მიუთითეთ `inkLimit`, `removeWhiteOverprint` ან `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	საბეჭდი მელნის შესწორებები მუშაობს CMYK დოკუმენტებზე: ჯერ აირჩიეთ ფაილი › დოკუმენტის ფერის რეჟიმი › CMYK ფერი
+@msg	`{key}` must be 0..{max}	`{key}` უნდა იყოს 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	კუთხეების ხელსაწყო
+	Slide Anchor Along Path	საყრდენი წერტილის სრიალი ტრაექტორიაზე
+	Set Corners	კუთხეების დაყენება
+	Remove Corners	კუთხეების მოცილება
+	Corners selected: {count}	მონიშნული კუთხეები: {count}
+	Apply to Selected Anchors	მონიშნულ საყრდენ წერტილებზე გამოყენება
+@msg	`radius` must be from 0 to 1000000 pt	`radius` უნდა იყოს 0-დან 1000000 pt-მდე
+@msg	`t` must be a number from -0.98 to 0.98	`t` უნდა იყოს რიცხვი -0.98-დან 0.98-მდე
+@msg	choose anchors where two sides meet at an angle: only those take a corner	აირჩიეთ საყრდენი წერტილები, სადაც ორი გვერდი კუთხით ხვდება ერთმანეთს: მხოლოდ მათ შეუძლიათ კუთხის მიღება
+@msg	give `anchor`, the index of the anchor to slide	მიუთითეთ `anchor`, სასრიალო საყრდენი წერტილის ინდექსი
+@msg	that anchor can't slide: an end of an open path has nowhere to go	ეს საყრდენი წერტილი ვერ ისრიალებს: ღია ტრაექტორიის ბოლოს წასასვლელი არ აქვს
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	ტექსტის დაყოფა
+	Combine Point Text	წერტილის ტექსტის გაერთიანება
+	Remove Breaks	წყვეტების წაშლა
+	Split Text at Cursor	ტექსტის დაყოფა კურსორთან
+	Set Alignment, Keep Position	სწორების დაყენება მდებარეობის შენარჩუნებით
+	Reset Text Transform	ტექსტის გარდაქმნის ჩამოყრა
+	Replace Missing Fonts…	დაკარგული შრიფტების ჩანაცვლება…
+	Replace Missing Fonts	დაკარგული შრიფტების ჩანაცვლება
+	Remove Line Breaks	სტრიქონის წყვეტების წაშლა
+	Remove Paragraph Breaks	აბზაცის წყვეტების წაშლა
+	Break Text into Lines	ტექსტის დაყოფა სტრიქონებად
+	Break Text into Paragraphs	ტექსტის დაყოფა აბზაცებად
+	Break Text into Words	ტექსტის დაყოფა სიტყვებად
+	Break Text into Glyphs	ტექსტის დაყოფა გლიფებად
+	Reset Text Transform and Scale	ტექსტის გარდაქმნისა და მასშტაბის ჩამოყრა
+	Set Alignment, Keep Position:	სწორების დაყენება მდებარეობის შენარჩუნებით:
+	Break Text into:	ტექსტის დაყოფა:
+	Split at Cursor	დაყოფა კურსორთან
+	Reset Transform	გარდაქმნის ჩამოყრა
+	Shift-click: break into paragraphs	Shift-დაწკაპუნება: დაყოფა აბზაცებად
+	Alt-click: reset the horizontal scale too	Alt-დაწკაპუნება: ჰორიზონტალური მასშტაბის ჩამოყრაც
+breakText	Lines	სტრიქონები
+breakText	Words	სიტყვები
+breakText	Glyphs	გლიფები
+@msg	Click in type with a Type tool to split it	დასაყოფად დააწკაპუნეთ ტექსტში ტექსტის ხელსაწყოთი
+@msg	Too many type objects to change at once	ერთდროულად შესაცვლელად ძალიან ბევრი ტექსტური ობიექტია
+@msg	Too many pieces to make at once	ერთდროულად შესაქმნელად ძალიან ბევრი ნაწილია
+@msg	Select horizontal point or area type whose text fits	აირჩიეთ ჰორიზონტალური წერტილის ან არის ტექსტი, რომლის ტექსტიც ეტევა
+@msg	Nothing to split at the cursor	კურსორთან დასაყოფი არაფერია
+@msg	Select two or more one-line point type objects on one baseline to combine	გასაერთიანებლად აირჩიეთ ერთ საბაზისო ხაზზე მდებარე ორი ან მეტი ერთსტრიქონიანი წერტილის ტექსტის ობიექტი
+@msg	No line breaks to remove	წასაშლელი სტრიქონის წყვეტები არ არის
+@msg	No paragraph breaks to remove	წასაშლელი აბზაცის წყვეტები არ არის
+@msg	Too many breaks to remove at once	ერთდროულად წასაშლელად ძალიან ბევრი წყვეტაა
+@msg	Select point type	აირჩიეთ წერტილის ტექსტი
+@msg	The point type is aligned that way already	წერტილის ტექსტი უკვე ასეა სწორებული
+@msg	The point type has no transform to reset	წერტილის ტექსტს ჩამოსაყრელი გარდაქმნა არ აქვს
+@msg	No fonts are missing	დაკარგული შრიფტები არ არის
+@msg	the replacement font is not available	ჩამნაცვლებელი შრიფტი მიუწვდომელია
+@msg	missing `align`	`align` აკლია
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` უნდა იყოს lines, paragraphs, words ან glyphs და არა {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` უნდა იყოს "line" ან "paragraph" და არა {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` უნდა იყოს "left", "center" ან "right" და არა {other}

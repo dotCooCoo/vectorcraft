@@ -591,7 +591,7 @@ font-technology	Variable	Biến thiên
 	Collect in New Layer	Thu thập vào lớp mới
 	Collect Links in a Separate Folder	Thu thập liên kết vào thư mục riêng
 	Color	Màu
-	Color (,)	Màu (,)
+	Color (, or <)	Màu (, hoặc <)
 	Color Adjustments	Điều chỉnh màu sắc
 	Color bars	Thanh màu
 	Color blindness – Deuteranopia-type	Mù màu – loại Deuteranopia
@@ -1491,7 +1491,7 @@ file-filter	Templates	Mẫu
 	GPU Performance	Hiệu suất GPU
 	Grab bag	Tổng hợp
 	Gradient	Chuyển sắc
-	Gradient (.)	Chuyển sắc (.)
+	Gradient (. or >)	Chuyển sắc (. hoặc >)
 	Gradient across stroke	Chuyển sắc ngang qua nét
 	Gradient along stroke	Chuyển sắc dọc theo nét
 	Gradient and Mesh Resolution:	Độ phân giải chuyển sắc và lưới:
@@ -4462,6 +4462,7 @@ theme	Appearance	Giao diện
 @msg	no document	không có tài liệu
 @msg	no document open	không có tài liệu nào đang mở
 @msg	no effect applied yet	chưa áp dụng hiệu ứng
+@msg	no Pathfinder operation applied yet	chưa áp dụng thao tác Pathfinder
 @msg	no effect at index {k}	không có hiệu ứng tại chỉ mục {k}
 @msg	no end record	không có bản ghi kết thúc
 @msg	no file manager here	không có trình quản lý tệp ở đây
@@ -5462,3 +5463,82 @@ anchor	Points:	Điểm:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Màu chấm theo tác phẩm
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Hai tông…
+	Duotone	Hai tông
+	Print Ink Fixes…	Sửa mực in…
+	Print Ink Fixes	Sửa mực in
+	Inks	Mực
+	Tone 1	Tông 1
+	Tone 2	Tông 2
+	Tone 3	Tông 3
+	Tone 4	Tông 4
+	Curve	Đường cong
+	Reset to Linear	Đặt lại thành tuyến tính
+	Reset to Inverse	Đặt lại thành đảo ngược
+	Skip Objects with Spot Colors	Bỏ qua đối tượng có màu pha
+	Ink Limit	Giới hạn mực
+	Exclude Pure Black	Loại trừ đen thuần
+	Remove White Overprint	Bỏ in chồng màu trắng
+	Overprint Black	In chồng đen
+	Text Only	Chỉ văn bản
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	hãy cho `inkLimit`, `removeWhiteOverprint` hoặc `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Sửa mực in hoạt động trên tài liệu CMYK: trước hết chọn Tệp › Chế độ màu tài liệu › Màu CMYK
+@msg	`{key}` must be 0..{max}	`{key}` phải là 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Công cụ Góc
+	Slide Anchor Along Path	Trượt điểm neo dọc đường dẫn
+	Set Corners	Đặt góc
+	Remove Corners	Gỡ góc
+	Corners selected: {count}	Góc đã chọn: {count}
+	Apply to Selected Anchors	Áp dụng cho các điểm neo đã chọn
+@msg	`radius` must be from 0 to 1000000 pt	`radius` phải từ 0 đến 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` phải là số từ -0.98 đến 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	hãy chọn các điểm neo nơi hai cạnh gặp nhau thành góc: chỉ những điểm đó mới nhận góc
+@msg	give `anchor`, the index of the anchor to slide	hãy cho biết `anchor`, chỉ số của điểm neo cần trượt
+@msg	that anchor can't slide: an end of an open path has nowhere to go	không thể trượt điểm neo đó: đầu của đường dẫn mở không có chỗ để đi
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Tách văn bản
+	Combine Point Text	Kết hợp chữ điểm
+	Remove Breaks	Xóa ngắt
+	Split Text at Cursor	Tách văn bản tại con trỏ
+	Set Alignment, Keep Position	Đặt căn lề, giữ vị trí
+	Reset Text Transform	Đặt lại biến đổi văn bản
+	Replace Missing Fonts…	Thay thế phông chữ thiếu…
+	Replace Missing Fonts	Thay thế phông chữ thiếu
+	Remove Line Breaks	Xóa xuống dòng
+	Remove Paragraph Breaks	Xóa ngắt đoạn
+	Break Text into Lines	Tách văn bản thành dòng
+	Break Text into Paragraphs	Tách văn bản thành đoạn
+	Break Text into Words	Tách văn bản thành từ
+	Break Text into Glyphs	Tách văn bản thành glyph
+	Reset Text Transform and Scale	Đặt lại biến đổi và tỷ lệ văn bản
+	Set Alignment, Keep Position:	Đặt căn lề, giữ vị trí:
+	Break Text into:	Tách văn bản thành:
+	Split at Cursor	Tách tại con trỏ
+	Reset Transform	Đặt lại biến đổi
+	Shift-click: break into paragraphs	Shift-bấm: tách thành đoạn
+	Alt-click: reset the horizontal scale too	Alt-bấm: đặt lại cả tỷ lệ ngang
+breakText	Lines	Dòng
+breakText	Words	Từ
+breakText	Glyphs	Glyph
+@msg	Click in type with a Type tool to split it	Nhấp vào văn bản bằng công cụ Chữ để tách văn bản
+@msg	Too many type objects to change at once	Quá nhiều đối tượng chữ để thay đổi cùng lúc
+@msg	Too many pieces to make at once	Quá nhiều phần để tạo cùng lúc
+@msg	Select horizontal point or area type whose text fits	Chọn chữ điểm hoặc chữ vùng nằm ngang có văn bản vừa khung
+@msg	Nothing to split at the cursor	Không có gì để tách tại con trỏ
+@msg	Select two or more one-line point type objects on one baseline to combine	Chọn hai đối tượng chữ điểm một dòng trở lên trên cùng một đường cơ sở để kết hợp
+@msg	No line breaks to remove	Không có xuống dòng nào để xóa
+@msg	No paragraph breaks to remove	Không có ngắt đoạn nào để xóa
+@msg	Too many breaks to remove at once	Quá nhiều ngắt để xóa cùng lúc
+@msg	Select point type	Chọn chữ điểm
+@msg	The point type is aligned that way already	Chữ điểm đã được căn như vậy
+@msg	The point type has no transform to reset	Chữ điểm không có biến đổi nào để đặt lại
+@msg	No fonts are missing	Không thiếu phông chữ nào
+@msg	the replacement font is not available	phông chữ thay thế không có sẵn
+@msg	missing `align`	thiếu `align`
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` phải là lines, paragraphs, words hoặc glyphs, không phải {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` phải là "line" hoặc "paragraph", không phải {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` phải là "left", "center" hoặc "right", không phải {other}

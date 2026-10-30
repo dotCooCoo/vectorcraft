@@ -507,7 +507,7 @@ font-technology	Variable	Вариативные
 	Collect in New Layer	Собрать в новый слой
 	Collect Links in a Separate Folder	Собрать связи в отдельную папку
 	Color	Цвет
-	Color (,)	Цвет (,)
+	Color (, or <)	Цвет (, или <)
 	Color Adjustments	Настройки цвета
 	Color bars	Цветные полосы
 	Color blindness – Deuteranopia-type	Дальтонизм — дейтеранопия
@@ -1281,7 +1281,7 @@ file-filter	Templates	Шаблоны
 	GPL palettes keep solid colours only, as RGB.	Палитры GPL сохраняют только сплошные цвета в RGB.
 	GPU Performance	Производительность GPU
 	Gradient	Градиент
-	Gradient (.)	Градиент (.)
+	Gradient (. or >)	Градиент (. или >)
 	Gradient across stroke	Градиент поперёк обводки
 	Gradient along stroke	Градиент вдоль обводки
 	Gradient and Mesh Resolution:	Разрешение градиентов и сеток:
@@ -4193,6 +4193,7 @@ axis	Both	Оба
 @msg	no document	нет документа
 @msg	no document open	нет открытого документа
 @msg	no effect applied yet	эффект ещё не применён
+@msg	no Pathfinder operation applied yet	операция обработки контуров ещё не применена
 @msg	no effect at index {k}	нет эффекта с индексом {k}
 @msg	no end record	нет конечной записи
 @msg	no file manager here	здесь нет файлового менеджера
@@ -5839,3 +5840,82 @@ anchor	Points:	Точки:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Цвет точек из рисунка
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Дуплекс…
+	Duotone	Дуплекс
+	Print Ink Fixes…	Исправления печатных красок…
+	Print Ink Fixes	Исправления печатных красок
+	Inks	Краски
+	Tone 1	Тон 1
+	Tone 2	Тон 2
+	Tone 3	Тон 3
+	Tone 4	Тон 4
+	Curve	Кривая
+	Reset to Linear	Сбросить на линейную
+	Reset to Inverse	Сбросить на обратную
+	Skip Objects with Spot Colors	Пропускать объекты с плашечными цветами
+	Ink Limit	Предел краски
+	Exclude Pure Black	Исключить чистый чёрный
+	Remove White Overprint	Убрать наложение белого
+	Overprint Black	Наложение чёрного
+	Text Only	Только текст
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	задайте `inkLimit`, `removeWhiteOverprint` или `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Исправления печатных красок работают в документах CMYK: сначала выберите Файл › Цветовой режим документа › Цвет CMYK
+@msg	`{key}` must be 0..{max}	`{key}` должен быть 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Инструмент «Углы»
+	Slide Anchor Along Path	Сдвинуть опорную точку вдоль контура
+	Set Corners	Задать углы
+	Remove Corners	Убрать углы
+	Corners selected: {count}	Выбрано углов: {count}
+	Apply to Selected Anchors	Применить к выбранным опорным точкам
+@msg	`radius` must be from 0 to 1000000 pt	`radius` должен быть от 0 до 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` должен быть числом от -0.98 до 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	выберите опорные точки, где две стороны сходятся под углом: только они принимают угол
+@msg	give `anchor`, the index of the anchor to slide	укажите `anchor`, индекс опорной точки для сдвига
+@msg	that anchor can't slide: an end of an open path has nowhere to go	эту опорную точку нельзя сдвинуть: концу открытого контура некуда двигаться
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Разбить текст
+	Combine Point Text	Объединить текст из точки
+	Remove Breaks	Удалить разрывы
+	Split Text at Cursor	Разбить текст у курсора
+	Set Alignment, Keep Position	Задать выравнивание, сохранив положение
+	Reset Text Transform	Сбросить трансформацию текста
+	Replace Missing Fonts…	Заменить отсутствующие шрифты…
+	Replace Missing Fonts	Заменить отсутствующие шрифты
+	Remove Line Breaks	Удалить разрывы строк
+	Remove Paragraph Breaks	Удалить разрывы абзацев
+	Break Text into Lines	Разбить текст на строки
+	Break Text into Paragraphs	Разбить текст на абзацы
+	Break Text into Words	Разбить текст на слова
+	Break Text into Glyphs	Разбить текст на глифы
+	Reset Text Transform and Scale	Сбросить трансформацию и масштаб текста
+	Set Alignment, Keep Position:	Выравнивание с сохранением положения:
+	Break Text into:	Разбить текст на:
+	Split at Cursor	Разбить у курсора
+	Reset Transform	Сбросить трансформацию
+	Shift-click: break into paragraphs	Shift+щелчок: разбить на абзацы
+	Alt-click: reset the horizontal scale too	Alt+щелчок: сбросить и масштаб по горизонтали
+breakText	Lines	Строки
+breakText	Words	Слова
+breakText	Glyphs	Глифы
+@msg	Click in type with a Type tool to split it	Щёлкните в тексте инструментом «Текст», чтобы разбить его
+@msg	Too many type objects to change at once	Слишком много текстовых объектов для изменения за один раз
+@msg	Too many pieces to make at once	Слишком много частей для создания за один раз
+@msg	Select horizontal point or area type whose text fits	Выделите горизонтальный текст из точки или в области, текст которого помещается
+@msg	Nothing to split at the cursor	У курсора нечего разбивать
+@msg	Select two or more one-line point type objects on one baseline to combine	Выделите два или более однострочных объекта текста из точки на одной базовой линии, чтобы объединить их
+@msg	No line breaks to remove	Нет разрывов строк для удаления
+@msg	No paragraph breaks to remove	Нет разрывов абзацев для удаления
+@msg	Too many breaks to remove at once	Слишком много разрывов для удаления за один раз
+@msg	Select point type	Выделите текст из точки
+@msg	The point type is aligned that way already	Текст из точки уже так выровнен
+@msg	The point type has no transform to reset	У текста из точки нет трансформации для сброса
+@msg	No fonts are missing	Отсутствующих шрифтов нет
+@msg	the replacement font is not available	шрифт для замены недоступен
+@msg	missing `align`	не указан `align`
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` должен быть lines, paragraphs, words или glyphs, а не {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` должен быть "line" или "paragraph", а не {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` должен быть "left", "center" или "right", а не {other}

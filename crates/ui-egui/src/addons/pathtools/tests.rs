@@ -21,6 +21,7 @@ fn the_plugins_submenu_selects_the_tools_and_opens_the_anchor_inspector() {
         ("Extend Path Tool", "extendPath"),
         ("Measure & Inspect Tool", "measureInspect"),
         ("Parametric Shape Tool", "parametricShape"),
+        ("Slide Anchor Along Path", "slideAnchor"),
     ] {
         let e = under(label).expect(label);
         assert_eq!((e.command.as_deref(), &e.params), (Some("tool.select"), &json!({ "tool": tool })));
@@ -112,4 +113,51 @@ fn the_parametric_shape_panel_opens_from_the_submenu_and_shows_the_shape() {
     let text = painted_text(&mut app, super::shape::show);
     assert!(text.contains("Speech Bubble") && text.contains("Tail:") && text.contains("Tip:") && !text.contains("With none selected"), "{text}");
     assert!(!text.contains("Count:"), "a speech bubble has no count: {text}");
+}
+
+#[test]
+fn the_corner_tool_item_selects_the_tool_and_opens_its_panel_section() {
+    let mut app = app();
+    let entries = menus::menu_entries(&app);
+    let e = entries.iter().find(|e| e.path == ["Object", "Plug-ins", "Path Precision Tools"] && e.label == "Corner Tool").expect("listed");
+    assert!(!crate::panel_docking::showing(&app.ui, ID));
+    menus::invoke(&mut app, e.command.as_deref().unwrap(), e.params.clone());
+    assert_eq!(app.session.tool_id(), "cornerTool");
+    assert!(crate::panel_docking::showing(&app.ui, ID), "the panel opens");
+    // Neither toolbar shows it, the All Tools list does.
+    assert!(
+        vectorcraft_tools::catalog::all_tools().any(|t| t.id == "cornerTool")
+            && vectorcraft_tools::catalog::all_tools().any(|t| t.id == "slideAnchor")
+    );
+    assert!(!vectorcraft_tools::TOOL_GROUPS.iter().flat_map(|g| g.iter()).any(|t| t.id == "cornerTool" || t.id == "slideAnchor"));
+}
+
+#[test]
+fn the_corner_section_shows_the_tools_values_and_applies_them_to_the_selection() {
+    let mut app = app();
+    let r = app
+        .run("path.create", json!({"anchors": [{"x": 10, "y": 10}, {"x": 110, "y": 10}, {"x": 110, "y": 110}, {"x": 10, "y": 110}], "closed": true}))
+        .unwrap();
+    let id = vectorcraft_doc::NodeId(r["id"].as_u64().unwrap());
+    let text = painted_text(&mut app, show);
+    assert!(
+        text.contains("Corners selected: 4") && text.contains("Radius:") && text.contains("Round") && text.contains("Apply to Selected Anchors"),
+        "{text}"
+    );
+    app.run("tool.setOption", json!({"tool": "cornerTool", "values": {"radius": 12, "kind": "chamfer"}})).unwrap();
+    assert!(painted_text(&mut app, show).contains("Chamfer"));
+    app.session
+        .select(|_, sel| {
+            sel.set([id]);
+            sel.anchors.insert(id, [(0, 1), (0, 2)].into_iter().collect());
+        })
+        .unwrap();
+    assert!(painted_text(&mut app, show).contains("Corners selected: 2"));
+    // What Apply runs: the tool's values on the selected corners, one undo step.
+    let steps = app.session.doc().unwrap().history.undo.len();
+    let options = app.session.tool_options_of("cornerTool");
+    app.run("addon.pathtools.cornerSet", json!({"radius": options["radius"], "kind": options["kind"]})).unwrap();
+    assert_eq!(app.session.doc().unwrap().history.undo.len(), steps + 1);
+    assert_eq!(app.session.doc().unwrap().doc.node(id).unwrap().path_data().unwrap().anchor_count(), 6);
+    assert!(painted_text(&mut app, show).contains("Corners selected: 2"), "still selected");
 }

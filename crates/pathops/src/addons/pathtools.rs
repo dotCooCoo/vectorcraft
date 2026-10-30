@@ -1,11 +1,13 @@
 //! Path Precision Tools' geometry: anchor edits for the Anchor Inspector (smooth by the auto-smooth
 //! rule, equalise handles, add evenly spaced anchors, close), the readouts the Measure & Inspect
-//! tool shows over a path, open paths lengthened or shortened at an end ([`extend`]) and the places
-//! where paths cross ([`crossings`]), and the Parametric Shape Tool's shapes ([`shapes`]).
+//! tool shows over a path, open paths lengthened or shortened at an end ([`extend`]), the places
+//! where paths cross ([`crossings`]), anchors slid along their path ([`slide`]) and the Parametric
+//! Shape Tool's shapes ([`shapes`]).
 
 mod crossings;
 mod extend;
 pub mod shapes;
+mod slide;
 #[cfg(test)]
 mod tests;
 
@@ -16,6 +18,7 @@ use vectorcraft_geom::{AnchorKind, PathData, SubPath};
 
 pub use crossings::{MAX_CROSSING_SEGMENTS, crossings, insert_at};
 pub use extend::{ExtendMode, extend_length_to, extend_open};
+pub use slide::{MAX_SLIDE, slide_anchor, slide_stops, slide_t_at};
 
 use crate::fit::{end_tangent, start_tangent};
 

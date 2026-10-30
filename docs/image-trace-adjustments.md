@@ -49,7 +49,9 @@ and traces as All.
 **Document Library linked colors.** With Library › Document Swatches, with or without a color group,
 a traced fill or stroke whose color comes from a global or spot swatch is linked to that swatch, and
 one whose color comes from a tint swatch is linked to its base at the tint. Editing the swatch
-recolors the trace. Colors from process swatches and from swatch libraries are not linked.
+recolors the trace. Colors from process swatches and from swatch libraries are not linked. When
+several swatches show the same color, the first of them in the list that is a global, spot or tint
+swatch gives the link.
 
 **Document Library** traces with the library's colors as they are. Each pixel takes the library
 color nearest to it in lightness and hue, with a difference in hue or chroma counted three times

@@ -509,7 +509,7 @@ font-technology	Variable	Variabili
 	Collect in New Layer	Raccogli in un nuovo livello
 	Collect Links in a Separate Folder	Raccogli i collegamenti in una cartella separata
 	Color	Colore
-	Color (,)	Colore (,)
+	Color (, or <)	Colore (, o <)
 	Color Adjustments	Regolazioni colore
 	Color bars	Barre colore
 	Color blindness – Deuteranopia-type	Daltonismo – tipo deuteranopia
@@ -1283,7 +1283,7 @@ file-filter	Templates	Modelli
 	GPL palettes keep solid colours only, as RGB.	Le palette GPL conservano solo i colori pieni, in RGB.
 	GPU Performance	Prestazioni GPU
 	Gradient	Sfumatura
-	Gradient (.)	Sfumatura (.)
+	Gradient (. or >)	Sfumatura (. o >)
 	Gradient across stroke	Sfumatura trasversale alla traccia
 	Gradient along stroke	Sfumatura lungo la traccia
 	Gradient and Mesh Resolution:	Risoluzione sfumature e trame:
@@ -4197,6 +4197,7 @@ axis	Both	Entrambi
 @msg	no document	nessun documento
 @msg	no document open	nessun documento aperto
 @msg	no effect applied yet	nessun effetto ancora applicato
+@msg	no Pathfinder operation applied yet	nessuna operazione di elaborazione tracciati ancora applicata
 @msg	no effect at index {k}	nessun effetto all'indice {k}
 @msg	no end record	nessun record finale
 @msg	no file manager here	nessun gestore file disponibile qui
@@ -5480,3 +5481,82 @@ anchor	Points:	Punti:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Colore punti dalla grafica
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Bicromia…
+	Duotone	Bicromia
+	Print Ink Fixes…	Correzioni inchiostri di stampa…
+	Print Ink Fixes	Correzioni inchiostri di stampa
+	Inks	Inchiostri
+	Tone 1	Tono 1
+	Tone 2	Tono 2
+	Tone 3	Tono 3
+	Tone 4	Tono 4
+	Curve	Curva
+	Reset to Linear	Ripristina lineare
+	Reset to Inverse	Ripristina invertita
+	Skip Objects with Spot Colors	Salta oggetti con colori spot
+	Ink Limit	Limite inchiostro
+	Exclude Pure Black	Escludi nero puro
+	Remove White Overprint	Rimuovi sovrastampa del bianco
+	Overprint Black	Sovrastampa nero
+	Text Only	Solo testo
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	indica `inkLimit`, `removeWhiteOverprint` o `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Le correzioni inchiostri di stampa funzionano nei documenti CMYK: scegli prima File › Metodo colore documento › Colore CMYK
+@msg	`{key}` must be 0..{max}	`{key}` deve essere 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Strumento Angoli
+	Slide Anchor Along Path	Fai scorrere il punto di ancoraggio lungo il tracciato
+	Set Corners	Imposta angoli
+	Remove Corners	Rimuovi angoli
+	Corners selected: {count}	Angoli selezionati: {count}
+	Apply to Selected Anchors	Applica ai punti di ancoraggio selezionati
+@msg	`radius` must be from 0 to 1000000 pt	`radius` deve essere da 0 a 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` deve essere un numero da -0.98 a 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	scegli punti di ancoraggio in cui due lati si incontrano ad angolo: solo quelli accettano un angolo
+@msg	give `anchor`, the index of the anchor to slide	indica `anchor`, l’indice del punto di ancoraggio da far scorrere
+@msg	that anchor can't slide: an end of an open path has nowhere to go	quel punto di ancoraggio non può scorrere: l’estremità di un tracciato aperto non ha dove andare
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Dividi testo
+	Combine Point Text	Combina testo con punto
+	Remove Breaks	Rimuovi interruzioni
+	Split Text at Cursor	Dividi testo al cursore
+	Set Alignment, Keep Position	Imposta allineamento mantenendo la posizione
+	Reset Text Transform	Reimposta trasformazione testo
+	Replace Missing Fonts…	Sostituisci font mancanti…
+	Replace Missing Fonts	Sostituisci font mancanti
+	Remove Line Breaks	Rimuovi interruzioni di riga
+	Remove Paragraph Breaks	Rimuovi interruzioni di paragrafo
+	Break Text into Lines	Dividi testo in righe
+	Break Text into Paragraphs	Dividi testo in paragrafi
+	Break Text into Words	Dividi testo in parole
+	Break Text into Glyphs	Dividi testo in glifi
+	Reset Text Transform and Scale	Reimposta trasformazione e scala testo
+	Set Alignment, Keep Position:	Imposta allineamento mantenendo la posizione:
+	Break Text into:	Dividi testo in:
+	Split at Cursor	Dividi al cursore
+	Reset Transform	Reimposta trasformazione
+	Shift-click: break into paragraphs	Shift+clic: dividi in paragrafi
+	Alt-click: reset the horizontal scale too	Alt+clic: reimposta anche la scala orizzontale
+breakText	Lines	Righe
+breakText	Words	Parole
+breakText	Glyphs	Glifi
+@msg	Click in type with a Type tool to split it	Fai clic nel testo con uno strumento Testo per dividerlo
+@msg	Too many type objects to change at once	Troppi oggetti di testo da modificare in una volta
+@msg	Too many pieces to make at once	Troppi pezzi da creare in una volta
+@msg	Select horizontal point or area type whose text fits	Seleziona testo con punto o in area orizzontale il cui testo ci sta
+@msg	Nothing to split at the cursor	Niente da dividere al cursore
+@msg	Select two or more one-line point type objects on one baseline to combine	Seleziona due o più oggetti di testo con punto su una riga sulla stessa linea di base per combinarli
+@msg	No line breaks to remove	Nessuna interruzione di riga da rimuovere
+@msg	No paragraph breaks to remove	Nessuna interruzione di paragrafo da rimuovere
+@msg	Too many breaks to remove at once	Troppe interruzioni da rimuovere in una volta
+@msg	Select point type	Seleziona testo con punto
+@msg	The point type is aligned that way already	Il testo con punto è già allineato così
+@msg	The point type has no transform to reset	Il testo con punto non ha trasformazioni da reimpostare
+@msg	No fonts are missing	Non mancano font
+@msg	the replacement font is not available	il font sostitutivo non è disponibile
+@msg	missing `align`	`align` mancante
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` deve essere lines, paragraphs, words o glyphs, non {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` deve essere "line" o "paragraph", non {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` deve essere "left", "center" o "right", non {other}

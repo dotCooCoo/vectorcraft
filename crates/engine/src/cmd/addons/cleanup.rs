@@ -1,10 +1,12 @@
 //! Artwork Cleanup (`addon.cleanup.*`), a built-in add-on: Simplify Anchors (Keep Shape), the
 //! Document Health Check (check, show and fix the issues it finds), Deep Ungroup and Rejoin Path
-//! Pieces. Its panel and its submenu, Object › Plug-ins › Artwork Cleanup, are the UI's.
+//! Pieces, and its text tools ([`text`]). Its panel and its submenu, Object › Plug-ins › Artwork
+//! Cleanup, are the UI's.
 
 mod checks;
 #[cfg(test)]
 mod tests;
+mod text;
 
 use serde_json::{Map, Value, json};
 use vectorcraft_doc::{Document, Node, NodeId, NodeKind};
@@ -30,7 +32,7 @@ const FIX_ROUNDS: usize = 3;
 const MAX_LISTED: usize = 1000;
 
 pub fn specs() -> Vec<CommandSpec> {
-    vec![
+    let mut v = vec![
         cmd!(
             "addon.cleanup.simplify",
             "Simplify Anchors (Keep Shape)…",
@@ -85,7 +87,9 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection,
             rejoin
         ),
-    ]
+    ];
+    v.extend(text::specs());
+    v
 }
 
 /// The paths (not guides) under `roots`, compound path members included.

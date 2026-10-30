@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use vectorcraft_color::Swatch;
 use vectorcraft_doc::ImageObject;
 
@@ -683,7 +685,7 @@ impl TraceRun {
 pub(super) fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Value> {
     let c = if expand { "imageTrace.makeAndExpand" } else { "imageTrace.make" };
     let Prepared { inputs, trace, view, params_json, preset_label, library, bytes } = prepare(s, c, p)?;
-    let by_color = expand && by_color_param(c, p)?;
+    let group_by_color = expand && by_color_param(c, p)?;
     // A saved preset's settings join the journal entry, so a replay traces as this run did after
     // the preset is changed, renamed or deleted.
     let named = str_param(p, "preset").unwrap_or("Default");
@@ -706,6 +708,16 @@ pub(super) fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Val
     let unit = xf.determinant().abs().sqrt();
     let (npaths, anchors, colors) = (res.paths.len(), res.anchor_count(), res.palette.len());
     let label = if expand { "Image Trace (Make and Expand)" } else { "Image Trace" };
+    // A library color fills with the swatch's own color (its model kept), linked to a
+    // global or spot swatch of the document. Of the swatches that trace as this color,
+    // the first linked one is taken, else the first. Build the lookup once per trace.
+    let mut by_color: HashMap<[u8; 3], &Paint> = HashMap::new();
+    for (rgb, paint) in &library {
+        let chosen = by_color.entry(*rgb).or_insert(paint);
+        if !matches!(**chosen, Paint::Solid { swatch: Some(_), .. }) && matches!(paint, Paint::Solid { swatch: Some(_), .. }) {
+            *chosen = paint;
+        }
+    }
     let id = s.edit(label, |d, sel| {
         let src = d.node(target).cloned().ok_or(EngineError::NoNode(target))?;
         let mut image = if is_trace_group(&src) {
@@ -733,12 +745,8 @@ pub(super) fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Val
                 *path = shape.to_path();
                 *live = Some(Box::new(shape));
             }
-            // A library color fills with the swatch's own color (its model kept), linked to a
-            // global or spot swatch of the document.
-            let solid = library
-                .iter()
-                .find(|(rgb, _)| *rgb == tp.color)
-                .map_or_else(|| Paint::solid(Color::rgb8(tp.color[0], tp.color[1], tp.color[2])), |l| l.1.clone());
+            let solid =
+                by_color.get(&tp.color).map_or_else(|| Paint::solid(Color::rgb8(tp.color[0], tp.color[1], tp.color[2])), |paint| (*paint).clone());
             // Gradients: a path the tracer found to be a linear gradient is filled with it.
             let paint = tp.gradient.as_ref().map_or(solid, |g| traced_gradient(g, xf));
             n.appearance = match tp.stroke {
@@ -757,7 +765,7 @@ pub(super) fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Val
             traced.push(n);
         }
         children.extend(grouped(d, traced, &res.parents));
-        if by_color {
+        if group_by_color {
             children = color_groups(c, d, children)?;
         }
         let gid = d.alloc_id();

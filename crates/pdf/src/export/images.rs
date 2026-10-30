@@ -3,6 +3,12 @@ use super::{Arc, BlendMode, Color, Exporter, Image, NodeKind, Paint, Rect, Size,
 use krilla::color::device_n::{Colorant, DeviceNSpace, Process};
 use krilla::image::{BitsPerComponent, CustomImage, ImageColorspace};
 
+/// The byte count of a repeated color channel, within [`vectorcraft_doc::MAX_RASTER_ALLOC`].
+fn tinted_color_len(samples: usize, pixels: usize) -> Option<usize> {
+    let bytes = samples.checked_mul(pixels)?;
+    (u64::try_from(bytes).ok()? <= vectorcraft_doc::MAX_RASTER_ALLOC).then_some(bytes)
+}
+
 /// A colorized image's pixels: one color in every pixel, shown as much as its soft mask says.
 #[derive(Clone, Hash)]
 struct Tinted {
@@ -52,8 +58,9 @@ impl Exporter<'_> {
     /// every process ink and every spot ink of the document, other colors in gray, RGB or CMYK as
     /// the Output settings write them. The coverage is resampled as the Compression settings ask
     /// ([`crate::images::coverage_sized`]). `None` when the paint isn't a solid color or the pixels
-    /// can't be decoded; cached like [`Self::load_image`]. With `interpolate` (and the export's own
-    /// setting), viewers may smooth it.
+    /// can't be decoded or its color channel exceeds [`vectorcraft_doc::MAX_RASTER_ALLOC`]; cached
+    /// like [`Self::load_image`]. With `interpolate` (and the export's own setting), viewers may
+    /// smooth it.
     pub(super) fn colorized_image(&mut self, im: &vectorcraft_doc::ImageObject, paint: &Paint, interpolate: bool) -> Option<Image> {
         let Paint::Solid { color, swatch, tint } = paint else { return None };
         let size = placed_size(im);
@@ -96,6 +103,7 @@ impl Exporter<'_> {
                 other => (other.to_rgb().map(q).to_vec(), ImageColorspace::Rgb),
             },
         };
+        tinted_color_len(samples.len(), n)?;
         let color = Arc::new(samples.repeat(n));
         let img = Image::from_custom(Tinted { color, alpha: Arc::new(alpha), width, height, space, device_n }, interpolate).ok();
         self.images.insert(cache, img.clone());
@@ -244,4 +252,17 @@ pub(super) fn embed(blob: &vectorcraft_doc::ImageBlob, interpolate: bool, sixtee
         let (w, h) = rgba.dimensions();
         Some(Image::from_rgba8(rgba.into_raw(), w, h))
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::tinted_color_len;
+
+    #[test]
+    fn tinted_color_rejects_oversized_and_overflowing_buffers() {
+        let max = usize::try_from(vectorcraft_doc::MAX_RASTER_ALLOC).unwrap_or(usize::MAX);
+        assert_eq!(tinted_color_len(4, max / 4), Some(max));
+        assert_eq!(tinted_color_len(4, max / 4 + 1), None);
+        assert_eq!(tinted_color_len(4, usize::MAX), None);
+    }
 }
