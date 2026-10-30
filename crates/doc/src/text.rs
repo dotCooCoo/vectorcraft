@@ -76,8 +76,8 @@ pub struct TextObject {
     /// Off for new type and for documents from before it, and saved only when on.
     #[serde(default, rename = "opticalMarginAlignment", skip_serializing_if = "crate::skip::is_default")]
     pub optical_margin: bool,
-    /// Character panel › Anti-aliasing Method: how the type's edges are drawn as pixels. Every
-    /// frame of a thread has the same method. Sharp for new type and for documents from before it,
+    /// Character panel › Anti-aliasing Method: how the type's edges are drawn as pixels. Each
+    /// frame of a thread keeps its own method. Sharp for new type and for documents from before it,
     /// and saved only when it is another method.
     #[serde(default, rename = "antiAlias", skip_serializing_if = "crate::skip::is_default")]
     pub anti_alias: TypeAntiAlias,

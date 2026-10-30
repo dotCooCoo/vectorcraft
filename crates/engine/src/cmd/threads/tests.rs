@@ -985,12 +985,11 @@ fn a_thread_takes_its_first_frames_optical_margin_alignment() {
     assert_eq!([a, b, c].map(|id| optical(&s, id).0), [true; 3]);
 }
 
-/// The anti-aliasing method (`text.setFormat {antiAlias}`) belongs to the whole thread and is
-/// saved only when not Sharp: set in one frame, with or without a range, it is set in every
-/// frame in one undo step, a frame threaded on takes the thread's method, and a file whose
-/// frames of one thread differ opens with the first frame's method in all of them.
+/// The anti-aliasing method (`text.setFormat {antiAlias}`) belongs to each frame and is saved
+/// only when not Sharp. A range sets its frame in one undo step. Threading and opening preserve
+/// different methods on the frames of a thread.
 #[test]
-fn the_anti_aliasing_method_is_set_for_every_frame_of_a_thread() {
+fn the_anti_aliasing_method_is_set_for_each_frame_of_a_thread() {
     use vectorcraft_doc::text::TypeAntiAlias::{self, Crisp, None as Hard, Sharp, Strong};
     let method = |s: &Session, id: u64| text_of(&s.doc().unwrap().doc, NodeId(id)).map(|t| t.anti_alias);
     let saved = |s: &Session, id: u64| serde_json::to_value(text_of(&s.doc().unwrap().doc, NodeId(id)).unwrap()).unwrap().get("antiAlias").cloned();
@@ -1001,18 +1000,30 @@ fn the_anti_aliasing_method_is_set_for_every_frame_of_a_thread() {
     let err = s.execute("text.setFormat", &json!({"antiAlias": "smooth"})).unwrap_err().to_string();
     assert!(err.contains("`antiAlias` must be"), "{err}");
     s.execute("text.setFormat", &json!({"antiAlias": "crisp"})).unwrap();
-    assert_eq!((method(&s, a), method(&s, b)), (Some(Crisp), Some(Crisp)), "the first frame takes it too");
-    assert_eq!(saved(&s, a), Some(json!("crisp")));
-    // A range of characters sets the whole thread as well.
+    assert_eq!((method(&s, a), method(&s, b)), (Some(Sharp), Some(Crisp)), "only the selected frame takes it");
+    assert_eq!(saved(&s, b), Some(json!("crisp")));
+    // A range of characters sets its whole frame.
     s.execute("text.setFormat", &json!({"ids": [a], "start": 0, "end": 1, "antiAlias": "none"})).unwrap();
-    assert_eq!((method(&s, a), method(&s, b)), (Some(Hard), Some(Hard)));
+    assert_eq!((method(&s, a), method(&s, b)), (Some(Hard), Some(Crisp)));
     s.execute("edit.undo", &json!({})).unwrap();
-    assert_eq!((method(&s, a), method(&s, b)), (Some(Crisp), Some(Crisp)), "one undo step");
-    // A frame threaded on from the last one takes the thread's method.
+    assert_eq!((method(&s, a), method(&s, b)), (Some(Sharp), Some(Crisp)), "one undo step");
+    // A new frame does not change the methods of the existing frames.
     s.execute("text.setFormat", &json!({"ids": [b], "antiAlias": "strong"})).unwrap();
     let c = new_id(s.execute("text.thread.add", &json!({"from": b, "at": [400, 10]})).unwrap());
-    assert_eq!([a, b, c].map(|id| method(&s, id)), [Some(Strong); 3]);
+    assert_eq!([a, b, c].map(|id| method(&s, id)), [Some(Sharp), Some(Strong), Some(Strong)]);
     s.execute("edit.undo", &json!({})).unwrap();
+    // Threading existing frames with different methods preserves both.
+    let (mut joined, first_id, second_id) = quoted_thread();
+    joined.execute("text.thread.remove", &json!({})).unwrap();
+    joined.execute("text.setFormat", &json!({"ids": [first_id], "antiAlias": "crisp"})).unwrap();
+    joined.execute("text.setFormat", &json!({"ids": [second_id], "antiAlias": "strong"})).unwrap();
+    joined.execute("select.set", &json!({"ids": [first_id, second_id]})).unwrap();
+    joined.execute("text.thread.create", &json!({})).unwrap();
+    assert_eq!((method(&joined, first_id), method(&joined, second_id)), (Some(Crisp), Some(Strong)));
+    joined.execute("text.editRange", &json!({"id": first_id, "start": 0, "end": 0, "insert": "New "})).unwrap();
+    assert_eq!((method(&joined, first_id), method(&joined, second_id)), (Some(Crisp), Some(Strong)), "reflow keeps both methods");
+    joined.execute("text.thread.remove", &json!({})).unwrap();
+    assert_eq!((method(&joined, first_id), method(&joined, second_id)), (Some(Crisp), Some(Strong)), "unthreading keeps both methods");
     let first: [TypeAntiAlias; 2] = [Crisp, Hard];
     for (one, name) in [(first, "old.vectorcraft"), ([Hard, Crisp], "old.vectorcraft"), (first, "old.eps"), ([Hard, Crisp], "old.eps")] {
         for (id, m) in [(a, one[0]), (b, one[1])] {
@@ -1029,7 +1040,7 @@ fn the_anti_aliasing_method_is_set_for_every_frame_of_a_thread() {
         let r = s.execute("document.open", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(&bytes)})).unwrap();
         assert_eq!(r["restored"], name.ends_with(".eps"), "{r}");
         assert_eq!(threads(&s), [[a, b]], "{name}");
-        assert_eq!((method(&s, a), method(&s, b)), (Some(one[0]), Some(one[0])), "{name}, first frame {:?}", one[0]);
+        assert_eq!((method(&s, a), method(&s, b)), (Some(one[0]), Some(one[1])), "{name}, frame methods");
     }
 }
 

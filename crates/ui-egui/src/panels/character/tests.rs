@@ -428,6 +428,7 @@ fn the_anti_aliasing_method_dropdown_shows_and_sets_the_types_method() {
     assert!(text_editing(&app).is_some());
     set_anti_alias(&mut app, TypeAntiAlias::Strong);
     assert_eq!(method(&app, a), TypeAntiAlias::Strong);
+    assert_eq!(method(&app, b), TypeAntiAlias::Sharp, "the other selected type is unchanged while editing");
     assert_eq!(shared_anti_alias(&app), Some(TypeAntiAlias::Strong));
     // Reset Panel sets Sharp, with the characters' attributes, in one undo step.
     range_style(&mut app, json!({"tracking": 50}));

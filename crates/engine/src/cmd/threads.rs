@@ -181,43 +181,10 @@ pub(crate) fn reflow(before: &Document, doc: &mut Document) {
             }
         }
         if live.len() >= 2 {
-            if let Some(a) = anti_alias(before, doc, &live) {
-                give_anti_alias(doc, &live, a);
-            }
             kept.push(live);
         }
     }
     doc.text_threads = kept;
-}
-
-/// The anti-aliasing method that every frame of a thread with the frames `live` takes: that of the
-/// first frame whose method changed between `before` and `doc`, else the first frame's.
-fn anti_alias(before: &Document, doc: &Document, live: &[NodeId]) -> Option<vectorcraft_doc::text::TypeAntiAlias> {
-    let now = |id: &NodeId| text_of(doc, *id).map(|t| t.anti_alias);
-    let changed = live.iter().find(|id| text_of(before, **id).is_some_and(|t| Some(t.anti_alias) != now(id)));
-    changed.or(live.first()).and_then(now)
-}
-
-/// Give each of the frames `live` that has another anti-aliasing method the method `a`.
-fn give_anti_alias(doc: &mut Document, live: &[NodeId], a: vectorcraft_doc::text::TypeAntiAlias) {
-    for id in live {
-        if text_of(doc, *id).is_some_and(|t| t.anti_alias != a)
-            && let Some(NodeKind::Text(t)) = doc.node_mut(*id).map(|n| &mut n.kind)
-        {
-            t.anti_alias = a;
-        }
-    }
-}
-
-/// Give every frame of each thread the first frame's anti-aliasing method, without re-flowing the
-/// story: for a document restored from a file as it was saved.
-pub(crate) fn share_anti_alias(doc: &mut Document) {
-    for thread in doc.text_threads.clone() {
-        let live: Vec<NodeId> = thread.into_iter().filter(|id| text_of(doc, *id).is_some()).collect();
-        if let Some(a) = anti_alias(doc, doc, &live) {
-            give_anti_alias(doc, &live, a);
-        }
-    }
 }
 
 /// Type that is not a frame of a thread is a story of its own: its numbered list paragraphs count

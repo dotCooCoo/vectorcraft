@@ -4875,10 +4875,10 @@ characters take the new ones. One undo step.
 `text.setFormat {antiAlias: "none"|"sharp"|"crisp"|"strong"}` (the selected type, or `ids`) sets the Character panel's
 Anti-aliasing Method, which decides how the edges of the characters are drawn as pixels: on the canvas, in raster exports
 (Export As PNG, JPEG and the other raster formats, Export for Screens, Save for Web) and when Object › Rasterize or
-Effect › Rasterize draws the type. The method belongs to the whole type object and to every frame of its thread: a
-`start`/`end` range sets the whole object, threading frames gives the thread its first frame's method, and a file
-whose frames of one thread differ opens with the first frame's method in all of them. VectorCraft defines what each
-method does, on the pixels of the picture being drawn (the canvas at its zoom, an export at its resolution):
+Effect › Rasterize draws the type. The method belongs to the whole type object, and each frame of a thread keeps its
+own method: a `start`/`end` range sets the whole frame, and threading frames or opening a file keeps each frame's
+method. VectorCraft defines what each method does, on the pixels of the picture being drawn (the canvas at its zoom,
+an export at its resolution):
 
 - `sharp`, the default, draws each edge pixel with the share of it the type covers, as before.
 - `none` draws hard edges: a pixel takes the type's color where the type covers at least half of it, and nothing

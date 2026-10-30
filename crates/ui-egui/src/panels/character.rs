@@ -723,9 +723,8 @@ fn shared_anti_alias(app: &VectorcraftApp) -> Option<TypeAntiAlias> {
     acc.value()
 }
 
-/// Set the anti-aliasing method `m` of the type objects the panel acts on, and of every frame of
-/// their threads (`text.setFormat {antiAlias}`): the one the Type tool edits, whatever part of its
-/// text is selected, else the selected type.
+/// Set the anti-aliasing method `m` of the frame the Type tool edits, whatever part of its text
+/// is selected, else the selected type objects (`text.setFormat {antiAlias}`).
 fn set_anti_alias(app: &mut VectorcraftApp, m: TypeAntiAlias) {
     let mut p = json!({"antiAlias": m.id()});
     if let Some((id, _, _)) = text_editing(app) {
