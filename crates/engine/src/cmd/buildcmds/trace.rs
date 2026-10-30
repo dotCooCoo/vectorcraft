@@ -9,6 +9,7 @@ use super::{
 #[cfg(test)]
 thread_local! {
     static BOX_TESTS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static CANDIDATE_VISITS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 // ---------- Image Trace ----------
@@ -392,7 +393,8 @@ fn by_color_param(cmd: &str, p: &Value) -> Result<bool> {
 /// another group of that paint, so the art draws as before. A group among `items` (Auto Grouping)
 /// is refused.
 fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>) -> Result<Vec<Arc<Node>>> {
-    use std::collections::HashMap;
+    use std::collections::{BTreeMap, HashMap};
+    use std::ops::Bound::{Excluded, Unbounded};
     use vectorcraft_color::tint_percent;
     // Grouped by the paint: unlinked (its #rrggbb), linked (the swatch and its exact tint), a
     // gradient, or another paint (its label). The name is apart from it: a swatch may be named as
@@ -433,9 +435,11 @@ fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>) -> Result<Ve
     };
     let mut groups: Vec<Run> = vec![];
     let mut latest: HashMap<PaintKey, usize> = HashMap::new();
-    let mut spatial: HashMap<(i64, i64), Vec<(usize, Rect)>> = HashMap::new();
-    let mut large: Vec<(usize, Rect)> = vec![];
-    let mut all_boxes: Vec<(usize, Rect)> = vec![];
+    // An item can join an earlier group, so insertion order is not group-index order. Index
+    // boxes by group to skip older groups without scanning their entries.
+    let mut spatial: HashMap<(i64, i64), BTreeMap<usize, Vec<Rect>>> = HashMap::new();
+    let mut large: BTreeMap<usize, Vec<Rect>> = BTreeMap::new();
+    let mut all_boxes: BTreeMap<usize, Vec<Rect>> = BTreeMap::new();
     for (item, bounds) in items {
         if matches!(item.kind, NodeKind::Group { .. }) {
             return Err(bad(cmd, "byColor can't split Auto Grouping groups: trace without Auto Grouping"));
@@ -457,11 +461,19 @@ fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>) -> Result<Ve
         // Joining an earlier group moves the item under every later group's items.
         let hidden_by_later = |at: usize| {
             bounds.is_some_and(|b| {
-                let candidates = cells(b).map_or_else(
-                    || all_boxes.iter().collect::<Vec<_>>(),
-                    |places| places.iter().filter_map(|c| spatial.get(c)).flat_map(|v| v.iter()).chain(large.iter()).collect(),
-                );
-                candidates.into_iter().any(|(index, box_bounds)| *index > at && meet(box_bounds, &b))
+                let overlaps_later = |boxes: &BTreeMap<usize, Vec<Rect>>| {
+                    boxes.range((Excluded(at), Unbounded)).rev().any(|(_, group_boxes)| {
+                        group_boxes.iter().rev().any(|box_bounds| {
+                            #[cfg(test)]
+                            CANDIDATE_VISITS.with(|n| n.set(n.get() + 1));
+                            meet(box_bounds, &b)
+                        })
+                    })
+                };
+                match cells(b) {
+                    Some(places) => places.iter().filter_map(|c| spatial.get(c)).any(overlaps_later) || overlaps_later(&large),
+                    None => overlaps_later(&all_boxes),
+                }
             })
         };
         let at = latest.get(&key).copied().filter(|&at| !hidden_by_later(at));
@@ -476,14 +488,14 @@ fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>) -> Result<Ve
         }
         if let Some(b) = bounds {
             let index = if new { groups.len() - 1 } else { at.unwrap_or_default() };
-            all_boxes.push((index, b));
+            all_boxes.entry(index).or_default().push(b);
             match cells(b.inflate(1.0, 1.0)) {
                 Some(places) => {
                     for place in places {
-                        spatial.entry(place).or_default().push((index, b));
+                        spatial.entry(place).or_default().entry(index).or_default().push(b);
                     }
                 }
-                None => large.push((index, b)),
+                None => large.entry(index).or_default().push(b),
             }
         }
     }
@@ -919,6 +931,19 @@ mod color_group_tests {
         let tests = BOX_TESTS.with(std::cell::Cell::get);
         assert_eq!(groups.iter().map(|g| g.children().map_or(0, Vec::len)).sum::<usize>(), 4000);
         assert!(tests < 4000 * 32, "{tests} box tests for 4000 paths");
+    }
+
+    #[test]
+    fn overlapping_alternating_colors_visit_bounded_candidates() {
+        const COUNT: usize = 3000;
+        let mut d = Document::new(100.0, 100.0);
+        let colors = [Color::rgb(1.0, 0.0, 0.0), Color::rgb(0.0, 0.0, 1.0)];
+        let items = (0..COUNT).map(|i| area(&mut d, 10.0, 10.0, 20.0, 20.0, colors[i % 2])).collect();
+        CANDIDATE_VISITS.with(|n| n.set(0));
+        let groups = color_groups("imageTrace.makeAndExpand", &mut d, items).unwrap();
+        let visits = CANDIDATE_VISITS.with(std::cell::Cell::get);
+        assert_eq!(groups.len(), COUNT);
+        assert!(visits < COUNT * 16, "{visits} candidate visits for {COUNT} paths");
     }
 
     #[test]
