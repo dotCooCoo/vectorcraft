@@ -357,6 +357,57 @@ fn asset_export_preserves_applied_preset_naming_and_folders_when_saving() {
 }
 
 #[test]
+fn asset_export_saves_changed_rows_with_applied_preset_fields() {
+    let (mut app, _, _) = app(true);
+    let original = json!({
+        "formats": [{"format": "svg"}],
+        "name": "<name>-###",
+        "counterStart": 7,
+        "counterPer": "file",
+        "folder": "exports",
+        "includeBleed": true,
+    });
+    app.run("document.exportPresets.save", json!({"name": "Named Rows", "settings": original})).unwrap();
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    menu_frame(&ctx, &mut app, vec![]);
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Named Rows")));
+    app.run("assets.settings.set", json!({"formats": [{"format": "png", "scale": "2x"}]})).unwrap();
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Save Changes")));
+
+    let saved = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Named Rows").expect("saved");
+    assert_eq!(saved.settings["formats"], json!([{"format": "png", "scale": "2x"}]));
+    for key in ["name", "counterStart", "counterPer", "folder", "includeBleed"] {
+        assert_eq!(saved.settings.get(key), original.get(key), "{key}: {:?}", saved.settings);
+    }
+}
+
+#[test]
+fn asset_export_saves_changed_subfolders_from_applied_preset() {
+    let (mut app, _, _) = app(true);
+    app.run("document.exportPresets.save", json!({"name": "Grouped Mobile", "settings": {"preset": "mobile", "folders": "format"}})).unwrap();
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    menu_frame(&ctx, &mut app, vec![]);
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Grouped Mobile")));
+    app.run("assets.settings.set", json!({"subfolders": true})).unwrap();
+    let current = app.run("document.exportSettings", json!({})).unwrap();
+    assert_eq!(current["settings"]["folders"], "rows");
+    let texts = menu_frame(&ctx, &mut app, vec![]);
+    menu_frame(&ctx, &mut app, click(at(&texts, "   Save Changes")));
+
+    let saved = app.session.prefs.screen_export_presets.iter().find(|p| p.name == "Grouped Mobile").expect("saved");
+    assert_eq!(saved.settings.get("folders"), Some(&json!("rows")));
+    assert_eq!(saved.settings.get("subfolders"), Some(&json!(true)));
+    app.run("assets.settings.set", json!({"exportPreset": "Grouped Mobile"})).unwrap();
+    let reapplied = app.run("document.exportSettings", json!({})).unwrap();
+    assert_eq!(reapplied["settings"]["folders"], "rows");
+}
+
+#[test]
 fn asset_export_preserves_applied_mobile_preset_folder_choice() {
     let (mut app, _, _) = app(true);
     app.run("document.exportPresets.save", json!({"name": "Mobile by Format", "settings": {"preset": "mobile", "folders": "format"}})).unwrap();
