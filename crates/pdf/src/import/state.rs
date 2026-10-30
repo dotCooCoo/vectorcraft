@@ -122,6 +122,8 @@ pub(super) struct Builder<'p> {
     pub(super) function_paints: HashMap<(u128, Option<Vec<String>>), Paint>,
     /// What is left of the import's function evaluations for those shadings.
     pub(super) function_budget: FunctionBudget,
+    /// What is left of the import's objects ([`super::entry::max_objects`]).
+    pub(super) objects_left: usize,
     /// Swatch names in use.
     pub(super) taken: Vec<String>,
     /// The page as walked by [`scan_page`], and how far the interpreter is through it.

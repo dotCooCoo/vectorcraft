@@ -271,6 +271,7 @@ impl Session {
             snap_tangent: self.prefs.snap_tangent,
             snap_perpendicular: self.prefs.snap_perpendicular,
             snap_to_glyph: view.snap_to_glyph && view.smart_guides && !view.snap_to_grid,
+            glyph_snap: self.prefs.glyph_snap,
             corner_widgets: view.corner_widgets,
             fill_active: self.fill_active,
             gradient_stop: self.selected_stop(),
@@ -742,8 +743,9 @@ impl Session {
                 Action::Begin(label) => self.begin_interaction(&label)?,
                 Action::Preview(cmd, p) => {
                     // Performance › Real-time Drawing and Editing (#394): off, remember the latest
-                    // params and apply them once on Commit instead of every move.
-                    if !self.prefs.real_time_drawing {
+                    // params and apply them once on Commit instead of every move. A ruler guide
+                    // being dragged still shows: the guide is all there is to see (#4646).
+                    if !self.prefs.real_time_drawing && !matches!(cmd.as_str(), "guide.add" | "guide.move") {
                         self.clear_deferred_overlay_cache();
                         let st = self.doc_mut()?;
                         if let Some(it) = &mut st.interaction {

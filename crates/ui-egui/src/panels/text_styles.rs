@@ -2,14 +2,15 @@
 //!
 //! Click a style to apply it to the selected text (or the Type tool's selected characters);
 //! Alt-click applies it and clears overrides. The style of the selection is highlighted, with a
-//! "+" when the text overrides some of its attributes.
+//! "+" when the text overrides some of its attributes. New makes a style from the selected text;
+//! Alt-click on New first asks for its name (`ui.newCharStyle`, `ui.newParaStyle`).
 
 use egui::{Sense, Ui, vec2};
 use serde_json::{Map, Value, json};
 use vectorcraft_engine::cmd::textstyles;
 
 use super::character::{end_typing, text_editing, text_style};
-use super::{pstate, selection_len, set_pstate};
+use super::{alt_held, pstate, selection_len, set_pstate};
 use crate::VectorcraftApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
@@ -106,6 +107,15 @@ fn target(app: &VectorcraftApp, kind: Kind, mut p: Value) -> Value {
     p
 }
 
+/// Open New Character Style (`Kind::Para`: New Paragraph Style) to name a style made from the
+/// selected text: `ui.newCharStyle` and `ui.newParaStyle`.
+pub(crate) fn open_new(app: &mut VectorcraftApp, kind: Kind) -> Result<Value, String> {
+    // A later typing preview must not restore the document from before this capture.
+    end_typing(app);
+    let t = target(app, kind, json!({}));
+    crate::dialogs::new_text_style::open(app, kind == Kind::Para, t)
+}
+
 pub fn show(app: &mut VectorcraftApp, ui: &mut Ui, kind: Kind) {
     let t = Tokens::get(ui.ctx());
     let all = styles(app, kind);
@@ -176,7 +186,9 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui, kind: Kind) {
             }
         } else if new.clicked() {
             end_typing(app);
-            if let Ok(r) = app.run(&format!("{}.new", kind.prefix()), target(app, kind, json!({}))) {
+            if alt_held(ui) {
+                app.run(if kind == Kind::Char { "ui.newCharStyle" } else { "ui.newParaStyle" }, json!({})).ok();
+            } else if let Ok(r) = app.run(&format!("{}.new", kind.prefix()), target(app, kind, json!({}))) {
                 highlight_made(ui.ctx(), kind, r["name"].as_str().map(str::to_string));
             }
         }

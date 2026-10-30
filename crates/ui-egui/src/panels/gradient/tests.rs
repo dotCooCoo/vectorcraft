@@ -540,3 +540,42 @@ fn angle_and_aspect_fields_are_named() {
     let _ = h.get_by_role_and_label(egui::accesskit::Role::TextInput, "Angle");
     let _ = h.get_by_role_and_label(egui::accesskit::Role::TextInput, "Aspect Ratio");
 }
+
+/// #4681: the stop popover the annotator opens has the eyedropper too: it closes the popover and
+/// arms the Eyedropper for the stop. A freeform gradient's point has none.
+#[test]
+fn the_stop_popover_has_an_eyedropper_for_a_stop() {
+    use egui_kittest::kittest::Queryable;
+    const TIP: &str = "Eyedropper: click the art to sample the stop's colour";
+    let harness = |app: VectorcraftApp| {
+        let mut fonts = false;
+        egui_kittest::Harness::builder().with_size(egui::vec2(800.0, 700.0)).with_accessibility_check(false).build_ui_state(
+            move |ui, app: &mut VectorcraftApp| {
+                if !std::mem::replace(&mut fonts, true) {
+                    crate::theme::install_fonts(ui.ctx());
+                    return;
+                }
+                crate::dialogs::show(app, ui.ctx());
+            },
+            app,
+        )
+    };
+    let mut app = app(json!({"gradient": {}}));
+    app.select_tool("gradient");
+    app.run("gradient.selectStop", json!({"index": 1})).unwrap();
+    app.ui.dialog = Some(crate::state::Dialog::new("gradientStop", json!({"index": 1, "screen": [100.0, 100.0], "tab": "color"})));
+    let mut h = harness(app);
+    h.run_steps(3);
+    h.get_by_label(TIP).click();
+    h.run_steps(2);
+    let app = h.state();
+    assert!(app.ui.dialog.is_none(), "the popover closed");
+    assert_eq!((app.session.tool_id(), app.session.tool_options()["stop"].clone()), ("eyedropper", json!("gradient")));
+
+    let mut app = super::tests::app(json!({"gradient": {"kind": "freeform"}}));
+    app.select_tool("gradient");
+    app.ui.dialog = Some(crate::state::Dialog::new("gradientStop", json!({"index": 0, "screen": [100.0, 100.0], "tab": "color"})));
+    let mut h = harness(app);
+    h.run_steps(3);
+    assert!(h.query_by_label(TIP).is_none(), "no eyedropper for a freeform point");
+}

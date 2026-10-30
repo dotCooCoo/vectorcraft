@@ -39,7 +39,7 @@ const ROWS: &[Row] = &[
     // Paintbrush has none of them).
     (&["pencil"], None, &["altSmooth", "livePreview", "liveFit"]),
     (&["smooth"], None, &["fidelity"]),
-    (&["blobBrush", "eraser"], None, &["size"]),
+    (&["blobBrush", "eraser"], None, &["size", "sizeMode", "sizeVariation"]),
     (&["blobBrush"], None, &["fidelity", "keepSelected", "mergeOnlySelection"]),
     // Eraser Tool Options' tip shape.
     (&["eraser"], None, &["angle", "roundness"]),
@@ -66,6 +66,10 @@ const ROWS: &[Row] = &[
         ],
     ),
     (&["artboard"], None, &["moveArt", "scaleArt"]),
+    // The add-ons' tools (`crate::addons`).
+    (&[crate::addons::anchor_eraser::ID], None, &["size", "tolerance", "pressure"]),
+    (&[crate::addons::extend_path::ID], None, &["mode"]),
+    (&[crate::addons::smart_pen::ID], None, &["next"]),
     // Flare Tool Options (`extra::FLARE_OPTIONS` and the Rays and Rings checkboxes).
     (
         &["flare"],

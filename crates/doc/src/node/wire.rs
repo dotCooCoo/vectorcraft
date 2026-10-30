@@ -5,6 +5,12 @@ use super::kind::NodeKind;
 use super::opacity::{Knockout, OpacityMask};
 use super::{Appearance, BlendMode, Deserialize, Node, PathData, Serialize, one, yes};
 
+/// Field `name` of a [`Node`] written as `v`, or skipped. A function of its own, so the long field
+/// list stays one straight run of calls.
+fn write_field<S: serde::ser::SerializeStruct, T: Serialize + ?Sized>(st: &mut S, skip: bool, name: &'static str, v: &T) -> Result<(), S::Error> {
+    if skip { st.skip_field(name) } else { st.serialize_field(name, v) }
+}
+
 /// How a [`Node`] is written: the flat field list of the file format, in its order, borrowed from
 /// the node and its extras (nothing is copied). The node reads back through `NodeWire`.
 impl Serialize for Node {
@@ -42,16 +48,15 @@ impl Serialize for Node {
             e.intertwine.is_none(),
             e.live_paint_gaps.is_none(),
             e.objects_on_path.is_none(),
+            e.colorize.is_none(),
+            is_default(&e.compound_shape),
+            is_default(&e.shape_mode),
         ];
         let mut st = s.serialize_struct("Node", skips.iter().filter(|s| !**s).count())?;
         let mut skip = skips.into_iter();
         macro_rules! field {
             ($name:literal, $v:expr) => {
-                if skip.next().unwrap_or(false) {
-                    st.skip_field($name)?;
-                } else {
-                    st.serialize_field($name, $v)?;
-                }
+                write_field(&mut st, skip.next().unwrap_or(false), $name, $v)?;
             };
         }
         field!("id", &self.id);
@@ -82,6 +87,9 @@ impl Serialize for Node {
         field!("intertwine", &e.intertwine);
         field!("live_paint_gaps", &e.live_paint_gaps);
         field!("objects_on_path", &e.objects_on_path);
+        field!("colorize", &e.colorize);
+        field!("compound_shape", &e.compound_shape);
+        field!("shape_mode", &e.shape_mode);
         st.end()
     }
 }
@@ -182,6 +190,12 @@ pub(super) struct NodeWire {
     live_paint_gaps: Option<Box<crate::live_paint::GapOptions>>,
     #[serde(default)]
     objects_on_path: Option<Box<crate::objects_on_path::ObjectsOnPath>>,
+    #[serde(default)]
+    colorize: Option<Box<vectorcraft_color::Paint>>,
+    #[serde(default)]
+    compound_shape: bool,
+    #[serde(default)]
+    shape_mode: crate::ShapeMode,
 }
 
 impl From<NodeWire> for Node {
@@ -203,6 +217,9 @@ impl From<NodeWire> for Node {
             intertwine: w.intertwine,
             live_paint_gaps: w.live_paint_gaps,
             objects_on_path: w.objects_on_path,
+            colorize: w.colorize,
+            compound_shape: w.compound_shape,
+            shape_mode: w.shape_mode,
         };
         Node {
             id: w.id,

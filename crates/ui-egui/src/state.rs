@@ -197,6 +197,10 @@ pub const ICON_PANELS: &[(&str, &str, &str)] = &[
     (crate::panels::asset_export::ID, "Asset Export", "share-2"),
     (crate::panels::css_properties::ID, "CSS Properties", "globe"),
     (crate::panels::variables::ID, "Variables", "chart-column"),
+    (crate::addons::cleanup::ID, "Artwork Cleanup", "sparkles"),
+    (crate::addons::color::ID, "Color Effects", "sun"),
+    (crate::addons::pathtools::ID, "Anchor Inspector", "dc-anchor-smooth"),
+    (crate::addons::pen::ID, "Smart Pen", "spline-pointer"),
 ];
 
 /// Groups of icon panels separated by dividers in the collapsed column.
@@ -541,6 +545,9 @@ pub struct UiState {
     /// dialog opens on them (#1152).
     #[serde(default)]
     pub offset_path: Value,
+    /// The Average & Join fields confirmed last (`to`; null: never used): its dialog opens on them.
+    #[serde(default)]
+    pub average_join: Value,
     /// The Simplify dialog's fields confirmed last with "Open this dialog with these settings next
     /// time" ticked (null: not ticked): Object › Path › Simplify opens the dialog on them instead
     /// of the Simplify slider.
@@ -878,6 +885,7 @@ impl Default for UiState {
             dxf_options: Value::Null,
             eps_options: Value::Null,
             offset_path: Value::Null,
+            average_join: Value::Null,
             simplify: Value::Null,
             move_options: Value::Null,
             transform_each: Value::Null,

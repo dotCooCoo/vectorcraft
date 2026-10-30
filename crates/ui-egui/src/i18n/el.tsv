@@ -524,6 +524,7 @@ font-technology	Variable	Μεταβλητές
 	Complement	Συμπληρωματικό
 	Complexity:	Πολυπλοκότητα:
 	Compound Path	Σύνθετη διαδρομή
+	Compound Shape	Σύνθετο σχήμα
 	Compress (RLE)	Συμπίεση (RLE)
 	Compress text and line art	Συμπίεση κειμένου και γραμμικών γραφικών
 	Compression	Συμπίεση
@@ -1674,6 +1675,8 @@ font-technology	Variable	Μεταβλητές
 	New Layer…	Νέο επίπεδο…
 	New Swatch…	Νέο δείγμα χρώματος…
 	New Window	Νέο παράθυρο
+	Next Document	Επόμενο έγγραφο
+	Previous Document	Προηγούμενο έγγραφο
 	New Without Dialog	Νέο χωρίς παράθυρο διαλόγου
 	New Workspace	Νέος χώρος εργασίας
 	New Workspace…	Νέος χώρος εργασίας…
@@ -1795,6 +1798,7 @@ font-technology	Variable	Μεταβλητές
 	Rename	Μετονομασία
 	Repeat	Επανάληψη
 	Replace	Αντικατάσταση
+	Replace:	Αντικατάσταση:
 	Replace…	Αντικατάσταση…
 	Reselect	Επαναφορά προηγούμενης επιλογής
 	Reset	Επαναφορά
@@ -2172,8 +2176,10 @@ axis	Both	Και τα δύο
 @msg	`freeform.points` must be an array	Το `freeform.points` πρέπει να είναι πίνακας
 @msg	`freeform.lines` must be an array	Το `freeform.lines` πρέπει να είναι πίνακας
 @msg	`gradient` must be an object	Το `gradient` πρέπει να είναι αντικείμενο
+@msg	`groupColors` must be an array	Το `groupColors` πρέπει να είναι πίνακας
 @msg	`library` is a library id or name (see {list})	Το `library` είναι αναγνωριστικό ή όνομα βιβλιοθήκης (δείτε {list})
 @msg	`mode` applies to freeform gradients	Το `mode` ισχύει για ντεγκραντέ ελεύθερης μορφής
+@msg	`preserve` must be an object	Το `preserve` πρέπει να είναι αντικείμενο
 @msg	`sampleSize` must be 1, 3 or 5	Το `sampleSize` πρέπει να είναι 1, 3 ή 5
 @msg	`stops` must be an array	Το `stops` πρέπει να είναι πίνακας
 @msg	`svg` must be an object of SVG options (see document.formats)	Το `svg` πρέπει να είναι αντικείμενο επιλογών SVG (δείτε document.formats)
@@ -2207,6 +2213,7 @@ axis	Both	Και τα δύο
 @msg	`{name}` is a process colour: tints apply to global and spot colours	Το `{name}` είναι χρώμα τετραχρωμίας: οι αποχρώσεις εφαρμόζονται σε καθολικά και πλακάτα χρώματα
 @msg	`{name}` is no recovery entry name	Το `{name}` δεν είναι όνομα καταχώρισης ανάκτησης
 @msg	`{name}` isn't a colour swatch	Το `{name}` δεν είναι δείγμα χρώματος
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	ένα χρώμα τετραχρωμίας δεν μπορεί να χρωματίσει εικόνα κλίμακας του γκρι με διαφάνεια: χρησιμοποιήστε πλακάτο χρώμα, μαύρο ή λευκό
 @msg	`{path}` must be a bool or an object of bools	Το `{path}` πρέπει να είναι λογική τιμή ή αντικείμενο λογικών τιμών
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	Το `{s}` δεν είναι χρώμα (#rrggbb ή όνομα προεπιλογής)
 @msg	`{tool}` isn't a Liquify tool	Το `{tool}` δεν είναι εργαλείο ρευστοποίησης
@@ -2495,7 +2502,6 @@ theme	Appearance	Εμφάνιση
 	Each page prints as one image, at the document's raster effects resolution.	Κάθε σελίδα εκτυπώνεται ως μία εικόνα, στην ανάλυση εφέ ράστερ του εγγράφου.
 	English: UK	Αγγλικά: Ηνωμένο Βασίλειο
 	English: USA	Αγγλικά: ΗΠΑ
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Η ανάπτυξη εφαρμόζεται σε σύνθετα σχήματα (Alt-κλικ σε λειτουργία σχήματος) — προγραμματισμένη λειτουργία
 	French	Γαλλικά
 	Generate CSS: the whole document's CSS while nothing is selected	Δημιουργία CSS: το CSS ολόκληρου του εγγράφου όταν δεν υπάρχει επιλογή
 	German	Γερμανικά
@@ -2670,6 +2676,7 @@ theme	Appearance	Εμφάνιση
 	Move in Perspective	Μετακίνηση σε προοπτική
 	Move Locked and Hidden Artwork with Artboard	Μετακίνηση κλειδωμένων και κρυφών σχεδίων μαζί με τον πίνακα σχεδίασης
 	Move Mesh Point	Μετακίνηση σημείου πλέγματος
+	Move Mesh Points	Μετακίνηση σημείων πλέγματος
 	Move Plane	Μετακίνηση επιπέδου προοπτικής
 	Move Plane to Match Object	Μετακίνηση επιπέδου προοπτικής ώστε να ταιριάζει στο αντικείμενο
 	Move Rows	Μετακίνηση γραμμών
@@ -2747,6 +2754,7 @@ theme	Appearance	Εμφάνιση
 	Flat Fan	Επίπεδη βεντάλια
 	New Calligraphic Brush	Νέο καλλιγραφικό πινέλο
 	New Character Style	Νέο στυλ χαρακτήρων
+	New Character Style…	Νέο στυλ χαρακτήρων…
 	New Color Group	Νέα ομάδα χρωμάτων
 	New Color Group…	Νέα ομάδα χρωμάτων…
 	New Document Presets	Νέες προεπιλογές εγγράφου
@@ -2761,6 +2769,7 @@ theme	Appearance	Εμφάνιση
 	New Opacity Masks Are Clipping	Οι νέες μάσκες αδιαφάνειας εφαρμόζουν αποκοπή
 	New Opacity Masks Are Inverted	Οι νέες μάσκες αδιαφάνειας είναι ανεστραμμένες
 	New Paragraph Style	Νέο στυλ παραγράφου
+	New Paragraph Style…	Νέο στυλ παραγράφου…
 	New Pattern Brush from Selection	Νέο πινέλο μοτίβου από επιλογή
 	New PDF Preset	Νέα προεπιλογή PDF
 	New Print Preset	Νέα προεπιλογή εκτύπωσης
@@ -3402,6 +3411,7 @@ theme	Appearance	Εμφάνιση
 	Shadows and Glows	Σκιές και λάμψεις
 	Shape Builder Regions	Περιοχές δημιουργίας σχημάτων
 	Shape Effects	Εφέ σχημάτων
+	Shape Mode	Λειτουργία σχήματος
 	Shape Modes:	Λειτουργίες σχημάτων:
 	Shape Properties:	Ιδιότητες σχήματος:
 	Shaper Tool	Διαμορφωτής σχημάτων (Shaper Tool)
@@ -3482,6 +3492,7 @@ theme	Appearance	Εμφάνιση
 	Single Quotes:	Μονά εισαγωγικά:
 	Single Right Quotation Mark	Μονό δεξί εισαγωγικό
 	Single-line Composer	Σύνθεση μονής γραμμής
+	Toggle Line Composer	Εναλλαγή σύνθεσης γραμμών
 	Sixth Space	Διάστημα ενός έκτου
 	Size Tile to Art	Προσαρμογή μεγέθους πλακιδίου στο σχέδιο
 	Size/Leading	Μέγεθος/διάστιχο
@@ -4547,6 +4558,9 @@ theme	Appearance	Εμφάνιση
 @msg	not a PSD file	δεν είναι αρχείο PSD
 @msg	the PSD file has an unknown colour mode ({m})	το αρχείο PSD χρησιμοποιεί άγνωστη λειτουργία χρώματος ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	τα δεδομένα εικόνας PSD χρησιμοποιούν άγνωστη συμπίεση ({m})
+@msg	the PCX file is cut short	το αρχείο PCX είναι περικομμένο
+@msg	the PCX file's header is damaged	η κεφαλίδα του αρχείου PCX είναι κατεστραμμένη
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	τα αρχεία PCX με εικονοστοιχεία {bits} bit σε {planes} επίπεδα δεν διαβάζονται
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	η εικόνα PSD είναι πολύ μεγάλη για ανάγνωση ({_1} × {_2} εικονοστοιχεία)
 @msg	zipped 32-bit PSD image data with prediction can't be read	τα συμπιεσμένα δεδομένα εικόνας PSD 32 bit με πρόβλεψη δεν διαβάζονται
 @msg	{depth}-bit PSD files in this colour mode can't be read	τα αρχεία PSD {depth} bit δεν διαβάζονται σε αυτήν τη λειτουργία χρώματος
@@ -5623,3 +5637,147 @@ axis	Y Axis	Άξονας Y
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	Επεκτείνετε πρώτα την εμφάνιση (Αντικείμενο › Επέκταση εμφάνισης)
 	Live preview	Ζωντανή προεπισκόπηση
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Κείμενο σημείου
+	Area Text	Κείμενο περιοχής
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Εμφάνιση επιλογών προσκόλλησης σε γλυφή
+	Hide Snap to Glyph Options	Απόκρυψη επιλογών προσκόλλησης σε γλυφή
+	Snap to Glyph Options	Επιλογές προσκόλλησης σε γλυφή
+	x-height	Ύψος x
+	Glyph Bounds	Όρια γλυφής
+	Proximity Guides	Οδηγοί εγγύτητας
+	Angular Guides	Γωνιακοί οδηγοί
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Μέσος όρος και ένωση…
+	Average & Join	Μέσος όρος και ένωση
+anchor	Points:	Σημεία:
+@msg	select two open path ends, or two open paths, to average and join	επιλέξτε δύο άκρα ανοιχτών διαδρομών ή δύο ανοιχτές διαδρομές για μέσο όρο και ένωση
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Εκκαθάριση γραφικών
+	Simplify Anchors (Keep Shape)…	Απλοποίηση σημείων αγκύρωσης (διατήρηση σχήματος)…
+	Health Check	Έλεγχος κατάστασης
+	Show Issue	Εμφάνιση προβλήματος
+	Fix All Issues	Διόρθωση όλων των προβλημάτων
+	Fix Issues	Διόρθωση προβλημάτων
+	Deep Ungroup…	Κατάργηση ομαδοποίησης σε όλα τα επίπεδα…
+	Rejoin Path Pieces…	Επανένωση τμημάτων διαδρομών…
+	Document Health Check	Έλεγχος κατάστασης εγγράφου
+	Check Selection	Έλεγχος επιλογής
+	Check Document	Έλεγχος εγγράφου
+	No issues found.	Δεν βρέθηκαν προβλήματα.
+	Changed since the last check.	Άλλαξε μετά τον τελευταίο έλεγχο.
+	Fix Selected	Διόρθωση επιλεγμένων
+	Fix All	Διόρθωση όλων
+	Issues fixed: {count}	Διορθωμένα προβλήματα: {count}
+	Open a document to check it for issues.	Ανοίξτε ένα έγγραφο για να το ελέγξετε για προβλήματα.
+	Empty Text	Κενό κείμενο
+	Unpainted Objects	Αντικείμενα χωρίς χρώμα
+	Zero-Opacity Objects	Αντικείμενα με μηδενική αδιαφάνεια
+	Duplicate Objects	Διπλότυπα αντικείμενα
+	Off-Artboard Art	Γραφικά εκτός πινάκων σχεδίασης
+	Duplicate Anchors	Διπλότυπα σημεία αγκύρωσης
+	Tiny Handles	Μικροσκοπικές λαβές
+	Collinear Anchors	Συγγραμμικά σημεία αγκύρωσης
+	Nearly Coincident Anchors	Σχεδόν συμπίπτοντα σημεία αγκύρωσης
+	Nearly Closed Paths	Σχεδόν κλειστές διαδρομές
+	Filled Open Paths	Γεμισμένες ανοιχτές διαδρομές
+	Needless Clipping Groups	Περιττές ομάδες αποκοπής
+	Needless Compound Paths	Περιττές σύνθετες διαδρομές
+	Needless Groups	Περιττές ομάδες
+	Empty Artboards	Κενοί πίνακες σχεδίασης
+	Protect Corners	Προστασία γωνιών
+	Gap	Απόσταση
+	Include Clip Groups	Συμπερίληψη ομάδων αποκοπής
+@msg	`tolerance` must be from 1 to 100	Το `tolerance` πρέπει να είναι από 1 έως 100
+@msg	`gap` must be from 0 to 6 pt	Το `gap` πρέπει να είναι από 0 έως 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Απλοποίηση σημείων αγκύρωσης: οι διαδρομές έχουν πάρα πολλά σημεία αγκύρωσης για να απλοποιηθούν μονομιάς
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Επανένωση τμημάτων διαδρομών: πάρα πολλές διαδρομές για επανένωση μονομιάς
+@msg	None of these issues are left: check again	Δεν έχει απομείνει κανένα από αυτά τα προβλήματα: ελέγξτε ξανά
+@msg	`kinds` must be a list of issue kinds	Το `kinds` πρέπει να είναι λίστα ειδών προβλημάτων
+@msg	missing `kind`	λείπει το `kind`
+	Simplify Anchors (Keep Shape)	Απλοποίηση σημείων αγκύρωσης (διατήρηση σχήματος)
+	Deep Ungroup	Κατάργηση ομαδοποίησης σε όλα τα επίπεδα
+	Rejoin Path Pieces	Επανένωση τμημάτων διαδρομών
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Εφέ χρώματος
+	Color Effects Panel	Πλαίσιο Εφέ χρώματος
+	Exposure	Έκθεση
+	Exposure…	Έκθεση…
+	Desaturate	Αποκορεσμός
+	Adjustment	Διόρθωση
+	Add as Effect	Προσθήκη ως εφέ
+	Apply as Filter	Εφαρμογή ως φίλτρο
+	Select objects to adjust their colors.	Επιλέξτε αντικείμενα για να προσαρμόσετε τα χρώματά τους.
+	Brightness/Contrast	Φωτεινότητα/Αντίθεση
+	Hue/Saturation	Απόχρωση/Κορεσμός
+	Temperature/Tint	Θερμοκρασία/Απόχρωση
+@msg	`{id}` is not a colour adjustment	Το `{id}` δεν είναι διόρθωση χρώματος
+@msg	missing `effect`	λείπει το `effect`
+@msg	`params` must be an object	Το `params` πρέπει να είναι αντικείμενο
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Εργαλεία ακρίβειας διαδρομών
+	Anchor Eraser Brush	Πινέλο διαγραφής σημείων αγκύρωσης (Anchor Eraser Brush)
+	Extend Path Tool	Επέκταση διαδρομής (Extend Path Tool)
+	Measure & Inspect Tool	Μέτρηση και επιθεώρηση (Measure & Inspect Tool)
+	Anchor Inspector	Επιθεωρητής σημείων αγκύρωσης
+	Add Points at Crossings	Προσθήκη σημείων στις διασταυρώσεις
+	Split at Crossings	Διαχωρισμός στις διασταυρώσεις
+	Extend Path	Επέκταση διαδρομής
+	Measure & Inspect	Μέτρηση και επιθεώρηση
+	Set Anchor	Ορισμός σημείου αγκύρωσης
+	Make Smooth	Μετατροπή σε ομαλό
+	Make Corner	Μετατροπή σε γωνία
+	Equalize Handles	Εξίσωση λαβών
+	Remove Points, Keep Shape	Αφαίρεση σημείων, διατήρηση σχήματος
+	Add Points to Segments…	Προσθήκη σημείων σε τμήματα…
+	Add Points to Segments	Προσθήκη σημείων σε τμήματα
+	Open a document to edit its anchor points.	Ανοίξτε ένα έγγραφο για να επεξεργαστείτε τα σημεία αγκύρωσής του.
+	Anchors selected: {count}	Επιλεγμένα σημεία αγκύρωσης: {count}
+	Direct-select anchor points to edit them.	Επιλέξτε απευθείας σημεία αγκύρωσης για να τα επεξεργαστείτε.
+	In:	Είσοδος:
+	Out:	Έξοδος:
+	Add Points	Προσθήκη σημείων
+	Points per segment	Σημεία ανά τμήμα
+	Close Path:	Κλείσιμο διαδρομής:
+	Keep Handles	Διατήρηση λαβών
+	Straight	Ευθύ
+	Stretch Curve	Τέντωμα καμπύλης
+@msg	direct-select the anchor points to remove	επιλέξτε απευθείας τα σημεία αγκύρωσης προς αφαίρεση
+@msg	select segments, or paths, to add points to	επιλέξτε τμήματα ή διαδρομές στα οποία θα προστεθούν σημεία
+@msg	select open paths to close	επιλέξτε ανοιχτές διαδρομές για κλείσιμο
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	οι διαδρομές είναι πάρα πολλές ή πολύ μπλεγμένες για να βρεθούν οι διασταυρώσεις τους (έως 10000 τμήματα)
+@msg	the paths have too many anchors to edit at once	οι διαδρομές έχουν πάρα πολλά σημεία αγκύρωσης για επεξεργασία με μία φορά
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Έξυπνη πένα
+	Smart Pen Tool	Έξυπνη πένα (Smart Pen Tool)
+	Smart Pen Panel	Πίνακας έξυπνης πένας
+	Next Segment	Επόμενο τμήμα
+	Curved	Καμπύλο
+	Retract Handles	Σύμπτυξη λαβών
+	Close or Join	Κλείσιμο ή ένωση
+	Open a document to draw with the Smart Pen.	Ανοίξτε ένα έγγραφο για να σχεδιάσετε με την έξυπνη πένα.
+	Straight or Curved Segment	Ευθύ ή καμπύλο τμήμα
+@msg	the path is locked or hidden	η διαδρομή είναι κλειδωμένη ή κρυφή
+@msg	`id` is not a path	Το `id` δεν είναι διαδρομή
+@msg	the path has no open subpath	η διαδρομή δεν έχει ανοιχτή υποδιαδρομή
+@msg	the subpath is closed	η υποδιαδρομή είναι κλειστή
+@msg	the subpath is closed or too short to close	η υποδιαδρομή είναι κλειστή ή πολύ μικρή για να κλείσει
+@msg	the path is too short to remove a point from	η διαδρομή είναι πολύ μικρή για να αφαιρεθεί σημείο
+@msg	the segment can't be bent that far	το τμήμα δεν μπορεί να καμφθεί τόσο
+@msg	give `{a}` and `{b}`	δώστε `{a}` και `{b}`
+@msg	`t` must be from 0 to 1	Το `t` πρέπει να είναι από 0 έως 1
+@msg	`segment` must be "straight" or "curved"	Το `segment` πρέπει να είναι "straight" ή "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	Το `mode` πρέπει να είναι "free", "keepAngles" ή "symmetric"
+@msg	`{key}` must be [x, y]	Το `{key}` πρέπει να είναι [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Επιλογή κατά είδος χρώματος
+	Objects with Spot Colors	Αντικείμενα με χρώματα spot
+	Objects with Color Effects	Αντικείμενα με εφέ χρώματος
+	RGB Images	Εικόνες RGB
+	CMYK Images	Εικόνες CMYK
+	Grayscale Images	Εικόνες σε κλίμακα του γκρι
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	Το `kind` πρέπει να είναι spotColors, colorEffects, rgbImages, cmykImages ή grayImages

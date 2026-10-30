@@ -27,6 +27,12 @@ pub struct Prefs {
     pub select_same_tint_percent: bool,
     pub show_home_screen: bool,
     pub use_preview_bounds: bool,
+    /// Align panel menu › Align to Glyph Bounds › Point Text: Align and Distribute measure point
+    /// type by the ink of its glyphs instead of its em box.
+    pub align_glyph_bounds_point: bool,
+    /// Align panel menu › Align to Glyph Bounds › Area Text: the same for area type, instead of
+    /// its frame.
+    pub align_glyph_bounds_area: bool,
     pub display_print_size: bool,
     pub double_click_to_isolate: bool,
     pub transform_pattern_tiles: bool,
@@ -197,6 +203,9 @@ pub struct Prefs {
     /// Pathfinder panel › Pathfinder Options (`object.pathfinder.options`; a preference group, see
     /// [`cmd::prefscmds::PREF_GROUPS`]).
     pub pathfinder: PathfinderOptions,
+    /// Character panel › Show Snap to Glyph Options: which guides View › Snap to Glyph gives
+    /// (`view.snapToGlyph.options`; a preference group, see [`cmd::prefscmds::PREF_GROUPS`]).
+    pub glyph_snap: vectorcraft_tools::GlyphSnap,
     /// Edit → Transparency Flattener Presets: the user's presets (the built-in ones aren't stored).
     /// Not a `prefs.set` key or group (resetting the preferences keeps them): `flattener.presets.*`
     /// edit it.
@@ -317,6 +326,8 @@ impl Default for Prefs {
             select_same_tint_percent: false,
             show_home_screen: true,
             use_preview_bounds: false,
+            align_glyph_bounds_point: false,
+            align_glyph_bounds_area: false,
             display_print_size: false,
             double_click_to_isolate: true,
             transform_pattern_tiles: false,
@@ -434,6 +445,7 @@ impl Default for Prefs {
             },
             eyedropper: Default::default(),
             pathfinder: Default::default(),
+            glyph_snap: Default::default(),
             flattener_presets: vec![],
             trace_presets: vec![],
             width_profiles: vec![],

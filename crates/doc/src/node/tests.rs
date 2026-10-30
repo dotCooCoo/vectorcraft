@@ -19,6 +19,8 @@ fn extras_are_written_flat_in_order() {
         e.slice = Some(Box::default());
         e.perspective = Some(Box::new(crate::PerspectiveAttachment::new("left", 1.0)));
         e.live_paint_gaps = Some(Box::default());
+        e.compound_shape = true;
+        e.shape_mode = crate::ShapeMode::Exclude;
     }
     /// The top-level keys of a JSON object, in the order written.
     struct Keys(Vec<String>);
@@ -61,8 +63,11 @@ fn extras_are_written_flat_in_order() {
         "bbox_angle",
         "perspective",
         "live_paint_gaps",
+        "compound_shape",
+        "shape_mode",
     ];
     assert_eq!(keys, order);
+    assert_eq!(v["shape_mode"], "exclude");
     assert_eq!(serde_json::from_value::<Node>(v).unwrap(), n);
     let plain = Node::path(NodeId(9), shapes::rectangle(Rect::new(0.0, 0.0, 4.0, 2.0)), Appearance::default_art());
     let back: Node = serde_json::from_value(serde_json::to_value(&plain).unwrap()).unwrap();

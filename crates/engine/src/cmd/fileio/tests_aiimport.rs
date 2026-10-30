@@ -536,6 +536,47 @@ fn an_ai_file_whose_pdf_part_is_only_text_still_opens_from_editing_data_that_rea
 }
 
 #[test]
+fn an_ai_file_whose_pdf_part_is_cropped_to_its_art_opens_from_its_layers() {
+    // A 400 × 200 pt artboard with two red bars across (100, 50)–(300, 150). The PDF part's page
+    // is that art's box, 200 × 100 pt (the editing data's bounding box), not the artboard.
+    let red = "0 1 1 0 1 0 0 Xa\n";
+    let art = ai::layer("Art", &format!("{red}{}f\n{red}{}f\n", ai::rect(100.0, 50.0, 180.0, 150.0), ai::rect(220.0, 50.0, 300.0, 150.0)));
+    let data = ai::editing_data_in([100.0, 50.0, 300.0, 150.0], [0.0, 0.0, 400.0, 200.0], &art);
+    let page = "1 0 0 rg 0 0 80 100 re f 120 0 80 100 re f";
+    let mut s = Session::new();
+    let r = open(&mut s, "cropped.ai", &ai::ai(&compressed(data.as_bytes()), page), json!({})).unwrap();
+    assert!(!r["warnings"].to_string().contains("weren't read"), "{r}");
+    let doc = &s.doc().unwrap().doc;
+    assert_eq!(names(&doc.layers), ["Art"]);
+    assert_eq!(doc.artboards.len(), 1);
+    assert_eq!(doc.artboards[0].rect, vectorcraft_geom::Rect::new(0.0, 0.0, 400.0, 200.0), "the file's artboard, not its page");
+    let bars = doc.layers[0].children().unwrap();
+    assert_eq!(bars.len(), 2);
+    let b = bars[0].geometric_bounds().unwrap();
+    assert!((b.x0 - 100.0).abs() < 0.01 && (b.y0 - 50.0).abs() < 0.01, "where the artboard has it: {b:?}");
+}
+
+#[test]
+fn an_ai_file_whose_pdf_part_draws_nothing_opens_from_its_editing_data() {
+    // A PDF-compatible `.ai` whose PDF part is a page with nothing on it (no notice text either),
+    // with or without the boxes that say where its art is: its editing data is the art.
+    for boxed in ["", "/ArtBox [0 0 200 100] /TrimBox [0 0 200 100]"] {
+        let mut s = Session::new();
+        let r = open(&mut s, "blank.ai", &ai::ai_with(&compressed(&ai::sample_data()), "", boxed), json!({})).unwrap();
+        assert_eq!(r["warnings"], json!([]), "{boxed:?}: {r}");
+        check_sample(&s);
+        // The PDF part alone, as asked: its empty page.
+        open(&mut s, "blank.ai", &ai::ai_with(&compressed(&ai::sample_data()), "", boxed), json!({"editingData": false})).unwrap();
+        let layers = &s.doc().unwrap().doc.layers;
+        assert!(layers.iter().all(|l| l.children().is_none_or(|c| c.is_empty())), "{boxed:?}");
+    }
+    // Editing data that can't be read leaves the empty page, as before.
+    let mut s = Session::new();
+    open(&mut s, "blank.ai", &ai::ai(b"%AI24_ZStandard_Data\0\0\0\0\0\0\0\0", ""), json!({})).unwrap();
+    assert_ne!(names(&s.doc().unwrap().doc.layers), ["Art", "Hidden"]);
+}
+
+#[test]
 fn editing_data_false_opens_only_what_the_page_prints() {
     let mut s = Session::new();
     for (name, file) in [("art.eps", ai::eps(&ai::sample_data(), ai::page_ps())), ("art.ai", ai::ai(&compressed(&ai::sample_data()), ai::page_pdf()))]

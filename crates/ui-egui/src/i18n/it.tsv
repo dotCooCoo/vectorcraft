@@ -565,6 +565,7 @@ font-technology	Variable	Variabili
 	Complexity:	Complessità:
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	I colori compositi vengono convertiti in questo profilo; le separazioni lo usano quando è un profilo CMYK.
 	Compound Path	Tracciato composto
+	Compound Shape	Forma composta
 	Compress (RLE)	Comprimi (RLE)
 	Compress text and line art	Comprimi testo e grafica al tratto
 	Compression	Compressione
@@ -991,7 +992,6 @@ font-technology	Variable	Variabili
 	Exit Isolation Mode	Esci dalla modalità isolamento
 	Expand	Espandi
 	Expand Appearance	Espandi aspetto
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Espandi si applica alle forme composte (Alt+clic su un metodo forma) — in programma
 	Expand Brush Strokes	Espandi tracce pennello
 	Expand Compound Shape	Espandi forma composta
 	Expand Gradient Mesh	Espandi trama sfumatura
@@ -1940,6 +1940,7 @@ file-filter	Templates	Modelli
 	Move in Perspective	Sposta in prospettiva
 	Move Locked and Hidden Artwork with Artboard	Sposta grafica bloccata e nascosta con la tavola da disegno
 	Move Mesh Point	Sposta punto trama
+	Move Mesh Points	Sposta punti trama
 	Move Plane	Sposta piano
 	Move Plane to Match Object	Sposta piano in base all'oggetto
 	Move Rows	Sposta righe
@@ -2045,6 +2046,7 @@ file-filter	Templates	Modelli
 	Brush Art	Grafica del pennello
 	New Calligraphic Brush	Nuovo pennello calligrafico
 	New Character Style	Nuovo stile carattere
+	New Character Style…	Nuovo stile carattere…
 	New Color Group	Nuovo gruppo colori
 	New Color Group…	Nuovo gruppo colori…
 	New Document Presets	Preset nuovo documento
@@ -2060,6 +2062,7 @@ file-filter	Templates	Modelli
 	New Opacity Masks Are Clipping	Le nuove maschere di opacità ritagliano
 	New Opacity Masks Are Inverted	Le nuove maschere di opacità sono invertite
 	New Paragraph Style	Nuovo stile paragrafo
+	New Paragraph Style…	Nuovo stile paragrafo…
 	New Pattern Brush from Selection	Nuovo pennello motivo dalla selezione
 	New PDF Preset	Nuovo preset PDF
 	New Print Preset	Nuovo preset di stampa
@@ -2073,6 +2076,8 @@ file-filter	Templates	Modelli
 	New View	Nuova vista
 	New View…	Nuova vista…
 	New Window	Nuova finestra
+	Next Document	Documento successivo
+	Previous Document	Documento precedente
 	New Without Dialog	Nuovo senza finestra di dialogo
 	New Workspace	Nuova area di lavoro
 	New Workspace…	Nuova area di lavoro…
@@ -2667,6 +2672,7 @@ mark-style	Japanese	Giapponese
 	Repeat Tab	Ripeti tabulazione
 	Repeat {name}	Ripeti {name}
 	Replace	Sostituisci
+	Replace:	Sostituisci:
 	Replace Font	Sostituisci font
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Sostituiscilo con un altro file oppure ignoralo: le sue immagini continueranno a mostrare l'anteprima salvata con il documento.
 	Replace Spine	Sostituisci dorsale
@@ -3004,6 +3010,7 @@ mark-style	Japanese	Giapponese
 	Shape Builder Regions	Aree del Generatore forme
 	Shape Builder Tool	Strumento Generatore forme
 	Shape Effects	Effetti forma
+	Shape Mode	Metodo forma
 	Shape Modes:	Metodi forma:
 	Shape Properties:	Proprietà forma:
 	Shaper Tool	Strumento Sagomatore
@@ -3107,6 +3114,7 @@ mark-style	Japanese	Giapponese
 	Single Quotes:	Virgolette singole:
 	Single Right Quotation Mark	Virgoletta singola di chiusura
 	Single-line Composer	Composizione su riga singola
+	Toggle Line Composer	Alterna composizione delle righe
 	Sixth Space	Spazio di un sesto
 	Size	Dimensione
 	Size Tile to Art	Adatta tassello alla grafica
@@ -3971,8 +3979,10 @@ axis	Both	Entrambi
 @msg	`freeform.points` must be an array	`freeform.points` deve essere un array
 @msg	`freeform.lines` must be an array	`freeform.lines` deve essere un array
 @msg	`gradient` must be an object	`gradient` deve essere un oggetto
+@msg	`groupColors` must be an array	`groupColors` deve essere un array
 @msg	`library` is a library id or name (see {list})	`library` è l'id o il nome di una libreria (vedi {list})
 @msg	`mode` applies to freeform gradients	`mode` si applica alle sfumature a forma libera
+@msg	`preserve` must be an object	`preserve` deve essere un oggetto
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` deve essere 1, 3 o 5
 @msg	`stops` must be an array	`stops` deve essere un array
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` deve essere un oggetto di opzioni SVG (vedi document.formats)
@@ -4007,6 +4017,7 @@ axis	Both	Entrambi
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` è un colore quadricromia: le tinte si applicano ai colori globali e spot
 @msg	`{name}` is no recovery entry name	`{name}` non è il nome di una voce di recupero
 @msg	`{name}` isn't a colour swatch	`{name}` non è un campione di colore
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	un colore quadricromia non può colorare un'immagine in scala di grigi con trasparenza: usa un colore spot, il nero o il bianco
 @msg	`{path}` must be a bool or an object of bools	`{path}` deve essere un booleano o un oggetto di booleani
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` non è un colore (#rrggbb o il nome di un preset)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` non è uno strumento Fluidifica
@@ -4627,6 +4638,9 @@ axis	Both	Entrambi
 @msg	not a PSD file	non è un documento PSD
 @msg	the PSD file has an unknown colour mode ({m})	il file PSD ha un metodo colore sconosciuto ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	i dati immagine del file PSD usano una compressione sconosciuta ({m})
+@msg	the PCX file is cut short	il file PCX è troncato
+@msg	the PCX file's header is damaged	l'intestazione del file PCX è danneggiata
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	i file PCX con pixel a {bits} bit in {planes} piani non possono essere letti
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	l'immagine PSD è troppo grande per essere letta ({_1} × {_2} pixel)
 @msg	zipped 32-bit PSD image data with prediction can't be read	i dati immagine PSD a 32 bit compressi ZIP con previsione non possono essere letti
 @msg	{depth}-bit PSD files in this colour mode can't be read	i file PSD a {depth} bit in questo metodo colore non possono essere letti
@@ -5287,3 +5301,148 @@ axis	Y Axis	Asse Y
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	Espandi prima l’aspetto (Oggetto › Espandi aspetto)
 	Live preview	Anteprima dal vivo
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Testo per punti
+	Area Text	Testo in area
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Mostra opzioni di aggancio a glifo
+	Hide Snap to Glyph Options	Nascondi opzioni di aggancio a glifo
+	Snap to Glyph Options	Opzioni di aggancio a glifo
+	x-height	Altezza x
+	Glyph Bounds	Limiti del glifo
+	Proximity Guides	Guide di prossimità
+	Angular Guides	Guide angolari
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Media e unisci…
+	Average & Join	Media e unisci
+anchor	Points:	Punti:
+@msg	select two open path ends, or two open paths, to average and join	seleziona due estremità di tracciati aperti, o due tracciati aperti, da mediare e unire
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Pulizia grafica
+	Simplify Anchors (Keep Shape)…	Semplifica punti di ancoraggio (mantieni forma)…
+	Health Check	Controllo integrità
+	Show Issue	Mostra problema
+	Fix All Issues	Correggi tutti i problemi
+	Fix Issues	Correggi problemi
+	Deep Ungroup…	Separa tutti i livelli…
+	Rejoin Path Pieces…	Ricongiungi parti di tracciato…
+	Document Health Check	Controllo integrità documento
+	Check Selection	Controlla selezione
+	Check Document	Controlla documento
+	No issues found.	Nessun problema trovato.
+	Changed since the last check.	Modificato dall’ultimo controllo.
+	Fix Selected	Correggi selezionati
+	Fix All	Correggi tutto
+	Issues fixed: {count}	Problemi corretti: {count}
+	Open a document to check it for issues.	Apri un documento per controllarne i problemi.
+	Empty Text	Testo vuoto
+	Unpainted Objects	Oggetti senza colore
+	Zero-Opacity Objects	Oggetti con opacità zero
+	Duplicate Objects	Oggetti duplicati
+	Off-Artboard Art	Grafica fuori dalle tavole da disegno
+	Duplicate Anchors	Punti di ancoraggio duplicati
+	Tiny Handles	Maniglie minuscole
+	Collinear Anchors	Punti di ancoraggio allineati
+	Nearly Coincident Anchors	Punti di ancoraggio quasi coincidenti
+	Nearly Closed Paths	Tracciati quasi chiusi
+	Filled Open Paths	Tracciati aperti con riempimento
+	Needless Clipping Groups	Gruppi di ritaglio superflui
+	Needless Compound Paths	Tracciati composti superflui
+	Needless Groups	Gruppi superflui
+	Empty Artboards	Tavole da disegno vuote
+	Protect Corners	Proteggi angoli
+	Gap	Distanza
+	Include Clip Groups	Includi gruppi di ritaglio
+@msg	`tolerance` must be from 1 to 100	`tolerance` deve essere compreso tra 1 e 100
+@msg	`gap` must be from 0 to 6 pt	`gap` deve essere compreso tra 0 e 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Semplifica punti di ancoraggio: i tracciati hanno troppi punti di ancoraggio da semplificare in una volta
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Ricongiungi parti di tracciato: troppi tracciati da ricongiungere in una volta
+@msg	None of these issues are left: check again	Nessuno di questi problemi è ancora presente: controlla di nuovo
+@msg	`kinds` must be a list of issue kinds	`kinds` deve essere un elenco di tipi di problema
+@msg	missing `kind`	`kind` mancante
+	Simplify Anchors (Keep Shape)	Semplifica punti di ancoraggio (mantieni forma)
+	Deep Ungroup	Separa tutti i livelli
+	Rejoin Path Pieces	Ricongiungi parti di tracciato
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Effetti colore
+	Color Effects Panel	Pannello Effetti colore
+	Exposure	Esposizione
+	Exposure…	Esposizione…
+	Desaturate	Desatura
+	Adjustment	Regolazione
+	Add as Effect	Aggiungi come effetto
+	Apply as Filter	Applica come filtro
+	Select objects to adjust their colors.	Seleziona gli oggetti per regolarne i colori.
+	Brightness/Contrast	Luminosità/contrasto
+	Hue/Saturation	Tonalità/saturazione
+	Temperature/Tint	Temperatura/tinta
+@msg	`{id}` is not a colour adjustment	`{id}` non è una regolazione del colore
+@msg	missing `effect`	manca `effect`
+@msg	`params` must be an object	`params` deve essere un oggetto
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Strumenti di precisione per tracciati
+	Anchor Eraser Brush	Pennello gomma punti di ancoraggio
+	Extend Path Tool	Strumento Estendi tracciato
+	Measure & Inspect Tool	Strumento Misura e ispeziona
+	Anchor Inspector	Ispettore punti di ancoraggio
+	Add Points at Crossings	Aggiungi punti agli incroci
+	Split at Crossings	Dividi agli incroci
+	Extend Path	Estendi tracciato
+	Measure & Inspect	Misura e ispeziona
+	Set Anchor	Imposta punto di ancoraggio
+	Make Smooth	Rendi arrotondato
+	Make Corner	Rendi angolo
+	Equalize Handles	Uguaglia maniglie
+	Remove Points, Keep Shape	Rimuovi punti, mantieni forma
+	Add Points to Segments…	Aggiungi punti ai segmenti…
+	Add Points to Segments	Aggiungi punti ai segmenti
+	Open a document to edit its anchor points.	Apri un documento per modificarne i punti di ancoraggio.
+	Anchors selected: {count}	Punti di ancoraggio selezionati: {count}
+	Direct-select anchor points to edit them.	Seleziona direttamente i punti di ancoraggio per modificarli.
+	Length	Lunghezza
+	In:	Entrata:
+	Out:	Uscita:
+	Add Points	Aggiungi punti
+	Points per segment	Punti per segmento
+	Close Path:	Chiudi tracciato:
+	Keep Handles	Mantieni maniglie
+	Straight	Diritto
+	Stretch Curve	Allunga curva
+@msg	direct-select the anchor points to remove	seleziona direttamente i punti di ancoraggio da rimuovere
+@msg	select segments, or paths, to add points to	seleziona segmenti, o tracciati, a cui aggiungere punti
+@msg	select open paths to close	seleziona tracciati aperti da chiudere
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	tracciati troppi o troppo intricati per trovarne gli incroci (al massimo 10000 segmenti)
+@msg	the paths have too many anchors to edit at once	i tracciati hanno troppi punti di ancoraggio da modificare in una volta
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Penna intelligente
+	Smart Pen Tool	Strumento Penna intelligente
+	Smart Pen Panel	Pannello Penna intelligente
+	Next Segment	Segmento successivo
+	Curved	Curvo
+	Retract Handles	Ritira maniglie
+	Close or Join	Chiudi o unisci
+	Open a document to draw with the Smart Pen.	Apri un documento per disegnare con la penna intelligente.
+	Straight or Curved Segment	Segmento diritto o curvo
+@msg	the path is locked or hidden	il tracciato è bloccato o nascosto
+@msg	`id` is not a path	`id` non è un tracciato
+@msg	the path has no open subpath	il tracciato non ha sottotracciati aperti
+@msg	the subpath is closed	il sottotracciato è chiuso
+@msg	the subpath is closed or too short to close	il sottotracciato è chiuso o troppo corto per chiuderlo
+@msg	the path is too short to remove a point from	il tracciato è troppo corto per rimuoverne un punto
+@msg	the segment can't be bent that far	il segmento non si può curvare così tanto
+@msg	give `{a}` and `{b}`	indica `{a}` e `{b}`
+@msg	`t` must be from 0 to 1	`t` deve essere compreso tra 0 e 1
+@msg	`segment` must be "straight" or "curved"	`segment` deve essere "straight" o "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` deve essere "free", "keepAngles" o "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` deve essere [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Seleziona per tipo di colore
+	Objects with Spot Colors	Oggetti con colori spot
+	Objects with Color Effects	Oggetti con effetti colore
+	RGB Images	Immagini RGB
+	CMYK Images	Immagini CMYK
+	Grayscale Images	Immagini in scala di grigi
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` deve essere spotColors, colorEffects, rgbImages, cmykImages o grayImages

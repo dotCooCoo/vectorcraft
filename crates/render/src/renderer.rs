@@ -115,7 +115,8 @@ impl Renderer {
         let px = 1.0 / view.determinant().abs().sqrt().max(1e-12);
         let screen = if opts.rich_black { Ink::RichBlack } else { Ink::Display };
         let symbols = doc.symbol_boxes().quick();
-        let frame = Frame { mt: threads > 0, doc, symbols: &symbols, view, visible, px, opts, ink: screen };
+        let plates = proof::plate_lut(opts);
+        let frame = Frame { mt: threads > 0, doc, symbols: &symbols, view, visible, px, opts, ink: screen, plates: plates.as_deref() };
         self.begin_frame();
         // View Opacity Mask: the mask's coverage in greyscale instead of the artwork.
         if let Some(m) = opts.mask_view.and_then(|id| doc.node(id)).and_then(|n| n.extras().mask.as_deref()) {
@@ -306,7 +307,7 @@ impl Renderer {
         let mut ctx = single_threaded_context(w, h);
         let opts = RenderOptions::default();
         let symbols = doc.symbol_boxes().quick();
-        let frame = Frame { mt: false, doc, symbols: &symbols, view, visible, px, opts: &opts, ink: Ink::Display };
+        let frame = Frame { mt: false, doc, symbols: &symbols, view, visible, px, opts: &opts, ink: Ink::Display, plates: None };
         self.begin_frame();
         (self.knockout, self.nested, self.backdrop, self.picture) = (false, 0, None, None);
         self.clip_paths.clear();
@@ -349,7 +350,8 @@ impl Renderer {
             ctx.fill_rect(&kurbo::Rect::new(0.0, 0.0, w as f64, w as f64));
         }
         let symbols = doc.symbol_boxes().quick();
-        let frame = Frame { mt: false, doc, symbols: &symbols, view, visible: b.inflate(1.0, 1.0), px: 1.0 / s, opts, ink: Ink::Display };
+        let frame =
+            Frame { mt: false, doc, symbols: &symbols, view, visible: b.inflate(1.0, 1.0), px: 1.0 / s, opts, ink: Ink::Display, plates: None };
         self.begin_frame();
         (self.knockout, self.nested, self.backdrop, self.picture) = (false, 0, None, None);
         self.clip_paths.clear();
