@@ -302,6 +302,85 @@ fn export_presets_export_and_import() {
     assert_eq!(r["count"], 1000);
 }
 
+#[test]
+fn export_presets_import_replace_numbers_duplicates_from_one_file() {
+    let mut source = session(1);
+    source.execute("document.exportPresets.save", &json!({"name": "A", "settings": {"formats": [{"format": "png"}]}})).unwrap();
+    let data = source.execute("document.exportPresets.export", &json!({"names": ["A", "A"]})).unwrap()["data"].clone();
+
+    let mut empty = session(1);
+    let reply = empty.execute("document.exportPresets.import", &json!({"data": data, "replace": true})).unwrap();
+    assert_eq!(reply["imported"], json!(["A", "A 2"]));
+    assert_eq!(empty.prefs.screen_export_presets.iter().map(|p| p.name.as_str()).collect::<Vec<_>>(), ["A", "A 2"]);
+
+    let mut existing = session(1);
+    existing.execute("document.exportPresets.save", &json!({"name": "A", "settings": {"formats": [{"format": "jpg"}]}})).unwrap();
+    let reply = existing.execute("document.exportPresets.import", &json!({"data": data, "replace": true})).unwrap();
+    assert_eq!(reply["imported"], json!(["A", "A"]));
+    assert_eq!(existing.prefs.screen_export_presets.len(), 1);
+    assert_eq!(existing.prefs.screen_export_presets[0].settings["formats"][0]["format"], "png");
+}
+
+#[test]
+fn export_presets_import_refuses_oversize_input_from_every_source() {
+    let mut s = session(1);
+    let good = s.execute("document.exportPresets.export", &json!({"names": ["Logo Package"]})).unwrap()["data"].as_str().unwrap().to_string();
+    let oversized = format!("{good}{}", " ".repeat((4 << 20) + 1));
+    let path = std::env::temp_dir().join(format!("vc-oversize-export-presets-{}.vcexportpresets", std::process::id()));
+    std::fs::write(&path, &oversized).unwrap();
+    for params in [
+        json!({"path": path.to_string_lossy()}),
+        json!({"data": oversized}),
+        json!({"dataBase64": vectorcraft_format::base64_encode(oversized.as_bytes())}),
+    ] {
+        let error = s.execute("document.exportPresets.import", &params).unwrap_err().to_string();
+        assert!(error.contains("larger than 4194304 bytes"), "{error}");
+        assert!(s.prefs.screen_export_presets.is_empty());
+    }
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn export_presets_import_accepts_wrapped_base64_near_size_limit() {
+    const LIMIT: usize = 4 << 20;
+    let empty = json!({
+        "format": "vcexportpresets",
+        "presets": [{"name": "Wrapped", "settings": {"formats": [{"format": "png"}], "prefix": ""}}],
+    });
+    let prefix = "x".repeat(LIMIT - 1 - empty.to_string().len());
+    let file = json!({
+        "format": "vcexportpresets",
+        "presets": [{"name": "Wrapped", "settings": {"formats": [{"format": "png"}], "prefix": prefix}}],
+    })
+    .to_string();
+    assert_eq!(file.len(), LIMIT - 1);
+    let encoded = vectorcraft_format::base64_encode(file.as_bytes());
+    let wrapped = encoded.as_bytes().chunks(76).map(|line| std::str::from_utf8(line).unwrap()).collect::<Vec<_>>().join("\n");
+    assert!(wrapped.len() > LIMIT.div_ceil(3) * 4);
+    assert_eq!(vectorcraft_format::base64_decode(&wrapped).as_deref(), Some(file.as_bytes()));
+
+    let mut s = session(1);
+    let reply = s.execute("document.exportPresets.import", &json!({"dataBase64": wrapped})).unwrap();
+    assert_eq!(reply["imported"], json!(["Wrapped"]));
+    assert_eq!(s.prefs.screen_export_presets[0].settings["prefix"], prefix);
+}
+
+#[test]
+fn export_presets_export_refuses_oversize_output() {
+    let mut s = session(1);
+    let prefix = "x".repeat((4 << 20) + 1);
+    s.execute("document.exportPresets.save", &json!({"name": "Large", "settings": {"prefix": prefix}})).unwrap();
+
+    let error = s.execute("document.exportPresets.export", &json!({})).unwrap_err().to_string();
+    assert!(error.contains("larger than 4194304 bytes"), "{error}");
+
+    let path = std::env::temp_dir().join(format!("vc-oversize-preset-output-{}.vcexportpresets", std::process::id()));
+    assert!(!path.exists());
+    let error = s.execute("document.exportPresets.export", &json!({"path": path.to_string_lossy()})).unwrap_err().to_string();
+    assert!(error.contains("larger than 4194304 bytes"), "{error}");
+    assert!(!path.exists());
+}
+
 /// An imported preset whose name is taken and ends in a number gets the next free number, not a
 /// second one; any other taken name gets the first free number.
 #[test]

@@ -3978,10 +3978,10 @@ Batch exports (#1935):
 - **Presets:** `document.exportPresets.list` (built-in: Logo Package, Print-Ready PDF), `.save {name, settings}`
   (kept with the preferences; a saved name is replaced) and `.delete {name}`; `exportPreset: "<name>"` uses one under
   the call's own params. `.export {names?, path?}` writes presets (every saved one, or the named ones, built-in ones too)
-  as a `.vcexportpresets` JSON file (without `path` it returns `data`; more than 1000 presets is an error), and `.import {path? | data? | dataBase64?,
+  as a `.vcexportpresets` JSON file (without `path` it returns `data`; more than 1000 presets or a file larger than 4194304 bytes is an error), and `.import {path? | data? | dataBase64?,
   replace?}` adds a file's presets (a name in use gets a number unless `replace`; a built-in name always gets one; a
   name that already ends in a number gets the next free one, so `Web 2` comes in as `Web 3`; a file with settings
-  `.save` refuses, or with more than 1000 presets, adds none). A preset name, saved or imported, keeps its first 255
+  `.save` refuses, with more than 1000 presets, or larger than 4194304 bytes adds none). A preset name, saved or imported, keeps its first 255
   characters. Opening a `.vcexportpresets` file imports it.
   The Asset Export panel menu lists presets and holds Save As Preset…, Save Changes, Delete Preset, Import Preset…
   and Export Preset…. `assets.settings.set {exportPreset}` applies a preset to the settings the panel shares: its rows or

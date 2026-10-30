@@ -708,6 +708,9 @@ pub const PRESET_FILE_EXTS: &[&str] = &[PRESET_FILE_FORMAT];
 /// The most presets one file imports.
 const MAX_IMPORT: usize = 1000;
 
+/// The most bytes in an export presets file.
+const MAX_PRESET_FILE_BYTES: usize = 4 << 20;
+
 pub(super) fn presets_export(s: &mut Session, p: &Value) -> Result<Value> {
     const EXPORT: &str = "document.exportPresets.export";
     // A file holds no more presets than an import reads.
@@ -732,6 +735,9 @@ pub(super) fn presets_export(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let count = presets.len();
     let text = serde_json::to_string_pretty(&PresetFile { format: PRESET_FILE_FORMAT.into(), presets }).map_err(|e| bad(EXPORT, e.to_string()))?;
+    if text.len() > MAX_PRESET_FILE_BYTES {
+        return Err(bad(EXPORT, format!("export presets file is larger than {MAX_PRESET_FILE_BYTES} bytes")));
+    }
     match str_param(p, "path") {
         Some(path) => {
             write_file(path, text.as_bytes())?;
@@ -744,11 +750,24 @@ pub(super) fn presets_export(s: &mut Session, p: &Value) -> Result<Value> {
 pub(super) fn presets_import(s: &mut Session, p: &Value) -> Result<Value> {
     const IMPORT: &str = "document.exportPresets.import";
     let bytes = match (str_param(p, "path"), str_param(p, "data"), str_param(p, "dataBase64")) {
-        (Some(path), ..) => super::read_file(path)?,
-        (None, Some(text), _) => text.as_bytes().to_vec(),
-        (None, None, Some(b64)) => vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(IMPORT, "bad dataBase64"))?,
+        (Some(path), ..) => super::read_file_head(path, MAX_PRESET_FILE_BYTES + 1)?,
+        (None, Some(text), _) => {
+            if text.len() > MAX_PRESET_FILE_BYTES {
+                return Err(bad(IMPORT, format!("export presets file is larger than {MAX_PRESET_FILE_BYTES} bytes")));
+            }
+            text.as_bytes().to_vec()
+        }
+        (None, None, Some(b64)) => {
+            if b64.bytes().filter(|b| !b.is_ascii_whitespace()).count() > MAX_PRESET_FILE_BYTES.div_ceil(3) * 4 {
+                return Err(bad(IMPORT, format!("export presets file is larger than {MAX_PRESET_FILE_BYTES} bytes")));
+            }
+            vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(IMPORT, "bad dataBase64"))?
+        }
         _ => return Err(bad(IMPORT, "give `path`, `data` or `dataBase64`")),
     };
+    if bytes.len() > MAX_PRESET_FILE_BYTES {
+        return Err(bad(IMPORT, format!("export presets file is larger than {MAX_PRESET_FILE_BYTES} bytes")));
+    }
     let file: PresetFile = serde_json::from_slice(&bytes).map_err(|e| bad(IMPORT, format!("not an export presets file: {e}")))?;
     if file.format != PRESET_FILE_FORMAT {
         return Err(bad(IMPORT, format!("not an export presets file (format `{}`)", file.format)));
@@ -769,12 +788,13 @@ pub(super) fn presets_import(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let replace = bool_or(p, "replace", false);
     let saved = &mut s.prefs.screen_export_presets;
+    let saved_before = saved.len();
     // A built-in name, or a saved one that stays, gets a number.
     let mut taken: std::collections::HashSet<String> =
         builtin_presets().into_iter().map(|b| b.name).chain(saved.iter().map(|q| q.name.clone())).collect();
     let mut imported = vec![];
     for (base, settings) in presets {
-        if replace && let Some(slot) = saved.iter_mut().find(|q| q.name == base) {
+        if replace && let Some(slot) = saved.iter_mut().take(saved_before).find(|q| q.name == base) {
             slot.settings = settings;
             imported.push(base);
             continue;
