@@ -389,6 +389,8 @@ pub fn open_options(app: &mut VectorcraftApp, tool: &str) -> Result<serde_json::
             crate::menus::invoke(app, id, json!({}));
             Ok(json!({ "dialog": "command" }))
         }
+        // The add-ons' tools.
+        _ if crate::addons::pathtools::has_options(tool) => crate::addons::pathtools::open_options(app, tool),
         _ if vectorcraft_tools::tool_info(tool).is_none() => Err(format!("unknown tool `{tool}`")),
         _ => Err(format!("the {tool} tool has no options")),
     }

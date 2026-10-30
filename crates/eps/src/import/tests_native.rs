@@ -381,11 +381,18 @@ fn an_ai_file_that_cant_be_read_through_its_editing_data_keeps_its_pdf_part() {
     let (d, w, read) = crate::layered_ai(b"nothing", pdf.clone(), vec![], false, false, 1.0);
     assert_eq!(d.layers.len(), pdf.layers.len());
     assert!(w.is_empty() && !read);
-    // Editing data that isn't for this page.
-    let other = native(&layer("Jig", true, &square(10, 10))).replace("%AI3_Cropmarks: 0 0 100 100", "%AI3_Cropmarks: 0 0 50 50");
+    // Editing data that isn't for this page: neither its artboard nor its art's box is the page.
+    let other = native(&layer("Jig", true, &square(10, 10))).replace(" 0 0 100 100", " 0 0 50 50");
     let (d, w, _) = crate::layered_ai(&private(&other), pdf.clone(), vec![], false, false, 1.0);
     assert_eq!(names(&d), names(&pdf));
     assert!(w.iter().any(|w| w.contains("for a 50 × 50 pt page, the file's 100 × 100 pt page at 1:2")), "{w:?}");
+    // A page cropped to the art's box, not the artboard, is that art's page: the layers are read,
+    // with their artboard.
+    let cropped = native(&layer("Jig", true, &square(10, 10))).replace("%AI3_Cropmarks: 0 0 100 100", "%AI3_Cropmarks: 0 0 50 50");
+    let (d, w, read) = crate::layered_ai(&private(&cropped), pdf.clone(), vec![], false, false, 1.0);
+    assert!(read, "{w:?}");
+    assert_eq!(names(&d), ["Jig"]);
+    assert_eq!(d.artboards[0].rect.size(), vectorcraft_geom::Size::new(50.0, 50.0));
 }
 
 /// #2034: editing data for a page of another size gives both sizes in points, in an EPS's note and
@@ -1562,4 +1569,38 @@ fn point_type_without_a_matrix_is_placed_by_its_layout() {
         (texts[0].plain_text(), texts[0].xf)
     };
     assert_eq!(place(&without), place(&with));
+}
+
+/// A placed file is put where its matrix takes the canvas point of art space's origin (the
+/// centre of `%AI3_TemplateBox` on the canvas); many files put it at the corner of the box it is
+/// written with instead. When the layers don't draw as the page with the first, the second is
+/// tried.
+#[test]
+fn a_placed_file_at_its_boxs_corner_matches_the_page() {
+    // A 2 × 2 preview of half-transparent black (premultiplied ARGB), of a file whose box is
+    // 8000 8000 8040 8040 on the canvas: 40 × 40 units, which the matrix takes to (30, 70)–(70,
+    // 30) in art space, a square at (30, 30)–(70, 70) on the 100 × 100 page. The template box's
+    // canvas point (8091.5, 8241.5) would put it off the page.
+    let pixel = "\x7f\0\0\0";
+    let place = format!(
+        "%AI5_BeginPlace\n%%FileType: 1\n[1 0 0 -1 -7970 8070] 8000 8000 8040 8040 4 4 0\n(photo.png)`\n\
+         %AI26_BeginPlacedObjectPreview\n2 2 8 32 17 {}\n%AI26_EndPlacedObjectPreview\n~\n%AI5_EndPlace\n",
+        pixel.repeat(4)
+    );
+    let data = native(&layer("Jig", true, &place)).replace("%AI5_NumLayers", "%AI3_TemplateBox: 100 50 100 50\n%AI5_NumLayers");
+    // The page: the square in 50% grey, as the PDF part draws the image.
+    let mut page = Document::new(100.0, 100.0);
+    let id = page.alloc_id();
+    let path = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(30.0, 30.0, 70.0, 70.0));
+    let grey = vectorcraft_doc::FillLayer::new(vectorcraft_color::Paint::solid(vectorcraft_color::Color::gray(0.5)));
+    let n = Node::path(id, path, vectorcraft_doc::Appearance { items: vec![vectorcraft_doc::AppearanceItem::Fill(grey)], ..Default::default() });
+    let l = page.layers[0].id;
+    page.insert(Some(l), 0, n).unwrap();
+    let (d, w, read) = crate::layered_ai(&private(&data), page, vec![], false, false, 1.0);
+    assert!(read, "{w:?}");
+    assert_eq!(names(&d), ["Jig"]);
+    let image = &d.layers[0].children().unwrap()[0];
+    assert!(matches!(image.kind, NodeKind::Image(_)), "{:?}", image.kind);
+    let b = image.geometric_bounds().unwrap();
+    assert!([b.x0 - 30.0, b.y0 - 30.0, b.x1 - 70.0, b.y1 - 70.0].iter().all(|v| v.abs() < 0.01), "on the page's square: {b:?}");
 }

@@ -1925,6 +1925,7 @@ const RENDER_SITE_ROWS: &[(&str, &str)] = &[
     ("file-filter", "PDF-compatible .ai"),
     ("file-filter", "VectorCraft Template"),
     ("file-filter", "Templates"),
+    ("anchor", "Points:"),
     ("diagnostics", "render"),
     ("diagnostics", "ui"),
     ("", "Preset {number}"),

@@ -754,6 +754,7 @@ font-technology	Variable	Változó
 	Compound	Összetett
 	Compound 2	Összetett 2
 	Compound Path	Összetett útvonal
+	Compound Shape	Összetett alakzat
 	Compress (RLE)	Tömörítés (RLE)
 	Compress text and line art	Szöveg és vonalas grafika tömörítése
 	Compression	Tömörítés
@@ -1274,7 +1275,6 @@ font-technology	Variable	Változó
 	Expand	Kibontás
 	Expand 1 Selected	1 kijelölt kibontása
 	Expand Appearance	Megjelenés kibontása
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	A Kibontás összetett alakzatokra vonatkozik (Alt+kattintás egy alakzatmódra) – tervezett funkció
 	Expand Brush Strokes	Ecsetvonások kibontása
 	Expand Compound Shape	Összetett alakzat kibontása
 	Expand Gradient Mesh	Színátmenetes háló kibontása
@@ -1811,6 +1811,7 @@ file-filter	Templates	Sablonok
 	Delete Guides	Segédvonalak törlése
 	Delete Slice	Szelet törlése
 	Delete Style	Stílus törlése
+	Delete Styles	Stílusok törlése
 	Delete Variables	Változók törlése
 	Delete View	Nézet törlése
 	Done Editing Pattern	Mintázatszerkesztés befejezése
@@ -2423,6 +2424,7 @@ file-filter	Templates	Sablonok
 	Move Library Item to Group	Könyvtárelem áthelyezése csoportba
 	Move Locked and Hidden Artwork with Artboard	Zárolt és rejtett grafika mozgatása a rajztáblával
 	Move Mesh Point	Hálópont áthelyezése
+	Move Mesh Points	Hálópontok áthelyezése
 	Move Panel	Panel áthelyezése
 	Move Plane	Sík áthelyezése
 	Move Plane to Match Object	Sík igazítása az objektumhoz
@@ -2461,6 +2463,7 @@ file-filter	Templates	Sablonok
 	New Brush…	Új ecset…
 	New Calligraphic Brush	Új kalligrafikus ecset
 	New Character Style	Új karakterstílus
+	New Character Style…	Új karakterstílus…
 	New Color Group	Új színcsoport
 	New Color Group…	Új színcsoport…
 	New Data Set	Új adatkészlet
@@ -2482,6 +2485,7 @@ file-filter	Templates	Sablonok
 	New Opacity Masks Are Clipping	Új átlátszósági maszkok vágnak
 	New Opacity Masks Are Inverted	Új átlátszósági maszkok invertáltak
 	New Paragraph Style	Új bekezdésstílus
+	New Paragraph Style…	Új bekezdésstílus…
 	New Pattern Brush from Selection	Új mintázatecset a kijelölésből
 	New PDF Preset	Új PDF-előbeállítás
 	New Print Preset	Új nyomtatási előbeállítás
@@ -2497,6 +2501,8 @@ file-filter	Templates	Sablonok
 	New View	Új nézet
 	New View…	Új nézet…
 	New Window	Új ablak
+	Next Document	Következő dokumentum
+	Previous Document	Előző dokumentum
 	New Without Dialog	Új párbeszédablak nélkül
 	New Workspace	Új munkaterület
 	New Workspace…	Új munkaterület…
@@ -3169,6 +3175,7 @@ mark-style	Japanese	Japán
 	Repeat Tab	Tabulátor ismétlése
 	Repeat {name}	Ismétlés: {name}
 	Replace	Csere
+	Replace:	Csere:
 	Replace Font	Betűtípus cseréje
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Cseréld le egy másik fájlra, vagy hagyd ki: a képei a dokumentummal mentett előnézetet mutatják tovább.
 	Replace Spine	Gerinc cseréje
@@ -3585,6 +3592,7 @@ mark-style	Japanese	Japán
 	Shape Builder Regions	Alakzatépítő területei
 	Shape Builder Tool	Alakzatépítő
 	Shape Effects	Alakzateffektusok
+	Shape Mode	Alakzatmód
 	Shape Modes:	Alakzatmódok:
 	Shape Properties:	Alakzat tulajdonságai:
 	Shape:	Alak:
@@ -3708,6 +3716,7 @@ mark-style	Japanese	Japán
 	Single Quotes:	Szimpla idézőjelek:
 	Single Right Quotation Mark	Jobb oldali szimpla idézőjel
 	Single-line Composer	Egysoros tördelő
+	Toggle Line Composer	Sortördelő váltása
 	Sixth Space	Hatodkvirt-szóköz
 	Size	Méret
 	Size Tile to Art	Csempe méretezése a grafikához
@@ -4462,10 +4471,12 @@ imageTrace	Outline	Körvonal
 @msg	`freeform.lines` must be an array	`freeform.lines`: tömb kell
 @msg	`freeform.points` must be an array	`freeform.points`: tömb kell
 @msg	`gradient` must be an object	`gradient`: objektum kell
+@msg	`groupColors` must be an array	`groupColors`: tömb kell
 @msg	`id` is the step reference {r}, which only `run` and `command_batch` resolve	az `id` lépéshivatkozás ({r}), ezt csak a `run` és a `command_batch` oldja fel
 @msg	`ids` must be an array of object ids, not {v}	`ids`: objektumazonosítók tömbje kell, ez nem az: {v}
 @msg	`library` is a library id or name (see {list})	a `library` könyvtárazonosító vagy -név lehet (lásd: {list})
 @msg	`mode` applies to freeform gradients	a `mode` a szabad formájú színátmenetekre vonatkozik
+@msg	`preserve` must be an object	`preserve`: objektum kell
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize`: 1, 3 vagy 5 kell
 @msg	`stops` must be an array	`stops`: tömb kell
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg`: SVG-beállításokat tartalmazó objektum kell (lásd: document.formats)
@@ -4501,6 +4512,7 @@ imageTrace	Outline	Körvonal
 @msg	`{name}` is a process colour: tints apply to global and spot colours	skálaszín: `{name}`; tónus csak globális és direktszínhez adható
 @msg	`{name}` is no recovery entry name	nem helyreállítási bejegyzés neve: `{name}`
 @msg	`{name}` isn't a colour swatch	nem színes színminta: `{name}`
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	skálaszín nem színezhet átlátszóságot tartalmazó szürkeárnyalatos képet: használjon direktszínt, feketét vagy fehéret
 @msg	`{path}` must be a bool or an object of bools	`{path}`: logikai érték vagy logikai értékeket tartalmazó objektum kell
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	nem szín: `{s}` (#rrggbb vagy előbeállítás neve)
 @msg	`{text}`: step {i}'s result has no such value (write $$ for a literal $)	`{text}`: a lépés eredményében nincs ilyen érték: {i} (a $ jelhez írj $$-t)
@@ -5114,6 +5126,9 @@ imageTrace	Outline	Körvonal
 @msg	the PSD file's header is damaged	a PSD-fájl fejléce sérült
 @msg	the PSD file's image data can't be read: {e}	a PSD-fájl képadatai nem olvashatók: {e}
 @msg	the PSD file's image data uses an unknown compression ({m})	a PSD-fájl képadatai ismeretlen tömörítést használnak ({m})
+@msg	the PCX file is cut short	a PCX-fájl csonka
+@msg	the PCX file's header is damaged	a PCX-fájl fejléce sérült
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	a {bits} bites pixeleket {planes} síkban tároló PCX-fájlok nem olvashatók
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	a PSD-kép túl nagy a beolvasáshoz ({_1} × {_2} pixel)
 @msg	the Save PDF dialog didn't open	a PDF mentése párbeszédablak nem nyílt meg
 @msg	the scale is not a usable number	a méretarány nem használható szám
@@ -5661,3 +5676,174 @@ axis	Y Axis	Y tengely
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	Előbb bontsd ki a megjelenést (Objektum › Megjelenés kibontása)
 	Live preview	Élő előnézet
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Pontszöveg
+	Area Text	Területszöveg
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Glifához illesztés beállításainak megjelenítése
+	Hide Snap to Glyph Options	Glifához illesztés beállításainak elrejtése
+	Snap to Glyph Options	Glifához illesztés beállításai
+	x-height	x-magasság
+	Glyph Bounds	Glifahatárok
+	Proximity Guides	Közelségi segédvonalak
+	Angular Guides	Szög-segédvonalak
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Átlagolás és összekapcsolás…
+	Average & Join	Átlagolás és összekapcsolás
+anchor	Points:	Pontok:
+@msg	select two open path ends, or two open paths, to average and join	jelölj ki két nyitott útvonalvéget vagy két nyitott útvonalat az átlagoláshoz és összekapcsoláshoz
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Grafika tisztítása
+	Simplify Anchors (Keep Shape)…	Horgonypontok egyszerűsítése (alak megtartása)…
+	Health Check	Állapotellenőrzés
+	Show Issue	Probléma megjelenítése
+	Fix All Issues	Minden probléma javítása
+	Fix Issues	Problémák javítása
+	Deep Ungroup…	Csoportbontás minden szinten…
+	Rejoin Path Pieces…	Útvonaldarabok újraegyesítése…
+	Document Health Check	Dokumentum állapotellenőrzése
+	Check Selection	Kijelölés ellenőrzése
+	Check Document	Dokumentum ellenőrzése
+	No issues found.	Nem található probléma.
+	Changed since the last check.	Módosult a legutóbbi ellenőrzés óta.
+	Fix Selected	Kijelöltek javítása
+	Fix All	Összes javítása
+	Issues fixed: {count}	Javított problémák: {count}
+	Open a document to check it for issues.	Nyisson meg egy dokumentumot a problémák ellenőrzéséhez.
+	Empty Text	Üres szöveg
+	Unpainted Objects	Festetlen objektumok
+	Zero-Opacity Objects	Nulla átlátszatlanságú objektumok
+	Duplicate Objects	Ismétlődő objektumok
+	Off-Artboard Art	Rajztáblákon kívüli grafika
+	Duplicate Anchors	Ismétlődő horgonypontok
+	Tiny Handles	Apró fogantyúk
+	Collinear Anchors	Egy egyenesre eső horgonypontok
+	Nearly Coincident Anchors	Majdnem egybeeső horgonypontok
+	Nearly Closed Paths	Majdnem zárt útvonalak
+	Filled Open Paths	Kitöltött nyitott útvonalak
+	Needless Clipping Groups	Szükségtelen vágócsoportok
+	Needless Compound Paths	Szükségtelen összetett útvonalak
+	Needless Groups	Szükségtelen csoportok
+	Empty Artboards	Üres rajztáblák
+	Protect Corners	Sarkok védelme
+	Gap	Hézag
+	Include Clip Groups	Vágócsoportokkal együtt
+@msg	`tolerance` must be from 1 to 100	A `tolerance` értéke 1 és 100 között lehet
+@msg	`gap` must be from 0 to 6 pt	A `gap` értéke 0 és 6 pt között lehet
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Horgonypontok egyszerűsítése: az útvonalaknak túl sok horgonypontja van ahhoz, hogy egyszerre egyszerűsíthetők legyenek
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Útvonaldarabok újraegyesítése: túl sok útvonal az egyszerre történő egyesítéshez
+@msg	None of these issues are left: check again	Ezek közül a problémák közül már egy sem maradt: ellenőrizze újra
+@msg	`kinds` must be a list of issue kinds	A `kinds` értékének problémafajták listájának kell lennie
+@msg	missing `kind`	hiányzik a `kind`
+	Simplify Anchors (Keep Shape)	Horgonypontok egyszerűsítése (alak megtartása)
+	Deep Ungroup	Csoportbontás minden szinten
+	Rejoin Path Pieces	Útvonaldarabok újraegyesítése
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Színeffektusok
+	Color Effects Panel	Színeffektusok panel
+	Exposure	Expozíció
+	Exposure…	Expozíció…
+	Desaturate	Telítettség csökkentése
+	Adjustment	Korrekció
+	Add as Effect	Hozzáadás effektusként
+	Apply as Filter	Alkalmazás szűrőként
+	Select objects to adjust their colors.	Jelöljön ki objektumokat a színeik módosításához.
+	Brightness/Contrast	Fényesség/kontraszt
+	Hue/Saturation	Színárnyalat/telítettség
+	Temperature/Tint	Színhőmérséklet/tónus
+@msg	`{id}` is not a colour adjustment	`{id}` nem színkorrekció
+@msg	missing `effect`	hiányzik: `effect`
+@msg	`params` must be an object	`params`: objektum kell
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Útvonal-precíziós eszközök
+	Anchor Eraser Brush	Horgonypont-radírecset
+	Extend Path Tool	Útvonal meghosszabbítása eszköz
+	Measure & Inspect Tool	Mérés és vizsgálat eszköz
+	Anchor Inspector	Horgonypont-vizsgáló
+	Add Points at Crossings	Pontok hozzáadása a kereszteződésekben
+	Split at Crossings	Felosztás a kereszteződésekben
+	Extend Path	Útvonal meghosszabbítása
+	Measure & Inspect	Mérés és vizsgálat
+	Set Anchor	Horgonypont beállítása
+	Make Smooth	Simává alakítás
+	Make Corner	Sarokká alakítás
+	Equalize Handles	Fogantyúk kiegyenlítése
+	Remove Points, Keep Shape	Pontok eltávolítása, alak megtartása
+	Add Points to Segments…	Pontok hozzáadása a szakaszokhoz…
+	Add Points to Segments	Pontok hozzáadása a szakaszokhoz
+	Open a document to edit its anchor points.	Nyisson meg egy dokumentumot a horgonypontjai szerkesztéséhez.
+	Anchors selected: {count}	Kijelölt horgonypontok: {count}
+	Direct-select anchor points to edit them.	A szerkesztéshez jelölje ki közvetlenül a horgonypontokat.
+	Length	Hossz
+	In:	Be:
+	Out:	Ki:
+	Add Points	Pontok hozzáadása
+	Points per segment	Pont szakaszonként
+	Close Path:	Útvonal lezárása:
+	Keep Handles	Fogantyúk megtartása
+	Straight	Egyenes
+	Stretch Curve	Görbe nyújtása
+@msg	direct-select the anchor points to remove	jelölje ki közvetlenül az eltávolítandó horgonypontokat
+@msg	select segments, or paths, to add points to	jelöljön ki szakaszokat vagy útvonalakat, amelyekhez pontokat ad
+@msg	select open paths to close	jelöljön ki lezárandó nyitott útvonalakat
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	túl sok vagy túl összegabalyodott útvonal a kereszteződések megtalálásához (legfeljebb 10000 szakasz)
+@msg	the paths have too many anchors to edit at once	az útvonalaknak túl sok horgonypontjuk van az egyszerre szerkesztéshez
+# Path Precision Tools add-on: the Parametric Shape Tool, its panel, commands and messages.
+	Parametric Shape Tool	Paraméteres alakzat eszköz
+	Parametric Shape	Paraméteres alakzat
+	Edit Parametric Shape	Paraméteres alakzat szerkesztése
+	Convert to Parametric Shape	Átalakítás paraméteres alakzattá
+	Ring	Gyűrű
+	Heart	Szív
+	Gear	Fogaskerék
+	Speech Bubble	Szövegbuborék
+	Count:	Darabszám:
+	Thickness:	Vastagság:
+	Inner Radius:	Belső sugár:
+	Head:	Fej:
+	Shaft:	Szár:
+	Point:	Csúcs:
+	Tooth Height:	Fogmagasság:
+	Tail:	Csóva:
+	Tip:	Csúcs:
+	Open a document to draw parametric shapes.	Nyisson meg egy dokumentumot paraméteres alakzatok rajzolásához.
+	Select a parametric shape to edit it. With none selected, these set the next shape.	A szerkesztéshez jelöljön ki egy paraméteres alakzatot. Kijelölés nélkül ezek az értékek a következő alakzatra vonatkoznak.
+@msg	the object is not an editable parametric shape	az objektum nem szerkeszthető paraméteres alakzat
+@msg	select plain rectangles, ellipses or regular polygons to convert	jelöljön ki átalakítandó egyszerű téglalapokat, ellipsziseket vagy szabályos sokszögeket
+@msg	the shape's numbers are out of range	az alakzat értékei a megengedett tartományon kívül esnek
+@msg	`kind` must be one of: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble	`kind`: ezek egyike kell: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble
+@msg	`count` must be a whole number from 3 to 1000	`count`: 3 és 1000 közötti egész szám kell
+@msg	`{key}` must be from {lo} to {hi}	`{key}`: {lo} és {hi} között kell
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Okostoll
+	Smart Pen Tool	Okostoll eszköz
+	Smart Pen Panel	Okostoll panel
+	Next Segment	Következő szakasz
+	Curved	Ívelt
+	Retract Handles	Fogantyúk behúzása
+	Close or Join	Lezárás vagy összekapcsolás
+	Open a document to draw with the Smart Pen.	Nyisson meg egy dokumentumot az okostollal való rajzoláshoz.
+	Straight or Curved Segment	Egyenes vagy ívelt szakasz
+@msg	the path is locked or hidden	az útvonal zárolt vagy rejtett
+@msg	`id` is not a path	`id`: nem útvonal
+@msg	the path has no open subpath	az útvonalnak nincs nyitott részútvonala
+@msg	the subpath is closed	a részútvonal zárt
+@msg	the subpath is closed or too short to close	a részútvonal zárt vagy túl rövid a lezáráshoz
+@msg	the path is too short to remove a point from	az útvonal túl rövid egy pont eltávolításához
+@msg	the segment can't be bent that far	a szakasz nem hajlítható ennyire
+@msg	give `{a}` and `{b}`	adja meg: `{a}` és `{b}`
+@msg	`t` must be from 0 to 1	`t`: 0 és 1 között kell
+@msg	`segment` must be "straight" or "curved"	`segment`: "straight" vagy "curved" kell
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode`: "free", "keepAngles" vagy "symmetric" kell
+@msg	`{key}` must be [x, y]	`{key}`: [x, y] kell
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Kijelölés színtípus szerint
+	Objects with Spot Colors	Direkt színeket használó objektumok
+	Objects with Color Effects	Színeffektusos objektumok
+	RGB Images	RGB-képek
+	CMYK Images	CMYK-képek
+	Grayscale Images	Szürkeárnyalatos képek
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	A `kind` értéke spotColors, colorEffects, rgbImages, cmykImages vagy grayImages lehet

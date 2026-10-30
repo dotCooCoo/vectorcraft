@@ -290,6 +290,7 @@ font-technology	Variable	가변
 	Clipping Mask	클리핑 마스크
 	Edit Clipping Path	클리핑 패스 편집
 	Compound Path	컴파운드 패스
+	Compound Shape	컴파운드 모양
 	Artboards	아트보드
 	Convert to Artboards	아트보드로 변환
 	Rearrange All Artboards…	모든 아트보드 재정렬…
@@ -614,6 +615,8 @@ font-technology	Variable	가변
 	Saved View 25	저장된 보기 25
 	Window	윈도우
 	New Window	새 창
+	Next Document	다음 문서
+	Previous Document	이전 문서
 	Cascade	계단식 배열
 	Tile	바둑판식 배열
 	Float in Window	창에 플로팅
@@ -1461,7 +1464,6 @@ font-technology	Variable	가변
 	Expand Layers Panel Rows	레이어 패널 행 펼치기
 	Expand Options	옵션 펼치기
 	Expand Repeat	반복 확장
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	확장은 컴파운드 모양(모양 모드를 Alt-클릭)에 적용됩니다 — 개발 예정
 	Expand:	확장:
 	Export All…	모두 내보내기…
 	Export Artboard	아트보드 내보내기
@@ -1704,6 +1706,7 @@ font-technology	Variable	가변
 	Delete Guides	안내선 삭제
 	Delete Slice	분할 삭제
 	Delete Style	스타일 삭제
+	Delete Styles	스타일 삭제
 	Delete Variables	변수 삭제
 	Delete View	보기 삭제
 	Done Editing Pattern	패턴 편집 완료
@@ -2080,6 +2083,7 @@ font-technology	Variable	가변
 	Move Guide	안내선 이동
 	Move Locked and Hidden Artwork with Artboard	잠기거나 숨겨진 아트워크를 아트보드와 함께 이동
 	Move Mesh Point	메시 포인트 이동
+	Move Mesh Points	메시 포인트 이동
 	Move Plane	평면 이동
 	Move Rows	행 이동
 	Move Slices	슬라이스 이동
@@ -2177,6 +2181,7 @@ font-technology	Variable	가변
 	Brush Art	브러시 아트
 	New Calligraphic Brush	새 캘리그래피 브러시
 	New Character Style	새 문자 스타일
+	New Character Style…	새 문자 스타일…
 	New Color Group	새 색상 그룹
 	New Color Group…	새 색상 그룹…
 	New Document Presets	새 문서 사전 설정
@@ -2190,6 +2195,7 @@ font-technology	Variable	가변
 	New Opacity Masks Are Inverted	새 불투명 마스크를 반전으로 설정
 	New PDF Preset	새 PDF 사전 설정
 	New Paragraph Style	새 단락 스타일
+	New Paragraph Style…	새 단락 스타일…
 	New Pattern Brush from Selection	선택 항목으로 새 패턴 브러시 만들기
 	New Print Preset	새 인쇄 사전 설정
 	New Scatter Brush from Selection	선택 항목으로 새 흩뿌리기 브러시 만들기
@@ -2639,6 +2645,7 @@ mark-style	Japanese	일본식
 	Repeat Tab	탭 반복
 	Repeat {name}	{name} 반복
 	Replace	바꾸기
+	Replace:	바꾸기:
 	Replace Font	글꼴 바꾸기
 	Replace Symbol	심볼 바꾸기
 	Replace With Font	바꿀 글꼴
@@ -2841,6 +2848,7 @@ mark-style	Japanese	일본식
 	Shape Builder	모양 빌더
 	Shape Builder Regions	모양 빌더 영역
 	Shape Builder Tool	모양 빌더 도구
+	Shape Mode	모양 모드
 	Shape Modes:	모양 모드:
 	Shape Properties:	모양 속성:
 	Shaper Tool	셰이퍼 도구
@@ -2902,6 +2910,7 @@ mark-style	Japanese	일본식
 	Simulate Paper	용지 시뮬레이션
 	Single Quotes:	작은따옴표:
 	Single-line Composer	한 줄 조판
+	Toggle Line Composer	줄 조판 방식 전환
 	Size Tile to Art	타일을 아트웍 크기에 맞춤
 	Size/Leading	크기/행간
 	Size:	크기:
@@ -4017,7 +4026,9 @@ theme	Appearance	외관
 @msg	unknown freeform mode `{m}` (points, lines)	알 수 없는 자유형 모드 `{m}`(points, lines)
 @msg	`aspect` must be a number (%)	`aspect`는 숫자(%)여야 합니다
 @msg	`gradient` must be an object	`gradient`는 개체여야 합니다
+@msg	`groupColors` must be an array	`groupColors`는 배열이어야 합니다
 @msg	`mode` applies to freeform gradients	`mode`는 자유형 그레이디언트에 적용됩니다
+@msg	`preserve` must be an object	`preserve`는 개체여야 합니다
 @msg	`stops` must be an array	`stops`는 배열이어야 합니다
 @msg	`{k}` must be [x, y]	`{k}`은(는) [x, y]여야 합니다
 @msg	a gradient needs at least two stops	그레이디언트에는 정지점이 두 개 이상 필요합니다
@@ -4079,6 +4090,7 @@ theme	Appearance	외관
 @msg	the object already has an opacity mask	개체에 이미 불투명 마스크가 있습니다
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}`은(는) 프로세스 색상입니다. 색조는 글로벌 색상과 별색에만 적용됩니다
 @msg	`{name}` isn't a colour swatch	`{name}`은(는) 색상 견본이 아닙니다
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	프로세스 색상으로는 투명도가 있는 그레이스케일 이미지를 색칠할 수 없습니다. 별색, 검정 또는 흰색을 사용하십시오
 @msg	a document needs at least one artboard	문서에는 아트보드가 하나 이상 있어야 합니다
 @msg	empty path	빈 패스입니다
 @msg	join needs open paths	연결하려면 열린 패스가 필요합니다
@@ -4601,6 +4613,9 @@ theme	Appearance	외관
 @msg	not a PSD file	PSD 파일이 아닙니다
 @msg	the PSD file has an unknown colour mode ({m})	PSD 파일의 색상 모드({m})를 알 수 없습니다
 @msg	the PSD file's image data uses an unknown compression ({m})	PSD 파일의 이미지 데이터가 알 수 없는 압축({m})을 사용합니다
+@msg	the PCX file is cut short	PCX 파일이 잘려 있습니다
+@msg	the PCX file's header is damaged	PCX 파일의 헤더가 손상되었습니다
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	{planes}개 평면에 {bits}비트 픽셀이 있는 PCX 파일은 읽을 수 없습니다
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	PSD 이미지가 너무 커서 읽을 수 없습니다({_1} × {_2}픽셀)
 @msg	zipped 32-bit PSD image data with prediction can't be read	예측이 적용된 ZIP 압축 32비트 PSD 이미지 데이터는 읽을 수 없습니다
 @msg	{depth}-bit PSD files in this colour mode can't be read	이 색상 모드의 {depth}비트 PSD 파일은 읽을 수 없습니다
@@ -5254,3 +5269,176 @@ axis	Y Axis	Y축
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	먼저 모양새를 확장하세요 (개체 › 모양새 확장)
 	Live preview	실시간 미리 보기
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	포인트 문자
+	Area Text	영역 문자
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	글리프에 스냅 옵션 표시
+	Hide Snap to Glyph Options	글리프에 스냅 옵션 숨기기
+	Snap to Glyph Options	글리프에 스냅 옵션
+	x-height	x 높이
+	Glyph Bounds	글리프 경계
+	Proximity Guides	근접 안내선
+	Angular Guides	각도 안내선
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	평균 및 결합…
+	Average & Join	평균 및 결합
+anchor	Points:	포인트:
+@msg	select two open path ends, or two open paths, to average and join	평균 및 결합할 열린 패스의 끝점 두 개 또는 열린 패스 두 개를 선택하세요
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	아트워크 정리
+	Simplify Anchors (Keep Shape)…	앵커 포인트 단순화(모양 유지)…
+	Health Check	상태 점검
+	Show Issue	문제 표시
+	Fix All Issues	모든 문제 수정
+	Fix Issues	문제 수정
+	Deep Ungroup…	모든 단계 그룹 해제…
+	Rejoin Path Pieces…	패스 조각 다시 연결…
+	Document Health Check	문서 상태 점검
+	Check Selection	선택 영역 점검
+	Check Document	문서 점검
+	No issues found.	문제가 없습니다.
+	Changed since the last check.	마지막 점검 이후 변경되었습니다.
+	Fix Selected	선택한 항목 수정
+	Fix All	모두 수정
+	Issues fixed: {count}	수정한 문제: {count}
+	Open a document to check it for issues.	문서를 열면 문제를 점검할 수 있습니다.
+	Empty Text	빈 텍스트
+	Unpainted Objects	칠하지 않은 오브젝트
+	Zero-Opacity Objects	불투명도 0% 오브젝트
+	Duplicate Objects	중복 오브젝트
+	Off-Artboard Art	아트보드 밖의 아트워크
+	Duplicate Anchors	중복 앵커 포인트
+	Tiny Handles	아주 짧은 핸들
+	Collinear Anchors	일직선 위의 앵커 포인트
+	Nearly Coincident Anchors	거의 겹치는 앵커 포인트
+	Nearly Closed Paths	거의 닫힌 패스
+	Filled Open Paths	칠한 열린 패스
+	Needless Clipping Groups	불필요한 클리핑 그룹
+	Needless Compound Paths	불필요한 컴파운드 패스
+	Needless Groups	불필요한 그룹
+	Empty Artboards	빈 아트보드
+	Protect Corners	모서리 보호
+	Gap	간격
+	Include Clip Groups	클리핑 그룹 포함
+@msg	`tolerance` must be from 1 to 100	`tolerance`는 1에서 100 사이여야 합니다
+@msg	`gap` must be from 0 to 6 pt	`gap`은 0에서 6pt 사이여야 합니다
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	앵커 포인트 단순화: 패스의 앵커 포인트가 너무 많아 한 번에 단순화할 수 없습니다
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	패스 조각 다시 연결: 패스가 너무 많아 한 번에 연결할 수 없습니다
+@msg	None of these issues are left: check again	이 문제가 더 이상 남아 있지 않습니다. 다시 점검하세요
+@msg	`kinds` must be a list of issue kinds	`kinds`는 문제 종류의 목록이어야 합니다
+@msg	missing `kind`	`kind`가 없습니다
+	Simplify Anchors (Keep Shape)	앵커 포인트 단순화(모양 유지)
+	Deep Ungroup	모든 단계 그룹 해제
+	Rejoin Path Pieces	패스 조각 다시 연결
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	색상 효과
+	Color Effects Panel	색상 효과 패널
+	Exposure	노출
+	Exposure…	노출…
+	Desaturate	채도 감소
+	Adjustment	조정
+	Add as Effect	효과로 추가
+	Apply as Filter	필터로 적용
+	Select objects to adjust their colors.	색상을 조정할 개체를 선택하십시오.
+	Brightness/Contrast	밝기/대비
+	Hue/Saturation	색조/채도
+	Temperature/Tint	색온도/색조
+@msg	`{id}` is not a colour adjustment	`{id}`은(는) 색상 조정이 아닙니다
+@msg	missing `effect`	`effect`이 없습니다
+@msg	`params` must be an object	`params`는 개체여야 합니다
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	패스 정밀 도구
+	Anchor Eraser Brush	앵커 포인트 지우개 브러시
+	Extend Path Tool	패스 연장 도구
+	Measure & Inspect Tool	측정 및 검사 도구
+	Anchor Inspector	앵커 포인트 검사기
+	Add Points at Crossings	교차점에 포인트 추가
+	Split at Crossings	교차점에서 분할
+	Extend Path	패스 연장
+	Measure & Inspect	측정 및 검사
+	Set Anchor	앵커 포인트 설정
+	Make Smooth	매끄럽게 만들기
+	Make Corner	모서리로 만들기
+	Equalize Handles	핸들 길이 맞추기
+	Remove Points, Keep Shape	포인트 제거(모양 유지)
+	Add Points to Segments…	세그먼트에 포인트 추가…
+	Add Points to Segments	세그먼트에 포인트 추가
+	Open a document to edit its anchor points.	앵커 포인트를 편집하려면 문서를 여세요.
+	Anchors selected: {count}	선택한 앵커 포인트: {count}
+	Direct-select anchor points to edit them.	편집할 앵커 포인트를 직접 선택하세요.
+	Length	길이
+	In:	들어옴:
+	Out:	나감:
+	Add Points	포인트 추가
+	Points per segment	세그먼트당 포인트
+	Close Path:	패스 닫기:
+	Keep Handles	핸들 유지
+	Straight	직선
+	Stretch Curve	곡선 늘이기
+@msg	direct-select the anchor points to remove	제거할 앵커 포인트를 직접 선택하세요
+@msg	select segments, or paths, to add points to	포인트를 추가할 세그먼트나 패스를 선택하세요
+@msg	select open paths to close	닫을 열린 패스를 선택하세요
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	패스가 너무 많거나 너무 얽혀 교차점을 찾을 수 없습니다(최대 10000개 세그먼트)
+@msg	the paths have too many anchors to edit at once	패스의 앵커 포인트가 너무 많아 한 번에 편집할 수 없습니다
+# Path Precision Tools add-on: the Parametric Shape Tool, its panel, commands and messages.
+	Parametric Shape Tool	파라메트릭 모양 도구
+	Parametric Shape	파라메트릭 모양
+	Edit Parametric Shape	파라메트릭 모양 편집
+	Convert to Parametric Shape	파라메트릭 모양으로 변환
+	Ring	고리
+	Arrow	화살표
+	Cross	십자
+	Heart	하트
+	Gear	톱니바퀴
+	Speech Bubble	말풍선
+	Count:	개수:
+	Thickness:	두께:
+	Inner Radius:	안쪽 반지름:
+	Head:	머리:
+	Shaft:	몸통:
+	Point:	끝:
+	Tooth Height:	톱니 높이:
+	Tail:	꼬리:
+	Tip:	끝:
+	Open a document to draw parametric shapes.	파라메트릭 모양을 그리려면 문서를 여세요.
+	Select a parametric shape to edit it. With none selected, these set the next shape.	편집할 파라메트릭 모양을 선택하세요. 선택하지 않으면 이 값은 다음 모양에 적용됩니다.
+@msg	the object is not an editable parametric shape	개체가 편집 가능한 파라메트릭 모양이 아닙니다
+@msg	select plain rectangles, ellipses or regular polygons to convert	변환할 일반 사각형, 타원 또는 정다각형을 선택하세요
+@msg	the shape's numbers are out of range	모양의 값이 범위를 벗어났습니다
+@msg	`kind` must be one of: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble	`kind`은(는) 다음 중 하나여야 합니다: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble
+@msg	`count` must be a whole number from 3 to 1000	`count`는 3에서 1000 사이의 정수여야 합니다
+@msg	`{key}` must be from {lo} to {hi}	`{key}`은(는) {lo}에서 {hi} 사이여야 합니다
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	스마트 펜
+	Smart Pen Tool	스마트 펜 도구
+	Smart Pen Panel	스마트 펜 패널
+	Next Segment	다음 세그먼트
+	Curved	곡선
+	Retract Handles	핸들 접기
+	Close or Join	닫기 또는 결합
+	Open a document to draw with the Smart Pen.	스마트 펜으로 그리려면 문서를 여세요.
+	Straight or Curved Segment	직선 또는 곡선 세그먼트
+@msg	the path is locked or hidden	패스가 잠겨 있거나 숨겨져 있습니다
+@msg	`id` is not a path	`id`은(는) 패스가 아닙니다
+@msg	the path has no open subpath	패스에 열린 하위 패스가 없습니다
+@msg	the subpath is closed	하위 패스가 닫혀 있습니다
+@msg	the subpath is closed or too short to close	하위 패스가 닫혀 있거나 너무 짧아 닫을 수 없습니다
+@msg	the path is too short to remove a point from	패스가 너무 짧아 포인트를 제거할 수 없습니다
+@msg	the segment can't be bent that far	세그먼트를 그만큼 구부릴 수 없습니다
+@msg	give `{a}` and `{b}`	`{a}`와(과) `{b}`을(를) 지정하세요
+@msg	`t` must be from 0 to 1	`t`는 0에서 1 사이여야 합니다
+@msg	`segment` must be "straight" or "curved"	`segment`는 "straight" 또는 "curved"여야 합니다
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode`는 "free", "keepAngles" 또는 "symmetric"이어야 합니다
+@msg	`{key}` must be [x, y]	`{key}`은(는) [x, y]여야 합니다
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	색상 종류로 선택
+	Objects with Spot Colors	별색을 사용한 개체
+	Objects with Color Effects	색상 효과가 있는 개체
+	RGB Images	RGB 이미지
+	CMYK Images	CMYK 이미지
+	Grayscale Images	회색 음영 이미지
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind`는 spotColors, colorEffects, rgbImages, cmykImages 또는 grayImages여야 합니다

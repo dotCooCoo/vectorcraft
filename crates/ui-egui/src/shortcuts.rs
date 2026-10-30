@@ -541,6 +541,10 @@ fn busy_tool_keys(app: &mut VectorcraftApp, ctx: &egui::Context, view: ViewInfo)
     for d in digits {
         let _ = app.session.tool_key(ToolKey::Digit(d), Mods::default(), view);
     }
+    // Tab, when the tool takes it (the Smart Pen Tool placing an anchor).
+    if app.session.tool_claims_key(ToolKey::Tab, view) && ctx.input_mut(|i| i.consume_key(Modifiers::NONE, Key::Tab)) {
+        let _ = app.session.tool_key(ToolKey::Tab, Mods::default(), view);
+    }
     // The tool gets each letter it takes (E while dragging a selection marquee) once per press,
     // without Cmd, Ctrl or Alt. The key is the one egui reports, which on a layout without Latin
     // letters is the key at that position on a US layout.
@@ -592,6 +596,8 @@ fn claimed_tool_keys(app: &mut VectorcraftApp, ctx: &egui::Context, view: ViewIn
         (Key::ArrowRight, ToolKey::Right),
         (Key::ArrowUp, ToolKey::Up),
         (Key::ArrowDown, ToolKey::Down),
+        // The Smart Pen Tool's Tab while it draws a path (the key otherwise hides the panels).
+        (Key::Tab, ToolKey::Tab),
     ] {
         if ctx.input(|i| i.key_pressed(k)) && app.session.tool_claims_key(tk, view) && ctx.input_mut(|i| i.consume_key(m, k)) {
             let r = app.session.tool_key(tk, crate::canvas::mods(m, false), view);

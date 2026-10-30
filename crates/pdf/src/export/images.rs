@@ -1,7 +1,106 @@
-use super::exporter::{UNDECODED, writable, xf};
-use super::{BlendMode, Exporter, Image, NodeKind, Rect, Size, Surface};
+use super::exporter::{UNDECODED, q, writable, xf};
+use super::{Arc, BlendMode, Color, Exporter, Image, NodeKind, Paint, Rect, Size, Surface, cmyk, krilla};
+use krilla::color::device_n::{Colorant, DeviceNSpace, Process};
+use krilla::image::{BitsPerComponent, CustomImage, ImageColorspace};
+
+/// A colorized image's pixels: one color in every pixel, shown as much as its soft mask says.
+#[derive(Clone, Hash)]
+struct Tinted {
+    color: Arc<Vec<u8>>,
+    alpha: Arc<Vec<u8>>,
+    width: u32,
+    height: u32,
+    space: ImageColorspace,
+    device_n: Option<DeviceNSpace>,
+}
+
+impl CustomImage for Tinted {
+    fn color_channel(&self) -> &[u8] {
+        &self.color
+    }
+
+    fn alpha_channel(&self) -> Option<&[u8]> {
+        Some(&self.alpha)
+    }
+
+    fn bits_per_component(&self) -> BitsPerComponent {
+        BitsPerComponent::Eight
+    }
+
+    fn size(&self) -> (u32, u32) {
+        (self.width, self.height)
+    }
+
+    fn icc_profile(&self) -> Option<&[u8]> {
+        None
+    }
+
+    fn color_space(&self) -> ImageColorspace {
+        self.space
+    }
+
+    fn device_n_space(&self) -> Option<DeviceNSpace> {
+        self.device_n.clone()
+    }
+}
 
 impl Exporter<'_> {
+    /// Image `im` colorized with `paint` ([`vectorcraft_doc::NodeExtras::colorize`]): every pixel
+    /// in the paint's color, with the image's coverage ([`vectorcraft_doc::ImageBlob::coverage`])
+    /// as its soft mask, so white pixels are transparent. A spot color is written as its tint of
+    /// that ink (a DeviceN space of the one ink, which lists its Separation space), Registration in
+    /// every process ink and every spot ink of the document, other colors in gray, RGB or CMYK as
+    /// the Output settings write them. The coverage is resampled as the Compression settings ask
+    /// ([`crate::images::coverage_sized`]). `None` when the paint isn't a solid color or the pixels
+    /// can't be decoded; cached like [`Self::load_image`]. With `interpolate` (and the export's own
+    /// setting), viewers may smooth it.
+    pub(super) fn colorized_image(&mut self, im: &vectorcraft_doc::ImageObject, paint: &Paint, interpolate: bool) -> Option<Image> {
+        let Paint::Solid { color, swatch, tint } = paint else { return None };
+        let size = placed_size(im);
+        let interpolate = interpolate && self.interpolate;
+        let mut cache = format!("{}\u{0}{paint:?}\u{0}{:.3}x{:.3}", im.key, size.0, size.1);
+        if !interpolate && self.interpolate {
+            cache.push_str("\u{0}pixelated");
+        }
+        if let Some(i) = self.images.get(&cache) {
+            return i.clone();
+        }
+        let doc = self.doc;
+        let (width, height, alpha) = doc
+            .image_blob(im)
+            .filter(|_| !self.left_out.contains(&im.key))
+            .and_then(|b| b.coverage())
+            .and_then(|(w, h, cover)| crate::images::coverage_sized(w, h, cover, size, self.compression))?;
+        let n = alpha.len();
+        let registration = swatch.as_deref() == Some(vectorcraft_color::swatch::REGISTRATION);
+        let inks: Vec<(String, [f32; 4])> = if registration {
+            let spots: Vec<String> = doc.swatches_iter().filter(|w| w.spot).map(|w| w.name.clone()).collect();
+            spots.iter().filter_map(|name| self.spot_ink(name)).collect()
+        } else {
+            swatch.as_deref().and_then(|name| self.spot_ink(name)).into_iter().collect()
+        };
+        let spot_colorants =
+            inks.into_iter().map(|(name, full)| Colorant::Spot { name, alternate: cmyk::Color::new(q(full[0]), q(full[1]), q(full[2]), q(full[3])) });
+        let device_n = if registration {
+            DeviceNSpace::new(Process::ALL.into_iter().map(Colorant::Process).chain(spot_colorants))
+        } else {
+            DeviceNSpace::new(spot_colorants)
+        };
+        let (samples, space) = match &device_n {
+            Some(d) if registration => (vec![q(*tint); d.colorants().len()], ImageColorspace::DeviceN),
+            Some(_) => (vec![q(*tint)], ImageColorspace::DeviceN),
+            None if registration => (vec![q(*tint); 4], ImageColorspace::Cmyk),
+            None => match self.page_color(color) {
+                Color::Gray { k } => (vec![q(1.0 - k)], ImageColorspace::Luma),
+                Color::Cmyk { c, m, y, k } => ([c, m, y, k].map(q).to_vec(), ImageColorspace::Cmyk),
+                other => (other.to_rgb().map(q).to_vec(), ImageColorspace::Rgb),
+            },
+        };
+        let color = Arc::new(samples.repeat(n));
+        let img = Image::from_custom(Tinted { color, alpha: Arc::new(alpha), width, height, space, device_n }, interpolate).ok();
+        self.images.insert(cache, img.clone());
+        img
+    }
     /// Image `im` placed `size` points wide and high, resampled and compressed as the Compression
     /// settings say ([`crate::images::recode`], [`crate::images::recode_cmyk`] for CMYK images);
     /// cached by key (and size when images are resampled). With `interpolate` (and the export's

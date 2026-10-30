@@ -161,6 +161,9 @@ pub struct Session {
     /// While [`Session::place_queue_read`] runs `file.place.queue`: the files read for it, which
     /// the command loads the place cursor with instead of reading them; `None` otherwise.
     pub(crate) queue_hand_off: Option<cmd::place::QueueRead>,
+    /// What a [`cmd::TraceRun`] traced, until the next `imageTrace.make` or
+    /// `imageTrace.makeAndExpand` takes it ([`cmd::Traced::hand_in`]).
+    pub(crate) trace_hand_off: Option<cmd::Traced>,
     /// Whether a click or drag of the place cursor asks the frontend to place its file
     /// ([`UiRequest::Place`]) instead of running `file.place`: the desktop app sets it to read the
     /// file off the UI thread. False: the file is placed at once.

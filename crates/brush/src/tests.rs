@@ -27,10 +27,16 @@ fn near(a: f64, b: f64, tol: f64) -> bool {
     (a - b).abs() <= tol
 }
 
+/// Points along every outline under `n`, its anchors among them. Bent art keeps its curves and
+/// long lines since #3926, so its anchors alone no longer trace it.
 fn all_points(n: &Node, out: &mut Vec<Point>) {
     n.walk(&mut |c| {
-        if let Some(p) = c.path_data() {
-            out.extend(p.anchors().map(|(_, _, a)| a.p));
+        for sp in c.path_data().into_iter().flat_map(|p| &p.subpaths) {
+            out.extend(sp.anchors.iter().map(|a| a.p));
+            for i in 0..sp.segment_count() {
+                let seg = sp.segment(i);
+                out.extend((1..32).map(|j| kurbo::ParamCurve::eval(&seg, j as f64 / 32.0)));
+            }
         }
     });
 }
@@ -185,9 +191,12 @@ fn art_brush_follows_curves() {
         }
     }
     let out = stroke_pieces(&Document::new(1.0, 1.0), &art_brush(rect_art(10.0, 4.0), ArtScale::Stretch), &bp_open, &stroke(1.0));
+    // The long edges bend as curves (#3926), where they used to be cut into some 400 chords. The
+    // path is run along in 0.05 pt chords, which the curves follow, so a few dozen remain.
+    let (anchors, curved) = anchors_and_curved(&out[0]);
+    assert!(anchors < 100 && curved > anchors / 2, "long edges bend as curves: {curved} of {anchors} anchors with handles");
     let mut pts = vec![];
     all_points(&out[0], &mut pts);
-    assert!(pts.len() > 40, "long edges are subdivided so they bend: {}", pts.len());
     for p in pts {
         let r = p.distance(Point::new(100.0, 100.0));
         assert!((r - 100.0).abs() <= 2.0 + 0.3, "point {p:?} is {r} from the centre");
@@ -1226,11 +1235,12 @@ fn a_pattern_tile_keeps_its_curves_on_a_straight_path() {
     assert!(near(b.height(), 40.0, 1.0), "and still stand the tile's height: {}", b.height());
 }
 
-/// The other half of the same behaviour: where the path really does bend, the tile is still
-/// subdivided, because an affine cannot reproduce a bend. The fit is checked before it is used,
-/// so a bent run falls back to exactly what it did before.
+/// The other half of the same behaviour: where the path really does bend, an affine cannot
+/// reproduce the bend, so the tile is bent, and it still comes out as curves: cubics fitted to the
+/// bent art rather than the chords it used to be flattened into (#3926). Here a 4-anchor circle
+/// tile runs round a circle of radius 200, so its outline stays in the band 20 either side of it.
 #[test]
-fn a_pattern_tile_on_a_bent_path_is_still_subdivided() {
+fn a_pattern_tile_on_a_bent_path_keeps_its_curves() {
     let circle =
         Node::path(NodeId(0), shapes::ellipse(Rect::new(0.0, -20.0, 40.0, 20.0)), Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0));
     let brush = Brush {
@@ -1240,9 +1250,23 @@ fn a_pattern_tile_on_a_bent_path_is_still_subdivided() {
     // A circle to run along: every tile sits on a curving section.
     let round = shapes::ellipse(Rect::new(0.0, 0.0, 400.0, 400.0)).to_bezpath();
     let out = stroke_pieces(&Document::new(1.0, 1.0), &brush, &round, &stroke(1.0));
-    assert!(!out.is_empty());
-    let bent = out.iter().filter(|n| anchors_and_curved(n).0 > 8).count();
-    assert!(bent > out.len() / 2, "tiles on a bend are still densified: {bent} of {}", out.len());
+    assert!(out.len() > 20, "tiles all the way round: {}", out.len());
+    let (mut lo, mut hi) = (f64::MAX, f64::MIN);
+    for n in &out {
+        let (anchors, curved) = anchors_and_curved(n);
+        assert!((4..=16).contains(&anchors), "a bent circle tile is a few curves, not a polygon: {anchors} anchors");
+        assert!(curved == anchors, "every anchor keeps a handle: {curved} of {anchors}");
+        let mut pts = vec![];
+        all_points(n, &mut pts);
+        for q in pts {
+            let r = q.distance(Point::new(200.0, 200.0));
+            (lo, hi) = (lo.min(r), hi.max(r));
+        }
+    }
+    // The path is a cubic circle (0.06 out at most) run along in chords of 0.05, and the fit holds
+    // a quarter of the 0.25 flattening tolerance, so the band holds to 0.2.
+    assert!(lo > 179.8 && hi < 220.2, "the curves stay in the tile's band round the path: {lo:.3}..{hi:.3}");
+    assert!(lo < 180.2 && hi > 219.8, "and reach both edges of it: {lo:.3}..{hi:.3}");
 }
 
 /// The kind of every node in a piece of brushed art, in paint order.
