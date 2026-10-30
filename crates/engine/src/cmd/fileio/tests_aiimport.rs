@@ -82,16 +82,18 @@ fn an_illustrator_ai_file_opens_from_its_editing_data() {
     assert_ne!(names(&s.doc().unwrap().doc.layers), ["Art", "Hidden"]);
 }
 
+/// A palette of three swatches and a color group `Inks` holding a fourth.
+const INKS_PALETTE: &str = "%AI5_BeginPalette\n0 0 Pb\n0 0 0 0 1 1 1 Xa\n(White)\nPc\n0.04 0.3 0 0 81.96 21 -8 (Pink ink) 0 2 Xx\n(Pink ink)\nPc\n\
+                            0.06 0.98 1 0 (Red ink) 0 x\n(Red ink)\nPc\n1 (Inks) 1 Pg\n0.02 0.1 1 0 (Yellow ink) 0 x\n(Yellow ink)\nPc\nPB\n%AI5_EndPalette\n";
+
 /// A `.ai` file opens with the swatches its palette holds, spot colours the art doesn't use and colour
 /// groups included, in place of the default swatches; art painted with Registration (`XZ`) still
 /// opens from the editing data.
 #[test]
 fn an_ai_file_opens_with_the_swatches_of_its_palette() {
-    let palette = "%AI5_BeginPalette\n0 0 Pb\n0 0 0 0 1 1 1 Xa\n(White)\nPc\n0.04 0.3 0 0 81.96 21 -8 (Pink ink) 0 2 Xx\n(Pink ink)\nPc\n\
-                   0.06 0.98 1 0 (Red ink) 0 x\n(Red ink)\nPc\n1 (Inks) 1 Pg\n0.02 0.1 1 0 (Yellow ink) 0 x\n(Yellow ink)\nPc\nPB\n%AI5_EndPalette\n";
     // The square the page draws, in the red ink, after a stroke colour of Registration.
     let art = format!("0 0 0 0 0 0 0 ([Registration]) 0 1 XZ\n0.06 0.98 1 0 (Red ink) 0 x\n{}f\n", ai::rect(10.0, 50.0, 40.0, 90.0));
-    let data = ai::editing_data(200.0, 100.0, &format!("{palette}{}", ai::layer("Art", &art)));
+    let data = ai::editing_data(200.0, 100.0, &format!("{INKS_PALETTE}{}", ai::layer("Art", &art)));
     let mut s = Session::new();
     let r = open(&mut s, "inks.ai", &ai::ai(&compressed(data.as_bytes()), "1 0 0 rg 10 50 30 40 re f"), json!({})).unwrap();
     assert_eq!(r["format"], json!("ai"), "{r}");
@@ -111,6 +113,45 @@ fn an_ai_file_opens_with_the_swatches_of_its_palette() {
         "{:?}",
         red.appearance.fill()
     );
+}
+
+/// A `.ai` whose editing data has a palette and no layers, as a swatch library is saved, opens as its
+/// PDF part with the swatches and color groups of its palette in place of the default swatches.
+#[test]
+fn an_ai_file_without_layers_opens_with_the_swatches_of_its_palette() {
+    let data = ai::editing_data(200.0, 100.0, INKS_PALETTE);
+    let mut s = Session::new();
+    let r = open(&mut s, "inks.ai", &ai::ai(&compressed(data.as_bytes()), "1 0 0 rg 10 50 30 40 re f"), json!({})).unwrap();
+    assert_eq!(r["format"], json!("ai"), "{r}");
+    let doc = &s.doc().unwrap().doc;
+    let swatches: Vec<&str> = doc.swatches.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(swatches, ["[None]", "White", "Pink ink", "Red ink"], "{r}");
+    let groups: Vec<&str> = doc.swatch_groups.iter().map(|g| g.name.as_str()).collect();
+    assert_eq!(groups, ["Inks"]);
+    assert!(doc.swatch("Yellow ink").is_some_and(|s| s.spot));
+}
+
+/// Other Library… on a `.ai` swatch library (a palette and no layers) gives the library the swatches
+/// of its palette, a gradient swatch among them, not the default swatches.
+#[test]
+fn a_swatch_library_in_a_ai_file_without_layers_loads_its_palette() {
+    let gradient =
+        "%AI5_BeginGradient: (Sky)\n(Sky) 0 2 Bd\n[\n%_0 0 0 0 1 1 1 2 1 6 50 0 Bs\n%_0 0 0 1 0 0 0 2 0.5 6 50 100 Bs\nBD\n%AI5_EndGradient\n";
+    let palette = INKS_PALETTE.replace("0 0 Pb\n", "0 0 Pb\nBb\n2 (Sky) 0 0 0 1 1 0 0 1 0 0 1 Bg\n0 BB\n(Sky)\nPc\n");
+    let data = ai::editing_data(200.0, 100.0, &format!("{gradient}{palette}"));
+    let file = ai::ai(&compressed(data.as_bytes()), "1 0 0 rg 10 50 30 40 re f");
+    let mut s = Session::new();
+    let p = json!({"dataBase64": vectorcraft_format::base64_encode(&file), "name": "inks.ai"});
+    let r = s.execute("swatch.library.load", &p).unwrap();
+    assert_eq!(r["count"], json!(5), "{r}");
+    let lib = s.execute("swatch.library.get", &json!({"library": r["library"]})).unwrap();
+    let swatches: Vec<&str> = lib["swatches"].as_array().unwrap().iter().map(|w| w["name"].as_str().unwrap()).collect();
+    assert_eq!(swatches, ["Sky", "White", "Pink ink", "Red ink", "Yellow ink"], "{lib}");
+    assert_eq!(lib["groups"][0]["name"], json!("Inks"), "{lib}");
+    let doc = s.execute("document.open", &json!({"name": "inks.ai", "dataBase64": p["dataBase64"]}));
+    assert!(doc.is_ok(), "{doc:?}");
+    let sky = s.doc().unwrap().doc.swatch("Sky").map(|w| w.paint.clone());
+    assert!(matches!(sky, Some(vectorcraft_color::Paint::Gradient(_))), "{sky:?}");
 }
 
 /// A 1-bit RGB image opens from the editing data in the colors its PDF part shows.
@@ -492,6 +533,47 @@ fn an_ai_file_whose_pdf_part_is_only_text_still_opens_from_editing_data_that_rea
     let mut s = Session::new();
     open(&mut s, "art.ai", &ai::ai_with(&compressed(&ai::sample_data()), TEXT_ART, "/ArtBox [0 0 200 100]"), json!({})).unwrap();
     check_sample(&s);
+}
+
+#[test]
+fn an_ai_file_whose_pdf_part_is_cropped_to_its_art_opens_from_its_layers() {
+    // A 400 × 200 pt artboard with two red bars across (100, 50)–(300, 150). The PDF part's page
+    // is that art's box, 200 × 100 pt (the editing data's bounding box), not the artboard.
+    let red = "0 1 1 0 1 0 0 Xa\n";
+    let art = ai::layer("Art", &format!("{red}{}f\n{red}{}f\n", ai::rect(100.0, 50.0, 180.0, 150.0), ai::rect(220.0, 50.0, 300.0, 150.0)));
+    let data = ai::editing_data_in([100.0, 50.0, 300.0, 150.0], [0.0, 0.0, 400.0, 200.0], &art);
+    let page = "1 0 0 rg 0 0 80 100 re f 120 0 80 100 re f";
+    let mut s = Session::new();
+    let r = open(&mut s, "cropped.ai", &ai::ai(&compressed(data.as_bytes()), page), json!({})).unwrap();
+    assert!(!r["warnings"].to_string().contains("weren't read"), "{r}");
+    let doc = &s.doc().unwrap().doc;
+    assert_eq!(names(&doc.layers), ["Art"]);
+    assert_eq!(doc.artboards.len(), 1);
+    assert_eq!(doc.artboards[0].rect, vectorcraft_geom::Rect::new(0.0, 0.0, 400.0, 200.0), "the file's artboard, not its page");
+    let bars = doc.layers[0].children().unwrap();
+    assert_eq!(bars.len(), 2);
+    let b = bars[0].geometric_bounds().unwrap();
+    assert!((b.x0 - 100.0).abs() < 0.01 && (b.y0 - 50.0).abs() < 0.01, "where the artboard has it: {b:?}");
+}
+
+#[test]
+fn an_ai_file_whose_pdf_part_draws_nothing_opens_from_its_editing_data() {
+    // A PDF-compatible `.ai` whose PDF part is a page with nothing on it (no notice text either),
+    // with or without the boxes that say where its art is: its editing data is the art.
+    for boxed in ["", "/ArtBox [0 0 200 100] /TrimBox [0 0 200 100]"] {
+        let mut s = Session::new();
+        let r = open(&mut s, "blank.ai", &ai::ai_with(&compressed(&ai::sample_data()), "", boxed), json!({})).unwrap();
+        assert_eq!(r["warnings"], json!([]), "{boxed:?}: {r}");
+        check_sample(&s);
+        // The PDF part alone, as asked: its empty page.
+        open(&mut s, "blank.ai", &ai::ai_with(&compressed(&ai::sample_data()), "", boxed), json!({"editingData": false})).unwrap();
+        let layers = &s.doc().unwrap().doc.layers;
+        assert!(layers.iter().all(|l| l.children().is_none_or(|c| c.is_empty())), "{boxed:?}");
+    }
+    // Editing data that can't be read leaves the empty page, as before.
+    let mut s = Session::new();
+    open(&mut s, "blank.ai", &ai::ai(b"%AI24_ZStandard_Data\0\0\0\0\0\0\0\0", ""), json!({})).unwrap();
+    assert_ne!(names(&s.doc().unwrap().doc.layers), ["Art", "Hidden"]);
 }
 
 #[test]

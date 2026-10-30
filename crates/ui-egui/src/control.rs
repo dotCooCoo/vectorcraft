@@ -331,7 +331,7 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context, req: &ControlReques
                 let before = app.ui.dialog.clone();
                 for (f, value) in fields {
                     if let Some(d) = app.ui.dialog.as_mut() {
-                        d.fields.insert(f.clone(), value);
+                        crate::dialogs::set_field(d, f.clone(), value);
                     }
                     if let Err(e) = crate::dialogs::field_set(app, &f) {
                         app.ui.dialog = before;

@@ -175,11 +175,11 @@ fn run_ui_part2(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
             crate::prefs_dialog::open(app, s("category").as_deref());
             Ok(Value::Null)
         }
-        // Edit → Color Settings… / Assign Profile… (no params): show the colour-management panel.
+        // Edit → Color Settings… / Assign Profile… (no params): show the colour-management panel
+        // wherever it is, as Window › Separations Preview does (it isn't in an icon column, so a
+        // flyout for it never opened: #4542).
         "edit.colorSettings" | "edit.assignProfile" if p.as_object().is_none_or(|o| o.is_empty()) => {
-            app.ui.open_panel = Some("separations".into());
-            app.ui.dock = true;
-            app.session.execute(id, p).map_err(|e| e.to_string())
+            crate::panel_docking::reveal_panel(app, "separations").and_then(|_| app.session.execute(id, p).map_err(|e| e.to_string()))
         }
         "view.outline" => flag(&mut app.ui.view.outline),
         _ => return None,
@@ -236,6 +236,12 @@ fn run_ui_part3(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
         "type.hiddenCharacters" => flag(&mut app.ui.view.hidden_chars),
         "type.bold" => crate::panels::character::toggle_face(app, Face::Bold),
         "type.italic" => crate::panels::character::toggle_face(app, Face::Italic),
+        "type.highlightFontName" => crate::panels::character::highlight(app, crate::panels::character::Field::FontName),
+        "type.highlightKerning" => crate::panels::character::highlight(app, crate::panels::character::Field::Kerning),
+        "type.highlightTracking" => crate::panels::character::highlight(app, crate::panels::character::Field::Tracking),
+        "type.underline" => crate::panels::character::toggle_underline(app),
+        "type.lineComposer" => crate::panels::paragraph::toggle_composer(app),
+        "type.hyphenate" => crate::panels::paragraph::toggle_hyphenate(app),
         id if let Some((_, justify)) = crate::panels::paragraph::ALIGN_COMMANDS.iter().find(|c| c.0 == id) => {
             crate::panels::paragraph::align(app, justify)
         }
@@ -508,6 +514,8 @@ fn run_ui_part6(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
             None => Err("brightness must be dark|mediumDark|mediumLight|light".into()),
         },
         "window.newWindow" => Err("New Window isn't available yet: a document opens in one window".into()),
+        "window.nextDocument" => crate::chrome::step_document(app, true),
+        "window.previousDocument" => crate::chrome::step_document(app, false),
         "tool.select" => match s("tool") {
             Some(t) if vectorcraft_tools::tool_info(&t).is_some() => {
                 app.select_tool(&t);
@@ -579,6 +587,8 @@ fn run_ui_part7(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
         "ui.colorPicker" => crate::dialogs::open_color_picker(app, p),
         "ui.sampleScreenColor" => crate::screen_color::start(app, p),
         "ui.graphicStyleOptions" => crate::dialogs::graphic_style_options::open(app, s("name").as_deref()),
+        "ui.newCharStyle" => crate::panels::text_styles::open_new(app, crate::panels::text_styles::Kind::Char),
+        "ui.newParaStyle" => crate::panels::text_styles::open_new(app, crate::panels::text_styles::Kind::Para),
         "ui.symbolOptions" => {
             let name = s("name");
             let edit = p.get("edit").and_then(Value::as_bool).unwrap_or(false);
@@ -650,6 +660,7 @@ fn run_ui_part9(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
             crate::dialogs::flattener_presets::open(app, s("selected").as_deref());
             Ok(Value::Null)
         }
+        "ui.imageTracePresetDialog" => crate::dialogs::trace_presets::open(app, p),
         "ui.flattenerPreview" => crate::panels::flattener_preview::command(app, p),
         "window.graphicStyleLibrary" => crate::panels::graphic_styles::open_library(app, p),
         "ui.libraryPanel" => crate::panels::library_panel::command(app, p),
@@ -695,6 +706,8 @@ fn run_ui_part10(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result
         "ui.expandDialog" => crate::dialogs::expand::open(app),
         "ui.simplifyAuto" => crate::dialogs::simplify_slider::auto(app),
         "ui.simplifyMoreOptions" => crate::dialogs::simplify_slider::more_options(app),
+        "ui.smoothAuto" => crate::dialogs::smooth_slider::auto(app),
+        "ui.dialogReset" => crate::dialogs::reset(app),
         "attributes.openUrl" => crate::panels::attributes::open_url(app, p),
         "ui.javascriptFilesDialog" => crate::panels::svg_interactivity::files_dialog(app, p),
         "ui.spotColors" => crate::dialogs::spot_colors::open(app),
@@ -821,6 +834,8 @@ fn run_ui_part13(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result
         "ui.installPlugin" => io::install_plugin(app, p),
         "plugin.cancelRuns" => Ok(crate::plugin_runs::cancel_all(app)),
         "plugin.hideRuns" => Ok(crate::plugin_runs::hide_all(app)),
+        "imageTrace.cancelRuns" => Ok(crate::trace_runs::cancel_all(app)),
+        "imageTrace.hideRuns" => Ok(crate::trace_runs::hide_all(app)),
         "ui.checkScript" => crate::dialogs::script_check::command(app, p),
         "ui.perspectiveGridDialog" => crate::dialogs::perspective_grid::open(app),
         "ui.perspectivePresetsDialog" => {

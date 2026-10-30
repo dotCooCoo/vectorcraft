@@ -127,6 +127,7 @@ impl Node {
             NodeKind::Layer { .. } => "Layer",
             NodeKind::Group { clip: true, .. } => "Clip Group",
             NodeKind::Group { .. } if self.extras().objects_on_path.is_some() => "Objects on Path",
+            NodeKind::Group { .. } if self.extras().compound_shape => "Compound Shape",
             NodeKind::Group { .. } => "Group",
             NodeKind::Path { live: Some(l), .. } => l.label(),
             NodeKind::Path { guide: true, .. } => "Guide",
@@ -545,9 +546,16 @@ impl Node {
     /// item) stands in for the topmost fill or stroke when it is of the proxy's kind. Otherwise
     /// type objects paint their runs (the first run speaks for all) in text space, fitted to the
     /// layout bounds; everything else paints its fill or stroke in the document, fitted to the
-    /// geometric bounds. Strokes fit the box grown by half their weight.
+    /// geometric bounds. Strokes fit the box grown by half their weight. A colorized image shows
+    /// its colorize paint as its fill.
     pub fn proxy_paint(&self, stroke: bool, item: Option<usize>) -> Option<(&vectorcraft_color::Paint, Affine, Rect)> {
         let item = self.appearance.item_of_kind(item, !stroke);
+        if item.is_none()
+            && !stroke
+            && let Some(c) = self.extras().colorize.as_deref()
+        {
+            return Some((c, Affine::IDENTITY, self.geometric_bounds().unwrap_or(Rect::ZERO)));
+        }
         if item.is_none()
             && let NodeKind::Text(t) = &self.kind
         {
