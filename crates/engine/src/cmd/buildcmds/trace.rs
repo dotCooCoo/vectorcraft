@@ -6,6 +6,11 @@ use super::{
     Result, Session, StrokeLayer, TRACE_NAME, TraceView, Value, bad, fill_only, ids_json, json, root_ids, shape_node, str_param, switch_or, tr,
 };
 
+#[cfg(test)]
+thread_local! {
+    static BOX_TESTS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 // ---------- Image Trace ----------
 
 fn is_trace_group(n: &Node) -> bool {
@@ -378,43 +383,60 @@ fn by_color_param(cmd: &str, p: &Value) -> Result<bool> {
     }
 }
 
-/// Whether a trace made with `params` can have paths that overlap, as in [`tr::trace_within`]'s
-/// Auto Grouping: stacked layers, Flat Logo's shapes and stroked lines.
-fn stacked_trace(params: &tr::TraceParams) -> bool {
-    params.method == tr::Method::Overlapping || params.mode == tr::Mode::Logo || params.strokes
-}
-
 /// Expand by color: an expanded trace's `items` (bottom-most first) in a group for each paint, a
 /// stroked line counted by its stroke. A solid color's group is named by the swatch it links to (a
 /// tint with its percentage) or as `#rrggbb`, and gradient fills share one group, "Gradients". The
 /// groups stack in the order of the lowest item in each, and each keeps its items' order. When the
-/// paths can overlap (`stacked`, or more than one has a gradient fill), an item joins its paint's
-/// last group only if no item of a later group overlaps it (by the boxes of everything they paint, effects included); otherwise it starts
+/// paths meet, an item joins its paint's last group only if no item of a later group meets it
+/// (by the boxes of everything they paint, effects included); otherwise it starts
 /// another group of that paint, so the art draws as before. A group among `items` (Auto Grouping)
 /// is refused.
-fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>, stacked: bool) -> Result<Vec<Arc<Node>>> {
+fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>) -> Result<Vec<Arc<Node>>> {
+    use std::collections::HashMap;
     use vectorcraft_color::tint_percent;
     // Grouped by the paint: unlinked (its #rrggbb), linked (the swatch and its exact tint), a
     // gradient, or another paint (its label). The name is apart from it: a swatch may be named as
     // a color's `#rrggbb` or as "Gradients".
     type PaintKey = (u8, String, u32);
     struct Run {
-        key: PaintKey,
         name: String,
         members: Vec<Arc<Node>>,
-        boxes: Vec<Rect>,
-        union: Option<Rect>,
     }
     // Boxes closer than a point count as overlapping: their antialiased edges can share pixels.
     let meet = |a: &Rect, b: &Rect| {
+        #[cfg(test)]
+        BOX_TESTS.with(|n| n.set(n.get() + 1));
         let b = b.inflate(1.0, 1.0);
         a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1
     };
-    // Gradient fills share one group, so in an Abutting trace too a second gradient could join the
-    // first one's group below a solid area that it borders.
-    let stacked = stacked || items.iter().filter(|i| matches!(i.appearance.fill_paint(), Paint::Gradient(_))).nth(1).is_some();
+    // Choose a cell size from the painted extent and path count. Large boxes stay in a separate
+    // list, keeping the index bounded even when a path covers most of the document.
+    let items: Vec<_> = items
+        .into_iter()
+        .map(|item| {
+            let bounds = vectorcraft_render::painted_bounds(d, &item);
+            (item, bounds)
+        })
+        .collect();
+    let extent = items.iter().filter_map(|(_, b)| *b).reduce(|a, b| a.union(b));
+    let cell_size = extent.map_or(1.0, |r| ((r.x1 - r.x0).abs() * (r.y1 - r.y0).abs() / items.len().max(1) as f64).sqrt().max(1.0));
+    let cells = |r: Rect| -> Option<Vec<(i64, i64)>> {
+        let coord = |v: f64| (v / cell_size).floor() as i64;
+        if ![r.x0, r.y0, r.x1, r.y1].iter().all(|v| v.is_finite()) {
+            return None;
+        }
+        let (x0, y0, x1, y1) = (coord(r.x0), coord(r.y0), coord(r.x1), coord(r.y1));
+        if i128::from(x1) - i128::from(x0) >= 8 || i128::from(y1) - i128::from(y0) >= 8 {
+            return None;
+        }
+        Some((y0..=y1).flat_map(|y| (x0..=x1).map(move |x| (x, y))).collect())
+    };
     let mut groups: Vec<Run> = vec![];
-    for item in items {
+    let mut latest: HashMap<PaintKey, usize> = HashMap::new();
+    let mut spatial: HashMap<(i64, i64), Vec<(usize, Rect)>> = HashMap::new();
+    let mut large: Vec<(usize, Rect)> = vec![];
+    let mut all_boxes: Vec<(usize, Rect)> = vec![];
+    for (item, bounds) in items {
         if matches!(item.kind, NodeKind::Group { .. }) {
             return Err(bad(cmd, "byColor can't split Auto Grouping groups: trace without Auto Grouping"));
         }
@@ -432,23 +454,37 @@ fn color_groups(cmd: &str, d: &mut Document, items: Vec<Arc<Node>>, stacked: boo
             Paint::Gradient(_) => ((2, String::new(), 0), "Gradients".to_string()),
             other => ((3, other.label(), 0), other.label()),
         };
-        let bounds = if stacked { vectorcraft_render::painted_bounds(d, &item) } else { None };
         // Joining an earlier group moves the item under every later group's items.
         let hidden_by_later = |at: usize| {
-            bounds.is_some_and(|b| groups.iter().skip(at + 1).any(|g| g.union.is_some_and(|u| meet(&u, &b)) && g.boxes.iter().any(|m| meet(m, &b))))
+            bounds.is_some_and(|b| {
+                let candidates = cells(b).map_or_else(
+                    || all_boxes.iter().collect::<Vec<_>>(),
+                    |places| places.iter().filter_map(|c| spatial.get(c)).flat_map(|v| v.iter()).chain(large.iter()).collect(),
+                );
+                candidates.into_iter().any(|(index, box_bounds)| *index > at && meet(box_bounds, &b))
+            })
         };
-        let at = groups.iter().rposition(|g| g.key == key).filter(|&at| !hidden_by_later(at));
-        let mut started = Run { key, name, members: vec![], boxes: vec![], union: None };
+        let at = latest.get(&key).copied().filter(|&at| !hidden_by_later(at));
+        let mut started = Run { name, members: vec![] };
         let joins = at.and_then(|at| groups.get_mut(at));
         let new = joins.is_none();
         let g = joins.unwrap_or(&mut started);
-        if let Some(b) = bounds {
-            g.boxes.push(b);
-            g.union = Some(g.union.map_or(b, |u| u.union(b)));
-        }
         g.members.push(item);
         if new {
             groups.push(started);
+            latest.insert(key, groups.len() - 1);
+        }
+        if let Some(b) = bounds {
+            let index = if new { groups.len() - 1 } else { at.unwrap_or_default() };
+            all_boxes.push((index, b));
+            match cells(b.inflate(1.0, 1.0)) {
+                Some(places) => {
+                    for place in places {
+                        spatial.entry(place).or_default().push((index, b));
+                    }
+                }
+                None => large.push((index, b)),
+            }
         }
     }
     Ok(groups
@@ -705,7 +741,7 @@ pub(super) fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Val
         }
         children.extend(grouped(d, traced, &res.parents));
         if by_color {
-            children = color_groups(c, d, children, stacked_trace(&trace))?;
+            children = color_groups(c, d, children)?;
         }
         let gid = d.alloc_id();
         let mut g = Node::group(gid, children);
@@ -828,7 +864,7 @@ pub(super) fn trace_expand(s: &mut Session, p: &Value) -> Result<Value> {
                 let items = d.node(*g).and_then(Node::children).cloned().unwrap_or_default();
                 // The paths may have been moved or reshaped since the trace was made, so any trace's
                 // paths are taken to overlap.
-                let groups = color_groups(C, d, items, true)?;
+                let groups = color_groups(C, d, items)?;
                 if let Some(ch) = d.node_mut(*g).and_then(Node::children_mut) {
                     *ch = groups;
                 }
@@ -845,6 +881,93 @@ mod color_group_tests {
     use super::*;
     use vectorcraft_geom::{PathData, SubPath};
 
+    fn area(d: &mut Document, x0: f64, y0: f64, x1: f64, y1: f64, color: Color) -> Arc<Node> {
+        let path = PathData::single(SubPath::polyline(&[Point::new(x0, y0), Point::new(x1, y0), Point::new(x1, y1), Point::new(x0, y1)], true));
+        Arc::new(Node::path(d.alloc_id(), path, fill_only(Paint::solid(color))))
+    }
+
+    #[test]
+    fn abutting_color_groups_preserve_order_at_shared_edges() {
+        let mut d = Document::new(100.0, 100.0);
+        let a = Color::rgb(1.0, 0.0, 0.0);
+        let b = Color::rgb(0.0, 0.0, 1.0);
+        let items = vec![area(&mut d, 0.0, 0.0, 20.0, 20.0, a), area(&mut d, 20.0, 0.0, 40.0, 20.0, b), area(&mut d, 40.0, 0.0, 60.0, 20.0, a)];
+        let original: Vec<_> = items.iter().map(|n| n.id).collect();
+        let groups = color_groups("imageTrace.makeAndExpand", &mut d, items).unwrap();
+        let actual: Vec<_> = groups.iter().flat_map(|g| g.children().unwrap().iter().map(|n| n.id)).collect();
+        assert_eq!(actual, original, "shared-edge paths changed stacking order");
+    }
+
+    #[test]
+    fn dense_color_groups_use_bounded_box_tests() {
+        let mut d = Document::new(200.0, 200.0);
+        let a = Color::rgb(1.0, 0.0, 0.0);
+        let b = Color::rgb(0.0, 0.0, 1.0);
+        let items = (0..4000)
+            .map(|i| {
+                if i % 2 == 0 {
+                    let x = 100.0 + (i % 40) as f64 * 0.01;
+                    area(&mut d, x, 100.0, x + 0.1, 100.1, a)
+                } else {
+                    let x = if i % 4 == 1 { 0.0 } else { 198.0 };
+                    area(&mut d, x, x, x + 2.0, x + 2.0, b)
+                }
+            })
+            .collect();
+        BOX_TESTS.with(|n| n.set(0));
+        let groups = color_groups("imageTrace.makeAndExpand", &mut d, items).unwrap();
+        let tests = BOX_TESTS.with(std::cell::Cell::get);
+        assert_eq!(groups.iter().map(|g| g.children().map_or(0, Vec::len)).sum::<usize>(), 4000);
+        assert!(tests < 4000 * 32, "{tests} box tests for 4000 paths");
+    }
+
+    #[test]
+    fn spatial_color_groups_match_simple_scan() {
+        let colors = [Color::rgb(1.0, 0.0, 0.0), Color::rgb(0.0, 0.0, 1.0), Color::rgb(0.0, 1.0, 0.0)];
+        for layout in 0..4 {
+            let mut d = Document::new(200.0, 200.0);
+            let items: Vec<_> = (0..90)
+                .map(|i| {
+                    let x = match layout {
+                        0 => i as f64 * 2.0,
+                        1 => (i % 10) as f64 * 5.0,
+                        2 => (i % 7) as f64 * 3.0,
+                        _ => (i % 13) as f64 * 9.0,
+                    };
+                    let y = match layout {
+                        0 => 0.0,
+                        1 => (i / 10) as f64 * 5.0,
+                        2 => (i / 7) as f64 * 3.0,
+                        _ => (i / 13) as f64 * 9.0,
+                    };
+                    area(&mut d, x, y, x + 3.0, y + 3.0, colors[i % 3])
+                })
+                .collect();
+            let mut expected: Vec<(String, Vec<(NodeId, Rect)>)> = vec![];
+            for item in &items {
+                let key = item.appearance.fill_paint().color().unwrap().to_hex();
+                let bounds = vectorcraft_render::painted_bounds(&d, item).unwrap();
+                let previous = expected.iter().rposition(|(k, _)| *k == key);
+                let can_join = previous.filter(|&at| {
+                    !expected.iter().skip(at + 1).any(|(_, boxes)| {
+                        boxes.iter().any(|(_, m)| {
+                            let b = bounds.inflate(1.0, 1.0);
+                            m.x0 < b.x1 && b.x0 < m.x1 && m.y0 < b.y1 && b.y0 < m.y1
+                        })
+                    })
+                });
+                match can_join.and_then(|at| expected.get_mut(at)) {
+                    Some((_, members)) => members.push((item.id, bounds)),
+                    None => expected.push((key, vec![(item.id, bounds)])),
+                }
+            }
+            let actual = color_groups("imageTrace.makeAndExpand", &mut d, items).unwrap();
+            let actual: Vec<Vec<_>> = actual.iter().map(|g| g.children().unwrap().iter().map(|n| n.id).collect()).collect();
+            let expected: Vec<Vec<_>> = expected.into_iter().map(|(_, members)| members.into_iter().map(|(id, _)| id).collect()).collect();
+            assert_eq!(actual, expected, "layout {layout}");
+        }
+    }
+
     #[test]
     fn an_abutting_gradient_stays_above_the_solid_area_it_borders() {
         use vectorcraft_color::{Gradient, GradientKind, GradientPaint, GradientStop};
@@ -858,7 +981,7 @@ mod color_group_tests {
         };
         // A gradient, a solid area beside it and a second gradient beside that, bottom to top.
         let items = vec![area(0.0, 50.0, ramp()), area(50.0, 80.0, Paint::solid(Color::rgb(0.2, 0.6, 0.2))), area(80.0, 100.0, ramp())];
-        let groups = color_groups("imageTrace.makeAndExpand", &mut d, items, false).unwrap();
+        let groups = color_groups("imageTrace.makeAndExpand", &mut d, items).unwrap();
         let names: Vec<_> = groups.iter().map(|g| g.name.clone().unwrap_or_default()).collect();
         assert_eq!(names, ["Gradients", "#339933", "Gradients"]);
     }
