@@ -5775,3 +5775,6 @@ anchor	Points:	Pontos:
 	CMYK Images	Imagens CMYK
 	Grayscale Images	Imagens em escala de cinza
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` deve ser spotColors, colorEffects, rgbImages, cmykImages ou grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Cor dos Pontos da Arte

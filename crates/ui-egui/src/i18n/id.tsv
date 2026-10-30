@@ -5760,3 +5760,6 @@ anchor	Points:	Titik:
 	CMYK Images	Gambar CMYK
 	Grayscale Images	Gambar Skala Abu-abu
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` harus spotColors, colorEffects, rgbImages, cmykImages, atau grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Warna titik dari karya seni

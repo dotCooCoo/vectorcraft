@@ -5913,3 +5913,35 @@ with a spot colour swatch, solid or in a gradient's stops), `colorEffects` (carr
 on the object or on one of its fills or strokes; a group carrying one is selected whole), `rgbImages`, `cmykImages` or
 `grayImages` (images whose pixels are RGB, CMYK, or grayscale or 1-bit, read from the image's header). It returns the
 `count` selected.
+
+### Vector Halftone (live)
+
+`addon.color.halftone` (Effect › Color Effects › Vector Halftone…, also in Object › Plug-ins › Color Effects) draws its
+object as vector halftone dots sized by the object's tone, the dots `object.vectorHalftone` makes, and keeps them in step
+as the art or the settings change. It goes on through `effect.apply` like any other effect; its dialog has the fields of
+Object › Vector Halftone without Keep Original, and the Appearance panel reopens it.
+
+| Parameter | Values (default) | Does |
+|---|---|---|
+| `shape` | `circle`, `ellipse`, `square`, `diamond`, `line` (`circle`) | The dot shape; lines join along a row |
+| `frequency` | lines per inch 1…300 (20) | Cells per inch of the screen |
+| `angle` | degrees (45) | The screen angle; CMYK: the black screen's, cyan −30°, magenta +30°, yellow −45° from it |
+| `mode` | `mono`, `cmyk` (`mono`) | One screen following lightness, or four ink screens following the art's ink amounts, multiplied over each other |
+| `color` | `#rrggbb` (`#000000`) | The mono dot colour |
+| `fromArt` | bool (false) | Mono: each dot takes the art's colour under it (one path per colour) |
+| `invert` | bool (false) | Dots for light tones |
+| `clip` | bool (true) | The dots clipped to the art's outline |
+
+The object is sampled as it draws with its other effects (its own transparency and opacity mask apply to the dots).
+Each screen takes at most 100000 cells: past that, or for art without area, the object draws as it is. The dots are kept
+while the object and what it reads from the document (symbols, patterns, fonts, colour settings) stay the same, so
+redrawing, measuring or exporting unchanged art doesn't sample it again. Effect › Expand Appearance turns the object
+into the dots, a group of one path per ink (per colour with `fromArt`), and the SVG, PDF, EPS and AI exporters write
+those paths.
+
+```json
+{"name":"run_command","arguments":{"command":"effect.apply","params":{"effect":"addon.color.halftone","params":{"frequency":24,"shape":"diamond","angle":30}}}}
+```
+
+Not yet: stochastic (FM) and radial patterns, a dot-gain curve, per-screen separation settings, and type or symbols as
+dots.

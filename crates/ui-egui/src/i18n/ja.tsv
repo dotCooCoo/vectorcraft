@@ -5545,3 +5545,6 @@ anchor	Points:	ポイント:
 	CMYK Images	CMYK 画像
 	Grayscale Images	グレースケール画像
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` は spotColors、colorEffects、rgbImages、cmykImages、grayImages のいずれかにしてください
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	ドットの色をアートから取得

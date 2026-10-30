@@ -5848,3 +5848,6 @@ anchor	Points:	Punts:
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` ha de ser spotColors, colorEffects, rgbImages, cmykImages o grayImages
 @msg	byColor must be true or false	byColor ha de ser true o false
 @msg	byColor can't split Auto Grouping groups: trace without Auto Grouping	byColor no pot separar els grups de l'agrupació automàtica: traça sense l'agrupació automàtica
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Color dels punts de la il·lustració

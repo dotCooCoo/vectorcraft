@@ -22,7 +22,7 @@ fn the_menus_list_the_effects_and_open_the_panel() {
     let at = |path: &[&str], label: &str| entries.iter().find(|e| e.path == path && e.label == label);
     let plugins = ["Object", "Plug-ins", "Color Effects"];
     let item = at(&plugins, "Color Effects Panel").expect("listed");
-    for label in ["Exposure…", "Desaturate", "Invert Colors"] {
+    for label in ["Exposure…", "Desaturate", "Invert Colors", "Vector Halftone…"] {
         assert!(at(&plugins, label).is_some(), "Object › Plug-ins › Color Effects › {label}");
         assert!(at(&["Effect", "Color Effects"], label).is_some(), "Effect › Color Effects › {label}");
     }
@@ -58,4 +58,27 @@ fn the_panel_shows_the_values_and_its_buttons() {
     }
     app.run("select.none", json!({})).unwrap();
     assert!(painted_text(&mut app, show).contains("No selection"));
+}
+
+#[test]
+fn the_halftone_effect_dialog_has_the_command_fields_and_edits_the_effect() {
+    let mut app = app();
+    let text = |app: &mut VectorcraftApp| painted_text(app, |app, ui| crate::dialogs::show(app, ui.ctx()));
+    app.run("effect.dialog", json!({"effect": "addon.color.halftone"})).unwrap();
+    let shown = text(&mut app);
+    for s in ["Vector Halftone", "Shape", "Frequency", "Angle", "Screens", "Dot Color from Art", "Color", "Invert", "Clip to Art", "Preview"] {
+        assert!(shown.lines().any(|l| l == s), "{s} in {shown}");
+    }
+    assert!(!shown.lines().any(|l| l == "Keep Original"), "the effect keeps its object");
+    assert!(app.session.in_interaction(), "the preview runs");
+    // The art's colours instead of one: no colour field.
+    app.ui.dialog.as_mut().unwrap().fields.insert("fromArt".into(), json!(true));
+    assert!(!text(&mut app).lines().any(|l| l == "Color"));
+    crate::dialogs::confirm(&mut app).unwrap();
+    let st = app.session.active().unwrap();
+    let fx = st.doc.node(st.selection.objects[0]).unwrap().appearance.effects.clone();
+    assert_eq!((fx.len(), fx[0].id.as_str(), &fx[0].params["fromArt"]), (1, "addon.color.halftone", &json!(true)));
+    // The Appearance panel reopens it with its values.
+    app.run("effect.dialog", json!({"effect": "addon.color.halftone", "index": 0})).unwrap();
+    assert_eq!(app.ui.dialog.as_ref().unwrap().fields["fromArt"], json!(true));
 }

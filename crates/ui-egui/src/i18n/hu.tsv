@@ -5844,3 +5844,6 @@ anchor	Points:	Pontok:
 	CMYK Images	CMYK-képek
 	Grayscale Images	Szürkeárnyalatos képek
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	A `kind` értéke spotColors, colorEffects, rgbImages, cmykImages vagy grayImages lehet
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Pontszín a grafikából

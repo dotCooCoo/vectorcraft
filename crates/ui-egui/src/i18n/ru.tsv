@@ -5835,3 +5835,6 @@ anchor	Points:	Точки:
 	CMYK Images	Изображения CMYK
 	Grayscale Images	Изображения в оттенках серого
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` должен быть spotColors, colorEffects, rgbImages, cmykImages или grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Цвет точек из рисунка

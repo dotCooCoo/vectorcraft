@@ -5815,3 +5815,6 @@ anchor	Points:	Noktalar:
 	CMYK Images	CMYK Görüntüler
 	Grayscale Images	Gri Tonlamalı Görüntüler
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` değeri spotColors, colorEffects, rgbImages, cmykImages veya grayImages olmalıdır
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Nokta Rengini Sanattan Al

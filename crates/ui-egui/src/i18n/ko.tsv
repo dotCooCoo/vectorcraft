@@ -5439,3 +5439,6 @@ anchor	Points:	포인트:
 	CMYK Images	CMYK 이미지
 	Grayscale Images	회색 음영 이미지
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind`는 spotColors, colorEffects, rgbImages, cmykImages 또는 grayImages여야 합니다
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	아트워크에서 점 색상 가져오기

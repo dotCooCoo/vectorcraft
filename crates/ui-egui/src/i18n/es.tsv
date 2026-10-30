@@ -5800,3 +5800,6 @@ anchor	Points:	Puntos:
 	CMYK Images	Imágenes CMYK
 	Grayscale Images	Imágenes en escala de grises
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` debe ser spotColors, colorEffects, rgbImages, cmykImages o grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Color de puntos de la ilustración

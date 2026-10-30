@@ -5712,3 +5712,6 @@ anchor	Points:	Punkty:
 	CMYK Images	Obrazy CMYK
 	Grayscale Images	Obrazy w skali szarości
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` musi mieć wartość spotColors, colorEffects, rgbImages, cmykImages lub grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Kolor kropek z kompozycji

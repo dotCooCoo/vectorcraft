@@ -5699,3 +5699,6 @@ anchor	Points:	点：
 	CMYK Images	CMYK 图像
 	Grayscale Images	灰度图像
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` 必须是 spotColors、colorEffects、rgbImages、cmykImages 或 grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	网点颜色取自图稿

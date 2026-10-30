@@ -5809,3 +5809,6 @@ anchor	Points:	Σημεία:
 	CMYK Images	Εικόνες CMYK
 	Grayscale Images	Εικόνες σε κλίμακα του γκρι
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	Το `kind` πρέπει να είναι spotColors, colorEffects, rgbImages, cmykImages ή grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Χρώμα κουκκίδων από το γραφικό

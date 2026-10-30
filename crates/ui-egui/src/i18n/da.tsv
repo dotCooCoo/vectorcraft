@@ -5760,3 +5760,6 @@ anchor	Points:	Punkter:
 	CMYK Images	CMYK-billeder
 	Grayscale Images	Gråtonebilleder
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` skal være spotColors, colorEffects, rgbImages, cmykImages eller grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Prikfarve fra grafik

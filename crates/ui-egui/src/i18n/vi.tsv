@@ -5458,3 +5458,6 @@ anchor	Points:	Điểm:
 	CMYK Images	Ảnh CMYK
 	Grayscale Images	Ảnh thang độ xám
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` phải là spotColors, colorEffects, rgbImages, cmykImages hoặc grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Màu chấm theo tác phẩm

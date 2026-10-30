@@ -5913,3 +5913,6 @@ shape	Open	Öppen
 	CMYK Images	CMYK-bilder
 	Grayscale Images	Gråskalebilder
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` måste vara spotColors, colorEffects, rgbImages, cmykImages eller grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Punktfärg från objekt

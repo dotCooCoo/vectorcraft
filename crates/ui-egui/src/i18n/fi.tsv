@@ -5888,3 +5888,6 @@ anchor	Points:	Pisteet:
 	CMYK Images	CMYK-kuvat
 	Grayscale Images	Harmaasävykuvat
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` on oltava spotColors, colorEffects, rgbImages, cmykImages tai grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Pisteiden väri kuvituksesta

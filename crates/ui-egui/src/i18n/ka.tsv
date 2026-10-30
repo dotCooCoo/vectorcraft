@@ -5847,3 +5847,6 @@ anchor	Points:	წერტილები:
 	CMYK Images	CMYK გამოსახულებები
 	Grayscale Images	ნაცრისფერის გრადაციის გამოსახულებები
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` უნდა იყოს spotColors, colorEffects, rgbImages, cmykImages ან grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	წერტილების ფერი ნახატიდან

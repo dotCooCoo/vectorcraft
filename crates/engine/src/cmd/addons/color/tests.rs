@@ -154,3 +154,87 @@ fn select_by_color_kind_finds_spot_colours_effects_and_image_models() {
     assert!(s.execute("addon.color.select", &json!({"kind": "pantone"})).is_err());
     assert!(s.execute("addon.color.select", &json!({})).is_err());
 }
+
+/// Vector Halftone, the live effect.
+const HALFTONE: &str = "addon.color.halftone";
+
+/// The dots in group `g`: each path's geometry, ink and blend mode.
+fn dots(g: &vectorcraft_doc::Node) -> Vec<(vectorcraft_geom::PathData, String, vectorcraft_color::BlendMode)> {
+    let ink = |c: &vectorcraft_doc::Node| c.appearance.fill_paint().color().unwrap().to_hex();
+    g.children().unwrap().iter().map(|c| (c.path_data().unwrap().clone(), ink(c), c.blend)).collect()
+}
+
+/// `format` as `document.export` writes the active document.
+fn exported(s: &mut Session, format: &str) -> Vec<u8> {
+    let v = s.execute("document.export", &json!({"format": format})).unwrap();
+    vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()
+}
+
+/// How many subpaths the path data of `svg` starts.
+fn svg_moves(svg: &[u8]) -> usize {
+    let svg = String::from_utf8_lossy(svg);
+    svg.split(" d=\"").skip(1).map(|d| d.split('"').next().unwrap_or("").matches(['M', 'm']).count()).sum()
+}
+
+#[test]
+fn expand_appearance_gives_the_dots_object_vector_halftone_makes() {
+    for params in [
+        json!({"frequency": 18}),
+        json!({"frequency": 12, "mode": "cmyk", "shape": "square", "angle": 15}),
+        json!({"shape": "line", "invert": true, "clip": false}),
+        json!({"shape": "ellipse", "color": "#336699", "angle": -30}),
+    ] {
+        let (mut live, id) = red_rect();
+        live.execute("effect.apply", &json!({"effect": HALFTONE, "params": params})).unwrap();
+        assert_eq!(fill_hex(&live, id), "#ff0000", "the effect leaves the object as it is");
+        live.execute("effect.expandAppearance", &json!({})).unwrap();
+        let expanded = live.doc().unwrap().doc.node(id).cloned().unwrap();
+        assert!(expanded.appearance.effects.is_empty());
+        let (mut made, _) = red_rect();
+        let r = made.execute("object.vectorHalftone", &params).unwrap();
+        let g = made.doc().unwrap().doc.node(NodeId(r["id"].as_u64().unwrap())).cloned().unwrap();
+        assert!(!dots(&g).is_empty(), "{params}");
+        assert_eq!(dots(&expanded), dots(&g), "{params}");
+        // Ids of their own.
+        let ids: std::collections::HashSet<_> = expanded.children().unwrap().iter().map(|c| c.id).chain([id]).collect();
+        assert_eq!(ids.len(), expanded.children().unwrap().len() + 1);
+    }
+}
+
+#[test]
+fn exports_write_the_dots_as_paths() {
+    let (mut s, _) = red_rect();
+    let plain: Vec<usize> = ["pdf", "eps", "ai"].map(|f| exported(&mut s, f).len()).to_vec();
+    s.execute("effect.apply", &json!({"effect": HALFTONE, "params": {"frequency": 18}})).unwrap();
+    // The exporters' copy of the document has the dots in the object's place.
+    let baked = vectorcraft_render::effects::bake_document(&s.doc().unwrap().doc).unwrap();
+    let mut paths = 0;
+    baked.walk(|n| {
+        assert!(n.appearance.effects.iter().all(|e| e.id != HALFTONE));
+        paths += n.path_data().map_or(0, |p| p.subpaths.len());
+    });
+    assert!(paths > 100, "{paths} subpaths");
+    // SVG: path data of a subpath per dot.
+    let moves = svg_moves(&exported(&mut s, "svg"));
+    assert!(moves > 100, "{moves} subpaths");
+    // PDF, EPS and AI: the dots' paths make each file larger.
+    for (f, plain) in ["pdf", "eps", "ai"].into_iter().zip(plain) {
+        let with = exported(&mut s, f).len();
+        assert!(with > plain + 1000, "{f}: {with} bytes, {plain} without the effect");
+    }
+}
+
+#[test]
+fn a_halftone_past_the_caps_leaves_the_object_as_it_is() {
+    let mut s = Session::new();
+    s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+    let id = NodeId(s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 9000, "height": 9000})).unwrap()["id"].as_u64().unwrap());
+    s.execute("effect.apply", &json!({"effect": HALFTONE, "params": {"frequency": 300}})).unwrap();
+    // Drawn as it is, exported and expanded without dots and without a panic.
+    pixel(&s);
+    assert!(svg_moves(&exported(&mut s, "svg")) < 5);
+    let r = s.execute("effect.expandAppearance", &json!({}));
+    assert!(!matches!(r, Err(crate::EngineError::Internal { .. })), "{r:?}");
+    let n = s.doc().unwrap().doc.node(id).cloned().unwrap();
+    assert!(n.children().is_none_or(|c| c.len() < 5), "no dots");
+}

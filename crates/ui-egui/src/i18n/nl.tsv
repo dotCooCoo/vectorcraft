@@ -5804,3 +5804,6 @@ anchor	Points:	Punten:
 	CMYK Images	CMYK-afbeeldingen
 	Grayscale Images	Grijswaardenafbeeldingen
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` moet spotColors, colorEffects, rgbImages, cmykImages of grayImages zijn
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Puntkleur uit artwork

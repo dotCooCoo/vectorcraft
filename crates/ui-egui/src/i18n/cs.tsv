@@ -5857,3 +5857,6 @@ anchor	Points:	Body:
 	CMYK Images	Obrazy CMYK
 	Grayscale Images	Obrazy ve stupních šedi
 @msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` musí být spotColors, colorEffects, rgbImages, cmykImages nebo grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Barva bodů podle kresby

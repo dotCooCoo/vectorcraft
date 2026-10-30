@@ -1,6 +1,6 @@
 # Parity with Adobe Illustrator
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-30 · **Change:** minor (Path Precision Tools add-on: the Parametric Shape Tool; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-30 · **Change:** minor (Color Effects add-on: live Vector Halftone; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
 
 ## Feature submission evidence
 
@@ -1269,11 +1269,21 @@ identity), `cmd::addons::color::tests` in `vectorcraft-engine` (drawn live witho
 undo step, with any adjustment and its params; bad requests refused) and `addons::color::tests` in
 `vectorcraft-ui-egui` (the menus and the panel). Select by Color Kind (`addon.color.select`) selects the objects that use
 spot colours, carry a colour adjustment, or are RGB, CMYK or grayscale images
-(`select_by_color_kind_finds_spot_colours_effects_and_image_models`). Commands: `docs/mcp.md` › Color Effects add-on.
+(`select_by_color_kind_finds_spot_colours_effects_and_image_models`). Vector Halftone (`addon.color.halftone`) draws the
+object as the dots Object › Vector Halftone makes, live: the screens and dots are shared
+(`vectorcraft_effects::addons::halftone`), the renderer samples the art and keeps the dots while it doesn't change
+(`vectorcraft_render::addons::halftone`), and Expand Appearance and the SVG, PDF, EPS and AI exporters write the paths.
+Tests: `addons::halftone` in `vectorcraft-effects` (settings, tone, caps), `addons::halftone::tests` in
+`vectorcraft-render` (drawn as dots, settings change them, unchanged art not sampled again, too many cells draw the
+object as it is), `expand_appearance_gives_the_dots_object_vector_halftone_makes`,
+`exports_write_the_dots_as_paths` and `a_halftone_past_the_caps_leaves_the_object_as_it_is` in `vectorcraft-engine`,
+and `the_halftone_effect_dialog_has_the_command_fields_and_edits_the_effect` in `vectorcraft-ui-egui`. Commands:
+`docs/mcp.md` › Color Effects add-on.
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-30 | minor | Color Effects add-on: live Vector Halftone; scores and estimates unchanged |
 | 2026-10-30 | minor | Path Precision Tools add-on: the Parametric Shape Tool; evidence added; scores unchanged. |
 | 2026-10-30 | minor | Presentation Mode fits the active artboard and hides selections, guides, grids and artboard edges; scores and estimates unchanged |
 | 2026-10-30 | minor | Color Effects add-on: Select by Color Kind; scores and estimates unchanged |
