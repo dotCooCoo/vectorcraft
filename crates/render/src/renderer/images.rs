@@ -1,6 +1,6 @@
 use super::{
     Affine, Arc, BezPath, Document, FillRule, Frame, HashMap, Ink, Node, Pixmap, Rect, RenderContext, Renderer, Shape, blob_key, blob_pixmap,
-    fill_rule, image_mip, ink, lookup, mip_level, peniko, vello_cpu,
+    fill_rule, image_mip, ink, lookup, mip_level, peniko, proof, vello_cpu,
 };
 use crate::images;
 
@@ -74,8 +74,13 @@ impl Renderer {
                     Some(rgb) => colorized_pixmap(key, &pm, rgb, !mips),
                     None => (key, pm),
                 };
-                // A colorized image is already in the frame's ink ([`image_tint`]).
+                // A colorized image is already in the frame's ink ([`image_tint`]), and with
+                // Separations Preview its color is already the visible plates' (`proof::prepare`).
                 let (key, pm) = if outline || tint.is_some() { (key, pm) } else { ink::ink_image(&key, &pm, f.ink, f.doc.image_blob(im), !mips) };
+                let (key, pm) = match f.plates.filter(|_| !outline && tint.is_none()) {
+                    Some(lut) => proof::plate_image(lut, &key, &pm, f.doc.image_blob(im), !mips),
+                    None => (key, pm),
+                };
                 if mips { image_mip(&key, pm, unit) } else { pm }
             })
         };
@@ -249,8 +254,7 @@ impl Renderer {
         m: Affine,
     ) -> Option<Arc<Pixmap>> {
         let (key, (w, h)) = self.image_key(f.doc, key, own, grey)?;
-        let key = images::ImageKey { tint, ..key };
-        let key = if grey || tint.is_some() { key } else { ink::ink_key(&key, f.ink) };
+        let key = shown_key(f, key, grey, tint);
         let level = mip_level(m, w, h);
         if level == 0 {
             return None;
@@ -272,8 +276,7 @@ impl Renderer {
         m: Affine,
     ) -> Option<Arc<Pixmap>> {
         let (key, (w, h)) = self.image_key(f.doc, key, own, grey)?;
-        let key = images::ImageKey { tint, ..key };
-        let key = if grey || tint.is_some() { key } else { ink::ink_key(&key, f.ink) };
+        let key = shown_key(f, key, grey, tint);
         let level = mip_level(m, w, h);
         let s = images::store();
         let at = |l: u8| s.peek(&images::ImageKey { mip: l, ..key.clone() });
@@ -290,6 +293,21 @@ impl Renderer {
             }
             None => self.adjusts.get(key).is_some_and(|(src, ..)| self.noted_undecodable(doc, src, None)),
         }
+    }
+}
+
+/// The key [`Renderer::draw_image_in`] gives the pixels it draws of image pixels `key`: in
+/// greyscale with `grey` (the outline view's) or colorized with `tint` as they are, else painted
+/// with the frame's ink and shown through its Separations Preview plates.
+fn shown_key(f: &Frame, key: images::ImageKey, grey: bool, tint: Option<[u8; 3]>) -> images::ImageKey {
+    let key = images::ImageKey { tint, ..key };
+    if grey || tint.is_some() {
+        return key;
+    }
+    let key = ink::ink_key(&key, f.ink);
+    match f.plates {
+        Some(lut) => images::ImageKey { plates: lut.generation, ..key },
+        None => key,
     }
 }
 

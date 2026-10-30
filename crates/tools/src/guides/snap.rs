@@ -1,7 +1,7 @@
 use super::targets::{Targets, span};
 use super::{
-    Affine, GuideStyle, Handle, HitOptions, Line, NodeId, OrientedBox, Overlay, ParamCurve, ParamCurveDeriv, ParamCurveNearest, PathSeg, Point, Rect,
-    ScreenFrame, ToolContext, Vec2, constrain_angle_from, hit_test,
+    Affine, GlyphSnap, GuideStyle, Handle, HitOptions, Line, NodeId, OrientedBox, Overlay, ParamCurve, ParamCurveDeriv, ParamCurveNearest, PathSeg,
+    Point, Rect, ScreenFrame, ToolContext, Vec2, constrain_angle_from, hit_test,
 };
 
 /// Where curves `a` and `b` cross near `p`: a point projected from one onto the other and back
@@ -295,7 +295,8 @@ struct SnapKey {
     exclude: Vec<NodeId>,
     screen: Option<ScreenFrame>,
     view: [bool; 7],
-    snap_to_glyph: bool,
+    /// The Snap to Glyph options while it gives guides.
+    snap_to_glyph: Option<GlyphSnap>,
     style: GuideStyle,
     tolerances: [f64; 2],
 }
@@ -307,7 +308,7 @@ impl SnapKey {
             exclude: exclude.to_vec(),
             screen: cx.screen,
             view: [cx.smart_guides, cx.snap_to_point, cx.snap_to_pixel, cx.snap_to_grid, cx.guides, cx.snap_tangent, cx.snap_perpendicular],
-            snap_to_glyph: cx.snap_to_glyph && cx.smart_guides && cx.alignment_guides,
+            snap_to_glyph: (cx.snap_to_glyph && cx.smart_guides && cx.alignment_guides).then_some(cx.glyph_snap),
             style: GuideStyle::of(cx),
             tolerances: [cx.snapping_tolerance, cx.snap_tolerance],
         }

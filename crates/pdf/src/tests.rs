@@ -29,6 +29,7 @@ mod import_overprint;
 mod layers;
 pub(super) mod live_text;
 mod marks;
+mod mesh_export;
 mod output;
 mod pdf13;
 mod pdfx;

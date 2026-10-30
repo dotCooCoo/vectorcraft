@@ -106,6 +106,10 @@ pub struct Structure {
     /// Where the drawn looks lay that objects read with their art style took the place of (the
     /// document's coordinates): the page draws Illustrator's rendering of those styles there.
     pub restyled: Vec<Rect>,
+    /// Placed files whose pixels the file puts at another point too: their image's id and the
+    /// move, in its pixels, that places them there (the corner of the box they are written with,
+    /// in place of the canvas point of art space's origin).
+    pub placed_elsewhere: Vec<(NodeId, Affine)>,
     pub warnings: Vec<String>,
 }
 
@@ -197,6 +201,8 @@ struct Reader<'a> {
     palette: super::palette::Palette,
     /// See [`Structure::restyled`].
     restyled: Vec<Rect>,
+    /// See [`Structure::placed_elsewhere`].
+    placed_elsewhere: Vec<(NodeId, Affine)>,
     /// CMYK samples converted, by value.
     cmyk_cache: HashMap<[u8; 4], [u8; 3]>,
     /// A `/ForeignObject`'s `/Data`: its PDF as ASCII85 in comment lines, until the object closes.
@@ -286,6 +292,7 @@ impl<'a> Reader<'a> {
             styles: HashMap::new(),
             palette: super::palette::Palette::default(),
             restyled: vec![],
+            placed_elsewhere: vec![],
             mesh: None,
             cmyk_cache: HashMap::new(),
             done: false,

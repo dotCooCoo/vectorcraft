@@ -3198,6 +3198,7 @@ theme	Appearance	Wygląd
 	Make Envelope	Utwórz kopertę
 	Move Envelope Mesh Point	Przesuń punkt siatki koperty
 	Move Mesh Point	Przesuń punkt siatki
+	Move Mesh Points	Przesuń punkty siatki
 	Move Spine Point	Przesuń punkt grzbietu
 	Reshape Spine Segment	Zmień kształt segmentu grzbietu
 	Reset with Mesh	Resetuj z siatką
@@ -3645,6 +3646,7 @@ axis	Both	Obie
 	Set Text	Ustaw tekst
 	Insert Character	Wstaw znak
 	Replace	Zastąp
+	Replace:	Zastąp:
 	Type on a Path Options	Opcje tekstu na ścieżce
 	Highlight Variable	Wyróżnij zmienną
 	New Variable	Nowa zmienna
@@ -5544,3 +5546,145 @@ axis	Y Axis	Oś Y
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Tekst punktowy
 	Area Text	Tekst akapitowy
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Pokaż opcje przyciągania do glifów
+	Hide Snap to Glyph Options	Ukryj opcje przyciągania do glifów
+	Snap to Glyph Options	Opcje przyciągania do glifów
+	x-height	Wysokość x
+	Glyph Bounds	Granice glifów
+	Proximity Guides	Linie bliskości
+	Angular Guides	Linie kątowe
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Uśrednij i połącz…
+	Average & Join	Uśrednij i połącz
+anchor	Points:	Punkty:
+@msg	select two open path ends, or two open paths, to average and join	zaznacz dwa końce otwartych ścieżek lub dwie otwarte ścieżki do uśrednienia i połączenia
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Porządkowanie grafiki
+	Simplify Anchors (Keep Shape)…	Uprość punkty kontrolne (zachowaj kształt)…
+	Health Check	Kontrola stanu
+	Show Issue	Pokaż problem
+	Fix All Issues	Napraw wszystkie problemy
+	Fix Issues	Napraw problemy
+	Deep Ungroup…	Rozgrupuj wszystkie poziomy…
+	Rejoin Path Pieces…	Ponownie połącz fragmenty ścieżek…
+	Document Health Check	Kontrola stanu dokumentu
+	Check Selection	Sprawdź zaznaczenie
+	Check Document	Sprawdź dokument
+	No issues found.	Nie znaleziono problemów.
+	Changed since the last check.	Zmieniono od ostatniego sprawdzenia.
+	Fix Selected	Napraw zaznaczone
+	Fix All	Napraw wszystko
+	Issues fixed: {count}	Naprawione problemy: {count}
+	Open a document to check it for issues.	Otwórz dokument, aby sprawdzić go pod kątem problemów.
+	Empty Text	Pusty tekst
+	Unpainted Objects	Obiekty bez koloru
+	Zero-Opacity Objects	Obiekty o zerowym kryciu
+	Duplicate Objects	Zduplikowane obiekty
+	Off-Artboard Art	Grafika poza obszarami kompozycji
+	Duplicate Anchors	Zduplikowane punkty kontrolne
+	Tiny Handles	Bardzo krótkie uchwyty
+	Collinear Anchors	Współliniowe punkty kontrolne
+	Nearly Coincident Anchors	Prawie pokrywające się punkty kontrolne
+	Nearly Closed Paths	Prawie zamknięte ścieżki
+	Filled Open Paths	Wypełnione otwarte ścieżki
+	Needless Clipping Groups	Zbędne grupy przycinające
+	Needless Compound Paths	Zbędne ścieżki złożone
+	Needless Groups	Zbędne grupy
+	Empty Artboards	Puste obszary kompozycji
+	Protect Corners	Chroń narożniki
+	Gap	Odstęp
+	Include Clip Groups	Uwzględnij grupy przycinające
+@msg	`tolerance` must be from 1 to 100	`tolerance` musi mieścić się w zakresie od 1 do 100
+@msg	`gap` must be from 0 to 6 pt	`gap` musi mieścić się w zakresie od 0 do 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Uprość punkty kontrolne: ścieżki mają zbyt wiele punktów kontrolnych, aby uprościć je naraz
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Ponownie połącz fragmenty ścieżek: zbyt wiele ścieżek do połączenia naraz
+@msg	None of these issues are left: check again	Żaden z tych problemów już nie występuje: sprawdź ponownie
+@msg	`kinds` must be a list of issue kinds	`kinds` musi być listą rodzajów problemów
+@msg	missing `kind`	brak `kind`
+	Simplify Anchors (Keep Shape)	Uprość punkty kontrolne (zachowaj kształt)
+	Deep Ungroup	Rozgrupuj wszystkie poziomy
+	Rejoin Path Pieces	Ponownie połącz fragmenty ścieżek
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Efekty koloru
+	Color Effects Panel	Panel Efekty koloru
+	Exposure	Ekspozycja
+	Exposure…	Ekspozycja…
+	Desaturate	Usuń nasycenie
+	Adjustment	Korekta
+	Add as Effect	Dodaj jako efekt
+	Apply as Filter	Zastosuj jako filtr
+	Select objects to adjust their colors.	Zaznacz obiekty, aby skorygować ich kolory.
+	Brightness/Contrast	Jasność/kontrast
+	Hue/Saturation	Barwa/nasycenie
+	Temperature/Tint	Temperatura/odcień
+@msg	`{id}` is not a colour adjustment	`{id}` nie jest korektą koloru
+@msg	missing `effect`	brak `effect`
+@msg	`params` must be an object	`params` musi być obiektem
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Precyzyjne narzędzia ścieżek
+	Anchor Eraser Brush	Pędzel gumki punktów kontrolnych
+	Extend Path Tool	Narzędzie Przedłuż ścieżkę
+	Measure & Inspect Tool	Narzędzie Mierz i badaj
+	Anchor Inspector	Inspektor punktów kontrolnych
+	Add Points at Crossings	Dodaj punkty na skrzyżowaniach
+	Split at Crossings	Podziel na skrzyżowaniach
+	Extend Path	Przedłuż ścieżkę
+	Measure & Inspect	Mierz i badaj
+	Set Anchor	Ustaw punkt kontrolny
+	Make Smooth	Zmień na gładki
+	Make Corner	Zmień na narożny
+	Equalize Handles	Wyrównaj uchwyty
+	Remove Points, Keep Shape	Usuń punkty, zachowaj kształt
+	Add Points to Segments…	Dodaj punkty do segmentów…
+	Add Points to Segments	Dodaj punkty do segmentów
+	Open a document to edit its anchor points.	Otwórz dokument, aby edytować jego punkty kontrolne.
+	Anchors selected: {count}	Zaznaczone punkty kontrolne: {count}
+	Direct-select anchor points to edit them.	Zaznacz bezpośrednio punkty kontrolne, aby je edytować.
+	Length	Długość
+	In:	Wejście:
+	Out:	Wyjście:
+	Add Points	Dodaj punkty
+	Points per segment	Punkty na segment
+	Close Path:	Zamknij ścieżkę:
+	Keep Handles	Zachowaj uchwyty
+	Straight	Prosty
+	Stretch Curve	Rozciągnij krzywą
+@msg	direct-select the anchor points to remove	zaznacz bezpośrednio punkty kontrolne do usunięcia
+@msg	select segments, or paths, to add points to	zaznacz segmenty lub ścieżki, do których dodać punkty
+@msg	select open paths to close	zaznacz otwarte ścieżki do zamknięcia
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	za dużo ścieżek lub są zbyt splątane, by znaleźć ich skrzyżowania (najwyżej 10000 segmentów)
+@msg	the paths have too many anchors to edit at once	ścieżki mają za dużo punktów kontrolnych, by edytować je naraz
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Inteligentne pióro
+	Smart Pen Tool	Narzędzie Inteligentne pióro
+	Smart Pen Panel	Panel Inteligentne pióro
+	Next Segment	Następny segment
+	Curved	Zakrzywiony
+	Retract Handles	Schowaj uchwyty
+	Close or Join	Zamknij lub połącz
+	Open a document to draw with the Smart Pen.	Otwórz dokument, aby rysować inteligentnym piórem.
+	Straight or Curved Segment	Segment prosty lub zakrzywiony
+@msg	the path is locked or hidden	ścieżka jest zablokowana lub ukryta
+@msg	`id` is not a path	`id` nie jest ścieżką
+@msg	the path has no open subpath	ścieżka nie ma otwartej ścieżki podrzędnej
+@msg	the subpath is closed	ścieżka podrzędna jest zamknięta
+@msg	the subpath is closed or too short to close	ścieżka podrzędna jest zamknięta lub za krótka, by ją zamknąć
+@msg	the path is too short to remove a point from	ścieżka jest za krótka, by usunąć z niej punkt
+@msg	the segment can't be bent that far	segmentu nie da się tak bardzo wygiąć
+@msg	give `{a}` and `{b}`	podaj `{a}` i `{b}`
+@msg	`t` must be from 0 to 1	`t` musi mieć wartość od 0 do 1
+@msg	`segment` must be "straight" or "curved"	`segment` musi mieć wartość "straight" lub "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` musi mieć wartość "free", "keepAngles" lub "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` musi mieć postać [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Zaznacz według rodzaju koloru
+	Objects with Spot Colors	Obiekty z kolorami dodatkowymi
+	Objects with Color Effects	Obiekty z efektami koloru
+	RGB Images	Obrazy RGB
+	CMYK Images	Obrazy CMYK
+	Grayscale Images	Obrazy w skali szarości
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` musi mieć wartość spotColors, colorEffects, rgbImages, cmykImages lub grayImages

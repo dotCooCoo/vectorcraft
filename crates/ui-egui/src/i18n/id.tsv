@@ -3076,6 +3076,7 @@ theme	Appearance	Tampilan
 	Make Envelope	Buat envelope
 	Move Envelope Mesh Point	Pindahkan titik mesh envelope
 	Move Mesh Point	Pindahkan titik mesh
+	Move Mesh Points	Pindahkan titik-titik mesh
 	Move Spine Point	Pindahkan titik spine
 	Reshape Spine Segment	Bentuk ulang segmen spine
 	Reset with Mesh	Atur ulang dengan mesh
@@ -3540,6 +3541,7 @@ axis	Both	Keduanya
 	Set Text	Atur teks
 	Insert Character	Sisipkan karakter
 	Replace	Ganti
+	Replace:	Ganti:
 	Type on a Path Options	Opsi teks pada jalur
 	Highlight Variable	Sorot variabel
 	New Variable	Variabel baru
@@ -5594,3 +5596,144 @@ axis	Y Axis	Sumbu Y
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Teks titik
 	Area Text	Teks area
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Tampilkan opsi snap ke glif
+	Hide Snap to Glyph Options	Sembunyikan opsi snap ke glif
+	Snap to Glyph Options	Opsi snap ke glif
+	x-height	Tinggi-x
+	Glyph Bounds	Batas glif
+	Proximity Guides	Panduan kedekatan
+	Angular Guides	Panduan sudut
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Rata-rata dan sambungkan…
+	Average & Join	Rata-rata dan sambungkan
+anchor	Points:	Titik:
+@msg	select two open path ends, or two open paths, to average and join	pilih dua ujung jalur terbuka, atau dua jalur terbuka, untuk dirata-ratakan dan disambungkan
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Pembersihan karya
+	Simplify Anchors (Keep Shape)…	Sederhanakan titik jangkar (pertahankan bentuk)…
+	Health Check	Pemeriksaan kesehatan
+	Show Issue	Tampilkan masalah
+	Fix All Issues	Perbaiki semua masalah
+	Fix Issues	Perbaiki masalah
+	Deep Ungroup…	Buka grup di semua tingkat…
+	Rejoin Path Pieces…	Sambungkan kembali potongan jalur…
+	Document Health Check	Pemeriksaan kesehatan dokumen
+	Check Selection	Periksa seleksi
+	Check Document	Periksa dokumen
+	No issues found.	Tidak ada masalah yang ditemukan.
+	Changed since the last check.	Berubah sejak pemeriksaan terakhir.
+	Fix Selected	Perbaiki yang dipilih
+	Fix All	Perbaiki semua
+	Issues fixed: {count}	Masalah diperbaiki: {count}
+	Open a document to check it for issues.	Buka dokumen untuk memeriksa masalahnya.
+	Empty Text	Teks kosong
+	Unpainted Objects	Objek tanpa warna
+	Zero-Opacity Objects	Objek dengan opasitas nol
+	Duplicate Objects	Objek duplikat
+	Off-Artboard Art	Karya di luar artboard
+	Duplicate Anchors	Titik jangkar duplikat
+	Tiny Handles	Pegangan sangat kecil
+	Collinear Anchors	Titik jangkar segaris
+	Nearly Coincident Anchors	Titik jangkar yang hampir berimpit
+	Nearly Closed Paths	Jalur yang hampir tertutup
+	Filled Open Paths	Jalur terbuka berisi
+	Needless Clipping Groups	Grup kliping yang tidak perlu
+	Needless Compound Paths	Jalur majemuk yang tidak perlu
+	Needless Groups	Grup yang tidak perlu
+	Empty Artboards	Artboard kosong
+	Protect Corners	Lindungi sudut
+	Gap	Celah
+	Include Clip Groups	Sertakan grup kliping
+@msg	`tolerance` must be from 1 to 100	`tolerance` harus antara 1 dan 100
+@msg	`gap` must be from 0 to 6 pt	`gap` harus antara 0 dan 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Sederhanakan titik jangkar: jalur memiliki terlalu banyak titik jangkar untuk disederhanakan sekaligus
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Sambungkan kembali potongan jalur: terlalu banyak jalur untuk disambungkan sekaligus
+@msg	None of these issues are left: check again	Tidak ada lagi masalah ini yang tersisa: periksa lagi
+@msg	`kinds` must be a list of issue kinds	`kinds` harus berupa daftar jenis masalah
+@msg	missing `kind`	`kind` tidak ada
+	Simplify Anchors (Keep Shape)	Sederhanakan titik jangkar (pertahankan bentuk)
+	Deep Ungroup	Buka grup di semua tingkat
+	Rejoin Path Pieces	Sambungkan kembali potongan jalur
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Efek Warna
+	Color Effects Panel	Panel Efek Warna
+	Exposure	Eksposur
+	Exposure…	Eksposur…
+	Desaturate	Hilangkan Saturasi
+	Adjustment	Penyesuaian
+	Add as Effect	Tambahkan sebagai Efek
+	Apply as Filter	Terapkan sebagai Filter
+	Select objects to adjust their colors.	Pilih objek untuk menyesuaikan warnanya.
+	Brightness/Contrast	Kecerahan/kontras
+	Hue/Saturation	Rona/saturasi
+	Temperature/Tint	Suhu/tint
+@msg	`{id}` is not a colour adjustment	`{id}` bukan penyesuaian warna
+@msg	missing `effect`	`effect` tidak ada
+@msg	`params` must be an object	`params` harus berupa objek
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Alat presisi jalur
+	Anchor Eraser Brush	Kuas penghapus titik jangkar
+	Extend Path Tool	Alat perpanjang jalur
+	Measure & Inspect Tool	Alat ukur dan periksa
+	Anchor Inspector	Pemeriksa titik jangkar
+	Add Points at Crossings	Tambahkan titik di persilangan
+	Split at Crossings	Pisahkan di persilangan
+	Extend Path	Perpanjang jalur
+	Measure & Inspect	Ukur dan periksa
+	Set Anchor	Atur titik jangkar
+	Make Smooth	Jadikan halus
+	Make Corner	Jadikan sudut
+	Equalize Handles	Samakan pegangan
+	Remove Points, Keep Shape	Hapus titik, pertahankan bentuk
+	Add Points to Segments…	Tambahkan titik ke segmen…
+	Add Points to Segments	Tambahkan titik ke segmen
+	Open a document to edit its anchor points.	Buka dokumen untuk menyunting titik jangkarnya.
+	Anchors selected: {count}	Titik jangkar terpilih: {count}
+	Direct-select anchor points to edit them.	Pilih langsung titik jangkar untuk menyuntingnya.
+	In:	Masuk:
+	Out:	Keluar:
+	Add Points	Tambahkan titik
+	Points per segment	Titik per segmen
+	Close Path:	Tutup jalur:
+	Keep Handles	Pertahankan pegangan
+	Straight	Lurus
+	Stretch Curve	Regangkan kurva
+@msg	direct-select the anchor points to remove	pilih langsung titik jangkar yang akan dihapus
+@msg	select segments, or paths, to add points to	pilih segmen, atau jalur, untuk ditambahi titik
+@msg	select open paths to close	pilih jalur terbuka untuk ditutup
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	jalur terlalu banyak atau terlalu kusut untuk menemukan persilangannya (paling banyak 10000 segmen)
+@msg	the paths have too many anchors to edit at once	jalur memiliki terlalu banyak titik jangkar untuk disunting sekaligus
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Pena pintar
+	Smart Pen Tool	Alat pena pintar
+	Smart Pen Panel	Panel pena pintar
+	Next Segment	Segmen berikutnya
+	Curved	Lengkung
+	Retract Handles	Tarik masuk pegangan
+	Close or Join	Tutup atau sambungkan
+	Open a document to draw with the Smart Pen.	Buka dokumen untuk menggambar dengan pena pintar.
+	Straight or Curved Segment	Segmen lurus atau lengkung
+@msg	the path is locked or hidden	jalur terkunci atau tersembunyi
+@msg	`id` is not a path	`id` bukan jalur
+@msg	the path has no open subpath	jalur tidak punya subjalur terbuka
+@msg	the subpath is closed	subjalur sudah tertutup
+@msg	the subpath is closed or too short to close	subjalur sudah tertutup atau terlalu pendek untuk ditutup
+@msg	the path is too short to remove a point from	jalur terlalu pendek untuk dihapus titiknya
+@msg	the segment can't be bent that far	segmen tidak dapat dibengkokkan sejauh itu
+@msg	give `{a}` and `{b}`	berikan `{a}` dan `{b}`
+@msg	`t` must be from 0 to 1	`t` harus antara 0 dan 1
+@msg	`segment` must be "straight" or "curved"	`segment` harus "straight" atau "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` harus "free", "keepAngles" atau "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` harus [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Pilih menurut Jenis Warna
+	Objects with Spot Colors	Objek dengan Warna Spot
+	Objects with Color Effects	Objek dengan Efek Warna
+	RGB Images	Gambar RGB
+	CMYK Images	Gambar CMYK
+	Grayscale Images	Gambar Skala Abu-abu
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` harus spotColors, colorEffects, rgbImages, cmykImages, atau grayImages

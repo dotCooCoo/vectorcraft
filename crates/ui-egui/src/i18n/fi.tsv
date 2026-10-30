@@ -3257,6 +3257,7 @@ theme	Appearance	Ulkoasu
 	Make Envelope	Tee kuori
 	Move Envelope Mesh Point	Siirrä kuoren verkkopistettä
 	Move Mesh Point	Siirrä verkkopistettä
+	Move Mesh Points	Siirrä verkkopisteitä
 	Move Spine Point	Siirrä selkärangan pistettä
 	Reshape Spine Segment	Muotoile selkärangan segmentti uudelleen
 	Reset with Mesh	Palauta verkolla
@@ -3723,6 +3724,7 @@ axis	Both	Molemmat
 	Set Text	Aseta teksti
 	Insert Character	Lisää merkki
 	Replace	Korvaa
+	Replace:	Korvaa:
 	Type on a Path Options	Polulla olevan tekstin asetukset
 	Highlight Variable	Korosta muuttuja
 	New Variable	Uusi muuttuja
@@ -5721,3 +5723,144 @@ axis	Y Axis	Y-akseli
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Pisteteksti
 	Area Text	Alueteksti
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Näytä merkkiin kohdistuksen asetukset
+	Hide Snap to Glyph Options	Piilota merkkiin kohdistuksen asetukset
+	Snap to Glyph Options	Merkkiin kohdistuksen asetukset
+	x-height	x-korkeus
+	Glyph Bounds	Merkin rajat
+	Proximity Guides	Läheisyysapuviivat
+	Angular Guides	Kulma-apuviivat
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Keskiarvota ja liitä…
+	Average & Join	Keskiarvota ja liitä
+anchor	Points:	Pisteet:
+@msg	select two open path ends, or two open paths, to average and join	valitse kaksi avoimen polun päätä tai kaksi avointa polkua keskiarvotettaviksi ja liitettäviksi
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Grafiikan siivous
+	Simplify Anchors (Keep Shape)…	Yksinkertaista ankkuripisteet (säilytä muoto)…
+	Health Check	Kuntotarkistus
+	Show Issue	Näytä ongelma
+	Fix All Issues	Korjaa kaikki ongelmat
+	Fix Issues	Korjaa ongelmat
+	Deep Ungroup…	Pura kaikki ryhmitystasot…
+	Rejoin Path Pieces…	Yhdistä polun palat uudelleen…
+	Document Health Check	Asiakirjan kuntotarkistus
+	Check Selection	Tarkista valinta
+	Check Document	Tarkista asiakirja
+	No issues found.	Ongelmia ei löytynyt.
+	Changed since the last check.	Muuttunut edellisen tarkistuksen jälkeen.
+	Fix Selected	Korjaa valitut
+	Fix All	Korjaa kaikki
+	Issues fixed: {count}	Korjattuja ongelmia: {count}
+	Open a document to check it for issues.	Avaa asiakirja tarkistaaksesi sen ongelmat.
+	Empty Text	Tyhjä teksti
+	Unpainted Objects	Värittömät objektit
+	Zero-Opacity Objects	Täysin läpinäkyvät objektit
+	Duplicate Objects	Objektien kaksoiskappaleet
+	Off-Artboard Art	Piirtoalustojen ulkopuolinen grafiikka
+	Duplicate Anchors	Kaksinkertaiset ankkuripisteet
+	Tiny Handles	Pienet kahvat
+	Collinear Anchors	Samalla suoralla olevat ankkuripisteet
+	Nearly Coincident Anchors	Lähes yhtenevät ankkuripisteet
+	Nearly Closed Paths	Lähes suljetut polut
+	Filled Open Paths	Täytetyt avoimet polut
+	Needless Clipping Groups	Tarpeettomat leikkausryhmät
+	Needless Compound Paths	Tarpeettomat yhdistelmäpolut
+	Needless Groups	Tarpeettomat ryhmät
+	Empty Artboards	Tyhjät piirtoalustat
+	Protect Corners	Suojaa kulmat
+	Gap	Väli
+	Include Clip Groups	Sisällytä leikkausryhmät
+@msg	`tolerance` must be from 1 to 100	`tolerance`-arvon on oltava 1–100
+@msg	`gap` must be from 0 to 6 pt	`gap`-arvon on oltava 0–6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Yksinkertaista ankkuripisteet: poluissa on liian monta ankkuripistettä yksinkertaistettavaksi kerralla
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Yhdistä polun palat uudelleen: liian monta polkua yhdistettäväksi kerralla
+@msg	None of these issues are left: check again	Yhtään näistä ongelmista ei ole enää jäljellä: tarkista uudelleen
+@msg	`kinds` must be a list of issue kinds	`kinds`-arvon on oltava luettelo ongelmatyypeistä
+@msg	missing `kind`	`kind` puuttuu
+	Simplify Anchors (Keep Shape)	Yksinkertaista ankkuripisteet (säilytä muoto)
+	Deep Ungroup	Pura kaikki ryhmitystasot
+	Rejoin Path Pieces	Yhdistä polun palat uudelleen
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Väritehosteet
+	Color Effects Panel	Väritehosteet-paneeli
+	Exposure	Valotus
+	Exposure…	Valotus…
+	Desaturate	Poista värikylläisyys
+	Adjustment	Säätö
+	Add as Effect	Lisää tehosteena
+	Apply as Filter	Käytä suodattimena
+	Select objects to adjust their colors.	Valitse objektit, joiden värejä haluat säätää.
+	Brightness/Contrast	Kirkkaus/kontrasti
+	Hue/Saturation	Sävy/kylläisyys
+	Temperature/Tint	Lämpötila/sävy
+@msg	`{id}` is not a colour adjustment	`{id}` ei ole värisäätö
+@msg	missing `effect`	`effect` puuttuu
+@msg	`params` must be an object	`params` on oltava objekti
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Polkujen tarkkuustyökalut
+	Anchor Eraser Brush	Ankkuripisteiden pyyhintäsivellin
+	Extend Path Tool	Polun jatkamistyökalu
+	Measure & Inspect Tool	Mittaus- ja tarkastelutyökalu
+	Anchor Inspector	Ankkuripisteiden tarkastelu
+	Add Points at Crossings	Lisää pisteet risteyskohtiin
+	Split at Crossings	Jaa risteyskohdista
+	Extend Path	Jatka polkua
+	Measure & Inspect	Mittaa ja tarkastele
+	Set Anchor	Aseta ankkuripiste
+	Make Smooth	Tee tasaiseksi
+	Make Corner	Tee kulmapisteeksi
+	Equalize Handles	Tasaa kahvat
+	Remove Points, Keep Shape	Poista pisteet, säilytä muoto
+	Add Points to Segments…	Lisää pisteitä osiin…
+	Add Points to Segments	Lisää pisteitä osiin
+	Open a document to edit its anchor points.	Avaa asiakirja muokataksesi sen ankkuripisteitä.
+	Anchors selected: {count}	Valittuja ankkuripisteitä: {count}
+	Direct-select anchor points to edit them.	Valitse ankkuripisteet suoraan muokataksesi niitä.
+	In:	Sisään:
+	Out:	Ulos:
+	Add Points	Lisää pisteitä
+	Points per segment	Pisteitä osaa kohden
+	Close Path:	Sulje polku:
+	Keep Handles	Säilytä kahvat
+	Straight	Suora
+	Stretch Curve	Venytä käyrää
+@msg	direct-select the anchor points to remove	valitse poistettavat ankkuripisteet suoraan
+@msg	select segments, or paths, to add points to	valitse osat tai polut, joihin pisteitä lisätään
+@msg	select open paths to close	valitse suljettavat avoimet polut
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	liian monta tai liian sotkuista polkua niiden risteyskohtien löytämiseen (enintään 10000 osaa)
+@msg	the paths have too many anchors to edit at once	poluissa on liian monta ankkuripistettä muokattavaksi kerralla
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Älykynä
+	Smart Pen Tool	Älykynätyökalu
+	Smart Pen Panel	Älykynäpaneeli
+	Next Segment	Seuraava segmentti
+	Curved	Kaareva
+	Retract Handles	Vedä kahvat sisään
+	Close or Join	Sulje tai liitä
+	Open a document to draw with the Smart Pen.	Avaa asiakirja piirtääksesi älykynällä.
+	Straight or Curved Segment	Suora tai kaareva segmentti
+@msg	the path is locked or hidden	polku on lukittu tai piilotettu
+@msg	`id` is not a path	`id` ei ole polku
+@msg	the path has no open subpath	polulla ei ole avointa alipolkua
+@msg	the subpath is closed	alipolku on suljettu
+@msg	the subpath is closed or too short to close	alipolku on suljettu tai liian lyhyt suljettavaksi
+@msg	the path is too short to remove a point from	polku on liian lyhyt pisteen poistamiseen
+@msg	the segment can't be bent that far	segmenttiä ei voi taivuttaa niin paljon
+@msg	give `{a}` and `{b}`	anna `{a}` ja `{b}`
+@msg	`t` must be from 0 to 1	`t` on oltava 0–1
+@msg	`segment` must be "straight" or "curved"	`segment` on oltava "straight" tai "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` on oltava "free", "keepAngles" tai "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` on oltava [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Valitse värityypin mukaan
+	Objects with Spot Colors	Objektit, joissa on spottivärejä
+	Objects with Color Effects	Objektit, joissa on väritehosteita
+	RGB Images	RGB-kuvat
+	CMYK Images	CMYK-kuvat
+	Grayscale Images	Harmaasävykuvat
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` on oltava spotColors, colorEffects, rgbImages, cmykImages tai grayImages

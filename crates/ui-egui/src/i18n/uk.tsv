@@ -1938,6 +1938,7 @@ file-filter	Templates	Шаблони
 	Move in Perspective	Перемістити у перспективі
 	Move Locked and Hidden Artwork with Artboard	Переміщати заблокований та прихований малюнок разом із монтажною областю
 	Move Mesh Point	Перемістити точку сітки
+	Move Mesh Points	Перемістити точки сітки
 	Move Plane	Перемістити площину
 	Move Plane to Match Object	Перемістити площину об’єктом
 	Move Rows	Перемістити рядки
@@ -2667,6 +2668,7 @@ mark-style	Japanese	Японський
 	Repeat Tab	Повторити табуляцію
 	Repeat {name}	Повторити {name}
 	Replace	Замінити
+	Replace:	Замінити:
 	Replace Font	Замінити шрифт
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Замініть його іншим файлом або ігноруйте: зображення продовжать показувати попередній перегляд, збережений з документом.
 	Replace Spine	Замінити вісь
@@ -5286,3 +5288,145 @@ axis	Y Axis	Вісь Y
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Точковий текст
 	Area Text	Текст в області
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Показати параметри прив’язки до гліфа
+	Hide Snap to Glyph Options	Приховати параметри прив’язки до гліфа
+	Snap to Glyph Options	Параметри прив’язки до гліфа
+	x-height	Висота x
+	Glyph Bounds	Межі гліфа
+	Proximity Guides	Напрямні близькості
+	Angular Guides	Кутові напрямні
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Усереднити і з’єднати…
+	Average & Join	Усереднити і з’єднати
+anchor	Points:	Точки:
+@msg	select two open path ends, or two open paths, to average and join	виділіть два кінці відкритих контурів або два відкриті контури для усереднення і з’єднання
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Очищення графіки
+	Simplify Anchors (Keep Shape)…	Спростити опорні точки (зберегти форму)…
+	Health Check	Перевірка стану
+	Show Issue	Показати проблему
+	Fix All Issues	Виправити всі проблеми
+	Fix Issues	Виправити проблеми
+	Deep Ungroup…	Розгрупувати всі рівні…
+	Rejoin Path Pieces…	З’єднати частини контурів…
+	Document Health Check	Перевірка стану документа
+	Check Selection	Перевірити виділення
+	Check Document	Перевірити документ
+	No issues found.	Проблем не знайдено.
+	Changed since the last check.	Змінено після останньої перевірки.
+	Fix Selected	Виправити вибрані
+	Fix All	Виправити все
+	Issues fixed: {count}	Виправлено проблем: {count}
+	Open a document to check it for issues.	Відкрийте документ, щоб перевірити його на проблеми.
+	Empty Text	Порожній текст
+	Unpainted Objects	Об’єкти без заливки й обведення
+	Zero-Opacity Objects	Об’єкти з нульовою непрозорістю
+	Duplicate Objects	Дублікати об’єктів
+	Off-Artboard Art	Графіка поза монтажними областями
+	Duplicate Anchors	Дублікати опорних точок
+	Tiny Handles	Крихітні маркери
+	Collinear Anchors	Колінеарні опорні точки
+	Nearly Coincident Anchors	Майже збіжні опорні точки
+	Nearly Closed Paths	Майже замкнені контури
+	Filled Open Paths	Відкриті контури із заливкою
+	Needless Clipping Groups	Зайві групи відсікання
+	Needless Compound Paths	Зайві складені контури
+	Needless Groups	Зайві групи
+	Empty Artboards	Порожні монтажні області
+	Protect Corners	Захищати кути
+	Gap	Проміжок
+	Include Clip Groups	Включити групи відсікання
+@msg	`tolerance` must be from 1 to 100	`tolerance` має бути від 1 до 100
+@msg	`gap` must be from 0 to 6 pt	`gap` має бути від 0 до 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Спростити опорні точки: контури мають забагато опорних точок, щоб спростити їх за один раз
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	З’єднати частини контурів: забагато контурів, щоб з’єднати їх за один раз
+@msg	None of these issues are left: check again	Жодної з цих проблем більше немає: перевірте знову
+@msg	`kinds` must be a list of issue kinds	`kinds` має бути списком видів проблем
+@msg	missing `kind`	не вказано `kind`
+	Simplify Anchors (Keep Shape)	Спростити опорні точки (зберегти форму)
+	Deep Ungroup	Розгрупувати всі рівні
+	Rejoin Path Pieces	З’єднати частини контурів
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Колірні ефекти
+	Color Effects Panel	Панель «Колірні ефекти»
+	Exposure	Експозиція
+	Exposure…	Експозиція…
+	Desaturate	Знебарвити
+	Adjustment	Корекція
+	Add as Effect	Додати як ефект
+	Apply as Filter	Застосувати як фільтр
+	Select objects to adjust their colors.	Виділіть об’єкти, щоб налаштувати їхні кольори.
+	Brightness/Contrast	Яскравість/контраст
+	Hue/Saturation	Відтінок/насиченість
+	Temperature/Tint	Температура/відтінок
+@msg	`{id}` is not a colour adjustment	`{id}` не є корекцією кольору
+@msg	missing `effect`	відсутня `effect`
+@msg	`params` must be an object	`params` має бути об’єктом
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Інструменти точного редагування контурів
+	Anchor Eraser Brush	Пензель-гумка опорних точок
+	Extend Path Tool	Інструмент «Подовження контуру»
+	Measure & Inspect Tool	Інструмент «Вимірювання й аналіз»
+	Anchor Inspector	Інспектор опорних точок
+	Add Points at Crossings	Додати точки на перетинах
+	Split at Crossings	Розрізати на перетинах
+	Extend Path	Подовжити контур
+	Measure & Inspect	Вимірювання й аналіз
+	Set Anchor	Задати опорну точку
+	Make Smooth	Зробити гладкою
+	Make Corner	Зробити кутовою
+	Equalize Handles	Вирівняти довжину маркерів
+	Remove Points, Keep Shape	Забрати точки, зберегти форму
+	Add Points to Segments…	Додати точки до сегментів…
+	Add Points to Segments	Додати точки до сегментів
+	Open a document to edit its anchor points.	Відкрийте документ, щоб редагувати його опорні точки.
+	Anchors selected: {count}	Вибрано опорних точок: {count}
+	Direct-select anchor points to edit them.	Виділіть опорні точки напряму, щоб редагувати їх.
+	Length	Довжина
+	In:	Вхід:
+	Out:	Вихід:
+	Add Points	Додати точки
+	Points per segment	Точок на сегмент
+	Close Path:	Замкнути контур:
+	Keep Handles	Зберегти маркери
+	Straight	Прямий
+	Stretch Curve	Розтягнути криву
+@msg	direct-select the anchor points to remove	виділіть напряму опорні точки, які треба забрати
+@msg	select segments, or paths, to add points to	виділіть сегменти або контури, до яких треба додати точки
+@msg	select open paths to close	виділіть незамкнені контури, щоб замкнути їх
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	контурів забагато або вони надто заплутані, щоб знайти їхні перетини (не більше 10000 сегментів)
+@msg	the paths have too many anchors to edit at once	у контурів забагато опорних точок, щоб редагувати їх за раз
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Розумне перо
+	Smart Pen Tool	Інструмент «Розумне перо»
+	Smart Pen Panel	Панель «Розумне перо»
+	Next Segment	Наступний сегмент
+	Curved	Кривий
+	Retract Handles	Прибрати маркери
+	Close or Join	Замкнути або з’єднати
+	Open a document to draw with the Smart Pen.	Відкрийте документ, щоб малювати розумним пером.
+	Straight or Curved Segment	Прямий або кривий сегмент
+@msg	the path is locked or hidden	контур заблоковано або приховано
+@msg	`id` is not a path	`id` не є контуром
+@msg	the path has no open subpath	контур не має незамкненого вкладеного контуру
+@msg	the subpath is closed	вкладений контур замкнено
+@msg	the subpath is closed or too short to close	вкладений контур замкнено або він закороткий, щоб його замкнути
+@msg	the path is too short to remove a point from	контур закороткий, щоб видалити з нього точку
+@msg	the segment can't be bent that far	сегмент не можна вигнути настільки
+@msg	give `{a}` and `{b}`	укажіть `{a}` і `{b}`
+@msg	`t` must be from 0 to 1	`t` має бути від 0 до 1
+@msg	`segment` must be "straight" or "curved"	`segment` має бути "straight" або "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` має бути "free", "keepAngles" або "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` має бути [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Виділити за типом кольору
+	Objects with Spot Colors	Об’єкти з плашковими кольорами
+	Objects with Color Effects	Об’єкти з колірними ефектами
+	RGB Images	Зображення RGB
+	CMYK Images	Зображення CMYK
+	Grayscale Images	Зображення у відтінках сірого
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` має бути spotColors, colorEffects, rgbImages, cmykImages або grayImages

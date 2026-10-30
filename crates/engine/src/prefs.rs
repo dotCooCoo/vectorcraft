@@ -203,6 +203,9 @@ pub struct Prefs {
     /// Pathfinder panel › Pathfinder Options (`object.pathfinder.options`; a preference group, see
     /// [`cmd::prefscmds::PREF_GROUPS`]).
     pub pathfinder: PathfinderOptions,
+    /// Character panel › Show Snap to Glyph Options: which guides View › Snap to Glyph gives
+    /// (`view.snapToGlyph.options`; a preference group, see [`cmd::prefscmds::PREF_GROUPS`]).
+    pub glyph_snap: vectorcraft_tools::GlyphSnap,
     /// Edit → Transparency Flattener Presets: the user's presets (the built-in ones aren't stored).
     /// Not a `prefs.set` key or group (resetting the preferences keeps them): `flattener.presets.*`
     /// edit it.
@@ -442,6 +445,7 @@ impl Default for Prefs {
             },
             eyedropper: Default::default(),
             pathfinder: Default::default(),
+            glyph_snap: Default::default(),
             flattener_presets: vec![],
             trace_presets: vec![],
             width_profiles: vec![],

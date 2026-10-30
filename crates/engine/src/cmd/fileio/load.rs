@@ -197,6 +197,13 @@ fn from_editing_data_alone(bytes: &[u8], opts: &LoadOptions) -> Option<Result<(D
     )
 }
 
+/// Does `doc` hold no art: only layers, with nothing in them?
+fn draws_nothing(doc: &Document) -> bool {
+    let mut art = false;
+    doc.walk(|n| art |= !n.is_layer());
+    !art
+}
+
 /// Is `e` the error of a file whose pages are only a placeholder
 /// ([`vectorcraft_pdf::PdfError::PlaceholderOnly`])?
 pub(crate) fn is_placeholder(e: &EngineError) -> bool {
@@ -272,8 +279,13 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
             restore_or_import(editing, || match super::pdfimport::import(bytes, opts, format.id != "pdf") {
                 Ok(r) => {
                     // Pages of text alone: the editing copy alone where it reads, as for a file
-                    // saved without its PDF part (#1387: else the page, which is the art).
-                    let alone = r.only_text.then(|| from_editing_data_alone(bytes, opts)).flatten().and_then(|read| read.ok());
+                    // saved without its PDF part (#1387: else the page, which is the art). So too
+                    // pages that draw nothing at all: there is no page art to check the layers
+                    // against, and the empty page would lose all of it.
+                    let alone = (r.only_text || draws_nothing(&r.document))
+                        .then(|| from_editing_data_alone(bytes, opts))
+                        .flatten()
+                        .and_then(|read| read.ok());
                     let (doc, warnings, read) = match alone {
                         Some((doc, warnings)) => (doc, warnings, true),
                         None => through_editing_data(bytes, opts, r.document, r.warnings, r.user_unit),
@@ -592,7 +604,11 @@ pub fn raster_image(bytes: &[u8]) -> Result<RasterImage> {
     reader.limits(limits);
     let kind = reader.format().ok_or_else(|| err("not an image VectorCraft reads (see document.formats)"))?;
     let f = image_format(kind).ok_or_else(|| err(format!("{kind:?} images can't be opened (see document.formats)")))?;
+    // A photo whose EXIF orientation turns or flips it (a camera held upright) is stored as it is
+    // seen, so it places the way it was taken (#4284); the others keep their own bytes.
+    let turned = matches!(f.id, "png" | "jpg" | "gif" | "webp" | "tiff") && exif_orientation(bytes).is_some();
     let kept = match f.id {
+        _ if turned => None,
         "png" | "jpg" | "gif" | "webp" => Some(bytes.to_vec()),
         "tiff" => vectorcraft_doc::cmyk::stored_cmyk_tiff(bytes, ppi),
         _ => None,
@@ -611,13 +627,16 @@ pub fn raster_image(bytes: &[u8]) -> Result<RasterImage> {
             Some(read) => read.map_err(err)?,
             None => {
                 use image::ImageDecoder as _;
-                let decoder = reader.into_decoder().map_err(err)?;
+                let mut decoder = reader.into_decoder().map_err(err)?;
                 // The allowance counts the decoded samples and the RGBA pixels they become (#1717).
                 let (w, h) = decoder.dimensions();
                 if decoder.total_bytes() > MAX_RASTER_ALLOC || u64::from(w) * u64::from(h) * 4 > MAX_RASTER_ALLOC {
                     return Err(err(format!("an image of {w} × {h} pixels is too large to draw")));
                 }
-                image::DynamicImage::from_decoder(decoder).map_err(err)?.to_rgba8()
+                let orientation = decoder.orientation().unwrap_or(image::metadata::Orientation::NoTransforms);
+                let mut img = image::DynamicImage::from_decoder(decoder).map_err(err)?;
+                img.apply_orientation(orientation);
+                img.to_rgba8()
             }
         },
     };
@@ -625,6 +644,14 @@ pub fn raster_image(bytes: &[u8]) -> Result<RasterImage> {
         super::tgaread::fix_alpha(bytes, &mut img);
     }
     as_png(img, ppi)
+}
+
+/// The EXIF orientation of encoded image `bytes` when it turns or flips the pixels; `None` when
+/// it leaves them as stored, or the image has none.
+pub(crate) fn exif_orientation(bytes: &[u8]) -> Option<image::metadata::Orientation> {
+    use image::ImageDecoder as _;
+    let mut decoder = image::ImageReader::new(Cursor::new(bytes)).with_guessed_format().ok()?.into_decoder().ok()?;
+    decoder.orientation().ok().filter(|o| *o != image::metadata::Orientation::NoTransforms)
 }
 
 /// `img` stored as a PNG that keeps the file's resolution.

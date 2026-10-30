@@ -3076,6 +3076,7 @@ theme	Appearance	Udseende
 	Make Envelope	Opret konvolut
 	Move Envelope Mesh Point	Flyt konvolut-meshpunkt
 	Move Mesh Point	Flyt meshpunkt
+	Move Mesh Points	Flyt meshpunkter
 	Move Spine Point	Flyt rygradpunkt
 	Reshape Spine Segment	Omform rygradsegment
 	Reset with Mesh	Nulstil med mesh
@@ -3540,6 +3541,7 @@ axis	Both	Begge
 	Set Text	Angiv tekst
 	Insert Character	Indsæt tegn
 	Replace	Erstat
+	Replace:	Erstat:
 	Type on a Path Options	Indstillinger for tekst på kurve
 	Highlight Variable	Fremhæv variabel
 	New Variable	Ny variabel
@@ -5594,3 +5596,144 @@ axis	Y Axis	Y-akse
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Punkttekst
 	Area Text	Områdetekst
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Vis indstillinger for fastgørelse til tegn
+	Hide Snap to Glyph Options	Skjul indstillinger for fastgørelse til tegn
+	Snap to Glyph Options	Indstillinger for fastgørelse til tegn
+	x-height	x-højde
+	Glyph Bounds	Glyfafgrænsning
+	Proximity Guides	Nærhedshjælpelinjer
+	Angular Guides	Vinkelhjælpelinjer
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Gennemsnit og forbind…
+	Average & Join	Gennemsnit og forbind
+anchor	Points:	Punkter:
+@msg	select two open path ends, or two open paths, to average and join	markér to ender af åbne stier eller to åbne stier, der skal udlignes til gennemsnit og forbindes
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Oprydning i grafik
+	Simplify Anchors (Keep Shape)…	Forenkl ankerpunkter (bevar form)…
+	Health Check	Sundhedstjek
+	Show Issue	Vis problem
+	Fix All Issues	Ret alle problemer
+	Fix Issues	Ret problemer
+	Deep Ungroup…	Afgruppér alle niveauer…
+	Rejoin Path Pieces…	Forbind kurvestykker igen…
+	Document Health Check	Sundhedstjek af dokument
+	Check Selection	Kontrollér markering
+	Check Document	Kontrollér dokument
+	No issues found.	Ingen problemer fundet.
+	Changed since the last check.	Ændret siden sidste kontrol.
+	Fix Selected	Ret valgte
+	Fix All	Ret alle
+	Issues fixed: {count}	Rettede problemer: {count}
+	Open a document to check it for issues.	Åbn et dokument for at kontrollere det for problemer.
+	Empty Text	Tom tekst
+	Unpainted Objects	Objekter uden farve
+	Zero-Opacity Objects	Objekter med 0 % opacitet
+	Duplicate Objects	Dublerede objekter
+	Off-Artboard Art	Grafik uden for kunstpladerne
+	Duplicate Anchors	Dublerede ankerpunkter
+	Tiny Handles	Små håndtag
+	Collinear Anchors	Kollineære ankerpunkter
+	Nearly Coincident Anchors	Næsten sammenfaldende ankerpunkter
+	Nearly Closed Paths	Næsten lukkede kurver
+	Filled Open Paths	Udfyldte åbne kurver
+	Needless Clipping Groups	Unødvendige beskæringsgrupper
+	Needless Compound Paths	Unødvendige sammensatte kurver
+	Needless Groups	Unødvendige grupper
+	Empty Artboards	Tomme kunstplader
+	Protect Corners	Beskyt hjørner
+	Gap	Afstand
+	Include Clip Groups	Medtag beskæringsgrupper
+@msg	`tolerance` must be from 1 to 100	`tolerance` skal være fra 1 til 100
+@msg	`gap` must be from 0 to 6 pt	`gap` skal være fra 0 til 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Forenkl ankerpunkter: kurverne har for mange ankerpunkter til at blive forenklet på én gang
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Forbind kurvestykker igen: for mange kurver til at forbinde på én gang
+@msg	None of these issues are left: check again	Ingen af disse problemer er tilbage: kontrollér igen
+@msg	`kinds` must be a list of issue kinds	`kinds` skal være en liste over problemtyper
+@msg	missing `kind`	`kind` mangler
+	Simplify Anchors (Keep Shape)	Forenkl ankerpunkter (bevar form)
+	Deep Ungroup	Afgruppér alle niveauer
+	Rejoin Path Pieces	Forbind kurvestykker igen
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Farveeffekter
+	Color Effects Panel	Panelet Farveeffekter
+	Exposure	Eksponering
+	Exposure…	Eksponering…
+	Desaturate	Afmæt
+	Adjustment	Justering
+	Add as Effect	Tilføj som effekt
+	Apply as Filter	Anvend som filter
+	Select objects to adjust their colors.	Markér objekter for at justere deres farver.
+	Brightness/Contrast	Lysstyrke/kontrast
+	Hue/Saturation	Farvetone/mætning
+	Temperature/Tint	Temperatur/toning
+@msg	`{id}` is not a colour adjustment	`{id}` er ikke en farvejustering
+@msg	missing `effect`	`effect` mangler
+@msg	`params` must be an object	`params` skal være et objekt
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Præcisionsværktøjer til stier
+	Anchor Eraser Brush	Ankerpunktviskepensel
+	Extend Path Tool	Forlæng sti-værktøj
+	Measure & Inspect Tool	Mål og undersøg-værktøj
+	Anchor Inspector	Ankerpunktinspektør
+	Add Points at Crossings	Tilføj punkter ved krydsninger
+	Split at Crossings	Opdel ved krydsninger
+	Extend Path	Forlæng sti
+	Measure & Inspect	Mål og undersøg
+	Set Anchor	Angiv ankerpunkt
+	Make Smooth	Gør blødt
+	Make Corner	Gør til hjørne
+	Equalize Handles	Udlign håndtag
+	Remove Points, Keep Shape	Fjern punkter, bevar form
+	Add Points to Segments…	Tilføj punkter til segmenter…
+	Add Points to Segments	Tilføj punkter til segmenter
+	Open a document to edit its anchor points.	Åbn et dokument for at redigere dets ankerpunkter.
+	Anchors selected: {count}	Valgte ankerpunkter: {count}
+	Direct-select anchor points to edit them.	Vælg ankerpunkter direkte for at redigere dem.
+	In:	Ind:
+	Out:	Ud:
+	Add Points	Tilføj punkter
+	Points per segment	Punkter pr. segment
+	Close Path:	Luk sti:
+	Keep Handles	Bevar håndtag
+	Straight	Lige
+	Stretch Curve	Stræk kurve
+@msg	direct-select the anchor points to remove	vælg de ankerpunkter, der skal fjernes, direkte
+@msg	select segments, or paths, to add points to	vælg segmenter eller stier at tilføje punkter til
+@msg	select open paths to close	vælg åbne stier at lukke
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	for mange eller for sammenfiltrede stier til at finde deres krydsninger (højst 10000 segmenter)
+@msg	the paths have too many anchors to edit at once	stierne har for mange ankerpunkter til at blive redigeret på én gang
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Smart pen
+	Smart Pen Tool	Smart pen-værktøj
+	Smart Pen Panel	Smart pen-panel
+	Next Segment	Næste segment
+	Curved	Buet
+	Retract Handles	Træk håndtag ind
+	Close or Join	Luk eller forbind
+	Open a document to draw with the Smart Pen.	Åbn et dokument for at tegne med smart pen.
+	Straight or Curved Segment	Lige eller buet segment
+@msg	the path is locked or hidden	stien er låst eller skjult
+@msg	`id` is not a path	`id` er ikke en sti
+@msg	the path has no open subpath	stien har ingen åben delsti
+@msg	the subpath is closed	delstien er lukket
+@msg	the subpath is closed or too short to close	delstien er lukket eller for kort til at lukke
+@msg	the path is too short to remove a point from	stien er for kort til at fjerne et punkt
+@msg	the segment can't be bent that far	segmentet kan ikke bøjes så langt
+@msg	give `{a}` and `{b}`	angiv `{a}` og `{b}`
+@msg	`t` must be from 0 to 1	`t` skal være fra 0 til 1
+@msg	`segment` must be "straight" or "curved"	`segment` skal være "straight" eller "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` skal være "free", "keepAngles" eller "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` skal være [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Markér efter farvetype
+	Objects with Spot Colors	Objekter med spotfarver
+	Objects with Color Effects	Objekter med farveeffekter
+	RGB Images	RGB-billeder
+	CMYK Images	CMYK-billeder
+	Grayscale Images	Gråtonebilleder
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` skal være spotColors, colorEffects, rgbImages, cmykImages eller grayImages

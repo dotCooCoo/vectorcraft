@@ -159,6 +159,8 @@ pub(crate) struct Frame<'a> {
     /// pixels they are placed back on). Type with an anti-aliasing method other than Sharp is
     /// drawn on these pixels ([`Renderer::draw_type_edges`]).
     pub(crate) output: Affine,
+    /// With Separations Preview, the tables placed images show the visible plates through.
+    pub(crate) plates: Option<&'a crate::proof::PlateLut>,
 }
 
 impl Frame<'_> {

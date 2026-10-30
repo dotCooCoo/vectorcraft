@@ -234,6 +234,46 @@ fn cmd_alt_shift_3_hides_unselected_artwork() {
     assert_eq!(shown(&app), [true, true], "nothing is hidden in isolation mode");
 }
 
+/// Cmd+Alt+Shift+J opens Average & Join's dialog, Points: Corner the first time. Cancel changes
+/// nothing; OK averages the selected lines' nearest ends and joins them there; the dialog opens
+/// again on the choice confirmed last.
+#[test]
+fn cmd_alt_shift_j_opens_average_and_join() {
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+    assert_eq!(crate::menus::shortcut_of("path.averageJoin"), Some("Cmd+Alt+Shift+J"));
+    let line = |app: &mut VectorcraftApp, x1: f64, x2: f64| {
+        app.session.execute("shape.line", &json!({"x1": x1, "y1": 10, "x2": x2, "y2": 10})).unwrap()["id"].as_u64().unwrap()
+    };
+    let (a, b) = (line(&mut app, 10.0, 50.0), line(&mut app, 60.0, 100.0));
+    app.session.execute("select.set", &json!({"ids": [a, b]})).unwrap();
+    let before = app.session.doc().unwrap().doc.clone();
+    let j = || egui::Event::Key {
+        key: Key::J,
+        physical_key: None,
+        pressed: true,
+        repeat: false,
+        modifiers: Modifiers::COMMAND | Modifiers::ALT | Modifiers::SHIFT,
+    };
+    frame(&mut app, vec![j()]);
+    let d = app.ui.dialog.as_ref().expect("the dialog opened");
+    assert_eq!((d.kind.as_str(), d.str("to").as_str()), ("averageJoin", "corner"));
+    crate::dialogs::cancel(&mut app);
+    assert!(app.ui.dialog.is_none());
+    assert_eq!(app.session.doc().unwrap().doc, before, "Cancel changes nothing");
+    frame(&mut app, vec![j()]);
+    app.ui.dialog.as_mut().expect("the dialog opened again").fields.insert("to".into(), json!("smooth"));
+    crate::dialogs::confirm(&mut app).unwrap();
+    assert!(app.ui.dialog.is_none());
+    let doc = &app.session.doc().unwrap().doc;
+    assert!(doc.node(vectorcraft_doc::NodeId(b)).is_none(), "joined into one path");
+    let path = doc.node(vectorcraft_doc::NodeId(a)).unwrap().path_data().unwrap();
+    let pts: Vec<(f64, f64)> = path.subpaths[0].anchors.iter().map(|x| (x.p.x, x.p.y)).collect();
+    assert_eq!(pts, [(10.0, 10.0), (55.0, 10.0), (100.0, 10.0)]);
+    frame(&mut app, vec![j()]);
+    assert_eq!(app.ui.dialog.as_ref().map(|d| d.str("to")).as_deref(), Some("smooth"), "the choice confirmed last");
+}
+
 /// Cmd+Shift+B while the Type tool edits text is Type › Bold, not Hide Bounding Box (#724).
 #[test]
 fn cmd_shift_b_while_typing_is_bold_not_the_bounding_box() {

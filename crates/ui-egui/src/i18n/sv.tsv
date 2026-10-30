@@ -1864,6 +1864,7 @@ font-technology	Variable	Variabla
 	Move in Perspective	Flytta i perspektiv
 	Move Locked and Hidden Artwork with Artboard	Flytta låst och dold grafik med ritytan
 	Move Mesh Point	Flytta nätpunkt
+	Move Mesh Points	Flytta nätpunkter
 	Move Plane	Flytta plan
 	Move Plane to Match Object	Flytta plan så att det matchar objekt
 	Move Rows	Flytta rader
@@ -2586,6 +2587,7 @@ font-technology	Variable	Variabla
 	Repeat Tab	Upprepa tabb
 	Repeat {name}	Upprepa {name}
 	Replace	Ersätt
+	Replace:	Ersätt:
 	Replace Font	Ersätt typsnitt
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Ersätt den med en annan fil eller ignorera den: dess bilder fortsätter att visa förhandsgranskningen som sparats med dokumentet.
 	Replace Spine	Ersätt ryggrad
@@ -5714,3 +5716,144 @@ axis	Y Axis	Y-axel
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Punkttext
 	Area Text	Områdestext
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Visa alternativ för fäst mot glyf
+	Hide Snap to Glyph Options	Dölj alternativ för fäst mot glyf
+	Snap to Glyph Options	Alternativ för fäst mot glyf
+	x-height	x-höjd
+	Glyph Bounds	Glyfgränser
+	Proximity Guides	Närhetsstödlinjer
+	Angular Guides	Vinkelstödlinjer
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Medelvärde och foga samman…
+	Average & Join	Medelvärde och foga samman
+anchor	Points:	Punkter:
+@msg	select two open path ends, or two open paths, to average and join	markera två ändar av öppna banor, eller två öppna banor, att medelvärdesberäkna och foga samman
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Upprensning av grafik
+	Simplify Anchors (Keep Shape)…	Förenkla ankarpunkter (behåll formen)…
+	Health Check	Hälsokontroll
+	Show Issue	Visa problem
+	Fix All Issues	Åtgärda alla problem
+	Fix Issues	Åtgärda problem
+	Deep Ungroup…	Dela upp grupper på alla nivåer…
+	Rejoin Path Pieces…	Foga samman banbitar igen…
+	Document Health Check	Hälsokontroll av dokument
+	Check Selection	Kontrollera markering
+	Check Document	Kontrollera dokument
+	No issues found.	Inga problem hittades.
+	Changed since the last check.	Ändrat sedan den senaste kontrollen.
+	Fix Selected	Åtgärda markerade
+	Fix All	Åtgärda alla
+	Issues fixed: {count}	Åtgärdade problem: {count}
+	Open a document to check it for issues.	Öppna ett dokument för att kontrollera det efter problem.
+	Empty Text	Tom text
+	Unpainted Objects	Ofärgade objekt
+	Zero-Opacity Objects	Objekt med 0 % opacitet
+	Duplicate Objects	Dubblettobjekt
+	Off-Artboard Art	Grafik utanför ritytorna
+	Duplicate Anchors	Dubbletter av ankarpunkter
+	Tiny Handles	Små handtag
+	Collinear Anchors	Kollineära ankarpunkter
+	Nearly Coincident Anchors	Nästan sammanfallande ankarpunkter
+	Nearly Closed Paths	Nästan slutna banor
+	Filled Open Paths	Fyllda öppna banor
+	Needless Clipping Groups	Onödiga klippgrupper
+	Needless Compound Paths	Onödiga sammansatta banor
+	Needless Groups	Onödiga grupper
+	Empty Artboards	Tomma ritytor
+	Protect Corners	Skydda hörn
+	Gap	Mellanrum
+	Include Clip Groups	Ta med klippgrupper
+@msg	`tolerance` must be from 1 to 100	`tolerance` måste vara från 1 till 100
+@msg	`gap` must be from 0 to 6 pt	`gap` måste vara från 0 till 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Förenkla ankarpunkter: banorna har för många ankarpunkter för att förenklas på en gång
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Foga samman banbitar igen: för många banor för att foga samman på en gång
+@msg	None of these issues are left: check again	Inget av dessa problem finns kvar: kontrollera igen
+@msg	`kinds` must be a list of issue kinds	`kinds` måste vara en lista med problemtyper
+@msg	missing `kind`	`kind` saknas
+	Simplify Anchors (Keep Shape)	Förenkla ankarpunkter (behåll formen)
+	Deep Ungroup	Dela upp grupper på alla nivåer
+	Rejoin Path Pieces	Foga samman banbitar igen
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Färgeffekter
+	Color Effects Panel	Panelen Färgeffekter
+	Exposure	Exponering
+	Exposure…	Exponering…
+	Desaturate	Avmätta
+	Adjustment	Justering
+	Add as Effect	Lägg till som effekt
+	Apply as Filter	Använd som filter
+	Select objects to adjust their colors.	Markera objekt för att justera deras färger.
+	Brightness/Contrast	Ljusstyrka/kontrast
+	Hue/Saturation	Nyans/mättnad
+	Temperature/Tint	Temperatur/färgton
+@msg	`{id}` is not a colour adjustment	`{id}` är ingen färgjustering
+@msg	missing `effect`	`effect` saknas
+@msg	`params` must be an object	`params` måste vara ett objekt
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Precisionsverktyg för banor
+	Anchor Eraser Brush	Ankarpunktsraderpensel
+	Extend Path Tool	Förläng bana-verktyget
+	Measure & Inspect Tool	Mät och granska-verktyget
+	Anchor Inspector	Ankarpunktsgranskare
+	Add Points at Crossings	Lägg till punkter vid korsningar
+	Split at Crossings	Dela vid korsningar
+	Extend Path	Förläng bana
+	Measure & Inspect	Mät och granska
+	Set Anchor	Ange ankarpunkt
+	Make Smooth	Gör mjuk
+	Make Corner	Gör till hörn
+	Equalize Handles	Utjämna handtag
+	Remove Points, Keep Shape	Ta bort punkter, behåll formen
+	Add Points to Segments…	Lägg till punkter i segment…
+	Add Points to Segments	Lägg till punkter i segment
+	Open a document to edit its anchor points.	Öppna ett dokument för att redigera dess ankarpunkter.
+	Anchors selected: {count}	Valda ankarpunkter: {count}
+	Direct-select anchor points to edit them.	Direktmarkera ankarpunkter för att redigera dem.
+	In:	In:
+	Out:	Ut:
+	Add Points	Lägg till punkter
+	Points per segment	Punkter per segment
+	Close Path:	Stäng bana:
+	Keep Handles	Behåll handtag
+	Straight	Rak
+	Stretch Curve	Sträck kurvan
+@msg	direct-select the anchor points to remove	direktmarkera ankarpunkterna som ska tas bort
+@msg	select segments, or paths, to add points to	markera segment, eller banor, att lägga till punkter i
+@msg	select open paths to close	markera öppna banor att stänga
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	för många eller för trassliga banor för att hitta deras korsningar (högst 10000 segment)
+@msg	the paths have too many anchors to edit at once	banorna har för många ankarpunkter för att redigeras på en gång
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Smart penna
+	Smart Pen Tool	Smart penna-verktyget
+	Smart Pen Panel	Smart penna-panelen
+	Next Segment	Nästa segment
+	Curved	Böjd
+	Retract Handles	Dra in handtag
+	Close or Join	Stäng eller foga samman
+	Open a document to draw with the Smart Pen.	Öppna ett dokument för att rita med smart penna.
+	Straight or Curved Segment	Rakt eller böjt segment
+@msg	the path is locked or hidden	banan är låst eller dold
+@msg	`id` is not a path	`id` är inte en bana
+@msg	the path has no open subpath	banan har ingen öppen delbana
+@msg	the subpath is closed	delbanan är stängd
+@msg	the subpath is closed or too short to close	delbanan är stängd eller för kort för att stänga
+@msg	the path is too short to remove a point from	banan är för kort för att ta bort en punkt
+@msg	the segment can't be bent that far	segmentet kan inte böjas så långt
+@msg	give `{a}` and `{b}`	ange `{a}` och `{b}`
+@msg	`t` must be from 0 to 1	`t` måste vara från 0 till 1
+@msg	`segment` must be "straight" or "curved"	`segment` måste vara "straight" eller "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` måste vara "free", "keepAngles" eller "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` måste vara [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Markera efter färgtyp
+	Objects with Spot Colors	Objekt med dekorfärger
+	Objects with Color Effects	Objekt med färgeffekter
+	RGB Images	RGB-bilder
+	CMYK Images	CMYK-bilder
+	Grayscale Images	Gråskalebilder
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` måste vara spotColors, colorEffects, rgbImages, cmykImages eller grayImages

@@ -15,6 +15,11 @@
 # Left in English on purpose (`MENU_KEEP_AS_IS` in the tests): the product name, language
 # names, OpenType, the built-in workspace names and the bracketed perspective grid preset names.
 	About VectorCraft	VectorCraft について
+	Check for Updates…	アップデートを確認…
+	Checking for updates…	アップデートを確認中…
+	Could not check for updates:\n{error}	アップデートを確認できませんでした:\n{error}
+	VectorCraft Updates	VectorCraft のアップデート
+	VectorCraft {version} is currently the newest version available.	VectorCraft {version} は最新バージョンです。
 	All Scripts	すべての文字
 	Anchors:	アンカー:
 	Any Kind	すべての種類
@@ -586,6 +591,8 @@ font-technology	Variable	バリアブル
 	Snap to Pixel	ピクセルにスナップ
 	Precise Cursors	精密カーソル
 	Image Trace Preview	画像トレースのプレビュー
+	Preparing the image…	画像を準備中…
+	Tracing the colors…	色をトレース中…
 	Snap to Point	ポイントにスナップ
 	Snap to Glyph	グリフにスナップ
 	New View…	新規表示…
@@ -2086,6 +2093,7 @@ font-technology	Variable	バリアブル
 	Move Guide	ガイドを移動
 	Move Locked and Hidden Artwork with Artboard	ロックおよび非表示のアートワークをアートボードと一緒に移動
 	Move Mesh Point	メッシュポイントを移動
+	Move Mesh Points	メッシュポイントを移動
 	Move Plane	面を移動
 	Move Rows	行を移動
 	Move Slices	スライスを移動
@@ -2648,6 +2656,7 @@ mark-style	Japanese	日本式
 	Repeat Tab	タブを繰り返し
 	Repeat {name}	{name}を繰り返す
 	Replace	置換
+	Replace:	置換:
 	Replace Font	フォントを置換
 	Replace Symbol	シンボルを置き換え
 	Replace With Font	置換するフォント
@@ -5368,3 +5377,145 @@ axis	Y Axis	Y 軸
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	ポイント文字
 	Area Text	エリア内文字
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	グリフにスナップのオプションを表示
+	Hide Snap to Glyph Options	グリフにスナップのオプションを隠す
+	Snap to Glyph Options	グリフにスナップのオプション
+	x-height	x ハイト
+	Glyph Bounds	字形の境界
+	Proximity Guides	近接ガイド
+	Angular Guides	角度ガイド
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	平均と連結…
+	Average & Join	平均と連結
+anchor	Points:	ポイント:
+@msg	select two open path ends, or two open paths, to average and join	平均と連結には、オープンパスの端点を 2 つ、またはオープンパスを 2 つ選択してください
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	アートワークのクリーンアップ
+	Simplify Anchors (Keep Shape)…	アンカーポイントを単純化（形状を維持）…
+	Health Check	ヘルスチェック
+	Show Issue	問題を表示
+	Fix All Issues	すべての問題を修正
+	Fix Issues	問題を修正
+	Deep Ungroup…	すべての階層のグループ解除…
+	Rejoin Path Pieces…	パスの断片を再連結…
+	Document Health Check	ドキュメントのヘルスチェック
+	Check Selection	選択範囲をチェック
+	Check Document	ドキュメントをチェック
+	No issues found.	問題は見つかりませんでした。
+	Changed since the last check.	前回のチェック以降に変更されています。
+	Fix Selected	選択した問題を修正
+	Fix All	すべて修正
+	Issues fixed: {count}	修正した問題：{count}
+	Open a document to check it for issues.	ドキュメントを開くと問題をチェックできます。
+	Empty Text	空のテキスト
+	Unpainted Objects	塗りも線もないオブジェクト
+	Zero-Opacity Objects	不透明度 0% のオブジェクト
+	Duplicate Objects	重複したオブジェクト
+	Off-Artboard Art	アートボード外のアートワーク
+	Duplicate Anchors	重複したアンカーポイント
+	Tiny Handles	ごく短いハンドル
+	Collinear Anchors	同一直線上のアンカーポイント
+	Nearly Coincident Anchors	ほぼ重なるアンカーポイント
+	Nearly Closed Paths	ほぼ閉じたパス
+	Filled Open Paths	塗りのあるオープンパス
+	Needless Clipping Groups	不要なクリップグループ
+	Needless Compound Paths	不要な複合パス
+	Needless Groups	不要なグループ
+	Empty Artboards	空のアートボード
+	Protect Corners	角を保護
+	Gap	間隔
+	Include Clip Groups	クリップグループを含める
+@msg	`tolerance` must be from 1 to 100	`tolerance` は 1～100 の範囲で指定してください
+@msg	`gap` must be from 0 to 6 pt	`gap` は 0～6 pt の範囲で指定してください
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	アンカーポイントを単純化：パスのアンカーポイントが多すぎて一度に単純化できません
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	パスの断片を再連結：パスが多すぎて一度に再連結できません
+@msg	None of these issues are left: check again	これらの問題はもう残っていません：もう一度チェックしてください
+@msg	`kinds` must be a list of issue kinds	`kinds` は問題の種類のリストで指定してください
+@msg	missing `kind`	`kind` がありません
+	Simplify Anchors (Keep Shape)	アンカーポイントを単純化（形状を維持）
+	Deep Ungroup	すべての階層のグループ解除
+	Rejoin Path Pieces	パスの断片を再連結
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	カラー効果
+	Color Effects Panel	カラー効果パネル
+	Exposure	露光量
+	Exposure…	露光量…
+	Desaturate	彩度を下げる
+	Adjustment	補正
+	Add as Effect	効果として追加
+	Apply as Filter	フィルターとして適用
+	Select objects to adjust their colors.	カラーを補正するオブジェクトを選択してください。
+	Brightness/Contrast	明るさ・コントラスト
+	Hue/Saturation	色相・彩度
+	Temperature/Tint	色温度・色かぶり
+@msg	`{id}` is not a colour adjustment	`{id}` はカラー補正ではありません
+@msg	missing `effect`	`effect` が指定されていません
+@msg	`params` must be an object	`params` にはオブジェクトを指定してください
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	パス精密ツール
+	Anchor Eraser Brush	アンカーポイント消去ブラシ
+	Extend Path Tool	パス延長ツール
+	Measure & Inspect Tool	計測・検査ツール
+	Anchor Inspector	アンカーポイントインスペクター
+	Add Points at Crossings	交差点にポイントを追加
+	Split at Crossings	交差点で分割
+	Extend Path	パスを延長
+	Measure & Inspect	計測・検査
+	Set Anchor	アンカーポイントを設定
+	Make Smooth	スムーズにする
+	Make Corner	コーナーにする
+	Equalize Handles	ハンドルの長さを揃える
+	Remove Points, Keep Shape	ポイントを削除（形状を維持）
+	Add Points to Segments…	セグメントにポイントを追加…
+	Add Points to Segments	セグメントにポイントを追加
+	Open a document to edit its anchor points.	アンカーポイントを編集するにはドキュメントを開いてください。
+	Anchors selected: {count}	選択中のアンカーポイント：{count}
+	Direct-select anchor points to edit them.	編集するアンカーポイントをダイレクト選択してください。
+	Length	長さ
+	In:	イン：
+	Out:	アウト：
+	Add Points	ポイントを追加
+	Points per segment	セグメントあたりのポイント数
+	Close Path:	パスを閉じる：
+	Keep Handles	ハンドルを維持
+	Straight	直線
+	Stretch Curve	カーブを延長
+@msg	direct-select the anchor points to remove	削除するアンカーポイントをダイレクト選択してください
+@msg	select segments, or paths, to add points to	ポイントを追加するセグメントまたはパスを選択してください
+@msg	select open paths to close	閉じるオープンパスを選択してください
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	パスが多すぎるか複雑すぎて交差点を見つけられません（最大 10000 セグメント）
+@msg	the paths have too many anchors to edit at once	パスのアンカーポイントが多すぎて一度に編集できません
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	スマートペン
+	Smart Pen Tool	スマートペンツール
+	Smart Pen Panel	スマートペンパネル
+	Next Segment	次のセグメント
+	Curved	曲線
+	Retract Handles	ハンドルを収める
+	Close or Join	閉じるまたは連結
+	Open a document to draw with the Smart Pen.	スマートペンで描くにはドキュメントを開いてください。
+	Straight or Curved Segment	直線または曲線セグメント
+@msg	the path is locked or hidden	パスがロックされているか非表示です
+@msg	`id` is not a path	`id` はパスではありません
+@msg	the path has no open subpath	パスに開いたサブパスがありません
+@msg	the subpath is closed	サブパスは閉じています
+@msg	the subpath is closed or too short to close	サブパスが閉じているか、短すぎて閉じられません
+@msg	the path is too short to remove a point from	パスが短すぎてポイントを削除できません
+@msg	the segment can't be bent that far	セグメントをそこまで曲げることはできません
+@msg	give `{a}` and `{b}`	`{a}` と `{b}` を指定してください
+@msg	`t` must be from 0 to 1	`t` には 0 から 1 を指定してください
+@msg	`segment` must be "straight" or "curved"	`segment` には "straight" または "curved" を指定してください
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` には "free"、"keepAngles" または "symmetric" を指定してください
+@msg	`{key}` must be [x, y]	`{key}` には [x, y] を指定してください
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	カラーの種類で選択
+	Objects with Spot Colors	特色を使用したオブジェクト
+	Objects with Color Effects	カラー効果のあるオブジェクト
+	RGB Images	RGB 画像
+	CMYK Images	CMYK 画像
+	Grayscale Images	グレースケール画像
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` は spotColors、colorEffects、rgbImages、cmykImages、grayImages のいずれかにしてください

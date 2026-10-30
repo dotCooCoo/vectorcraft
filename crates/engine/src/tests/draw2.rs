@@ -2723,6 +2723,88 @@ fn join_takes_the_paths_and_the_ends_to_join() {
     }
 }
 
+/// Average & Join (Cmd+Alt+Shift+J): the two ends meet at their midpoint and become one anchor of
+/// one path, a corner or a smooth point as asked, in one undo step; from two selected paths (their
+/// nearest ends) or from two direct-selected ends (the ends picked, not the nearest).
+#[test]
+fn average_join_meets_at_the_midpoint_as_a_corner_or_smooth_point() {
+    let pts = |s: &Session, id: NodeId| path(s, id).subpaths[0].anchors.iter().map(|x| (x.p.x, x.p.y)).collect::<Vec<_>>();
+    for (to, picks) in [("corner", false), ("smooth", false), ("corner", true), ("smooth", true)] {
+        let mut s = session();
+        let a = line(&mut s, 0.0, 0.0, 100.0, 0.0);
+        let b = line(&mut s, 110.0, 40.0, 200.0, 40.0);
+        let want = if picks {
+            // a's first and b's last, the far ends.
+            s.execute("select.anchors", &json!({"id": a.0, "anchors": [[0, 0]], "mode": "set"})).unwrap();
+            s.execute("select.anchors", &json!({"id": b.0, "anchors": [[0, 1]], "mode": "add"})).unwrap();
+            [(100.0, 0.0), (100.0, 20.0), (110.0, 40.0)]
+        } else {
+            s.select(|_, sel| sel.set([a, b])).unwrap();
+            [(0.0, 0.0), (105.0, 20.0), (200.0, 40.0)]
+        };
+        let undo = s.doc().unwrap().history.undo.len();
+        s.execute("path.averageJoin", &json!({ "to": to })).unwrap();
+        assert_eq!(pts(&s, a), want, "{to} picks:{picks}");
+        assert!(s.doc().unwrap().doc.node(b).is_none(), "b was joined into a");
+        assert_eq!(s.doc().unwrap().selection.objects, [a]);
+        let joined = path(&s, a).subpaths[0].anchors[1];
+        let (din, dout) = (joined.h_in - joined.p, joined.h_out - joined.p);
+        if to == "corner" {
+            assert!(din.hypot() < 1e-9 && dout.hypot() < 1e-9, "a corner has no handles: {joined:?}");
+        } else {
+            assert!(din.hypot() > 1.0 && dout.hypot() > 1.0 && din.cross(dout).abs() < 1e-6 && din.dot(dout) < 0.0, "smooth: {joined:?}");
+        }
+        assert_eq!(s.doc().unwrap().history.undo.len(), undo + 1, "one undo step");
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert_eq!(pts(&s, a), [(0.0, 0.0), (100.0, 0.0)]);
+        assert_eq!(pts(&s, b), [(110.0, 40.0), (200.0, 40.0)]);
+    }
+}
+
+/// Average & Join closes one open path at the midpoint of its ends, and refuses a bad `to` and a
+/// selection without two open ends to join (a closed path, three paths, one picked end, a line's
+/// two ends), leaving the document as it was; `ids` names the paths over the selection.
+#[test]
+fn average_join_closes_one_path_and_refuses_what_it_cannot_join() {
+    let mut s = session();
+    let v = NodeId(s.execute("path.create", &json!({"d": "M0 0 L50 100 L100 10"})).unwrap()["id"].as_u64().unwrap());
+    s.select(|_, sel| sel.set([v])).unwrap();
+    s.execute("path.averageJoin", &json!({"to": "corner"})).unwrap();
+    let pd = path(&s, v);
+    assert!(pd.subpaths[0].closed);
+    assert_eq!(pd.subpaths[0].anchors.iter().map(|x| (x.p.x, x.p.y)).collect::<Vec<_>>(), [(50.0, 5.0), (50.0, 100.0)]);
+
+    let mut s = session();
+    let a = line(&mut s, 0.0, 0.0, 100.0, 0.0);
+    let b = line(&mut s, 110.0, 0.0, 200.0, 0.0);
+    let c = line(&mut s, 210.0, 0.0, 300.0, 0.0);
+    let r = rect(&mut s, 0.0, 50.0, 10.0, 10.0);
+    let before = s.doc().unwrap().doc.clone();
+    let corner = json!({"to": "corner"});
+    let cases = [
+        (vec![a, b], None, json!({})),
+        (vec![a, b], None, json!({"to": "round"})),
+        (vec![r], None, corner.clone()),
+        (vec![a, b, c], None, corner.clone()),
+        (vec![a], None, corner.clone()),
+        (vec![r], None, json!({"to": "corner", "ids": [a.0, 999]})),
+        (vec![r], None, json!({"to": "corner", "ids": [r.0, a.0]})),
+        (vec![a, b], Some(json!({"id": a.0, "anchors": [[0, 0]], "mode": "set"})), corner.clone()),
+        (vec![a, b], Some(json!({"id": a.0, "anchors": [[0, 0], [0, 1]], "mode": "set"})), corner.clone()),
+    ];
+    for (picked, anchors, p) in cases {
+        s.select(|_, sel| sel.set(picked.clone())).unwrap();
+        if let Some(anchors) = anchors {
+            s.execute("select.anchors", &anchors).unwrap();
+        }
+        assert!(s.execute("path.averageJoin", &p).is_err(), "{picked:?} {p}");
+        assert_eq!(s.doc().unwrap().doc, before, "{picked:?} {p}: nothing changed");
+    }
+    s.select(|_, sel| sel.set([r])).unwrap();
+    s.execute("path.averageJoin", &json!({"to": "corner", "ids": [b.0, c.0]})).unwrap();
+    assert_eq!(path(&s, b).subpaths[0].anchors.iter().map(|x| (x.p.x, x.p.y)).collect::<Vec<_>>(), [(110.0, 0.0), (205.0, 0.0), (300.0, 0.0)]);
+}
+
 /// `path.join {ends}` on selected paths honors the requested ends, not the nearest pair.
 #[test]
 fn join_selected_paths_honors_ends_parameter() {

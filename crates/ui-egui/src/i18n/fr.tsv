@@ -1916,6 +1916,7 @@ font-technology	Variable	Variables
 	Move in Perspective	Déplacer en perspective
 	Move Locked and Hidden Artwork with Artboard	Déplacer les illustrations verrouillées et masquées avec le plan de travail
 	Move Mesh Point	Déplacer le point de filet
+	Move Mesh Points	Déplacer les points de filet
 	Move Plane	Déplacer le plan
 	Move Plane to Match Object	Déplacer le plan pour l’aligner sur l’objet
 	Move Rows	Déplacer les lignes
@@ -2641,6 +2642,7 @@ font-technology	Variable	Variables
 	Repeat Tab	Répéter la tabulation
 	Repeat {name}	Répéter {name}
 	Replace	Remplacer
+	Replace:	Remplacer :
 	Replace Font	Remplacer la police
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Remplacez-le par un autre fichier ou ignorez-le : ses images continueront d’afficher l’aperçu enregistré avec le document.
 	Replace Spine	Remplacer la dorsale
@@ -5689,3 +5691,144 @@ axis	Y Axis	Axe Y
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Texte de point
 	Area Text	Texte captif
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Afficher les options de magnétisme du glyphe
+	Hide Snap to Glyph Options	Masquer les options de magnétisme du glyphe
+	Snap to Glyph Options	Options de magnétisme du glyphe
+	x-height	Hauteur d’x
+	Glyph Bounds	Limites du glyphe
+	Proximity Guides	Repères de proximité
+	Angular Guides	Repères angulaires
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Alignement et jonction…
+	Average & Join	Alignement et jonction
+anchor	Points:	Points :
+@msg	select two open path ends, or two open paths, to average and join	sélectionnez deux extrémités de tracés ouverts, ou deux tracés ouverts, à aligner et joindre
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Nettoyage des illustrations
+	Simplify Anchors (Keep Shape)…	Simplifier les points d’ancrage (conserver la forme)…
+	Health Check	Vérification de l’état
+	Show Issue	Afficher le problème
+	Fix All Issues	Corriger tous les problèmes
+	Fix Issues	Corriger les problèmes
+	Deep Ungroup…	Dissocier tous les niveaux…
+	Rejoin Path Pieces…	Rejoindre les morceaux de tracé…
+	Document Health Check	Vérification de l’état du document
+	Check Selection	Vérifier la sélection
+	Check Document	Vérifier le document
+	No issues found.	Aucun problème trouvé.
+	Changed since the last check.	Modifié depuis la dernière vérification.
+	Fix Selected	Corriger la sélection
+	Fix All	Tout corriger
+	Issues fixed: {count}	Problèmes corrigés : {count}
+	Open a document to check it for issues.	Ouvrez un document pour y rechercher des problèmes.
+	Empty Text	Texte vide
+	Unpainted Objects	Objets sans fond ni contour
+	Zero-Opacity Objects	Objets à opacité nulle
+	Duplicate Objects	Objets en double
+	Off-Artboard Art	Illustration hors des plans de travail
+	Duplicate Anchors	Points d’ancrage en double
+	Tiny Handles	Poignées minuscules
+	Collinear Anchors	Points d’ancrage alignés
+	Nearly Coincident Anchors	Points d’ancrage presque confondus
+	Nearly Closed Paths	Tracés presque fermés
+	Filled Open Paths	Tracés ouverts avec fond
+	Needless Clipping Groups	Groupes de découpe inutiles
+	Needless Compound Paths	Tracés transparents inutiles
+	Needless Groups	Groupes inutiles
+	Empty Artboards	Plans de travail vides
+	Protect Corners	Protéger les angles
+	Gap	Écart
+	Include Clip Groups	Inclure les groupes de découpe
+@msg	`tolerance` must be from 1 to 100	`tolerance` doit être compris entre 1 et 100
+@msg	`gap` must be from 0 to 6 pt	`gap` doit être compris entre 0 et 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Simplifier les points d’ancrage : les tracés ont trop de points d’ancrage pour être simplifiés en une fois
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Rejoindre les morceaux de tracé : trop de tracés à rejoindre en une fois
+@msg	None of these issues are left: check again	Aucun de ces problèmes ne subsiste : relancez la vérification
+@msg	`kinds` must be a list of issue kinds	`kinds` doit être une liste de types de problèmes
+@msg	missing `kind`	`kind` manquant
+	Simplify Anchors (Keep Shape)	Simplifier les points d’ancrage (conserver la forme)
+	Deep Ungroup	Dissocier tous les niveaux
+	Rejoin Path Pieces	Rejoindre les morceaux de tracé
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Effets de couleur
+	Color Effects Panel	Panneau Effets de couleur
+	Exposure	Exposition
+	Exposure…	Exposition…
+	Desaturate	Désaturer
+	Adjustment	Réglage
+	Add as Effect	Ajouter comme effet
+	Apply as Filter	Appliquer comme filtre
+	Select objects to adjust their colors.	Sélectionnez des objets pour régler leurs couleurs.
+	Brightness/Contrast	Luminosité/contraste
+	Hue/Saturation	Teinte/saturation
+	Temperature/Tint	Température/teinte
+@msg	`{id}` is not a colour adjustment	`{id}` n'est pas un réglage de couleur
+@msg	missing `effect`	`effect` manquant
+@msg	`params` must be an object	`params` doit être un objet
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Outils de précision des tracés
+	Anchor Eraser Brush	Pinceau effaceur de points d’ancrage
+	Extend Path Tool	Outil Prolonger le tracé
+	Measure & Inspect Tool	Outil Mesurer et inspecter
+	Anchor Inspector	Inspecteur de points d’ancrage
+	Add Points at Crossings	Ajouter des points aux croisements
+	Split at Crossings	Scinder aux croisements
+	Extend Path	Prolonger le tracé
+	Measure & Inspect	Mesurer et inspecter
+	Set Anchor	Définir le point d’ancrage
+	Make Smooth	Rendre lisse
+	Make Corner	Rendre angulaire
+	Equalize Handles	Égaliser les poignées
+	Remove Points, Keep Shape	Supprimer des points, conserver la forme
+	Add Points to Segments…	Ajouter des points aux segments…
+	Add Points to Segments	Ajouter des points aux segments
+	Open a document to edit its anchor points.	Ouvrez un document pour modifier ses points d’ancrage.
+	Anchors selected: {count}	Points d’ancrage sélectionnés : {count}
+	Direct-select anchor points to edit them.	Sélectionnez directement des points d’ancrage pour les modifier.
+	In:	Entrée :
+	Out:	Sortie :
+	Add Points	Ajouter des points
+	Points per segment	Points par segment
+	Close Path:	Fermer le tracé :
+	Keep Handles	Conserver les poignées
+	Straight	Droit
+	Stretch Curve	Étirer la courbe
+@msg	direct-select the anchor points to remove	sélectionnez directement les points d’ancrage à supprimer
+@msg	select segments, or paths, to add points to	sélectionnez des segments, ou des tracés, auxquels ajouter des points
+@msg	select open paths to close	sélectionnez des tracés ouverts à fermer
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	trop de tracés, ou trop enchevêtrés, pour trouver leurs croisements (10000 segments au plus)
+@msg	the paths have too many anchors to edit at once	les tracés ont trop de points d’ancrage pour être modifiés en une fois
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Plume intelligente
+	Smart Pen Tool	Outil Plume intelligente
+	Smart Pen Panel	Panneau Plume intelligente
+	Next Segment	Segment suivant
+	Curved	Courbe
+	Retract Handles	Rétracter les poignées
+	Close or Join	Fermer ou joindre
+	Open a document to draw with the Smart Pen.	Ouvrez un document pour dessiner avec la plume intelligente.
+	Straight or Curved Segment	Segment droit ou courbe
+@msg	the path is locked or hidden	le tracé est verrouillé ou masqué
+@msg	`id` is not a path	`id` n’est pas un tracé
+@msg	the path has no open subpath	le tracé n’a aucun sous-tracé ouvert
+@msg	the subpath is closed	le sous-tracé est fermé
+@msg	the subpath is closed or too short to close	le sous-tracé est fermé ou trop court pour être fermé
+@msg	the path is too short to remove a point from	le tracé est trop court pour en retirer un point
+@msg	the segment can't be bent that far	le segment ne peut pas être courbé à ce point
+@msg	give `{a}` and `{b}`	indiquez `{a}` et `{b}`
+@msg	`t` must be from 0 to 1	`t` doit être compris entre 0 et 1
+@msg	`segment` must be "straight" or "curved"	`segment` doit être "straight" ou "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` doit être "free", "keepAngles" ou "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` doit être [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Sélectionner par type de couleur
+	Objects with Spot Colors	Objets avec tons directs
+	Objects with Color Effects	Objets avec effets de couleur
+	RGB Images	Images RVB
+	CMYK Images	Images CMJN
+	Grayscale Images	Images en niveaux de gris
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` doit être spotColors, colorEffects, rgbImages, cmykImages ou grayImages

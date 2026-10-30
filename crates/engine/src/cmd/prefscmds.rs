@@ -388,10 +388,11 @@ pub fn spec(key: &str) -> Option<&'static PrefSpec> {
 
 /// Preferences kept as one object with a command of their own instead of [`PREF_SPECS`] rows (they
 /// aren't in the Preferences dialog): the Eyedropper Options (`eyedropper.setOptions`), the
-/// Perspective Grid Options (`perspective.widget.options`) and the Pathfinder Options
-/// (`object.pathfinder.options`). `prefs.get` and `prefs.set` take them by key (a partial object
-/// updates what it names) and `prefs.reset` without a category resets them.
-pub const PREF_GROUPS: &[&str] = &["eyedropper", "perspectiveWidget", "pathfinder"];
+/// Perspective Grid Options (`perspective.widget.options`), the Pathfinder Options
+/// (`object.pathfinder.options`) and the Snap to Glyph options (`view.snapToGlyph.options`).
+/// `prefs.get` and `prefs.set` take them by key (a partial object updates what it names) and
+/// `prefs.reset` without a category resets them.
+pub const PREF_GROUPS: &[&str] = &["eyedropper", "perspectiveWidget", "pathfinder", "glyphSnap"];
 
 /// Validate a value for preference group `key` against `current`.
 fn validate_group(key: &str, current: &Value, v: &Value) -> std::result::Result<Value, String> {
@@ -402,6 +403,10 @@ fn validate_group(key: &str, current: &Value, v: &Value) -> std::result::Result<
         }
         "pathfinder" => {
             let cur: super::PathfinderOptions = serde_json::from_value(current.clone()).unwrap_or_default();
+            cur.merged(v).map(|o| json!(o))
+        }
+        "glyphSnap" => {
+            let cur: vectorcraft_tools::GlyphSnap = serde_json::from_value(current.clone()).unwrap_or_default();
             cur.merged(v).map(|o| json!(o))
         }
         "perspectiveWidget" => {

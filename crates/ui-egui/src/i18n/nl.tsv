@@ -3090,6 +3090,7 @@ theme	Appearance	Vormgeving
 	Make Envelope	Omtrek maken
 	Move Envelope Mesh Point	Maaspunt van omtrek verplaatsen
 	Move Mesh Point	Maaspunt verplaatsen
+	Move Mesh Points	Maaspunten verplaatsen
 	Move Spine Point	Aspunt verplaatsen
 	Reshape Spine Segment	Segment van de as opnieuw vormgeven
 	Reset with Mesh	Opnieuw instellen met maas
@@ -3554,6 +3555,7 @@ axis	Both	Beide
 	Set Text	Tekst instellen
 	Insert Character	Teken invoegen
 	Replace	Vervangen
+	Replace:	Vervangen:
 	Type on a Path Options	Opties voor tekst op pad
 	Highlight Variable	Variabele markeren
 	New Variable	Nieuwe variabele
@@ -5638,3 +5640,144 @@ axis	Y Axis	Y-as
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Punttekst
 	Area Text	Vlaktekst
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Opties voor uitlijnen op glyph tonen
+	Hide Snap to Glyph Options	Opties voor uitlijnen op glyph verbergen
+	Snap to Glyph Options	Opties voor uitlijnen op glyph
+	x-height	x-hoogte
+	Glyph Bounds	Glyphbegrenzing
+	Proximity Guides	Nabijheidshulplijnen
+	Angular Guides	Hoekhulplijnen
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Gemiddelde en verbinden…
+	Average & Join	Gemiddelde en verbinden
+anchor	Points:	Punten:
+@msg	select two open path ends, or two open paths, to average and join	selecteer twee uiteinden van open paden, of twee open paden, om te middelen en te verbinden
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Illustratie opschonen
+	Simplify Anchors (Keep Shape)…	Ankerpunten vereenvoudigen (vorm behouden)…
+	Health Check	Gezondheidscontrole
+	Show Issue	Probleem tonen
+	Fix All Issues	Alle problemen oplossen
+	Fix Issues	Problemen oplossen
+	Deep Ungroup…	Alle groeperingsniveaus opheffen…
+	Rejoin Path Pieces…	Padstukken opnieuw verbinden…
+	Document Health Check	Gezondheidscontrole van document
+	Check Selection	Selectie controleren
+	Check Document	Document controleren
+	No issues found.	Geen problemen gevonden.
+	Changed since the last check.	Gewijzigd sinds de laatste controle.
+	Fix Selected	Geselecteerde oplossen
+	Fix All	Alles oplossen
+	Issues fixed: {count}	Opgeloste problemen: {count}
+	Open a document to check it for issues.	Open een document om het op problemen te controleren.
+	Empty Text	Lege tekst
+	Unpainted Objects	Objecten zonder verf
+	Zero-Opacity Objects	Objecten met 0% dekking
+	Duplicate Objects	Dubbele objecten
+	Off-Artboard Art	Illustraties buiten de tekenborden
+	Duplicate Anchors	Dubbele ankerpunten
+	Tiny Handles	Piepkleine grepen
+	Collinear Anchors	Collineaire ankerpunten
+	Nearly Coincident Anchors	Bijna samenvallende ankerpunten
+	Nearly Closed Paths	Bijna gesloten paden
+	Filled Open Paths	Gevulde open paden
+	Needless Clipping Groups	Overbodige knipgroepen
+	Needless Compound Paths	Overbodige samengestelde paden
+	Needless Groups	Overbodige groepen
+	Empty Artboards	Lege tekenborden
+	Protect Corners	Hoeken beschermen
+	Gap	Tussenruimte
+	Include Clip Groups	Knipgroepen meenemen
+@msg	`tolerance` must be from 1 to 100	`tolerance` moet tussen 1 en 100 liggen
+@msg	`gap` must be from 0 to 6 pt	`gap` moet tussen 0 en 6 pt liggen
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Ankerpunten vereenvoudigen: de paden hebben te veel ankerpunten om in één keer te vereenvoudigen
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Padstukken opnieuw verbinden: te veel paden om in één keer te verbinden
+@msg	None of these issues are left: check again	Geen van deze problemen is nog over: controleer opnieuw
+@msg	`kinds` must be a list of issue kinds	`kinds` moet een lijst met soorten problemen zijn
+@msg	missing `kind`	`kind` ontbreekt
+	Simplify Anchors (Keep Shape)	Ankerpunten vereenvoudigen (vorm behouden)
+	Deep Ungroup	Alle groeperingsniveaus opheffen
+	Rejoin Path Pieces	Padstukken opnieuw verbinden
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Kleureffecten
+	Color Effects Panel	Deelvenster Kleureffecten
+	Exposure	Belichting
+	Exposure…	Belichting…
+	Desaturate	Desatureren
+	Adjustment	Aanpassing
+	Add as Effect	Toevoegen als effect
+	Apply as Filter	Toepassen als filter
+	Select objects to adjust their colors.	Selecteer objecten om hun kleuren aan te passen.
+	Brightness/Contrast	Helderheid/contrast
+	Hue/Saturation	Kleurtoon/verzadiging
+	Temperature/Tint	Temperatuur/tint
+@msg	`{id}` is not a colour adjustment	`{id}` is geen kleuraanpassing
+@msg	missing `effect`	`effect` ontbreekt
+@msg	`params` must be an object	`params` moet een object zijn
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Precisiegereedschappen voor paden
+	Anchor Eraser Brush	Ankerpunt-gumpenseel
+	Extend Path Tool	Pad verlengen-gereedschap
+	Measure & Inspect Tool	Meten en inspecteren-gereedschap
+	Anchor Inspector	Ankerpuntinspecteur
+	Add Points at Crossings	Punten toevoegen bij kruisingen
+	Split at Crossings	Splitsen bij kruisingen
+	Extend Path	Pad verlengen
+	Measure & Inspect	Meten en inspecteren
+	Set Anchor	Ankerpunt instellen
+	Make Smooth	Vloeiend maken
+	Make Corner	Hoekpunt maken
+	Equalize Handles	Grepen gelijkmaken
+	Remove Points, Keep Shape	Punten verwijderen, vorm behouden
+	Add Points to Segments…	Punten aan segmenten toevoegen…
+	Add Points to Segments	Punten aan segmenten toevoegen
+	Open a document to edit its anchor points.	Open een document om de ankerpunten ervan te bewerken.
+	Anchors selected: {count}	Geselecteerde ankerpunten: {count}
+	Direct-select anchor points to edit them.	Selecteer ankerpunten direct om ze te bewerken.
+	In:	In:
+	Out:	Uit:
+	Add Points	Punten toevoegen
+	Points per segment	Punten per segment
+	Close Path:	Pad sluiten:
+	Keep Handles	Grepen behouden
+	Straight	Recht
+	Stretch Curve	Curve uitrekken
+@msg	direct-select the anchor points to remove	selecteer de te verwijderen ankerpunten direct
+@msg	select segments, or paths, to add points to	selecteer segmenten, of paden, om punten aan toe te voegen
+@msg	select open paths to close	selecteer open paden om te sluiten
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	te veel of te verwarde paden om hun kruisingen te vinden (hoogstens 10000 segmenten)
+@msg	the paths have too many anchors to edit at once	de paden hebben te veel ankerpunten om in één keer te bewerken
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Slimme pen
+	Smart Pen Tool	Slimme pen-gereedschap
+	Smart Pen Panel	Slimme pen-paneel
+	Next Segment	Volgend segment
+	Curved	Gebogen
+	Retract Handles	Grepen intrekken
+	Close or Join	Sluiten of verbinden
+	Open a document to draw with the Smart Pen.	Open een document om met de slimme pen te tekenen.
+	Straight or Curved Segment	Recht of gebogen segment
+@msg	the path is locked or hidden	het pad is vergrendeld of verborgen
+@msg	`id` is not a path	`id` is geen pad
+@msg	the path has no open subpath	het pad heeft geen open subpad
+@msg	the subpath is closed	het subpad is gesloten
+@msg	the subpath is closed or too short to close	het subpad is gesloten of te kort om te sluiten
+@msg	the path is too short to remove a point from	het pad is te kort om er een punt uit te verwijderen
+@msg	the segment can't be bent that far	het segment kan niet zo ver worden gebogen
+@msg	give `{a}` and `{b}`	geef `{a}` en `{b}` op
+@msg	`t` must be from 0 to 1	`t` moet tussen 0 en 1 liggen
+@msg	`segment` must be "straight" or "curved"	`segment` moet "straight" of "curved" zijn
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` moet "free", "keepAngles" of "symmetric" zijn
+@msg	`{key}` must be [x, y]	`{key}` moet [x, y] zijn
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Selecteren op kleursoort
+	Objects with Spot Colors	Objecten met steunkleuren
+	Objects with Color Effects	Objecten met kleureffecten
+	RGB Images	RGB-afbeeldingen
+	CMYK Images	CMYK-afbeeldingen
+	Grayscale Images	Grijswaardenafbeeldingen
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` moet spotColors, colorEffects, rgbImages, cmykImages of grayImages zijn

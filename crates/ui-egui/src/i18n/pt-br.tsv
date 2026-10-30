@@ -1601,6 +1601,7 @@
 	Move Guide	Mover Guia
 	Move Locked and Hidden Artwork with Artboard	Mover Arte Bloqueada e Oculta com a Mesa de Trabalho
 	Move Mesh Point	Mover Ponto de Malha
+	Move Mesh Points	Mover Pontos de Malha
 	Move Plane	Mover Plano
 	Move Plane to Match Object	Mover Plano para Corresponder ao Objeto
 	Move Slices	Mover Fatias
@@ -2182,6 +2183,7 @@
 	Repeat Tab	Repetir Parada de Tabulação
 	Repeat {name}	Repetir {name}
 	Replace	Substituir
+	Replace:	Substituir:
 	Replace Font	Substituir Fonte
 	Replace Spine	Substituir Coluna
 	Replace Symbol	Substituir Símbolo
@@ -5607,3 +5609,145 @@ axis	Y Axis	Eixo Y
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Texto de Ponto
 	Area Text	Texto de Área
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Mostrar Opções de Ajuste ao Glifo
+	Hide Snap to Glyph Options	Ocultar Opções de Ajuste ao Glifo
+	Snap to Glyph Options	Opções de Ajuste ao Glifo
+	x-height	Altura-x
+	Glyph Bounds	Limites do Glifo
+	Proximity Guides	Guias de Proximidade
+	Angular Guides	Guias Angulares
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Média e união…
+	Average & Join	Média e união
+anchor	Points:	Pontos:
+@msg	select two open path ends, or two open paths, to average and join	selecione duas extremidades de traçados abertos, ou dois traçados abertos, para calcular a média e unir
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Limpeza de Arte
+	Simplify Anchors (Keep Shape)…	Simplificar Pontos de Ancoragem (Manter Forma)…
+	Health Check	Verificação de Integridade
+	Show Issue	Mostrar Problema
+	Fix All Issues	Corrigir Todos os Problemas
+	Fix Issues	Corrigir Problemas
+	Deep Ungroup…	Desagrupar Todos os Níveis…
+	Rejoin Path Pieces…	Reunir Partes de Caminho…
+	Document Health Check	Verificação de Integridade do Documento
+	Check Selection	Verificar Seleção
+	Check Document	Verificar Documento
+	No issues found.	Nenhum problema encontrado.
+	Changed since the last check.	Alterado desde a última verificação.
+	Fix Selected	Corrigir Selecionados
+	Fix All	Corrigir Tudo
+	Issues fixed: {count}	Problemas corrigidos: {count}
+	Open a document to check it for issues.	Abra um documento para verificar se há problemas.
+	Empty Text	Texto Vazio
+	Unpainted Objects	Objetos sem Pintura
+	Zero-Opacity Objects	Objetos com Opacidade Zero
+	Duplicate Objects	Objetos Duplicados
+	Off-Artboard Art	Arte Fora das Pranchetas
+	Duplicate Anchors	Pontos de Ancoragem Duplicados
+	Tiny Handles	Alças Minúsculas
+	Collinear Anchors	Pontos de Ancoragem Colineares
+	Nearly Coincident Anchors	Pontos de Ancoragem Quase Coincidentes
+	Nearly Closed Paths	Caminhos Quase Fechados
+	Filled Open Paths	Caminhos Abertos Preenchidos
+	Needless Clipping Groups	Grupos de Recorte Desnecessários
+	Needless Compound Paths	Caminhos Compostos Desnecessários
+	Needless Groups	Grupos Desnecessários
+	Empty Artboards	Pranchetas Vazias
+	Protect Corners	Proteger Cantos
+	Gap	Distância
+	Include Clip Groups	Incluir Grupos de Recorte
+@msg	`tolerance` must be from 1 to 100	`tolerance` deve estar entre 1 e 100
+@msg	`gap` must be from 0 to 6 pt	`gap` deve estar entre 0 e 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Simplificar Pontos de Ancoragem: os caminhos têm pontos de ancoragem demais para simplificar de uma vez
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Reunir Partes de Caminho: caminhos demais para reunir de uma vez
+@msg	None of these issues are left: check again	Nenhum desses problemas permanece: verifique novamente
+@msg	`kinds` must be a list of issue kinds	`kinds` deve ser uma lista de tipos de problema
+@msg	missing `kind`	`kind` ausente
+	Simplify Anchors (Keep Shape)	Simplificar Pontos de Ancoragem (Manter Forma)
+	Deep Ungroup	Desagrupar Todos os Níveis
+	Rejoin Path Pieces	Reunir Partes de Caminho
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Efeitos de cor
+	Color Effects Panel	Painel Efeitos de cor
+	Exposure	Exposição
+	Exposure…	Exposição…
+	Desaturate	Dessaturar
+	Adjustment	Ajuste
+	Add as Effect	Adicionar como efeito
+	Apply as Filter	Aplicar como filtro
+	Select objects to adjust their colors.	Selecione objetos para ajustar suas cores.
+	Brightness/Contrast	Brilho/Contraste
+	Hue/Saturation	Matiz/Saturação
+	Temperature/Tint	Temperatura/Tom
+@msg	`{id}` is not a colour adjustment	`{id}` não é um ajuste de cor
+@msg	missing `effect`	falta `effect`
+@msg	`params` must be an object	`params` deve ser um objeto
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Ferramentas de Precisão de Caminhos
+	Anchor Eraser Brush	Pincel Apagador de Pontos de Ancoragem
+	Extend Path Tool	Ferramenta Estender Caminho
+	Measure & Inspect Tool	Ferramenta Medir e Inspecionar
+	Anchor Inspector	Inspetor de Pontos de Ancoragem
+	Add Points at Crossings	Adicionar Pontos nos Cruzamentos
+	Split at Crossings	Dividir nos Cruzamentos
+	Extend Path	Estender Caminho
+	Measure & Inspect	Medir e Inspecionar
+	Set Anchor	Definir Ponto de Ancoragem
+	Make Smooth	Tornar Suave
+	Make Corner	Tornar Canto
+	Equalize Handles	Igualar Alças
+	Remove Points, Keep Shape	Remover Pontos, Manter Forma
+	Add Points to Segments…	Adicionar Pontos aos Segmentos…
+	Add Points to Segments	Adicionar Pontos aos Segmentos
+	Open a document to edit its anchor points.	Abra um documento para editar seus pontos de ancoragem.
+	Anchors selected: {count}	Pontos de ancoragem selecionados: {count}
+	Direct-select anchor points to edit them.	Selecione diretamente pontos de ancoragem para editá-los.
+	Length	Comprimento
+	In:	Entrada:
+	Out:	Saída:
+	Add Points	Adicionar Pontos
+	Points per segment	Pontos por segmento
+	Close Path:	Fechar Caminho:
+	Keep Handles	Manter Alças
+	Straight	Reto
+	Stretch Curve	Esticar Curva
+@msg	direct-select the anchor points to remove	selecione diretamente os pontos de ancoragem a remover
+@msg	select segments, or paths, to add points to	selecione segmentos, ou caminhos, aos quais adicionar pontos
+@msg	select open paths to close	selecione caminhos abertos para fechar
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	caminhos demais, ou emaranhados demais, para encontrar seus cruzamentos (no máximo 10000 segmentos)
+@msg	the paths have too many anchors to edit at once	os caminhos têm pontos de ancoragem demais para editar de uma vez
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Caneta Inteligente
+	Smart Pen Tool	Ferramenta Caneta Inteligente
+	Smart Pen Panel	Painel Caneta Inteligente
+	Next Segment	Próximo Segmento
+	Curved	Curvo
+	Retract Handles	Recolher Alças
+	Close or Join	Fechar ou Unir
+	Open a document to draw with the Smart Pen.	Abra um documento para desenhar com a caneta inteligente.
+	Straight or Curved Segment	Segmento Reto ou Curvo
+@msg	the path is locked or hidden	o caminho está bloqueado ou oculto
+@msg	`id` is not a path	`id` não é um caminho
+@msg	the path has no open subpath	o caminho não tem subcaminho aberto
+@msg	the subpath is closed	o subcaminho está fechado
+@msg	the subpath is closed or too short to close	o subcaminho está fechado ou é curto demais para fechar
+@msg	the path is too short to remove a point from	o caminho é curto demais para remover um ponto
+@msg	the segment can't be bent that far	o segmento não pode ser curvado tanto
+@msg	give `{a}` and `{b}`	informe `{a}` e `{b}`
+@msg	`t` must be from 0 to 1	`t` deve estar entre 0 e 1
+@msg	`segment` must be "straight" or "curved"	`segment` deve ser "straight" ou "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` deve ser "free", "keepAngles" ou "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` deve ser [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Selecionar por tipo de cor
+	Objects with Spot Colors	Objetos com cores spot
+	Objects with Color Effects	Objetos com efeitos de cor
+	RGB Images	Imagens RGB
+	CMYK Images	Imagens CMYK
+	Grayscale Images	Imagens em escala de cinza
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` deve ser spotColors, colorEffects, rgbImages, cmykImages ou grayImages

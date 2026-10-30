@@ -81,9 +81,12 @@ pub(super) fn handle_input(app: &mut VectorcraftApp, ui: &Ui, resp: &egui::Respo
     let middle_pan = matches!(drag, Some(Drag::Pan { middle: true, .. }));
     // egui counts a press a few pixels outside the canvas as on it (its interaction radius): only a
     // press on the canvas itself reaches the tools, else it would land at the canvas's centre.
+    // A finger pressing with others down, or with another landing in its frame, presses nothing
+    // (`touch_gestures` made the press a gesture, #4198).
     if pointer.primary_pressed()
         && resp.hovered()
         && !middle_pan
+        && drag != Some(Drag::Gesture)
         && let Some(p) = at
     {
         ui.ctx().memory_mut(|mem| mem.stop_text_input());

@@ -717,6 +717,7 @@ mod tests {
             opts: &opts,
             ink: Ink::Display,
             output: Affine::IDENTITY,
+            plates: None,
         };
         let mut ctx = frame.offscreen_context(100, 100);
         let mut r = Renderer::new();

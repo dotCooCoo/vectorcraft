@@ -145,7 +145,7 @@ impl Tool for TypeTool {
             return false;
         }
         let clip: String = self.clipboard.iter().map(|r| r.text.as_str()).collect();
-        !(self.preedit.is_none() && !normalized.is_empty() && normalized == clip && !cx.paste_plain_text)
+        self.preedit.is_some() || normalized.is_empty() || normalized != clip || cx.paste_plain_text
     }
     /// Whether the typing session still describes the edited document; a session ended by an outside
     /// command reports false until a replacement commit starts a new one.

@@ -844,7 +844,49 @@ pub(crate) fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
     ui.separator();
 }
 
+/// The panel state key of the panel menu's Show Snap to Glyph Options.
+const SNAP_TO_GLYPH_OPTIONS: &str = "ch-snap-to-glyph-options";
+
 pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+    attributes(app, ui);
+    // Drawing over type needs no type selected, so the options show without one too.
+    if pstate::<bool>(ui.ctx(), SNAP_TO_GLYPH_OPTIONS) {
+        snap_to_glyph_options(app, ui);
+    }
+}
+
+/// The Snap to Glyph options (Show Snap to Glyph Options): which guides View › Snap to Glyph gives,
+/// each a checkbox running `view.snapToGlyph.options`. Dimmed while Snap to Glyph is off.
+fn snap_to_glyph_options(app: &mut VectorcraftApp, ui: &mut Ui) {
+    ui.add_space(4.0);
+    ui.separator();
+    widgets::section_header(ui, "Snap to Glyph");
+    let (o, enabled) = (app.session.prefs.glyph_snap, app.ui.view.snap_to_glyph);
+    egui::Grid::new("ch-snap-to-glyph").num_columns(2).show(ui, |ui| {
+        for (i, (label, key, on)) in [
+            ("Baseline", "baseline", o.baseline),
+            ("x-height", "xHeight", o.x_height),
+            ("Glyph Bounds", "bounds", o.bounds),
+            ("Proximity Guides", "proximity", o.proximity),
+            ("Angular Guides", "angular", o.angular),
+            ("Anchor Point", "anchors", o.anchors),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            // A known key and a bool: the command can't refuse it.
+            if widgets::check(ui, label, on, enabled) {
+                app.run("view.snapToGlyph.options", json!({ key: !on })).ok();
+            }
+            if i % 2 == 1 {
+                ui.end_row();
+            }
+        }
+    });
+}
+
+/// The character attributes of the type selected (an empty state without any).
+fn attributes(app: &mut VectorcraftApp, ui: &mut Ui) {
     let Some((s, _)) = text_style(app) else {
         app.character_focus = None;
         super::empty_state(ui, "type", tl!("No text selected"), tl!("Select a text object to edit its character attributes."));
@@ -972,6 +1014,10 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
     let hidden: bool = pstate(ui.ctx(), "ch-hide-options");
     if menu_item(ui, if hidden { tl!("Show Options") } else { tl!("Hide Options") }, true, false) {
         set_pstate(ui.ctx(), "ch-hide-options", !hidden);
+    }
+    let glyph = pstate::<bool>(ui.ctx(), SNAP_TO_GLYPH_OPTIONS);
+    if menu_item(ui, if glyph { tl!("Hide Snap to Glyph Options") } else { tl!("Show Snap to Glyph Options") }, true, false) {
+        set_pstate(ui.ctx(), SNAP_TO_GLYPH_OPTIONS, !glyph);
     }
     ui.separator();
     let s = st.map(|x| x.0);

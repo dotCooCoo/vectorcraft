@@ -2231,6 +2231,7 @@ file-filter	Templates	Mẫu
 	Move Library Item to Group	Di chuyển mục thư viện vào nhóm
 	Move Locked and Hidden Artwork with Artboard	Di chuyển tác phẩm đã khóa và ẩn cùng bảng vẽ
 	Move Mesh Point	Di chuyển điểm lưới
+	Move Mesh Points	Di chuyển các điểm lưới
 	Move Panel	Di chuyển bảng
 	Move Plane	Di chuyển mặt phẳng
 	Move Plane to Match Object	Di chuyển mặt phẳng khớp với đối tượng
@@ -2938,6 +2939,7 @@ mark-style	Japanese	Kiểu Nhật
 	Repeat Tab	Tab lặp lại
 	Repeat {name}	Lặp lại {name}
 	Replace	Thay thế
+	Replace:	Thay thế:
 	Replace Font	Thay thế phông chữ
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Thay thế bằng tệp khác hoặc bỏ qua: ảnh của nó vẫn hiển thị bản xem trước đã lưu cùng tài liệu.
 	Replace Spine	Thay thế trục
@@ -5288,3 +5290,145 @@ axis	Y Axis	Trục Y
 # Align panel menu › Align to Glyph Bounds (#4231).
 	Point Text	Chữ điểm
 	Area Text	Chữ vùng
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Hiện tùy chọn hút vào glyph
+	Hide Snap to Glyph Options	Ẩn tùy chọn hút vào glyph
+	Snap to Glyph Options	Tùy chọn hút vào glyph
+	x-height	Chiều cao x
+	Glyph Bounds	Giới hạn glyph
+	Proximity Guides	Đường căn lân cận
+	Angular Guides	Đường căn góc
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Trung bình và nối…
+	Average & Join	Trung bình và nối
+anchor	Points:	Điểm:
+@msg	select two open path ends, or two open paths, to average and join	hãy chọn hai đầu của đường dẫn mở, hoặc hai đường dẫn mở, để lấy trung bình và nối
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Dọn dẹp tác phẩm
+	Simplify Anchors (Keep Shape)…	Đơn giản hóa điểm neo (giữ hình dạng)…
+	Health Check	Kiểm tra tình trạng
+	Show Issue	Hiện vấn đề
+	Fix All Issues	Sửa mọi vấn đề
+	Fix Issues	Sửa vấn đề
+	Deep Ungroup…	Bỏ nhóm mọi cấp…
+	Rejoin Path Pieces…	Nối lại các mảnh đường dẫn…
+	Document Health Check	Kiểm tra tình trạng tài liệu
+	Check Selection	Kiểm tra vùng chọn
+	Check Document	Kiểm tra tài liệu
+	No issues found.	Không tìm thấy vấn đề nào.
+	Changed since the last check.	Đã thay đổi kể từ lần kiểm tra trước.
+	Fix Selected	Sửa mục đã chọn
+	Fix All	Sửa tất cả
+	Issues fixed: {count}	Vấn đề đã sửa: {count}
+	Open a document to check it for issues.	Mở một tài liệu để kiểm tra vấn đề.
+	Empty Text	Văn bản trống
+	Unpainted Objects	Đối tượng không tô màu
+	Zero-Opacity Objects	Đối tượng có độ mờ đục bằng 0
+	Duplicate Objects	Đối tượng trùng lặp
+	Off-Artboard Art	Hình vẽ ngoài bảng vẽ
+	Duplicate Anchors	Điểm neo trùng lặp
+	Tiny Handles	Tay nắm rất ngắn
+	Collinear Anchors	Điểm neo thẳng hàng
+	Nearly Coincident Anchors	Điểm neo gần trùng nhau
+	Nearly Closed Paths	Đường dẫn gần khép kín
+	Filled Open Paths	Đường dẫn mở có tô
+	Needless Clipping Groups	Nhóm cắt không cần thiết
+	Needless Compound Paths	Đường dẫn phức không cần thiết
+	Needless Groups	Nhóm không cần thiết
+	Empty Artboards	Bảng vẽ trống
+	Protect Corners	Bảo vệ góc
+	Gap	Khoảng hở
+	Include Clip Groups	Bao gồm nhóm cắt
+@msg	`tolerance` must be from 1 to 100	`tolerance` phải từ 1 đến 100
+@msg	`gap` must be from 0 to 6 pt	`gap` phải từ 0 đến 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Đơn giản hóa điểm neo: các đường dẫn có quá nhiều điểm neo để đơn giản hóa một lần
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Nối lại các mảnh đường dẫn: quá nhiều đường dẫn để nối một lần
+@msg	None of these issues are left: check again	Không còn vấn đề nào trong số này: hãy kiểm tra lại
+@msg	`kinds` must be a list of issue kinds	`kinds` phải là danh sách các loại vấn đề
+@msg	missing `kind`	thiếu `kind`
+	Simplify Anchors (Keep Shape)	Đơn giản hóa điểm neo (giữ hình dạng)
+	Deep Ungroup	Bỏ nhóm mọi cấp
+	Rejoin Path Pieces	Nối lại các mảnh đường dẫn
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Hiệu ứng màu
+	Color Effects Panel	Bảng Hiệu ứng màu
+	Exposure	Phơi sáng
+	Exposure…	Phơi sáng…
+	Desaturate	Khử bão hòa
+	Adjustment	Điều chỉnh
+	Add as Effect	Thêm làm hiệu ứng
+	Apply as Filter	Áp dụng làm bộ lọc
+	Select objects to adjust their colors.	Chọn đối tượng để điều chỉnh màu của chúng.
+	Brightness/Contrast	Độ sáng/Tương phản
+	Hue/Saturation	Sắc độ/Độ bão hòa
+	Temperature/Tint	Nhiệt độ màu/Tông
+@msg	`{id}` is not a colour adjustment	`{id}` không phải là điều chỉnh màu
+@msg	missing `effect`	thiếu `effect`
+@msg	`params` must be an object	`params` phải là một đối tượng
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Công cụ chính xác cho đường dẫn
+	Anchor Eraser Brush	Cọ tẩy điểm neo
+	Extend Path Tool	Công cụ Kéo dài đường dẫn
+	Measure & Inspect Tool	Công cụ Đo và kiểm tra
+	Anchor Inspector	Trình kiểm tra điểm neo
+	Add Points at Crossings	Thêm điểm tại chỗ giao nhau
+	Split at Crossings	Tách tại chỗ giao nhau
+	Extend Path	Kéo dài đường dẫn
+	Measure & Inspect	Đo và kiểm tra
+	Set Anchor	Đặt điểm neo
+	Make Smooth	Làm mượt
+	Make Corner	Chuyển thành góc
+	Equalize Handles	Cân bằng tay nắm
+	Remove Points, Keep Shape	Gỡ điểm, giữ hình dạng
+	Add Points to Segments…	Thêm điểm vào đoạn…
+	Add Points to Segments	Thêm điểm vào đoạn
+	Open a document to edit its anchor points.	Mở một tài liệu để sửa các điểm neo của nó.
+	Anchors selected: {count}	Điểm neo đã chọn: {count}
+	Direct-select anchor points to edit them.	Chọn trực tiếp các điểm neo để sửa chúng.
+	Length	Độ dài
+	In:	Vào:
+	Out:	Ra:
+	Add Points	Thêm điểm
+	Points per segment	Số điểm mỗi đoạn
+	Close Path:	Đóng đường dẫn:
+	Keep Handles	Giữ tay nắm
+	Straight	Thẳng
+	Stretch Curve	Kéo giãn đường cong
+@msg	direct-select the anchor points to remove	chọn trực tiếp các điểm neo cần gỡ
+@msg	select segments, or paths, to add points to	chọn các đoạn hoặc đường dẫn để thêm điểm
+@msg	select open paths to close	chọn các đường dẫn mở để đóng
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	quá nhiều đường dẫn hoặc chúng quá rối để tìm chỗ giao nhau (tối đa 10000 đoạn)
+@msg	the paths have too many anchors to edit at once	các đường dẫn có quá nhiều điểm neo để sửa cùng lúc
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Bút thông minh
+	Smart Pen Tool	Công cụ Bút thông minh
+	Smart Pen Panel	Bảng Bút thông minh
+	Next Segment	Đoạn tiếp theo
+	Curved	Cong
+	Retract Handles	Thu tay nắm
+	Close or Join	Đóng hoặc nối
+	Open a document to draw with the Smart Pen.	Mở một tài liệu để vẽ bằng bút thông minh.
+	Straight or Curved Segment	Đoạn thẳng hoặc cong
+@msg	the path is locked or hidden	đường dẫn bị khóa hoặc bị ẩn
+@msg	`id` is not a path	`id` không phải là đường dẫn
+@msg	the path has no open subpath	đường dẫn không có nhánh con mở
+@msg	the subpath is closed	nhánh con đã đóng
+@msg	the subpath is closed or too short to close	nhánh con đã đóng hoặc quá ngắn để đóng
+@msg	the path is too short to remove a point from	đường dẫn quá ngắn để xóa một điểm
+@msg	the segment can't be bent that far	không thể uốn đoạn xa đến vậy
+@msg	give `{a}` and `{b}`	hãy cho `{a}` và `{b}`
+@msg	`t` must be from 0 to 1	`t` phải từ 0 đến 1
+@msg	`segment` must be "straight" or "curved"	`segment` phải là "straight" hoặc "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` phải là "free", "keepAngles" hoặc "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` phải là [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Chọn theo loại màu
+	Objects with Spot Colors	Đối tượng có màu pha
+	Objects with Color Effects	Đối tượng có hiệu ứng màu
+	RGB Images	Ảnh RGB
+	CMYK Images	Ảnh CMYK
+	Grayscale Images	Ảnh thang độ xám
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` phải là spotColors, colorEffects, rgbImages, cmykImages hoặc grayImages

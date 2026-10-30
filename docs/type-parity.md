@@ -1,6 +1,6 @@
 # Type parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-29 · **Change:** minor (copying text in Type tool retains formatted runs across documents and on canvas paste (#4459) · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-30 · **Change:** minor (Character panel menu › Show Snap to Glyph Options shows the Snap to Glyph section (Baseline, x-height, Glyph Bounds, Proximity Guides, Angular Guides, Anchor Point; `view.snapToGlyph.options`) (#4232); scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x)
 
 Type is Illustrator's largest single area by use (weight 13 of 105 across "Type core" and "Type advanced" in
 [target-app-parity.md](target-app-parity.md)). This checklist lists the features one by one. Status is from the
@@ -50,7 +50,7 @@ against Illustrator's public documentation; **estimated** unless noted.
 | Caret: the arrows and Delete step over whole clusters (Thai consonant with its marks, combining accents, emoji); Backspace removes one character | done | in text with right-to-left characters the arrows move in visual order and stop on both sides of a character drawn with no width, such as a zero width non-joiner |
 | Touch Type tool | done | moves, scales and rotates one character through its kerning, baseline shift, scales and rotation (`text.touchType`); the first character of a line and right-to-left characters move only up and down |
 | Retype (identify fonts in outlines/images) | missing | Illustrator's uses a cloud model |
-| Snap to Glyph | done | View › Snap to Glyph (`view.snapToGlyph`): with Smart Guides on, new point type and drawing tools snap to live-text baselines and glyph bounds (`Targets::for_drawing`, `tools::text_tests::snap_to_glyph_lines_up_new_point_type_with_a_baseline`) |
+| Snap to Glyph | done | View › Snap to Glyph (`view.snapToGlyph`): with Smart Guides on, new point type and drawing tools snap to live-text baselines and glyph bounds (`Targets::for_drawing`, `tools::text_tests::snap_to_glyph_lines_up_new_point_type_with_a_baseline`). Character panel menu › Show Snap to Glyph Options: Baseline, x-height, Glyph Bounds, Proximity Guides, Angular Guides and Anchor Point each turn their guides on or off (`view.snapToGlyph.options`, all on by default; #4232) |
 | Thai, Lao, Khmer, Myanmar: shaping (marks, reordering), lines broken between words, word-by-word caret and double-click | done | words found by ICU4X's line segmenter: dictionaries on the desktop, LSTM models on the web |
 | Middle Eastern: bidirectional layout, Paragraph Direction | done | |
 | Middle Eastern: digit types (Character panel menu › Digits: Default, Arabic, Hindi, Farsi) | done | `text.setFormat` / `text.setRangeStyle {digits}`; the text keeps the typed digits, the glyphs and SVG export follow the style |
@@ -71,6 +71,7 @@ Character Styles menu New/Redefine and footer New capture the first selected cha
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-30 | minor | Character panel menu › Show Snap to Glyph Options shows the Snap to Glyph section (Baseline, x-height, Glyph Bounds, Proximity Guides, Angular Guides, Anchor Point; `view.snapToGlyph.options`) (#4232); scores unchanged |
 | 2026-10-29 | minor | Font fallback keeps a letter and its combining marks in one face; Vietnamese stacked diacritics (Ể, Ứ, Ự) attach in precomposed, decomposed and keyboard forms (#4491); scores and hours unchanged |
 | 2026-10-25 | minor | Threading ports: a double-click on a threaded port with the Selection tool breaks the thread there (`text.thread.break`); the story flows into the frames before the break; scores unchanged |
 | 2026-10-24 | minor | Ruby: Type › Create Outlines, EPS, EMF/WMF, legacy `.ai` and type that effects, Expand Appearance and flattening outline keep the reading's glyphs where the canvas draws them (they were dropped), stacked with their run as the canvas paints it (Create Outlines puts each run's reading right after that run's glyphs, below later runs); legacy `.ai` writes type with ruby as outlines; scores unchanged |
