@@ -17,7 +17,7 @@ use egui::{Color32, Rect, Sense, Stroke, StrokeKind, Ui, vec2};
 use serde_json::{Value, json};
 use vectorcraft_doc::{ExportAsset, Node, NodeId};
 use vectorcraft_engine::DocState;
-use vectorcraft_engine::cmd::fileio::SCREEN_SETTINGS_KEYS;
+use vectorcraft_engine::cmd::fileio::{SCREEN_SETTINGS_KEYS, screen_export_preset_list};
 
 use super::{pstate, set_pstate};
 use crate::dialogs::{
@@ -417,7 +417,7 @@ pub(crate) fn preset(app: &mut VectorcraftApp, ctx: &egui::Context, doc: u64, pi
             app.run("assets.settings.set", json!({ "exportPreset": name })).map(|_| set_pstate(ctx, PRESET, (doc, name)))
         }
         ScreenPresetPick::Save(name) => {
-            let settings = shared_settings(app);
+            let settings = preset_settings(app, ctx, doc);
             // The name as saved (trimmed and capped).
             app.run("document.exportPresets.save", json!({ "name": name, "settings": settings })).map(|r| {
                 set_pstate(ctx, SAVING, None::<String>);
@@ -454,6 +454,33 @@ pub(crate) fn preset(app: &mut VectorcraftApp, ctx: &egui::Context, doc: u64, pi
     {
         app.status(e);
     }
+}
+
+/// What Save Preset saves for document `doc` (uid): the preset the panel applied, when the document
+/// still has its rows, with the shared settings over it; else the shared settings alone.
+fn preset_settings(app: &VectorcraftApp, ctx: &egui::Context, doc: u64) -> Value {
+    let mut shared = shared_settings(app).as_object().cloned().unwrap_or_default();
+    let (shown_doc, current): (u64, String) = pstate(ctx, PRESET);
+    if shown_doc != doc || current.is_empty() {
+        return Value::Object(shared);
+    }
+    let list = screen_export_preset_list(&app.session.prefs.screen_export_presets);
+    let Some(applied) = list.as_array().and_then(|rows| rows.iter().find(|p| p["name"] == current)).and_then(|p| p["settings"].as_object()) else {
+        return Value::Object(shared);
+    };
+    let Some(st) = app.session.active() else { return Value::Object(shared) };
+    if ["formats", "preset"].iter().any(|k| applied.get(*k).is_some_and(|v| st.doc.export_settings.get(*k) != Some(v))) {
+        return Value::Object(shared);
+    }
+    if shared.get("folders") == Some(&json!("none"))
+        && applied.get("folders").is_some_and(|f| f != "none")
+        && st.doc.export_settings.get("folders") == applied.get("folders")
+    {
+        shared.remove("folders");
+    }
+    let mut settings = applied.clone();
+    settings.extend(shared);
+    Value::Object(settings)
 }
 
 /// The settings the panel shows, as a preset keeps them: the shared settings, with the row shown
