@@ -171,7 +171,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Expand",
             ["Object", "Image Trace"],
             None,
-            "{id?, ids?: [id…] (instead of id), byColor?: false (each color's paths in a group of their own, named by the swatch the color links to or as #rrggbb, gradient fills in one group named Gradients; the groups stack by their lowest path and keep their paths' order; a color whose paths overlap another color's from above and below gets a group for each part, so the art draws the same; not for a trace made with autoGrouping)} keep only the traced paths (drop the source image) → {ids}",
+            "{id?, ids?: [id…] (instead of id), byColor?: false (each color's paths in a group of their own, named by the swatch the color links to or as #rrggbb, gradient fills in one group named Gradients; the groups stack by their lowest path and keep their paths' order; a color whose paths overlap another color's from above and below gets a group for each part, so the art draws the same; refused for a trace made with autoGrouping and for a trace with a live Pathfinder effect)} keep only the traced paths (drop the source image) → {ids}",
             has_selection_or_ids,
             trace_expand
         ),
