@@ -2203,6 +2203,7 @@ file-filter	Templates	範本
 @msg	no PNG encoder	沒有 PNG 編碼器
 @msg	no document open	沒有開啟的文件
 @msg	no effect applied yet	尚未套用任何效果
+@msg	no Pathfinder operation applied yet	尚未套用任何路徑管理員操作
 @msg	no such perspective grid preset	沒有這個透視格點預設集
 @msg	no such recent file	沒有這個最近使用的檔案
 @msg	no such recent font	沒有這個最近使用的字體
@@ -5501,3 +5502,26 @@ anchor	Points:	點：
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	網點顏色取自圖稿
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	雙色調…
+	Duotone	雙色調
+	Print Ink Fixes…	印刷油墨修正…
+	Print Ink Fixes	印刷油墨修正
+	Inks	油墨
+	Tone 1	色調 1
+	Tone 2	色調 2
+	Tone 3	色調 3
+	Tone 4	色調 4
+	Curve	曲線
+	Reset to Linear	重設為線性
+	Reset to Inverse	重設為反轉
+	Skip Objects with Spot Colors	略過使用特別色的物件
+	Ink Limit	油墨限制
+	Exclude Pure Black	排除純黑
+	Remove White Overprint	移除白色疊印
+	Overprint Black	疊印黑色
+	Text Only	僅文字
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	請指定 `inkLimit`、`removeWhiteOverprint` 或 `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	印刷油墨修正適用於 CMYK 文件：請先選擇 檔案 › 文件色彩模式 › CMYK 色彩
+@msg	`{key}` must be 0..{max}	`{key}` 必須為 0..{max}

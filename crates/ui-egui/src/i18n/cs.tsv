@@ -4469,6 +4469,7 @@ imageTrace	Outline	Obrys
 @msg	no document	žádný dokument
 @msg	no document open	není otevřen žádný dokument
 @msg	no effect applied yet	zatím nebyl použit žádný efekt
+@msg	no Pathfinder operation applied yet	zatím nebyla použita žádná operace s cestami
 @msg	no effect at index {k}	na indexu {k} není žádný efekt
 @msg	no end record	chybí koncový záznam
 @msg	no file manager here	zde není správce souborů
@@ -5863,3 +5864,26 @@ anchor	Points:	Body:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Barva bodů podle kresby
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Dvoutón…
+	Duotone	Dvoutón
+	Print Ink Fixes…	Opravy tiskových barev…
+	Print Ink Fixes	Opravy tiskových barev
+	Inks	Barvy
+	Tone 1	Tón 1
+	Tone 2	Tón 2
+	Tone 3	Tón 3
+	Tone 4	Tón 4
+	Curve	Křivka
+	Reset to Linear	Obnovit lineární
+	Reset to Inverse	Obnovit obrácenou
+	Skip Objects with Spot Colors	Vynechat objekty s přímými barvami
+	Ink Limit	Limit barvy
+	Exclude Pure Black	Vyloučit čistou černou
+	Remove White Overprint	Odebrat přetisk bílé
+	Overprint Black	Přetisk černé
+	Text Only	Pouze text
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	zadejte `inkLimit`, `removeWhiteOverprint` nebo `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Opravy tiskových barev fungují v dokumentech CMYK: nejprve zvolte Soubor › Barevný režim dokumentu › Barvy CMYK
+@msg	`{key}` must be 0..{max}	`{key}` musí být 0..{max}

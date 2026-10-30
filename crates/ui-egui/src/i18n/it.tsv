@@ -4202,6 +4202,7 @@ axis	Both	Entrambi
 @msg	no document	nessun documento
 @msg	no document open	nessun documento aperto
 @msg	no effect applied yet	nessun effetto ancora applicato
+@msg	no Pathfinder operation applied yet	nessuna operazione di elaborazione tracciati ancora applicata
 @msg	no effect at index {k}	nessun effetto all'indice {k}
 @msg	no end record	nessun record finale
 @msg	no file manager here	nessun gestore file disponibile qui
@@ -5482,3 +5483,26 @@ anchor	Points:	Punti:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Colore punti dalla grafica
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Bicromia…
+	Duotone	Bicromia
+	Print Ink Fixes…	Correzioni inchiostri di stampa…
+	Print Ink Fixes	Correzioni inchiostri di stampa
+	Inks	Inchiostri
+	Tone 1	Tono 1
+	Tone 2	Tono 2
+	Tone 3	Tono 3
+	Tone 4	Tono 4
+	Curve	Curva
+	Reset to Linear	Ripristina lineare
+	Reset to Inverse	Ripristina invertita
+	Skip Objects with Spot Colors	Salta oggetti con colori spot
+	Ink Limit	Limite inchiostro
+	Exclude Pure Black	Escludi nero puro
+	Remove White Overprint	Rimuovi sovrastampa del bianco
+	Overprint Black	Sovrastampa nero
+	Text Only	Solo testo
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	indica `inkLimit`, `removeWhiteOverprint` o `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Le correzioni inchiostri di stampa funzionano nei documenti CMYK: scegli prima File › Metodo colore documento › Colore CMYK
+@msg	`{key}` must be 0..{max}	`{key}` deve essere 0..{max}

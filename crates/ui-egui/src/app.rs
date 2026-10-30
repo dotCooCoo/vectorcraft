@@ -79,6 +79,7 @@ impl VectorcraftApp {
             dock_rt: Default::default(),
             titlebar_inset: 0.0,
             last_effect: None,
+            last_pathfinder: None,
             last_warp: None,
             character_focus: None,
             run_count: 0,

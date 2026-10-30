@@ -576,6 +576,12 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
     ),
     ("effect.applyLast", "Apply Last Effect", "Cmd+Shift+E", "{}"),
     (
+        "pathfinder.repeat",
+        "Repeat Pathfinder",
+        "Cmd+4",
+        "{} repeat the last successful Pathfinder panel operation, direct object.pathfinder.* command or command.batch step on the selection with current Pathfinder Options; an error until one has run",
+    ),
+    (
         "file.export.pdf",
         "Save as PDF…",
         "",

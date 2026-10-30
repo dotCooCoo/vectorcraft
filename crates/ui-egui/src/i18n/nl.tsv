@@ -4167,6 +4167,7 @@ imageTrace	Outline	Contour
 @msg	no document	geen document
 @msg	no document open	geen document geopend
 @msg	no effect applied yet	nog geen effect toegepast
+@msg	no Pathfinder operation applied yet	nog geen Pathfinder-bewerking toegepast
 @msg	no effect at index {k}	geen effect op index {k}
 @msg	no end record	geen eindrecord
 @msg	no file manager here	hier is geen bestandsbeheerder
@@ -5811,3 +5812,26 @@ anchor	Points:	Punten:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Puntkleur uit artwork
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duotoon…
+	Duotone	Duotoon
+	Print Ink Fixes…	Drukinktcorrecties…
+	Print Ink Fixes	Drukinktcorrecties
+	Inks	Inkten
+	Tone 1	Toon 1
+	Tone 2	Toon 2
+	Tone 3	Toon 3
+	Tone 4	Toon 4
+	Curve	Curve
+	Reset to Linear	Herstellen naar lineair
+	Reset to Inverse	Herstellen naar omgekeerd
+	Skip Objects with Spot Colors	Objecten met steunkleuren overslaan
+	Ink Limit	Inktlimiet
+	Exclude Pure Black	Puur zwart uitsluiten
+	Remove White Overprint	Overprint van wit verwijderen
+	Overprint Black	Zwart overprinten
+	Text Only	Alleen tekst
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	geef `inkLimit`, `removeWhiteOverprint` of `overprintBlack` op
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Drukinktcorrecties werken in CMYK-documenten: kies eerst Bestand › Documentkleurmodus › CMYK-kleur
+@msg	`{key}` must be 0..{max}	`{key}` moet 0..{max} zijn

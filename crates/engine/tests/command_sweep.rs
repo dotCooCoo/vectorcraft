@@ -406,6 +406,22 @@ fn structured_junk() {
         ("effect.apply", json!({"effect": "addon.color.halftone", "params": {"frequency": 1e308, "angle": -1e308, "shape": "star", "mode": "rgb"}})),
         ("effect.apply", json!({"effect": "addon.color.halftone", "params": {"frequency": 300, "invert": true, "clip": false, "fromArt": true}})),
         ("effect.apply", json!({"effect": "addon.color.halftone", "params": {"frequency": -1e308, "mode": "cmyk", "color": "#123456", "target": 3}})),
+        ("effect.apply", json!({"effect": "addon.color.duotone", "params": {"tones": "x", "skipSpot": "yes"}})),
+        (
+            "effect.apply",
+            json!({"effect": "addon.color.duotone", "params": {"tones": [1, null, {"color": [1e308, -1e308, "x"], "curve": [[1e308, -1e308], ["a"]]}]}}),
+        ),
+        (
+            "effect.apply",
+            json!({"effect": "addon.color.duotone", "params": {"tones": [{"swatch": 3, "curve": "1e999,5 x,y", "active": "no"}, {"color": {"model": "lab", "l": 1e30, "a": -1e30, "b": 0}}, {}, {}, {}, {}]}}),
+        ),
+        (
+            "addon.color.filter",
+            json!({"effect": "addon.color.duotone", "params": {"tones": [{"color": "#ff0000", "swatch": "[Registration]"}], "skipSpot": true}}),
+        ),
+        ("addon.color.printFixes", json!({"inkLimit": 1e308, "overprintBlack": -1e308})),
+        ("addon.color.printFixes", json!({"inkLimit": 1, "overprintBlack": 1, "removeWhiteOverprint": true, "scope": "document", "textOnly": true})),
+        ("addon.color.printFixes", json!({"inkLimit": [300], "scope": 3, "ids": "x"})),
         ("effect.apply", json!({"effect": "no.such.effect"})),
         ("effect.remove", json!({"index": 99})),
         ("effect.setParams", json!({"index": 0, "params": null})),

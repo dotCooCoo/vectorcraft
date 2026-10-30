@@ -402,9 +402,10 @@ alpha channel takes only a spot color, black or white; a process color is refuse
 For `draw_shape` and `draw_path`, omitted paint fields inherit the current [new-art appearance](#new-art).
 For a filled shape or path without an outline, pass an explicit `fill` and `stroke: "none"`.
 Lines start with no fill and a visible stroke.
-The Fill/Stroke proxy commands run through `run_command`: `paint.invert` and `paint.complement` recolour the active
-proxy keeping each colour's model, `paint.lastColor` / `paint.lastGradient` re-apply the last solid colour or gradient,
-and `paint.recent` returns the recent colours that every paint command (and the eyedropper) feeds.
+The Fill/Stroke proxy commands run through `run_command`: `paint.invert` and `paint.complement` recolor the active
+proxy, including a grayscale image's colorized fill, while keeping each color's model. `paint.lastColor` /
+`paint.lastGradient` re-apply the last solid color or gradient, and `paint.recent` returns the recent colors that every
+paint command (and the eyedropper) feeds.
 `paint.proxies` returns what the proxies show: the fill and stroke, which one is active, and whether the selected
 objects' fills or strokes differ (`fillMixed` / `strokeMixed`, drawn as a "?" proxy).
 
@@ -430,7 +431,7 @@ objects' fills or strokes differ (`fillMixed` / `strokeMixed`, drawn as a "?" pr
 | `export` | `{path?, format?, scale?, artboard?, range?, selection?, outlineText?, options?}` | `svg`, `svgz`, `pdf`, `ai` (the PDF-compatible `.ai` that Save writes, which carries the document when every artboard is written in order), `eps`, `dxf`, `emf`, `wmf`, `png`, `jpg`, `webp`, `gif`, `png8` (an indexed `.png`), `tiff`, `bmp`, `tga`, `psd` (layered), `txt` (the document's text), `vectorcraft` or `template` (a native template). The tool's `format` enum and `document.formats` list them, generated from the engine's format table. When `format` is omitted, it comes from the path's extension. PDF and `.ai` write one page per artboard: all of them, or `artboard` (0-based) / `range` (`"1-3, 5"`, 1-based). SVG and SVGZ write one file per chosen artboard. EPS writes one file of the visible art; with `artboard`, `range`, `options.artboards` or `options: {"useArtboards": true}` it writes one file per chosen artboard, after a central file of the visible art when there are two or more, and `useArtboards: false` keeps the one file. Rasters, DXF, EMF and WMF write one artboard, or one file per chosen artboard with `options: {"useArtboards": true}`. Rasters also take `options: {"rect": [x, y, width, height]}` (page points, y down): that area of the page at the given `ppi`/`scale`, without an artboard and without changing the document; it is refused with `artboard`, `artboards`, `range` or `useArtboards`, with a non-positive or non-finite size, and for non-raster formats. `options` carries more format options (e.g. `{"quality": 80}` for JPEG). `selection: true` exports the selected objects cropped to their bounds (the reply adds their `bounds`, and reports `format` and the encoder's `warnings` as a whole-document export does); `outlineText: true` writes SVG text as paths. Template layers are left out, live effects are kept, and exporting `vectorcraft` never changes the document's path. Without `path` the bytes come back as `dataBase64`. Both backends run the same `document.export` call. |
 | `add_text` | `{text, x?, y?, width?, height?, fit?, fitMinPercent?, path?, mode?, pathEffect?, size?, font?, color?, justify?, vertical?}` | Point type at (x, y) (`justify`: `left`, `center` or `right` starts, centres or ends each line on x); area type with `width`/`height` (`fit`: `none`, `autoHeight`, `shrinkText`, as `text.areaOptions`); or `path` + `mode` (`area`/`onPath`) to flow text in or along a path, with `pathEffect` (`rainbow`, `skew`, `3dRibbon`, `stairStep`, `gravity`); `justify` (also `auto`, `justifyAll`) aligns the paragraphs of every kind, as `text.setStyle` does later. `vertical: true` uses the existing vertical writing mode for every kind (default `false`, horizontal). Returns `{id}`, with `overflow: true` when the text doesn't fit its frame or path. |
 | `apply_effect` | `{effect?, params?, ids?}` | Appends a live effect. Without `effect`, returns the effect catalogue with parameters and defaults. |
-| `pathfinder` | `{operation, ids?}` | `unite`, `minusFront`, `intersect`, `exclude`, `divide`, `trim`, `merge`, `crop`, `outline`, `minusBack`. For a live version, apply the `pathfinder.*` effect to a group (`effect.apply` groups several loose selected objects first). |
+| `pathfinder` | `{operation, ids?}` | `unite`, `minusFront`, `intersect`, `exclude`, `divide`, `trim`, `merge`, `crop`, `outline`, `minusBack`. For a live version, apply the `pathfinder.*` effect to a group (`effect.apply` groups several loose selected objects first). In remote desktop mode, `run_command` and `invoke_menu` can both call `pathfinder.repeat` with `{}`. Successful panel operations, direct `object.pathfinder.*` commands, and `command.batch` steps (including Actions panel playback) set its history. Repeat applies it to the current selection using current Pathfinder Options. Trap, compound-shape edits, live effects and `action.batch` do not set history. With no history it returns "no Pathfinder operation applied yet". |
 | `transform` | `{ids?, dx?, dy?, rotate?, scale?, scaleX?, scaleY?, reflect?, shear?, origin?, copy?}` | Runs move, rotate, scale, reflect, shear in that order. With `copy`, the first step duplicates. |
 | `create_graph` | `{type?, x, y, width, height, csv? \| series?, categories?, rows?}` | The nine Illustrator graph types: column, stacked column, bar, stacked bar, line, area, scatter, pie and radar. An empty CSV cell or a `null` in `rows` is a blank value; a number in straight quotes is a label. Edit later with `graph.setData` / `graph.setType` via `run_command`. `graph.column {design, columnType: vertical\|uniform\|repeating\|sliding, each, fractions: chop\|scale}` draws the columns or bars of the series picked with Group Selection (or `seriesIndexes`, or all of them) with a graph design saved by `graph.design`; with no `design` it returns the series' current design and options. Type in the design that holds a `%` followed by two digits shows each column's value, with at least the first digit's places before the decimal point and the second digit's places after it. |
 | `text_wrap` | `{ids?, offset?, invert?, release?}` | Area type below the objects (same layer) flows around them. |
@@ -485,6 +486,18 @@ raise and lower its slope by 10, within −100…100. Each press switches once. 
 values, and they stay as the Arc tool's `closed`, `baseAlong` and `slope` options for the next arc. With nothing being
 dragged, `c` chooses the tool bound to C, and `f` runs the shortcut bound to F in remote mode (headless has no
 binding for it).
+
+While a spiral is being dragged out with the Spiral tool, a `drag` event with `mods.alt` or `mods.cmd` keeps the
+spiral's inner end at the distance from the center it had on the first modified `drag` event, and the outer end follows
+the pointer. With `mods.alt` alone, dragging outward adds whole winds of four segments and dragging inward removes
+them. The fitted segment count rounds to the nearest whole wind from the count on the first Alt-only `drag`, within 2…1000.
+With `mods.cmd`, decay changes to fit within 5…99.99 %; it takes precedence when both modifiers are held. Switching
+back to Alt uses the current count as its new base while keeping the held inner end. The spiral drawn on release uses
+the new values, and they stay as the Spiral tool's `segments` and `decay` options for the next spiral:
+
+```json
+{"name":"pointer_gesture","arguments":{"tool":"spiral","events":[{"kind":"down","x":100,"y":100},{"kind":"drag","x":200,"y":100,"mods":{"alt":true}},{"kind":"drag","x":300,"y":100,"mods":{"alt":true}},{"kind":"up","x":300,"y":100}]}}
+```
 
 Appearance stacks: an object can carry several fills and strokes (`appearance.addFill`, `appearance.addStroke`), indexed
 in paint order (0 is painted first, the bottom row of the Appearance panel). Cmd+/ runs `appearance.addFill` and
@@ -1797,13 +1810,15 @@ the scope and what differs from the public documentation.
 ## Edit Colors and Recolor Artwork
 
 `edit.colors.invert`, `edit.colors.toCMYK`, `edit.colors.toGrayscale`, `edit.colors.toRGB`, `edit.colors.saturate`,
-`edit.colors.adjustBalance` and `recolor.apply` recolour everything inside the selection (or `ids`) in one undo step:
-fills, strokes, text, gradient stops, gradient-mesh points, embedded images (a recoloured copy of the image; linked
-images are left alone) and the tiles of pattern fills and strokes (a recoloured copy saved as a new pattern swatch,
-e.g. "Dots 2"; the original pattern is untouched). `includeImages: false` / `includePatterns: false` leave images or
-patterns out. The Blend commands also grade gradient meshes, which keep their shading. `edit.colors.saturate` needs
-`intensity`, a number from -100 to 100 (a number outside the range counts as its nearest end). Without one, or with a
-value that is not a number, it answers `` missing number `intensity` `` and changes nothing.
+`edit.colors.adjustBalance` and `recolor.apply` recolor everything inside the selection (or `ids`) in one undo step:
+fills, strokes, text, gradient stops, gradient-mesh points, colorized image fills, embedded images (a recolored copy of
+the image; linked images are left alone) and the tiles of pattern fills and strokes (a recolored copy saved as a new
+pattern swatch, e.g. "Dots 2"; the original pattern is untouched). Colorized image fills are recolored when fills are in
+scope, but their pixels are never recolored. `includeImages: false` leaves other images' pixels unchanged.
+For `edit.colors.*`, `fill: false` leaves colorized image fills unchanged. `recolor.apply` always includes fills.
+`includePatterns: false` leaves patterns out. The Blend commands also grade gradient meshes, which keep their shading.
+`edit.colors.saturate` needs `intensity`, a number from -100 to 100 (a number outside the range counts as its nearest
+end). Without one, or with a value that is not a number, it answers `` missing number `intensity` `` and changes nothing.
 
 ```json
 {"name":"run_command","arguments":{"command":"recolor.colors","params":{}}}
@@ -5913,6 +5928,7 @@ the other colour adjustments (Effect › Color Adjustments); each colour keeps i
 |---|---|---|
 | `addon.color.exposure` (Exposure…) | `exposure` stops −20…20 (0), `offset` −0.5…0.5 (0), `gamma` 0.1…10 (1) | Scales the light in linear light (each stop doubles or halves it, mostly in the highlights), adds the offset (shadows and midtones) and applies the gamma |
 | `addon.color.desaturate` (Desaturate) | none | Turns every colour to the grey of its lightness |
+| `addon.color.duotone` (Duotone…) | `tones`, `skipSpot` (below) | Prints each colour's tone with one to four inks |
 | `addon.color.invert` (Invert Colors) | none | Turns every colour to its RGB inverse |
 
 `addon.color.filter {effect, params?, fill?, stroke?, includeImages?, includePatterns?, ids?}` applies any colour
@@ -5966,3 +5982,59 @@ those paths.
 
 Not yet: stochastic (FM) and radial patterns, a dot-gain curve, per-screen separation settings, and type or symbols as
 dots.
+
+### Duotone (live)
+
+`addon.color.duotone` (Effect › Color Effects › Duotone…, also in Object › Plug-ins › Color Effects and the panel's Inks)
+prints the grey-equivalent tone of each colour the object paints with one to four inks: a monotone, duotone, tritone or
+quadtone. It is a colour adjustment like the add-on's others, so it goes on through `effect.apply`, stacks with the
+other adjustments and works as a filter through `addon.color.filter {effect: "addon.color.duotone", params}`; Expand
+Appearance gives the same colours as the filter.
+
+| Parameter | Values (default) | Does |
+|---|---|---|
+| `tones` | up to four `{color, swatch?, curve?, active?}` (one black tone) | The inks; tones past the fourth are left out, and one not `active` (true) is skipped |
+| `tones[].color` | `#rrggbb`, `[r, g, b]` or a colour object (`#000000`) | The ink's colour; with a `swatch`, that swatch's colour (the dialog fills it in) |
+| `tones[].swatch` | a global or spot swatch's name (none) | The swatch the ink is |
+| `tones[].curve` | `"tint,ink tint,ink …"` or `[[tint, ink], …]`, 0…100, at most 64 points (`"0,0 100,100"`) | The tone's tint to the ink's tint, a smooth curve through the points, flat past its ends |
+| `skipSpot` | bool (false) | Colours linked to a spot swatch keep their colour |
+
+The tone of a colour is its grey equivalent (a grey's ink; for other colours one minus their luma). With one tone of a
+swatch the document has, the result is a tint of that swatch, linked to it, so a spot tone separates onto its own plate.
+With several tones the inks overprint: the result is the CMYK mix of their tints, each ink multiplying what the others
+leave of the paper. A colour links to one swatch at one tint, so a mix of several spot inks becomes process colour.
+Gradient stops, type, gradient meshes and embedded images are recoloured as by the other adjustments.
+
+```json
+{"name":"run_command","arguments":{"command":"effect.apply","params":{"effect":"addon.color.duotone","params":{"tones":[{"color":"#000000"},{"color":{"model":"cmyk","c":0,"m":0.5,"y":1,"k":0},"swatch":"Orange","curve":"0,0 50,70 100,100"}]}}}}
+```
+
+The dialog has a row per tone (on or off, a colour chip, the swatch or Process Color with its hex value), the curve of the
+tone picked under Curve (the graph, its points and Reset to Linear or Reset to Inverse) and Skip Objects with Spot Colors.
+
+Not yet: an opaque undercoat, tones for type only, extra gradient stops for smoother tints, and buttons that flip a
+curve or set it to 100 %.
+
+### Print Ink Fixes
+
+`addon.color.printFixes {scope?, inkLimit?, excludePureBlack?, removeWhiteOverprint?, overprintBlack?, textOnly?, fill?,
+stroke?, ids?}` (Object › Plug-ins › Color Effects › Print Ink Fixes…, also under the panel's Inks) prepares a CMYK
+document's inks for print, as one undo step:
+
+| Parameter | Values (default) | Does |
+|---|---|---|
+| `scope` | `selection`, `document` (the selection, or the document while nothing is selected) | What it fixes; `ids` stand for the selection |
+| `inkLimit` | total ink % 1…400, 0 off (off) | CMYK colours (solid, gradient stops, gradient meshes) with more ink than this are scaled down to it; colours of spot swatches and Registration stay |
+| `excludePureBlack` | bool (true) | Black-only CMYK and grey colours keep their ink |
+| `removeWhiteOverprint` | bool (false) | White fills and strokes, and characters', stop overprinting |
+| `overprintBlack` | black % 1…100, 0 off (off) | Black-only and grey fills and strokes this dark or darker overprint, as `edit.colors.overprintBlack` sets it (not spot-linked or rich blacks) |
+| `textOnly` | bool (false) | Overprint Black on type only |
+| `fill`, `stroke` | bool (true) | Which paints the fixes reach |
+
+It returns `changed`, `inkLimited` (paints and meshes scaled), `whiteOverprintRemoved` and `blackOverprinted` (objects);
+nothing changed is no undo step. It needs a CMYK document (File › Document Color Mode › CMYK Color) and refuses an RGB
+one, out of range values and a request with no fix on.
+
+```json
+{"name":"run_command","arguments":{"command":"addon.color.printFixes","params":{"scope":"document","inkLimit":300,"removeWhiteOverprint":true,"overprintBlack":100}}}
+```

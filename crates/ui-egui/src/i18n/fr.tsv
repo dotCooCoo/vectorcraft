@@ -4159,6 +4159,7 @@ axis	Both	Les deux
 @msg	no document	aucun document
 @msg	no document open	aucun document ouvert
 @msg	no effect applied yet	aucun effet appliqué pour l’instant
+@msg	no Pathfinder operation applied yet	aucune opération Pathfinder appliquée pour l’instant
 @msg	no effect at index {k}	aucun effet à l’indice {k}
 @msg	no end record	aucun enregistrement de fin
 @msg	no file manager here	aucun gestionnaire de fichiers ici
@@ -5862,3 +5863,26 @@ anchor	Points:	Points :
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Couleur des points d’après l’illustration
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Bichromie…
+	Duotone	Bichromie
+	Print Ink Fixes…	Corrections d’encres pour l’impression…
+	Print Ink Fixes	Corrections d’encres pour l’impression
+	Inks	Encres
+	Tone 1	Ton 1
+	Tone 2	Ton 2
+	Tone 3	Ton 3
+	Tone 4	Ton 4
+	Curve	Courbe
+	Reset to Linear	Réinitialiser en linéaire
+	Reset to Inverse	Réinitialiser en inversée
+	Skip Objects with Spot Colors	Ignorer les objets avec tons directs
+	Ink Limit	Limite d’encrage
+	Exclude Pure Black	Exclure le noir pur
+	Remove White Overprint	Supprimer la surimpression du blanc
+	Overprint Black	Surimpression du noir
+	Text Only	Texte uniquement
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	indiquez `inkLimit`, `removeWhiteOverprint` ou `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Les corrections d’encres pour l’impression s’appliquent aux documents CMJN : choisissez d’abord Fichier › Mode colorimétrique du document › Couleur CMJN
+@msg	`{key}` must be 0..{max}	`{key}` doit être compris entre 0 et {max}

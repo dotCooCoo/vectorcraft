@@ -3179,6 +3179,43 @@ fn image_trace_document_library_links_fills_to_global_swatches() {
 }
 
 #[test]
+fn image_trace_document_library_links_to_a_global_swatch_after_a_process_swatch_of_its_color() {
+    let mut s = session();
+    // A process swatch, then two global swatches, all of one color.
+    s.execute("swatch.new", &json!({"name": "Red", "color": "#c82828"})).unwrap();
+    s.execute("swatch.new", &json!({"name": "Ink", "color": "#c82828", "global": true})).unwrap();
+    s.execute("swatch.new", &json!({"name": "Ink 2", "color": "#c82828", "global": true})).unwrap();
+    s.execute("swatch.new", &json!({"name": "Leaf", "color": "#28a03c"})).unwrap();
+    s.execute("swatch.new", &json!({"name": "Sky", "color": "#2846c8", "global": true})).unwrap();
+    let [tr, tg, tb, _] = s.doc().unwrap().doc.tint_paint("Sky", 0.5).unwrap().color().unwrap().to_rgba8(1.0);
+    let tint_hex = format!("#{tr:02x}{tg:02x}{tb:02x}");
+    s.execute("swatch.new", &json!({"name": "Mist", "color": tint_hex})).unwrap();
+    s.execute("swatch.new", &json!({"swatch": "Sky", "tint": 50})).unwrap();
+    let r = vectorcraft_trace::Raster::from_fn(60, 60, |x, _| match x {
+        0..20 => [200, 40, 40, 255],
+        20..40 => [40, 160, 60, 255],
+        _ => [tr, tg, tb, 255],
+    });
+    add_image(&mut s, &r, Affine::IDENTITY);
+    let params = json!({"mode": "color", "palette": "documentLibrary", "library": "document", "colors": 8});
+    let res = s.execute("imageTrace.makeAndExpand", &json!({"params": params})).unwrap();
+    let g = node(&s, NodeId(res["id"].as_u64().unwrap()));
+    let got: Vec<Paint> = g.children().unwrap().iter().map(|n| n.appearance.fill_paint()).collect();
+    let red = Color::rgb8(200, 40, 40);
+    let reds: Vec<&Paint> = got.iter().filter(|p| p.color().map(|c| c.to_rgba8(1.0)) == Some(red.to_rgba8(1.0))).collect();
+    assert!(!reds.is_empty(), "{got:?}");
+    assert!(reds.iter().all(|p| matches!(p, Paint::Solid { swatch: Some(w), .. } if w == "Ink")), "{got:?}");
+    let tints: Vec<&Paint> = got.iter().filter(|p| p.color().map(|c| c.to_rgba8(1.0)) == Some([tr, tg, tb, 255])).collect();
+    assert!(!tints.is_empty(), "{got:?}");
+    assert!(tints.iter().all(|p| matches!(p, Paint::Solid { swatch: Some(w), tint, .. } if w == "Sky" && *tint == 0.5)), "{got:?}");
+    // Editing the global swatch recolors the trace.
+    s.execute("swatch.edit", &json!({"name": "Ink", "color": "#ff8800"})).unwrap();
+    let g = node(&s, NodeId(res["id"].as_u64().unwrap()));
+    let orange = Color::rgb8(255, 136, 0).to_rgba8(1.0);
+    assert!(g.children().unwrap().iter().any(|n| n.appearance.fill_paint().color().map(|c| c.to_rgba8(1.0)) == Some(orange)));
+}
+
+#[test]
 fn image_trace_document_library_matches_a_lab_spot_by_its_cmyk_equivalent() {
     let _g = crate::tests_colormgmt::GLOBAL.lock().unwrap_or_else(|e| e.into_inner());
     let mut s = session();

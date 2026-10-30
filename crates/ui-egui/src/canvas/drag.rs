@@ -78,6 +78,16 @@ pub(super) fn tool_drag_moved(ui: &Ui, xf: &Xf, p: Pos2, pointer: &egui::Pointer
     true
 }
 
+/// Whether the tool should get another drag event at a pointer held still because Shift, Alt,
+/// Cmd/Ctrl or Space went down or up (#4711): a scale switches to proportional or from the centre
+/// at once. Records `m` as the modifiers last seen; only once the press has dragged.
+pub(super) fn tool_drag_mods_changed(ui: &Ui, m: Mods) -> bool {
+    let id = egui::Id::unique("canvas-tool-drag-mods");
+    let (dragged, last) = ui.data(|d| (d.get_temp::<Point>(tool_drag_doc_id()).is_some(), d.get_temp::<Mods>(id)));
+    ui.data_mut(|d| d.insert_temp(id, m));
+    dragged && last.is_some_and(|l| l != m)
+}
+
 /// The pen pressure (0..1) of the press in progress: the force of this frame's pen or touch
 /// input, else the pressure in the host's feed while a pen is the pointer that moved last
 /// ([`crate::Services::stylus`]: [`StylusFeed::press`] for a new press, [`StylusFeed::held`]

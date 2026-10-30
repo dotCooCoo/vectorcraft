@@ -4045,6 +4045,7 @@ axis	Both	И двете
 @msg	no document	няма документ
 @msg	no document open	няма отворен документ
 @msg	no effect applied yet	все още няма приложен ефект
+@msg	no Pathfinder operation applied yet	все още няма приложена операция на Pathfinder
 @msg	no effect at index {k}	няма ефект на индекс {k}
 @msg	no end record	няма краен запис
 @msg	no file manager here	няма файлов мениджър тук
@@ -5752,3 +5753,26 @@ anchor	Points:	Точки:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Цвят на точките от илюстрацията
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Двутон…
+	Duotone	Двутон
+	Print Ink Fixes…	Корекции на мастилата за печат…
+	Print Ink Fixes	Корекции на мастилата за печат
+	Inks	Мастила
+	Tone 1	Тон 1
+	Tone 2	Тон 2
+	Tone 3	Тон 3
+	Tone 4	Тон 4
+	Curve	Крива
+	Reset to Linear	Връщане към линейна
+	Reset to Inverse	Връщане към обърната
+	Skip Objects with Spot Colors	Пропускане на обекти с плакатни цветове
+	Ink Limit	Лимит на мастилото
+	Exclude Pure Black	Без чисто черно
+	Remove White Overprint	Премахване на напечатването на бялото
+	Overprint Black	Напечатване на черното
+	Text Only	Само текст
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	задайте `inkLimit`, `removeWhiteOverprint` или `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Корекциите на мастилата за печат работят върху CMYK документи: първо изберете Файл › Цветен режим на документа › CMYK цвят
+@msg	`{key}` must be 0..{max}	`{key}` трябва да е 0..{max}

@@ -4548,6 +4548,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	no PNG encoder	PNG エンコーダーがありません
 @msg	no document open	ドキュメントが開かれていません
 @msg	no effect applied yet	まだ効果を適用していません
+@msg	no Pathfinder operation applied yet	まだパスファインダーの操作を適用していません
 @msg	no such perspective grid preset	指定された遠近グリッドプリセットが見つかりません
 @msg	no such recent file	指定された最近使ったファイルが見つかりません
 @msg	no such recent font	指定された最近使ったフォントが見つかりません
@@ -5551,3 +5552,26 @@ anchor	Points:	ポイント:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	ドットの色をアートから取得
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	ダブルトーン…
+	Duotone	ダブルトーン
+	Print Ink Fixes…	印刷インキの修正…
+	Print Ink Fixes	印刷インキの修正
+	Inks	インキ
+	Tone 1	トーン 1
+	Tone 2	トーン 2
+	Tone 3	トーン 3
+	Tone 4	トーン 4
+	Curve	カーブ
+	Reset to Linear	直線にリセット
+	Reset to Inverse	反転にリセット
+	Skip Objects with Spot Colors	特色を使用したオブジェクトをスキップ
+	Ink Limit	インキ総量の上限
+	Exclude Pure Black	純粋なブラックを除外
+	Remove White Overprint	白のオーバープリントを削除
+	Overprint Black	ブラックをオーバープリント
+	Text Only	テキストのみ
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	`inkLimit`、`removeWhiteOverprint` または `overprintBlack` を指定してください
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	印刷インキの修正は CMYK ドキュメントで使用できます。先にファイル › ドキュメントのカラーモード › CMYK カラーを選択してください
+@msg	`{key}` must be 0..{max}	`{key}` は 0..{max} にしてください

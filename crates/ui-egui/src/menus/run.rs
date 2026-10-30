@@ -544,6 +544,7 @@ fn run_ui_part6(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
             Some((e, params)) => app.run("effect.apply", json!({"effect": e, "params": params})),
             None => Err("no effect applied yet".into()),
         },
+        "pathfinder.repeat" => crate::panels::pathfinder::repeat(app),
         "file.export.pdf" if p.as_object().is_none_or(|o| o.is_empty()) => crate::dialogs::open_save_pdf(app, &json!({})),
         "file.export.pdf" => io::export_pdf(app, p.clone()),
         _ => return None,

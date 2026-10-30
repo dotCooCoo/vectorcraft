@@ -4378,6 +4378,7 @@ imageTrace	Outline	Ääriviiva
 @msg	no document	ei asiakirjaa
 @msg	no document open	asiakirjaa ei ole auki
 @msg	no effect applied yet	tehostetta ei ole vielä käytetty
+@msg	no Pathfinder operation applied yet	polunetsimen toimintoa ei ole vielä käytetty
 @msg	no effect at index {k}	ei tehostetta indeksissä {k}
 @msg	no end record	ei loppumerkintää
 @msg	no file manager here	täällä ei ole tiedostonhallintaa
@@ -5894,3 +5895,26 @@ anchor	Points:	Pisteet:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Pisteiden väri kuvituksesta
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duotone…
+	Duotone	Duotone
+	Print Ink Fixes…	Painovärien korjaukset…
+	Print Ink Fixes	Painovärien korjaukset
+	Inks	Painovärit
+	Tone 1	Sävy 1
+	Tone 2	Sävy 2
+	Tone 3	Sävy 3
+	Tone 4	Sävy 4
+	Curve	Käyrä
+	Reset to Linear	Palauta lineaariseksi
+	Reset to Inverse	Palauta käänteiseksi
+	Skip Objects with Spot Colors	Ohita objektit, joissa on spottivärejä
+	Ink Limit	Värirajoitus
+	Exclude Pure Black	Jätä puhdas musta pois
+	Remove White Overprint	Poista valkoisen päällepainatus
+	Overprint Black	Päällepainata musta
+	Text Only	Vain teksti
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	anna `inkLimit`, `removeWhiteOverprint` tai `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Painovärien korjaukset toimivat CMYK-asiakirjoissa: valitse ensin Tiedosto › Asiakirjan väritila › CMYK-väri
+@msg	`{key}` must be 0..{max}	`{key}` on oltava 0..{max}

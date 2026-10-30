@@ -444,7 +444,7 @@ impl Renderer {
         let art = if effects::has_revolve(a) || effects::has_solid(a) { effects::evaluate_container(Some(doc), &art).unwrap_or(art) } else { art };
         // Vector Halftone samples the object with its colour adjustments: its dots keep their inks.
         let outer = if effects::addons::halftone::has_halftone(a) { None } else { effects::color_map(&a.appearance.effects) };
-        let mut art = self.adjusted_art(art, outer.as_ref());
+        let mut art = self.adjusted_art(doc, art, outer.as_ref());
         // A path's geometry effects still apply when it is drawn.
         let path = matches!(art.kind, NodeKind::Path { .. } | NodeKind::Compound { .. });
         art.appearance.effects.retain(|e| path && effects::is_geometry(&e.id));
@@ -477,12 +477,15 @@ impl Renderer {
     }
 
     /// `art` with the colour adjustments inside it applied, then `outer` (its object's own) on
-    /// everything ([`effects::adjust`]). Embedded images become recoloured copies, cached with the
-    /// decoded images under a key naming the adjustment.
-    fn adjusted_art(&mut self, mut art: Node, outer: Option<&effects::ColorMap>) -> Node {
+    /// everything ([`effects::adjust`]), with `doc`'s swatches. Embedded images become recoloured
+    /// copies, cached with the decoded images under a key naming the adjustment.
+    fn adjusted_art(&mut self, doc: &vectorcraft_doc::Document, mut art: Node, outer: Option<&effects::ColorMap>) -> Node {
         art.appearance.effects.retain(|e| !effects::is_adjustment(&e.id));
         let mut wanted: Vec<(String, String, u64, effects::ColorMap)> = vec![];
-        let adjusted = effects::adjust(&art, outer, &mut |key, map| {
+        // shortcut: art kept by `fx_arts` isn't made again when only a swatch's kind (spot or
+        // process) changes, which Duotone reads; editing the object makes it again.
+        let swatches = |name: &str| effects::addons::duotone::swatch_kind(doc, name);
+        let adjusted = effects::adjust(&art, outer, &swatches, &mut |key, map| {
             let mut h = std::hash::DefaultHasher::new();
             std::hash::Hash::hash(&format!("{map:?}"), &mut h);
             let hash = std::hash::Hasher::finish(&h);

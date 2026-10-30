@@ -3936,6 +3936,7 @@ axis	Both	Her İkisi
 @msg	no document	belge yok
 @msg	no document open	hiçbir belge açık değil
 @msg	no effect applied yet	henüz hiçbir efekt uygulanmadı
+@msg	no Pathfinder operation applied yet	henüz hiçbir Yol Bulucu işlemi uygulanmadı
 @msg	no effect at index {k}	{k} endeksinde etkisi yok
 @msg	no end record	son kayıt yok
 @msg	no file manager here	burada dosya yöneticisi yok
@@ -5821,3 +5822,26 @@ anchor	Points:	Noktalar:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Nokta Rengini Sanattan Al
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Çift Ton…
+	Duotone	Çift Ton
+	Print Ink Fixes…	Baskı Mürekkebi Düzeltmeleri…
+	Print Ink Fixes	Baskı Mürekkebi Düzeltmeleri
+	Inks	Mürekkepler
+	Tone 1	Ton 1
+	Tone 2	Ton 2
+	Tone 3	Ton 3
+	Tone 4	Ton 4
+	Curve	Eğri
+	Reset to Linear	Doğrusala sıfırla
+	Reset to Inverse	Terse sıfırla
+	Skip Objects with Spot Colors	Spot renkli nesneleri atla
+	Ink Limit	Mürekkep sınırı
+	Exclude Pure Black	Saf siyahı hariç tut
+	Remove White Overprint	Beyazın üst baskısını kaldır
+	Overprint Black	Üst Baskı Siyah
+	Text Only	Yalnızca metin
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	`inkLimit`, `removeWhiteOverprint` veya `overprintBlack` verin
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Baskı Mürekkebi Düzeltmeleri CMYK belgelerinde çalışır: önce Dosya › Belge Renk Modu › CMYK Rengi'ni seçin
+@msg	`{key}` must be 0..{max}	`{key}` 0..{max} olmalıdır

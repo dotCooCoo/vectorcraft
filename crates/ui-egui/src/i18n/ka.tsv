@@ -3939,6 +3939,7 @@ font-technology	Variable	ცვლადი
 @msg	no document	დოკუმენტი არ არის
 @msg	no document open	გახსნილი დოკუმენტი არ არის
 @msg	no effect applied yet	ეფექტი ჯერ არ გამოყენებულა
+@msg	no Pathfinder operation applied yet	ტრაექტორიების ოპერაცია ჯერ არ გამოყენებულა
 @msg	no effect at index {k}	ინდექსზე {k} ეფექტი არ არის
 @msg	no end record	დასასრულის ჩანაწერი არ არის
 @msg	no file manager here	აქ ფაილების მენეჯერი არ არის
@@ -5853,3 +5854,26 @@ anchor	Points:	წერტილები:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	წერტილების ფერი ნახატიდან
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	დუოტონი…
+	Duotone	დუოტონი
+	Print Ink Fixes…	საბეჭდი მელნის შესწორებები…
+	Print Ink Fixes	საბეჭდი მელნის შესწორებები
+	Inks	მელნები
+	Tone 1	ტონი 1
+	Tone 2	ტონი 2
+	Tone 3	ტონი 3
+	Tone 4	ტონი 4
+	Curve	მრუდი
+	Reset to Linear	წრფივზე დაბრუნება
+	Reset to Inverse	შებრუნებულზე დაბრუნება
+	Skip Objects with Spot Colors	სპოტ-ფერების მქონე ობიექტების გამოტოვება
+	Ink Limit	მელნის ზღვარი
+	Exclude Pure Black	სუფთა შავის გამორიცხვა
+	Remove White Overprint	თეთრის ზედდაბეჭდვის მოხსნა
+	Overprint Black	შავის ზედდაბეჭდვა
+	Text Only	მხოლოდ ტექსტი
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	მიუთითეთ `inkLimit`, `removeWhiteOverprint` ან `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	საბეჭდი მელნის შესწორებები მუშაობს CMYK დოკუმენტებზე: ჯერ აირჩიეთ ფაილი › დოკუმენტის ფერის რეჟიმი › CMYK ფერი
+@msg	`{key}` must be 0..{max}	`{key}` უნდა იყოს 0..{max}

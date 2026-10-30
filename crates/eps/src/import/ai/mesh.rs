@@ -186,7 +186,9 @@ impl MeshReader {
             "N" => {
                 if let Some(V::Arr(a)) = value {
                     if self.corners.len() < 4 {
-                        let n: Vec<f64> = a.iter().filter_map(V::num).take(64).collect();
+                        // A corner holding anything but numbers is unread: skipping it would shift
+                        // the numbers after it into the colour or the opacity.
+                        let n: Vec<f64> = a.iter().take(64).map(V::num).collect::<Option<_>>().unwrap_or_default();
                         let comps = self.space.components();
                         let color = comps.and_then(|k| self.space.color(n.get(..k)?));
                         let rest = comps.and_then(|k| n.get(k..)).map(<[f64]>::to_vec).unwrap_or_default();
@@ -899,6 +901,29 @@ mod tests {
             square(&mut reader, [&[1.0, 1.0]; 4], [vec![(space, "CS")], vec![], vec![], vec![]]);
             assert!(reader.unread && reader.patches.is_empty());
         }
+    }
+
+    /// A corner holding anything but numbers is unread: skipping it would shift the numbers after
+    /// it into its colour and opacity (two inks' tints `0.25 /bad 0.5`, read as `0.25 0.5` and no
+    /// opacity).
+    #[test]
+    fn a_corner_with_something_other_than_numbers_is_unread() {
+        let ink = |c: [f64; 4], name: &str| {
+            let mut v: Vec<V> = c.iter().map(|x| V::Num(*x)).collect();
+            v.extend([V::Name("DeviceCMYK".into()), V::Str(name.as_bytes().to_vec()), V::Name("Separation".into())]);
+            V::Arr(v)
+        };
+        let channels =
+            V::Arr(vec![ink([0.0, 0.0, 1.0, 0.0], "Yellow"), ink([0.0, 1.0, 0.0, 0.0], "Magenta"), V::Num(2.0), V::Name("NChannel".into())]);
+        let mut reader = MeshReader::default();
+        reader.entry(&[channels, V::Name("CS".into())], Affine::IDENTITY);
+        for (x, y) in [(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0)] {
+            let mut corner = vec![V::Num(0.25), V::Name("bad".into()), V::Num(0.5)];
+            corner.extend([x, y, x, y, 1.0, x, y, 1.0].map(V::Num));
+            reader.entry(&[V::Arr(corner), V::Name("N".into())], Affine::IDENTITY);
+        }
+        reader.entry(&[V::Num(0.0), V::Name("E".into())], Affine::IDENTITY);
+        assert!(reader.unread && reader.patches.is_empty(), "{:?}", reader.patches);
     }
 
     /// Meshes as large as files users sent (97 × 72 patches) are read, as one mesh.

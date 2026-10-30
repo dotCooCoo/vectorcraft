@@ -6054,6 +6054,43 @@ fn tool_drag_moved_without_pointer_delta() {
     assert!(moved, "a new document position runs even when egui reports no delta");
 }
 
+/// #4711: Shift pressed and released while a corner handle is held still scales proportionally and
+/// then freely again at once, without waiting for the pointer to move.
+#[test]
+fn a_modifier_changed_mid_scale_applies_with_the_pointer_held_still() {
+    use egui::{Event, Modifiers};
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    app.ui.view.smart_guides = false;
+    app.ui.view.snap_to_point = false;
+    let id = app.session.execute("shape.rectangle", &json!({"x": 100, "y": 100, "width": 100, "height": 50})).unwrap()["id"].as_u64().unwrap();
+    app.select_tool("selection");
+    let ctx = egui::Context::default();
+    frame(&mut app, &ctx, vec![]);
+    let xf = Xf::new(app.canvas_rect.unwrap(), app.view().unwrap());
+    let with = |app: &mut VectorcraftApp, mut events: Vec<Event>, modifiers: Modifiers| {
+        events.insert(0, Event::ModifiersChanged(modifiers));
+        let raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), events, ..Default::default() };
+        let mut out = ctx.run_ui(raw, |ui| show(app, ui));
+        out.textures_delta.clear();
+    };
+    let button = |pos, pressed| Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::NONE };
+    let height =
+        |app: &VectorcraftApp| app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().height();
+    let corner = xf.to_screen(Point::new(200.0, 150.0));
+    let to = xf.to_screen(Point::new(300.0, 150.0));
+    with(&mut app, vec![Event::PointerMoved(corner)], Modifiers::NONE);
+    with(&mut app, vec![button(corner, true)], Modifiers::NONE);
+    with(&mut app, vec![Event::PointerMoved(to)], Modifiers::NONE);
+    assert!((height(&app) - 50.0).abs() < 1e-6, "a free scale keeps the height: {}", height(&app));
+    with(&mut app, vec![], Modifiers::SHIFT);
+    assert!((height(&app) - 100.0).abs() < 1e-6, "Shift scales proportionally at once: {}", height(&app));
+    with(&mut app, vec![], Modifiers::NONE);
+    assert!((height(&app) - 50.0).abs() < 1e-6, "releasing Shift frees it at once: {}", height(&app));
+    with(&mut app, vec![button(to, false)], Modifiers::NONE);
+    assert!(app.session.active().unwrap().interaction.is_none(), "committed");
+}
+
 /// #834 review: a press held still is not a drag. Before the press has dragged, the first held
 /// frame without a delta at the press's own position sends nothing, so a click stays a click;
 /// the first move after it does.

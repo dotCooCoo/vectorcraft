@@ -4155,6 +4155,7 @@ imageTrace	Outline	Kontur
 @msg	no document	intet dokument
 @msg	no document open	intet åbent dokument
 @msg	no effect applied yet	ingen effekt er anvendt endnu
+@msg	no Pathfinder operation applied yet	ingen Pathfinder-handling er anvendt endnu
 @msg	no effect at index {k}	ingen effekt ved indeks {k}
 @msg	no end record	ingen slutpost
 @msg	no file manager here	ingen filhåndtering her
@@ -5767,3 +5768,26 @@ anchor	Points:	Punkter:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Prikfarve fra grafik
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duotone…
+	Duotone	Duotone
+	Print Ink Fixes…	Trykfarverettelser…
+	Print Ink Fixes	Trykfarverettelser
+	Inks	Trykfarver
+	Tone 1	Tone 1
+	Tone 2	Tone 2
+	Tone 3	Tone 3
+	Tone 4	Tone 4
+	Curve	Kurve
+	Reset to Linear	Nulstil til lineær
+	Reset to Inverse	Nulstil til omvendt
+	Skip Objects with Spot Colors	Spring objekter med spotfarver over
+	Ink Limit	Farvegrænse
+	Exclude Pure Black	Udelad ren sort
+	Remove White Overprint	Fjern overprint af hvid
+	Overprint Black	Overprint sort
+	Text Only	Kun tekst
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	angiv `inkLimit`, `removeWhiteOverprint` eller `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Trykfarverettelser virker på CMYK-dokumenter: vælg først Filer › Dokumentets farvetilstand › CMYK-farve
+@msg	`{key}` must be 0..{max}	`{key}` skal være 0..{max}

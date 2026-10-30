@@ -4083,6 +4083,7 @@ theme	Appearance	Erscheinungsbild
 @msg	no document	kein Dokument
 @msg	no document open	kein Dokument geöffnet
 @msg	no effect applied yet	noch kein Effekt angewendet
+@msg	no Pathfinder operation applied yet	noch keine Pathfinder-Operation angewendet
 @msg	no effect at index {k}	kein Effekt bei Index {k}
 @msg	no end record	kein Endeintrag
 @msg	no file manager here	hier gibt es keinen Dateimanager
@@ -5448,3 +5449,26 @@ anchor	Points:	Punkte:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Punktfarbe aus Grafik
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duplex…
+	Duotone	Duplex
+	Print Ink Fixes…	Druckfarbkorrekturen…
+	Print Ink Fixes	Druckfarbkorrekturen
+	Inks	Druckfarben
+	Tone 1	Druckfarbe 1
+	Tone 2	Druckfarbe 2
+	Tone 3	Druckfarbe 3
+	Tone 4	Druckfarbe 4
+	Curve	Kurve
+	Reset to Linear	Auf linear zurücksetzen
+	Reset to Inverse	Auf umgekehrt zurücksetzen
+	Skip Objects with Spot Colors	Objekte mit Volltonfarben auslassen
+	Ink Limit	Farbauftragsgrenze
+	Exclude Pure Black	Reines Schwarz ausnehmen
+	Remove White Overprint	Überdrucken von Weiß entfernen
+	Overprint Black	Schwarz überdrucken
+	Text Only	Nur Text
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	geben Sie `inkLimit`, `removeWhiteOverprint` oder `overprintBlack` an
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Druckfarbkorrekturen wirken in CMYK-Dokumenten: Wählen Sie zuerst Datei › Dokumentfarbmodus › CMYK-Farbe
+@msg	`{key}` must be 0..{max}	`{key}` muss 0..{max} sein

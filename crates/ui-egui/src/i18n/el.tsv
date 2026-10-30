@@ -4122,6 +4122,7 @@ theme	Appearance	Εμφάνιση
 @msg	no document	δεν υπάρχει έγγραφο
 @msg	no document open	δεν υπάρχει ανοιχτό έγγραφο
 @msg	no effect applied yet	δεν έχει εφαρμοστεί ακόμη εφέ
+@msg	no Pathfinder operation applied yet	δεν έχει εφαρμοστεί ακόμη λειτουργία Pathfinder
 @msg	no effect at index {k}	δεν υπάρχει εφέ στον δείκτη {k}
 @msg	no end record	λείπει η εγγραφή τέλους
 @msg	no file manager here	δεν υπάρχει διαχειριστής αρχείων εδώ
@@ -5815,3 +5816,26 @@ anchor	Points:	Σημεία:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Χρώμα κουκκίδων από το γραφικό
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Δίτονο…
+	Duotone	Δίτονο
+	Print Ink Fixes…	Διορθώσεις μελανιών εκτύπωσης…
+	Print Ink Fixes	Διορθώσεις μελανιών εκτύπωσης
+	Inks	Μελάνια
+	Tone 1	Τόνος 1
+	Tone 2	Τόνος 2
+	Tone 3	Τόνος 3
+	Tone 4	Τόνος 4
+	Curve	Καμπύλη
+	Reset to Linear	Επαναφορά σε γραμμική
+	Reset to Inverse	Επαναφορά σε αντεστραμμένη
+	Skip Objects with Spot Colors	Παράλειψη αντικειμένων με χρώματα spot
+	Ink Limit	Όριο μελανιού
+	Exclude Pure Black	Εξαίρεση καθαρού μαύρου
+	Remove White Overprint	Αφαίρεση υπερεκτύπωσης λευκού
+	Overprint Black	Υπερεκτύπωση μαύρου
+	Text Only	Μόνο κείμενο
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	δώστε `inkLimit`, `removeWhiteOverprint` ή `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Οι διορθώσεις μελανιών εκτύπωσης ισχύουν σε έγγραφα CMYK: επιλέξτε πρώτα Αρχείο › Λειτουργία χρώματος εγγράφου › Χρώμα CMYK
+@msg	`{key}` must be 0..{max}	το `{key}` πρέπει να είναι 0..{max}

@@ -4262,6 +4262,7 @@ imageTrace	Outline	轮廓
 @msg	no PNG encoder	没有 PNG 编码器
 @msg	no document open	没有打开的文档
 @msg	no effect applied yet	尚未应用任何效果
+@msg	no Pathfinder operation applied yet	尚未应用任何路径查找器操作
 @msg	no such perspective grid preset	没有此透视网格预设
 @msg	no such recent file	没有此最近使用的文件
 @msg	no such recent font	没有此最近使用的字体
@@ -5705,3 +5706,26 @@ anchor	Points:	点：
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	网点颜色取自图稿
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	双色调…
+	Duotone	双色调
+	Print Ink Fixes…	印刷油墨修正…
+	Print Ink Fixes	印刷油墨修正
+	Inks	油墨
+	Tone 1	色调 1
+	Tone 2	色调 2
+	Tone 3	色调 3
+	Tone 4	色调 4
+	Curve	曲线
+	Reset to Linear	重置为线性
+	Reset to Inverse	重置为反相
+	Skip Objects with Spot Colors	跳过使用专色的对象
+	Ink Limit	油墨限制
+	Exclude Pure Black	排除纯黑
+	Remove White Overprint	移除白色叠印
+	Overprint Black	黑色叠印
+	Text Only	仅文字
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	请指定 `inkLimit`、`removeWhiteOverprint` 或 `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	印刷油墨修正适用于 CMYK 文档：请先选择 文件 › 文档颜色模式 › CMYK 颜色
+@msg	`{key}` must be 0..{max}	`{key}` 必须为 0..{max}

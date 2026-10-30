@@ -1,7 +1,7 @@
 use super::artboards::{artboard_name_at, begin_artboard_name_edit, name_press_id, select_named_artboard};
 use super::drag::{
     HoverContext, apply_requests, dispatch, drag_art_out, drag_id, drag_layer_id, drag_pos_id, drop_press, mods, on_canvas, pen_pressure,
-    tool_drag_doc_id, tool_drag_moved, tool_frame_moves, tool_holds, tool_press_doc_id,
+    tool_drag_doc_id, tool_drag_mods_changed, tool_drag_moved, tool_frame_moves, tool_holds, tool_press_doc_id,
 };
 use super::view::{
     HOLD_DELAY, HOLD_ZOOM, SCRUB_SLOP, SCRUB_ZOOM, WheelTurn, animated_zoom, pan_pixels, rotate_about, scroll_view, touch_gestures, trackpad_turn,
@@ -361,7 +361,8 @@ fn drag_held(app: &mut VectorcraftApp, ui: &Ui, f: &Pointing, d: Drag, p: Pos2) 
             // the last position only, so a costly drag preview runs once a frame.
             let moves = tool_frame_moves(ui, app);
             // A frame whose pointer ends where the last one did still moved in between.
-            if tool_drag_moved(ui, &xf, p, pointer) || !moves.is_empty() {
+            let mods_changed = tool_drag_mods_changed(ui, mods(m, space));
+            if tool_drag_moved(ui, &xf, p, pointer) || mods_changed || !moves.is_empty() {
                 for (at, force) in moves {
                     let pressure = force.unwrap_or_else(|| pen_pressure(ui, app, false));
                     dispatch(app, &PointerEvent { kind: PointerKind::Drag, pos: xf.to_doc(at), mods: mods(m, space), pressure }, view);

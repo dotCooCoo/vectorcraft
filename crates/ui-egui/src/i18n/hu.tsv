@@ -4819,6 +4819,7 @@ imageTrace	Outline	Körvonal
 @msg	no document	nincs dokumentum
 @msg	no document open	nincs megnyitott dokumentum
 @msg	no effect applied yet	még nincs alkalmazott effektus
+@msg	no Pathfinder operation applied yet	még nincs alkalmazott útvonalkezelő-művelet
 @msg	no effect at index {k}	ezen az indexen nincs effektus: {k}
 @msg	no end record	nincs záró rekord
 @msg	no file manager here	itt nincs fájlkezelő
@@ -5850,3 +5851,26 @@ anchor	Points:	Pontok:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Pontszín a grafikából
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duplex…
+	Duotone	Duplex
+	Print Ink Fixes…	Nyomdai festékjavítások…
+	Print Ink Fixes	Nyomdai festékjavítások
+	Inks	Festékek
+	Tone 1	1. tónus
+	Tone 2	2. tónus
+	Tone 3	3. tónus
+	Tone 4	4. tónus
+	Curve	Görbe
+	Reset to Linear	Visszaállítás lineárisra
+	Reset to Inverse	Visszaállítás fordítottra
+	Skip Objects with Spot Colors	Direkt színeket használó objektumok kihagyása
+	Ink Limit	Festékkorlát
+	Exclude Pure Black	Tiszta fekete kizárása
+	Remove White Overprint	Fehér felülnyomásának eltávolítása
+	Overprint Black	Fekete felülnyomása
+	Text Only	Csak szöveg
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	adja meg: `inkLimit`, `removeWhiteOverprint` vagy `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	A nyomdai festékjavítások CMYK-dokumentumokon működnek: előbb válassza a Fájl › Dokumentum színmódja › CMYK-szín parancsot
+@msg	`{key}` must be 0..{max}	`{key}` értéke 0..{max} lehet

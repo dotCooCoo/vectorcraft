@@ -1011,6 +1011,36 @@ fn knife_cuts_rect_into_two_pieces() {
     assert_eq!(paths(&s).len(), 1);
 }
 
+/// An Alt-drag with the Knife cuts along the straight line from the press point to the release,
+/// wherever the drag went between, and Shift+Alt along the nearest 45° step, in one undo step.
+#[test]
+fn knife_alt_drag_cuts_along_a_straight_line() {
+    let alt = Mods { alt: true, ..Default::default() };
+    let shift_alt = Mods { shift: true, alt: true, ..Default::default() };
+    // From (150, 50) to (250, 250) the line crosses the rectangle's top at x 175 and its bottom at
+    // x 225, so the left piece holds 10000 pt²; a vertical cut at x 150 leaves 5000 pt².
+    for (m, to, left, top, bottom) in [
+        (alt, (250.0, 250.0), 10000.0, Point::new(175.0, 100.0), Point::new(225.0, 200.0)),
+        (shift_alt, (160.0, 240.0), 5000.0, Point::new(150.0, 100.0), Point::new(150.0, 200.0)),
+    ] {
+        let mut s = session();
+        rect(&mut s, 100.0, 100.0, 200.0, 100.0);
+        s.execute("select.none", &json!({})).unwrap();
+        s.select_tool("knife", view()).unwrap();
+        assert_eq!(gesture(&mut s, &[(150.0, 50.0), (290.0, 150.0), to], m), 1, "{m:?}: one undo step");
+        let ps = paths(&s);
+        assert_eq!(ps.len(), 2, "{m:?}");
+        let small = ps.iter().map(|(_, p)| area(p)).fold(f64::INFINITY, f64::min);
+        assert!((small - left).abs() < 30.0, "{m:?}: {small}");
+        // The Knife leaves a narrow slit, so each piece's boundary lies just beside the center line.
+        for (_, piece) in &ps {
+            let anchors = &piece.subpaths[0].anchors;
+            assert!(anchors.iter().any(|a| a.p.distance(top) < 0.1), "{m:?}: missing top cut boundary near {top:?}: {anchors:?}");
+            assert!(anchors.iter().any(|a| a.p.distance(bottom) < 0.1), "{m:?}: missing bottom cut boundary near {bottom:?}: {anchors:?}");
+        }
+    }
+}
+
 #[test]
 fn knife_partial_cut_does_nothing() {
     let mut s = session();
@@ -1273,6 +1303,38 @@ fn shape_arc_closed_along_y_closes_through_the_top_left_corner() {
     assert_eq!(ends, [Point::new(100.0, 90.0), Point::new(180.0, 50.0), Point::new(100.0, 50.0)]);
     let area = sp.signed_area().abs() / (80.0 * 40.0);
     assert!((area - std::f64::consts::FRAC_PI_4).abs() < 0.01, "{area}");
+}
+
+/// A spiral dragged out with Alt pressed part way gets four more segments per wind as its outer end
+/// moves out. Ctrl/Cmd pressed part way fits the decay so the inner end keeps its distance from the
+/// center. The Spiral tool keeps both values for the next spiral.
+#[test]
+fn spiral_drags_with_alt_and_ctrl_change_its_segments_and_decay() {
+    let mut s = session();
+    let v = view();
+    let spiral = |s: &mut Session, m: Mods, to: (f64, f64)| {
+        s.pointer(&PointerEvent::new(PointerKind::Down, 100.0, 100.0), v).unwrap();
+        s.pointer(&PointerEvent::new(PointerKind::Drag, 200.0, 100.0), v).unwrap();
+        s.pointer(&PointerEvent::new(PointerKind::Drag, 200.0, 100.0).with_mods(m), v).unwrap();
+        s.pointer(&PointerEvent::new(PointerKind::Drag, to.0, to.1).with_mods(m), v).unwrap();
+        s.pointer(&PointerEvent::new(PointerKind::Up, to.0, to.1).with_mods(m), v).unwrap();
+        let sp = paths(s).last().unwrap().1.subpaths[0].clone();
+        (sp.anchors.len(), sp.anchors.last().unwrap().p)
+    };
+    s.select_tool("spiral", v).unwrap();
+    let undo = undo_steps(&s);
+    // Alt from a radius of 100 to 200: 10 segments become 14, one full wind of four quarter turns.
+    let (anchors, outer) = spiral(&mut s, Mods { alt: true, ..Mods::default() }, (300.0, 100.0));
+    assert_eq!(anchors, 15);
+    assert!(near(outer, Point::new(300.0, 100.0)), "{outer:?}");
+    assert_eq!(s.tool_options()["segments"], json!(14));
+    // Ctrl/Cmd from 100 to 50: the decay rises from 80 % to 80 × 2^(1/14) %.
+    let (anchors, outer) = spiral(&mut s, Mods { cmd: true, ..Mods::default() }, (150.0, 100.0));
+    assert_eq!(anchors, 15);
+    assert!(near(outer, Point::new(150.0, 100.0)), "{outer:?}");
+    let decay = s.tool_options()["decay"].as_f64().unwrap();
+    assert!((decay - 80.0 * 2f64.powf(1.0 / 14.0)).abs() < 1e-9, "{decay}");
+    assert_eq!(undo_steps(&s) - undo, 2, "one undo step a spiral");
 }
 
 /// The children of the grid a `shape.rectangularGrid` / `shape.polarGrid` call made, bottom first.

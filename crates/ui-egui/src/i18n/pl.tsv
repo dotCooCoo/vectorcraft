@@ -4293,6 +4293,7 @@ imageTrace	Outline	Kontur
 @msg	no document	brak dokumentu
 @msg	no document open	brak otwartego dokumentu
 @msg	no effect applied yet	nie zastosowano jeszcze żadnego efektu
+@msg	no Pathfinder operation applied yet	nie zastosowano jeszcze żadnej operacji odnajdywania ścieżek
 @msg	no effect at index {k}	brak efektu o indeksie {k}
 @msg	no end record	brak rekordu końcowego
 @msg	no file manager here	brak menedżera plików
@@ -5718,3 +5719,26 @@ anchor	Points:	Punkty:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Kolor kropek z kompozycji
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Dwutonowy…
+	Duotone	Dwutonowy
+	Print Ink Fixes…	Poprawki farb drukarskich…
+	Print Ink Fixes	Poprawki farb drukarskich
+	Inks	Farby
+	Tone 1	Ton 1
+	Tone 2	Ton 2
+	Tone 3	Ton 3
+	Tone 4	Ton 4
+	Curve	Krzywa
+	Reset to Linear	Resetuj do liniowej
+	Reset to Inverse	Resetuj do odwróconej
+	Skip Objects with Spot Colors	Pomiń obiekty z kolorami dodatkowymi
+	Ink Limit	Limit farby
+	Exclude Pure Black	Wyklucz czystą czerń
+	Remove White Overprint	Usuń nadruk bieli
+	Overprint Black	Nadruk czerni
+	Text Only	Tylko tekst
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	podaj `inkLimit`, `removeWhiteOverprint` lub `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Poprawki farb drukarskich działają w dokumentach CMYK: najpierw wybierz Plik › Tryb koloru dokumentu › Kolor CMYK
+@msg	`{key}` must be 0..{max}	`{key}` musi wynosić 0..{max}

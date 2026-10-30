@@ -4073,6 +4073,7 @@ axis	Both	Båda
 @msg	no document	inget dokument
 @msg	no document open	inget dokument är öppet
 @msg	no effect applied yet	ingen effekt har använts än
+@msg	no Pathfinder operation applied yet	ingen banfinnaråtgärd har använts än
 @msg	no effect at index {k}	ingen effekt vid index {k}
 @msg	no end record	ingen slutpost
 @msg	no file manager here	ingen filhanterare här
@@ -5919,3 +5920,26 @@ shape	Open	Öppen
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Punktfärg från objekt
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duoton…
+	Duotone	Duoton
+	Print Ink Fixes…	Tryckfärgskorrigeringar…
+	Print Ink Fixes	Tryckfärgskorrigeringar
+	Inks	Tryckfärger
+	Tone 1	Ton 1
+	Tone 2	Ton 2
+	Tone 3	Ton 3
+	Tone 4	Ton 4
+	Curve	Kurva
+	Reset to Linear	Återställ till linjär
+	Reset to Inverse	Återställ till omvänd
+	Skip Objects with Spot Colors	Hoppa över objekt med dekorfärger
+	Ink Limit	Färggräns
+	Exclude Pure Black	Uteslut ren svart
+	Remove White Overprint	Ta bort övertryck av vitt
+	Overprint Black	Övertryck svart
+	Text Only	Endast text
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	ange `inkLimit`, `removeWhiteOverprint` eller `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Tryckfärgskorrigeringar fungerar i CMYK-dokument: välj först Fil › Dokumentets färgläge › CMYK-färg
+@msg	`{key}` must be 0..{max}	`{key}` måste vara 0..{max}

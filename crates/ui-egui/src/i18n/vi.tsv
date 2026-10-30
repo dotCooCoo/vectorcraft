@@ -4467,6 +4467,7 @@ theme	Appearance	Giao diện
 @msg	no document	không có tài liệu
 @msg	no document open	không có tài liệu nào đang mở
 @msg	no effect applied yet	chưa áp dụng hiệu ứng
+@msg	no Pathfinder operation applied yet	chưa áp dụng thao tác Pathfinder
 @msg	no effect at index {k}	không có hiệu ứng tại chỉ mục {k}
 @msg	no end record	không có bản ghi kết thúc
 @msg	no file manager here	không có trình quản lý tệp ở đây
@@ -5464,3 +5465,26 @@ anchor	Points:	Điểm:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Màu chấm theo tác phẩm
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Hai tông…
+	Duotone	Hai tông
+	Print Ink Fixes…	Sửa mực in…
+	Print Ink Fixes	Sửa mực in
+	Inks	Mực
+	Tone 1	Tông 1
+	Tone 2	Tông 2
+	Tone 3	Tông 3
+	Tone 4	Tông 4
+	Curve	Đường cong
+	Reset to Linear	Đặt lại thành tuyến tính
+	Reset to Inverse	Đặt lại thành đảo ngược
+	Skip Objects with Spot Colors	Bỏ qua đối tượng có màu pha
+	Ink Limit	Giới hạn mực
+	Exclude Pure Black	Loại trừ đen thuần
+	Remove White Overprint	Bỏ in chồng màu trắng
+	Overprint Black	In chồng đen
+	Text Only	Chỉ văn bản
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	hãy cho `inkLimit`, `removeWhiteOverprint` hoặc `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Sửa mực in hoạt động trên tài liệu CMYK: trước hết chọn Tệp › Chế độ màu tài liệu › Màu CMYK
+@msg	`{key}` must be 0..{max}	`{key}` phải là 0..{max}

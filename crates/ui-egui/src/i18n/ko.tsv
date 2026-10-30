@@ -4473,6 +4473,7 @@ theme	Appearance	외관
 @msg	no PNG encoder	PNG 인코더가 없습니다
 @msg	no document open	열린 문서가 없습니다
 @msg	no effect applied yet	아직 적용된 효과가 없습니다
+@msg	no Pathfinder operation applied yet	아직 적용된 패스파인더 작업이 없습니다
 @msg	no such perspective grid preset	해당 원근 격자 프리셋이 없습니다
 @msg	no such recent file	해당 최근 파일이 없습니다
 @msg	no such recent font	해당 최근 글꼴이 없습니다
@@ -5445,3 +5446,26 @@ anchor	Points:	포인트:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	아트워크에서 점 색상 가져오기
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	이중톤…
+	Duotone	이중톤
+	Print Ink Fixes…	인쇄 잉크 수정…
+	Print Ink Fixes	인쇄 잉크 수정
+	Inks	잉크
+	Tone 1	톤 1
+	Tone 2	톤 2
+	Tone 3	톤 3
+	Tone 4	톤 4
+	Curve	곡선
+	Reset to Linear	선형으로 재설정
+	Reset to Inverse	반전으로 재설정
+	Skip Objects with Spot Colors	별색을 사용한 개체 건너뛰기
+	Ink Limit	잉크 한계
+	Exclude Pure Black	순수 검정 제외
+	Remove White Overprint	흰색 겹쳐찍기 제거
+	Overprint Black	검정 겹쳐찍기
+	Text Only	문자만
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	`inkLimit`, `removeWhiteOverprint` 또는 `overprintBlack`을 지정하십시오
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	인쇄 잉크 수정은 CMYK 문서에서 작동합니다. 먼저 파일 › 문서 색상 모드 › CMYK 색상을 선택하십시오
+@msg	`{key}` must be 0..{max}	`{key}`은(는) 0..{max}이어야 합니다

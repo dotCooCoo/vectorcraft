@@ -5109,6 +5109,7 @@
 @msg	no document	no hi ha document
 @msg	no document open	no hi ha cap document obert
 @msg	no effect applied yet	encara no s’ha aplicat cap efecte
+@msg	no Pathfinder operation applied yet	encara no s’ha aplicat cap operació del Cercador de traçats
 @msg	no effect at index {k}	no hi ha cap efecte a l’índex {k}
 @msg	no empty artboards to delete	no hi ha taulers buits per suprimir
 @msg	no end record	no hi ha registre final
@@ -5854,3 +5855,26 @@ anchor	Points:	Punts:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Color dels punts de la il·lustració
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Bitò…
+	Duotone	Bitò
+	Print Ink Fixes…	Correccions de tinta per a impressió…
+	Print Ink Fixes	Correccions de tinta per a impressió
+	Inks	Tintes
+	Tone 1	To 1
+	Tone 2	To 2
+	Tone 3	To 3
+	Tone 4	To 4
+	Curve	Corba
+	Reset to Linear	Restableix a lineal
+	Reset to Inverse	Restableix a invertida
+	Skip Objects with Spot Colors	Omet els objectes amb colors directes
+	Ink Limit	Límit de tinta
+	Exclude Pure Black	Exclou el negre pur
+	Remove White Overprint	Elimina la sobreimpressió del blanc
+	Overprint Black	Sobreimpressió del negre
+	Text Only	Només text
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	indiqueu `inkLimit`, `removeWhiteOverprint` o `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Les correccions de tinta per a impressió funcionen en documents CMYK: trieu primer Fitxer › Mode de color del document › Color CMYK
+@msg	`{key}` must be 0..{max}	`{key}` ha de ser 0..{max}

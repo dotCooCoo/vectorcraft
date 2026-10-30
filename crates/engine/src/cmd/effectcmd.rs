@@ -732,6 +732,7 @@ fn expanded_node(d: &mut Document, mut n: Node, brushes: &[vectorcraft_brush::Br
 fn expand_appearance(s: &mut Session, p: &Value) -> Result<Value> {
     let roots = appearance_targets(s, p)?;
     let failed = vectorcraft_render::decode_failures();
+    let colorized_ok = super::paint::check_colorized(&s.doc()?.doc).is_ok();
     let ids = s.edit("Expand Appearance", |d, _| {
         let brushes = vectorcraft_brush::library(d);
         let mut out = vec![];
@@ -745,6 +746,7 @@ fn expand_appearance(s: &mut Session, p: &Value) -> Result<Value> {
         if out.is_empty() {
             return Err(EngineError::Other("Expand Appearance: the selection has a basic appearance".into()));
         }
+        super::paint::check_colorized_kept(colorized_ok, d).map_err(|e| bad("Expand Appearance", e))?;
         Ok(out)
     })?;
     let mut out = json!({ "ids": ids_json(&ids) });
