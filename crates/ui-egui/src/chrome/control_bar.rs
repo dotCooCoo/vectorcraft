@@ -1,4 +1,4 @@
-use super::*;
+use super::{NodeKind, Sense, Stroke, Tokens, Ui, VectorcraftApp, json, stroke_panel, theme, vec2, widgets};
 
 /// An anchor button: icon, tooltip, command and the convert command's `to`.
 type AnchorButton<'a> = (&'a str, &'a str, &'a str, Option<&'a str>);
@@ -190,6 +190,7 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                 let image = crate::place::control_bar_details(app, ui) || crate::panels::image_trace::control_bar(app, ui);
                 crate::toolbar::control_bar_options(app, ui);
                 crate::dialogs::envelope::control_bar(app, ui);
+                crate::panels::symbols::control_bar(app, ui);
                 let opacity = if first.is_some() { crate::panels::current_transparency(app).map_or(1.0, |t| t.0) } else { 1.0 };
                 if !image {
                     let shown_stroke = crate::panels::current_stroke(app);
