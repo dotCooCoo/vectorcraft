@@ -5644,3 +5644,132 @@ axis	Y Axis	Eje Y
 	Average & Join	Promediar y unir
 anchor	Points:	Puntos:
 @msg	select two open path ends, or two open paths, to average and join	selecciona dos extremos de trazados abiertos, o dos trazados abiertos, para promediarlos y unirlos
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Limpieza de ilustraciones
+	Simplify Anchors (Keep Shape)…	Simplificar puntos de ancla (mantener forma)…
+	Health Check	Revisión de estado
+	Show Issue	Mostrar problema
+	Fix All Issues	Corregir todos los problemas
+	Fix Issues	Corregir problemas
+	Deep Ungroup…	Desagrupar todos los niveles…
+	Rejoin Path Pieces…	Volver a unir fragmentos de trazado…
+	Document Health Check	Revisión de estado del documento
+	Check Selection	Revisar selección
+	Check Document	Revisar documento
+	No issues found.	No se encontraron problemas.
+	Changed since the last check.	Ha cambiado desde la última revisión.
+	Fix Selected	Corregir seleccionados
+	Fix All	Corregir todo
+	Issues fixed: {count}	Problemas corregidos: {count}
+	Open a document to check it for issues.	Abra un documento para buscar problemas en él.
+	Empty Text	Texto vacío
+	Unpainted Objects	Objetos sin pintar
+	Zero-Opacity Objects	Objetos con opacidad cero
+	Duplicate Objects	Objetos duplicados
+	Off-Artboard Art	Ilustración fuera de las mesas de trabajo
+	Duplicate Anchors	Puntos de ancla duplicados
+	Tiny Handles	Manejadores diminutos
+	Collinear Anchors	Puntos de ancla colineales
+	Nearly Coincident Anchors	Puntos de ancla casi coincidentes
+	Nearly Closed Paths	Trazados casi cerrados
+	Filled Open Paths	Trazados abiertos con relleno
+	Needless Clipping Groups	Grupos de recorte innecesarios
+	Needless Compound Paths	Trazados compuestos innecesarios
+	Needless Groups	Grupos innecesarios
+	Empty Artboards	Mesas de trabajo vacías
+	Protect Corners	Proteger esquinas
+	Gap	Separación
+	Include Clip Groups	Incluir grupos de recorte
+@msg	`tolerance` must be from 1 to 100	`tolerance` debe estar entre 1 y 100
+@msg	`gap` must be from 0 to 6 pt	`gap` debe estar entre 0 y 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Simplificar puntos de ancla: los trazados tienen demasiados puntos de ancla para simplificarlos de una vez
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Volver a unir fragmentos de trazado: demasiados trazados para unirlos de una vez
+@msg	None of these issues are left: check again	Ya no queda ninguno de estos problemas: vuelva a revisar
+@msg	`kinds` must be a list of issue kinds	`kinds` debe ser una lista de tipos de problema
+@msg	missing `kind`	falta `kind`
+	Simplify Anchors (Keep Shape)	Simplificar puntos de ancla (mantener forma)
+	Deep Ungroup	Desagrupar todos los niveles
+	Rejoin Path Pieces	Volver a unir fragmentos de trazado
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Efectos de color
+	Color Effects Panel	Panel Efectos de color
+	Exposure	Exposición
+	Exposure…	Exposición…
+	Desaturate	Desaturar
+	Adjustment	Ajuste
+	Add as Effect	Añadir como efecto
+	Apply as Filter	Aplicar como filtro
+	Select objects to adjust their colors.	Seleccione objetos para ajustar sus colores.
+	Brightness/Contrast	Brillo/contraste
+	Hue/Saturation	Tono/saturación
+	Temperature/Tint	Temperatura/tinte
+@msg	`{id}` is not a colour adjustment	`{id}` no es un ajuste de color
+@msg	missing `effect`	falta `effect`
+@msg	`params` must be an object	`params` debe ser un objeto
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Herramientas de precisión de trazados
+	Anchor Eraser Brush	Pincel borrador de puntos de ancla
+	Extend Path Tool	Herramienta Prolongar trazado
+	Measure & Inspect Tool	Herramienta Medir e inspeccionar
+	Anchor Inspector	Inspector de puntos de ancla
+	Add Points at Crossings	Agregar puntos en los cruces
+	Split at Crossings	Dividir en los cruces
+	Extend Path	Prolongar trazado
+	Measure & Inspect	Medir e inspeccionar
+	Set Anchor	Definir punto de ancla
+	Make Smooth	Suavizar punto
+	Make Corner	Convertir en vértice
+	Equalize Handles	Igualar manejadores
+	Remove Points, Keep Shape	Quitar puntos, mantener forma
+	Add Points to Segments…	Agregar puntos a segmentos…
+	Add Points to Segments	Agregar puntos a segmentos
+	Open a document to edit its anchor points.	Abra un documento para editar sus puntos de ancla.
+	Anchors selected: {count}	Puntos de ancla seleccionados: {count}
+	Direct-select anchor points to edit them.	Seleccione directamente puntos de ancla para editarlos.
+	Length	Longitud
+	In:	Entrada:
+	Out:	Salida:
+	Add Points	Agregar puntos
+	Points per segment	Puntos por segmento
+	Close Path:	Cerrar trazado:
+	Keep Handles	Mantener manejadores
+	Straight	Recto
+	Stretch Curve	Estirar curva
+@msg	direct-select the anchor points to remove	seleccione directamente los puntos de ancla que quitar
+@msg	select segments, or paths, to add points to	seleccione segmentos, o trazados, a los que agregar puntos
+@msg	select open paths to close	seleccione trazados abiertos que cerrar
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	hay demasiados trazados, o están demasiado enredados, para hallar sus cruces (10000 segmentos como máximo)
+@msg	the paths have too many anchors to edit at once	los trazados tienen demasiados puntos de ancla para editarlos a la vez
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Pluma inteligente
+	Smart Pen Tool	Herramienta Pluma inteligente
+	Smart Pen Panel	Panel Pluma inteligente
+	Next Segment	Segmento siguiente
+	Curved	Curvo
+	Retract Handles	Retraer manejadores
+	Close or Join	Cerrar o unir
+	Open a document to draw with the Smart Pen.	Abra un documento para dibujar con la pluma inteligente.
+	Straight or Curved Segment	Segmento recto o curvo
+@msg	the path is locked or hidden	el trazado está bloqueado u oculto
+@msg	`id` is not a path	`id` no es un trazado
+@msg	the path has no open subpath	el trazado no tiene ningún subtrazado abierto
+@msg	the subpath is closed	el subtrazado está cerrado
+@msg	the subpath is closed or too short to close	el subtrazado está cerrado o es demasiado corto para cerrarlo
+@msg	the path is too short to remove a point from	el trazado es demasiado corto para quitarle un punto
+@msg	the segment can't be bent that far	el segmento no se puede curvar tanto
+@msg	give `{a}` and `{b}`	indique `{a}` y `{b}`
+@msg	`t` must be from 0 to 1	`t` debe estar entre 0 y 1
+@msg	`segment` must be "straight" or "curved"	`segment` debe ser "straight" o "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` debe ser "free", "keepAngles" o "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` debe ser [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Seleccionar por tipo de color
+	Objects with Spot Colors	Objetos con tintas planas
+	Objects with Color Effects	Objetos con efectos de color
+	RGB Images	Imágenes RGB
+	CMYK Images	Imágenes CMYK
+	Grayscale Images	Imágenes en escala de grises
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` debe ser spotColors, colorEffects, rgbImages, cmykImages o grayImages

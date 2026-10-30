@@ -5318,3 +5318,132 @@ axis	Y Axis	Asse Y
 	Average & Join	Media e unisci
 anchor	Points:	Punti:
 @msg	select two open path ends, or two open paths, to average and join	seleziona due estremità di tracciati aperti, o due tracciati aperti, da mediare e unire
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Pulizia grafica
+	Simplify Anchors (Keep Shape)…	Semplifica punti di ancoraggio (mantieni forma)…
+	Health Check	Controllo integrità
+	Show Issue	Mostra problema
+	Fix All Issues	Correggi tutti i problemi
+	Fix Issues	Correggi problemi
+	Deep Ungroup…	Separa tutti i livelli…
+	Rejoin Path Pieces…	Ricongiungi parti di tracciato…
+	Document Health Check	Controllo integrità documento
+	Check Selection	Controlla selezione
+	Check Document	Controlla documento
+	No issues found.	Nessun problema trovato.
+	Changed since the last check.	Modificato dall’ultimo controllo.
+	Fix Selected	Correggi selezionati
+	Fix All	Correggi tutto
+	Issues fixed: {count}	Problemi corretti: {count}
+	Open a document to check it for issues.	Apri un documento per controllarne i problemi.
+	Empty Text	Testo vuoto
+	Unpainted Objects	Oggetti senza colore
+	Zero-Opacity Objects	Oggetti con opacità zero
+	Duplicate Objects	Oggetti duplicati
+	Off-Artboard Art	Grafica fuori dalle tavole da disegno
+	Duplicate Anchors	Punti di ancoraggio duplicati
+	Tiny Handles	Maniglie minuscole
+	Collinear Anchors	Punti di ancoraggio allineati
+	Nearly Coincident Anchors	Punti di ancoraggio quasi coincidenti
+	Nearly Closed Paths	Tracciati quasi chiusi
+	Filled Open Paths	Tracciati aperti con riempimento
+	Needless Clipping Groups	Gruppi di ritaglio superflui
+	Needless Compound Paths	Tracciati composti superflui
+	Needless Groups	Gruppi superflui
+	Empty Artboards	Tavole da disegno vuote
+	Protect Corners	Proteggi angoli
+	Gap	Distanza
+	Include Clip Groups	Includi gruppi di ritaglio
+@msg	`tolerance` must be from 1 to 100	`tolerance` deve essere compreso tra 1 e 100
+@msg	`gap` must be from 0 to 6 pt	`gap` deve essere compreso tra 0 e 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Semplifica punti di ancoraggio: i tracciati hanno troppi punti di ancoraggio da semplificare in una volta
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Ricongiungi parti di tracciato: troppi tracciati da ricongiungere in una volta
+@msg	None of these issues are left: check again	Nessuno di questi problemi è ancora presente: controlla di nuovo
+@msg	`kinds` must be a list of issue kinds	`kinds` deve essere un elenco di tipi di problema
+@msg	missing `kind`	`kind` mancante
+	Simplify Anchors (Keep Shape)	Semplifica punti di ancoraggio (mantieni forma)
+	Deep Ungroup	Separa tutti i livelli
+	Rejoin Path Pieces	Ricongiungi parti di tracciato
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Effetti colore
+	Color Effects Panel	Pannello Effetti colore
+	Exposure	Esposizione
+	Exposure…	Esposizione…
+	Desaturate	Desatura
+	Adjustment	Regolazione
+	Add as Effect	Aggiungi come effetto
+	Apply as Filter	Applica come filtro
+	Select objects to adjust their colors.	Seleziona gli oggetti per regolarne i colori.
+	Brightness/Contrast	Luminosità/contrasto
+	Hue/Saturation	Tonalità/saturazione
+	Temperature/Tint	Temperatura/tinta
+@msg	`{id}` is not a colour adjustment	`{id}` non è una regolazione del colore
+@msg	missing `effect`	manca `effect`
+@msg	`params` must be an object	`params` deve essere un oggetto
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Strumenti di precisione per tracciati
+	Anchor Eraser Brush	Pennello gomma punti di ancoraggio
+	Extend Path Tool	Strumento Estendi tracciato
+	Measure & Inspect Tool	Strumento Misura e ispeziona
+	Anchor Inspector	Ispettore punti di ancoraggio
+	Add Points at Crossings	Aggiungi punti agli incroci
+	Split at Crossings	Dividi agli incroci
+	Extend Path	Estendi tracciato
+	Measure & Inspect	Misura e ispeziona
+	Set Anchor	Imposta punto di ancoraggio
+	Make Smooth	Rendi arrotondato
+	Make Corner	Rendi angolo
+	Equalize Handles	Uguaglia maniglie
+	Remove Points, Keep Shape	Rimuovi punti, mantieni forma
+	Add Points to Segments…	Aggiungi punti ai segmenti…
+	Add Points to Segments	Aggiungi punti ai segmenti
+	Open a document to edit its anchor points.	Apri un documento per modificarne i punti di ancoraggio.
+	Anchors selected: {count}	Punti di ancoraggio selezionati: {count}
+	Direct-select anchor points to edit them.	Seleziona direttamente i punti di ancoraggio per modificarli.
+	Length	Lunghezza
+	In:	Entrata:
+	Out:	Uscita:
+	Add Points	Aggiungi punti
+	Points per segment	Punti per segmento
+	Close Path:	Chiudi tracciato:
+	Keep Handles	Mantieni maniglie
+	Straight	Diritto
+	Stretch Curve	Allunga curva
+@msg	direct-select the anchor points to remove	seleziona direttamente i punti di ancoraggio da rimuovere
+@msg	select segments, or paths, to add points to	seleziona segmenti, o tracciati, a cui aggiungere punti
+@msg	select open paths to close	seleziona tracciati aperti da chiudere
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	tracciati troppi o troppo intricati per trovarne gli incroci (al massimo 10000 segmenti)
+@msg	the paths have too many anchors to edit at once	i tracciati hanno troppi punti di ancoraggio da modificare in una volta
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Penna intelligente
+	Smart Pen Tool	Strumento Penna intelligente
+	Smart Pen Panel	Pannello Penna intelligente
+	Next Segment	Segmento successivo
+	Curved	Curvo
+	Retract Handles	Ritira maniglie
+	Close or Join	Chiudi o unisci
+	Open a document to draw with the Smart Pen.	Apri un documento per disegnare con la penna intelligente.
+	Straight or Curved Segment	Segmento diritto o curvo
+@msg	the path is locked or hidden	il tracciato è bloccato o nascosto
+@msg	`id` is not a path	`id` non è un tracciato
+@msg	the path has no open subpath	il tracciato non ha sottotracciati aperti
+@msg	the subpath is closed	il sottotracciato è chiuso
+@msg	the subpath is closed or too short to close	il sottotracciato è chiuso o troppo corto per chiuderlo
+@msg	the path is too short to remove a point from	il tracciato è troppo corto per rimuoverne un punto
+@msg	the segment can't be bent that far	il segmento non si può curvare così tanto
+@msg	give `{a}` and `{b}`	indica `{a}` e `{b}`
+@msg	`t` must be from 0 to 1	`t` deve essere compreso tra 0 e 1
+@msg	`segment` must be "straight" or "curved"	`segment` deve essere "straight" o "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` deve essere "free", "keepAngles" o "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` deve essere [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Seleziona per tipo di colore
+	Objects with Spot Colors	Oggetti con colori spot
+	Objects with Color Effects	Oggetti con effetti colore
+	RGB Images	Immagini RGB
+	CMYK Images	Immagini CMYK
+	Grayscale Images	Immagini in scala di grigi
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` deve essere spotColors, colorEffects, rgbImages, cmykImages o grayImages

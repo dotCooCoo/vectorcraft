@@ -341,7 +341,7 @@ fn set_anchors(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// The compound path enclosing `id`, or `id` itself if it is not inside a compound path.
-fn compound_or_self(d: &Document, id: NodeId) -> NodeId {
+pub(super) fn compound_or_self(d: &Document, id: NodeId) -> NodeId {
     d.parent_of(id).filter(|p| matches!(d.node(*p).map(|n| &n.kind), Some(NodeKind::Compound { .. }))).unwrap_or(id)
 }
 
@@ -547,7 +547,7 @@ fn join_subpaths_in_node(d: &mut Document, id: NodeId, (sa, sb): (usize, usize),
 }
 
 /// Join open paths into a single path, or close an open path, preserving compound path structure.
-fn join(s: &mut Session, p: &Value) -> Result<Value> {
+pub(super) fn join(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "path.join";
     let join_kind = match p.get("to").and_then(Value::as_str) {
         None => None,

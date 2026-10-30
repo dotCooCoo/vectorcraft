@@ -1603,3 +1603,33 @@ fn artboard_close_active_tab_properties_delete_uses_shown_board() {
     close_b_tab(&mut app, &ctx, &base);
     delete_shown_board(&mut app, &ctx, &base);
 }
+
+/// #4365: Full Screen and Presentation Mode put the window full screen once, and Normal Screen
+/// Mode takes it back out; a window already full screen is left as it is.
+#[test]
+fn full_screen_modes_fill_the_screen_and_normal_mode_restores_the_window() {
+    let mut app = title_test_app(true);
+    let ctx = egui::Context::default();
+    let sent = |app: &mut crate::VectorcraftApp, fullscreen: bool| -> Vec<bool> {
+        let mut input = egui::RawInput::default();
+        input.viewports.entry(egui::ViewportId::ROOT).or_default().fullscreen = Some(fullscreen);
+        let mut out = ctx.run_ui(input, |ui| super::sync_fullscreen(app, ui.ctx()));
+        out.textures_delta.clear();
+        let cmds = out.viewport_output.remove(&egui::ViewportId::ROOT).map(|v| v.commands).unwrap_or_default();
+        cmds.iter().filter_map(|c| if let egui::ViewportCommand::Fullscreen(f) = c { Some(*f) } else { None }).collect()
+    };
+    assert!(sent(&mut app, false).is_empty(), "Normal Screen Mode");
+    app.ui.screen_mode = 3;
+    assert_eq!(sent(&mut app, false), [true], "Presentation Mode");
+    assert!(sent(&mut app, true).is_empty(), "once");
+    app.ui.screen_mode = 2;
+    assert!(sent(&mut app, true).is_empty(), "Full Screen Mode keeps it");
+    app.ui.screen_mode = 0;
+    assert_eq!(sent(&mut app, true), [false], "back to a window");
+    assert!(sent(&mut app, false).is_empty());
+    // Full screen by the user's own choice: the modes leave it so.
+    app.ui.screen_mode = 3;
+    assert!(sent(&mut app, true).is_empty());
+    app.ui.screen_mode = 0;
+    assert!(sent(&mut app, true).is_empty(), "still full screen, as the user had it");
+}

@@ -5284,3 +5284,132 @@ axis	Y Axis	Y-Achse
 	Average & Join	Durchschnitt berechnen und zusammenfügen
 anchor	Points:	Punkte:
 @msg	select two open path ends, or two open paths, to average and join	wählen Sie zwei Enden offener Pfade oder zwei offene Pfade aus, um sie zu mitteln und zusammenzufügen
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Bildmaterial-Bereinigung
+	Simplify Anchors (Keep Shape)…	Ankerpunkte vereinfachen (Form erhalten)…
+	Health Check	Zustandsprüfung
+	Show Issue	Problem anzeigen
+	Fix All Issues	Alle Probleme beheben
+	Fix Issues	Probleme beheben
+	Deep Ungroup…	Alle Gruppierungsebenen aufheben…
+	Rejoin Path Pieces…	Pfadstücke wieder zusammenfügen…
+	Document Health Check	Dokument-Zustandsprüfung
+	Check Selection	Auswahl prüfen
+	Check Document	Dokument prüfen
+	No issues found.	Keine Probleme gefunden.
+	Changed since the last check.	Seit der letzten Prüfung geändert.
+	Fix Selected	Ausgewählte beheben
+	Fix All	Alle beheben
+	Issues fixed: {count}	Behobene Probleme: {count}
+	Open a document to check it for issues.	Öffnen Sie ein Dokument, um es auf Probleme zu prüfen.
+	Empty Text	Leerer Text
+	Unpainted Objects	Objekte ohne Farbe
+	Zero-Opacity Objects	Objekte mit 0 % Deckkraft
+	Duplicate Objects	Doppelte Objekte
+	Off-Artboard Art	Bildmaterial außerhalb der Zeichenflächen
+	Duplicate Anchors	Doppelte Ankerpunkte
+	Tiny Handles	Winzige Griffe
+	Collinear Anchors	Kollineare Ankerpunkte
+	Nearly Coincident Anchors	Fast deckungsgleiche Ankerpunkte
+	Nearly Closed Paths	Fast geschlossene Pfade
+	Filled Open Paths	Gefüllte offene Pfade
+	Needless Clipping Groups	Überflüssige Schnittgruppen
+	Needless Compound Paths	Überflüssige zusammengesetzte Pfade
+	Needless Groups	Überflüssige Gruppen
+	Empty Artboards	Leere Zeichenflächen
+	Protect Corners	Ecken schützen
+	Gap	Abstand
+	Include Clip Groups	Schnittgruppen einbeziehen
+@msg	`tolerance` must be from 1 to 100	`tolerance` muss zwischen 1 und 100 liegen
+@msg	`gap` must be from 0 to 6 pt	`gap` muss zwischen 0 und 6 pt liegen
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Ankerpunkte vereinfachen: Die Pfade haben zu viele Ankerpunkte, um sie auf einmal zu vereinfachen
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Pfadstücke wieder zusammenfügen: zu viele Pfade, um sie auf einmal zusammenzufügen
+@msg	None of these issues are left: check again	Keines dieser Probleme ist mehr vorhanden: Prüfen Sie erneut
+@msg	`kinds` must be a list of issue kinds	`kinds` muss eine Liste von Problemarten sein
+@msg	missing `kind`	`kind` fehlt
+	Simplify Anchors (Keep Shape)	Ankerpunkte vereinfachen (Form erhalten)
+	Deep Ungroup	Alle Gruppierungsebenen aufheben
+	Rejoin Path Pieces	Pfadstücke wieder zusammenfügen
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Farbeffekte
+	Color Effects Panel	Farbeffekte-Bedienfeld
+	Exposure	Belichtung
+	Exposure…	Belichtung…
+	Desaturate	Sättigung verringern
+	Adjustment	Korrektur
+	Add as Effect	Als Effekt hinzufügen
+	Apply as Filter	Als Filter anwenden
+	Select objects to adjust their colors.	Wählen Sie Objekte aus, um ihre Farben anzupassen.
+	Brightness/Contrast	Helligkeit/Kontrast
+	Hue/Saturation	Farbton/Sättigung
+	Temperature/Tint	Temperatur/Farbstich
+@msg	`{id}` is not a colour adjustment	`{id}` ist keine Farbkorrektur
+@msg	missing `effect`	`effect` fehlt
+@msg	`params` must be an object	`params` muss ein Objekt sein
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Pfad-Präzisionswerkzeuge
+	Anchor Eraser Brush	Ankerpunkt-Radierpinsel
+	Extend Path Tool	Pfad-verlängern-Werkzeug
+	Measure & Inspect Tool	Messen-und-Prüfen-Werkzeug
+	Anchor Inspector	Ankerpunkt-Inspektor
+	Add Points at Crossings	Punkte an Kreuzungen hinzufügen
+	Split at Crossings	An Kreuzungen teilen
+	Extend Path	Pfad verlängern
+	Measure & Inspect	Messen und prüfen
+	Set Anchor	Ankerpunkt festlegen
+	Make Smooth	Glätten
+	Make Corner	Zu Eckpunkt machen
+	Equalize Handles	Griffe angleichen
+	Remove Points, Keep Shape	Punkte entfernen, Form erhalten
+	Add Points to Segments…	Punkte zu Segmenten hinzufügen…
+	Add Points to Segments	Punkte zu Segmenten hinzufügen
+	Open a document to edit its anchor points.	Öffnen Sie ein Dokument, um seine Ankerpunkte zu bearbeiten.
+	Anchors selected: {count}	Ausgewählte Ankerpunkte: {count}
+	Direct-select anchor points to edit them.	Wählen Sie Ankerpunkte direkt aus, um sie zu bearbeiten.
+	Length	Länge
+	In:	Ein:
+	Out:	Aus:
+	Add Points	Punkte hinzufügen
+	Points per segment	Punkte pro Segment
+	Close Path:	Pfad schließen:
+	Keep Handles	Griffe beibehalten
+	Straight	Gerade
+	Stretch Curve	Kurve strecken
+@msg	direct-select the anchor points to remove	die zu entfernenden Ankerpunkte direkt auswählen
+@msg	select segments, or paths, to add points to	Segmente oder Pfade auswählen, denen Punkte hinzugefügt werden sollen
+@msg	select open paths to close	offene Pfade zum Schließen auswählen
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	zu viele oder zu verschlungene Pfade, um ihre Kreuzungen zu finden (höchstens 10000 Segmente)
+@msg	the paths have too many anchors to edit at once	die Pfade haben zu viele Ankerpunkte, um sie auf einmal zu bearbeiten
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Intelligenter Zeichenstift
+	Smart Pen Tool	Intelligenter-Zeichenstift-Werkzeug
+	Smart Pen Panel	Bedienfeld „Intelligenter Zeichenstift“
+	Next Segment	Nächstes Segment
+	Curved	Gebogen
+	Retract Handles	Griffe einziehen
+	Close or Join	Schließen oder zusammenfügen
+	Open a document to draw with the Smart Pen.	Öffnen Sie ein Dokument, um mit dem intelligenten Zeichenstift zu zeichnen.
+	Straight or Curved Segment	Gerades oder gebogenes Segment
+@msg	the path is locked or hidden	der Pfad ist gesperrt oder ausgeblendet
+@msg	`id` is not a path	`id` ist kein Pfad
+@msg	the path has no open subpath	der Pfad hat keinen offenen Teilpfad
+@msg	the subpath is closed	der Teilpfad ist geschlossen
+@msg	the subpath is closed or too short to close	der Teilpfad ist geschlossen oder zu kurz zum Schließen
+@msg	the path is too short to remove a point from	der Pfad ist zu kurz, um einen Punkt zu entfernen
+@msg	the segment can't be bent that far	das Segment lässt sich nicht so weit biegen
+@msg	give `{a}` and `{b}`	geben Sie `{a}` und `{b}` an
+@msg	`t` must be from 0 to 1	`t` muss zwischen 0 und 1 liegen
+@msg	`segment` must be "straight" or "curved"	`segment` muss "straight" oder "curved" sein
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` muss "free", "keepAngles" oder "symmetric" sein
+@msg	`{key}` must be [x, y]	`{key}` muss [x, y] sein
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Nach Farbart auswählen
+	Objects with Spot Colors	Objekte mit Volltonfarben
+	Objects with Color Effects	Objekte mit Farbeffekten
+	RGB Images	RGB-Bilder
+	CMYK Images	CMYK-Bilder
+	Grayscale Images	Graustufenbilder
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` muss spotColors, colorEffects, rgbImages, cmykImages oder grayImages sein

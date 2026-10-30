@@ -5691,3 +5691,131 @@ theme	Appearance	Aparença
 	Average & Join	Mitjana i unió
 anchor	Points:	Punts:
 @msg	select two open path ends, or two open paths, to average and join	selecciona dos extrems de traçats oberts, o dos traçats oberts, per fer-ne la mitjana i unir-los
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Neteja de l’art
+	Simplify Anchors (Keep Shape)…	Simplifica els punts d’ancoratge (mantén la forma)…
+	Health Check	Revisió de l’estat
+	Show Issue	Mostra el problema
+	Fix All Issues	Corregeix tots els problemes
+	Fix Issues	Corregeix els problemes
+	Deep Ungroup…	Desagrupa tots els nivells…
+	Rejoin Path Pieces…	Torna a unir els trossos de traçat…
+	Document Health Check	Revisió de l’estat del document
+	Check Selection	Revisa la selecció
+	Check Document	Revisa el document
+	No issues found.	No s’ha trobat cap problema.
+	Changed since the last check.	Ha canviat des de l’última revisió.
+	Fix Selected	Corregeix els seleccionats
+	Fix All	Corregeix-ho tot
+	Issues fixed: {count}	Problemes corregits: {count}
+	Open a document to check it for issues.	Obriu un document per revisar-ne els problemes.
+	Empty Text	Text buit
+	Unpainted Objects	Objectes sense pintura
+	Zero-Opacity Objects	Objectes amb opacitat zero
+	Duplicate Objects	Objectes duplicats
+	Off-Artboard Art	Art fora dels taulers
+	Duplicate Anchors	Punts d’ancoratge duplicats
+	Tiny Handles	Nanses minúscules
+	Collinear Anchors	Punts d’ancoratge col·lineals
+	Nearly Coincident Anchors	Punts d’ancoratge gairebé coincidents
+	Nearly Closed Paths	Traçats gairebé tancats
+	Filled Open Paths	Traçats oberts amb emplenament
+	Needless Clipping Groups	Grups de retall innecessaris
+	Needless Compound Paths	Traçats compostos innecessaris
+	Needless Groups	Grups innecessaris
+	Empty Artboards	Taulers buits
+	Protect Corners	Protegeix les cantonades
+	Gap	Separació
+	Include Clip Groups	Inclou els grups de retall
+@msg	`tolerance` must be from 1 to 100	`tolerance` ha d’estar entre 1 i 100
+@msg	`gap` must be from 0 to 6 pt	`gap` ha d’estar entre 0 i 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Simplifica els punts d’ancoratge: els traçats tenen massa punts d’ancoratge per simplificar-los d’un cop
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Torna a unir els trossos de traçat: massa traçats per unir-los d’un cop
+@msg	None of these issues are left: check again	Ja no queda cap d’aquests problemes: torneu a revisar
+@msg	`kinds` must be a list of issue kinds	`kinds` ha de ser una llista de tipus de problema
+@msg	missing `kind`	falta `kind`
+	Simplify Anchors (Keep Shape)	Simplifica els punts d’ancoratge (mantén la forma)
+	Deep Ungroup	Desagrupa tots els nivells
+	Rejoin Path Pieces	Torna a unir els trossos de traçat
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Efectes de color
+	Color Effects Panel	Tauler Efectes de color
+	Exposure	Exposició
+	Exposure…	Exposició…
+	Desaturate	Dessaturar
+	Adjustment	Ajust
+	Add as Effect	Afegeix com a efecte
+	Apply as Filter	Aplica com a filtre
+	Select objects to adjust their colors.	Seleccioneu objectes per ajustar-ne els colors.
+	Brightness/Contrast	Lluentor/Contrast
+	Hue/Saturation	To/saturació
+	Temperature/Tint	Temperatura/To
+@msg	`{id}` is not a colour adjustment	`{id}` no és un ajust de color
+@msg	missing `effect`	falta `effect`
+@msg	`params` must be an object	`params` ha de ser un objecte
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Eines de precisió de traçats
+	Anchor Eraser Brush	Pinzell esborrador de punts d’ancoratge
+	Extend Path Tool	Eina d’allargar el traçat
+	Measure & Inspect Tool	Eina de mesurar i inspeccionar
+	Anchor Inspector	Inspector de punts d’ancoratge
+	Add Points at Crossings	Afegeix punts als encreuaments
+	Split at Crossings	Divideix als encreuaments
+	Extend Path	Allarga el traçat
+	Measure & Inspect	Mesura i inspecciona
+	Set Anchor	Defineix el punt d’ancoratge
+	Make Smooth	Fes-lo suau
+	Make Corner	Fes-lo vèrtex
+	Equalize Handles	Iguala les nanses
+	Remove Points, Keep Shape	Elimina punts, mantén la forma
+	Add Points to Segments…	Afegeix punts als segments…
+	Add Points to Segments	Afegeix punts als segments
+	Open a document to edit its anchor points.	Obriu un document per editar-ne els punts d’ancoratge.
+	Anchors selected: {count}	Punts d’ancoratge seleccionats: {count}
+	Direct-select anchor points to edit them.	Seleccioneu directament punts d’ancoratge per editar-los.
+	In:	Entrada:
+	Out:	Sortida:
+	Add Points	Afegeix punts
+	Points per segment	Punts per segment
+	Close Path:	Tanca el traçat:
+	Keep Handles	Mantén les nanses
+	Straight	Recte
+	Stretch Curve	Estira la corba
+@msg	direct-select the anchor points to remove	seleccioneu directament els punts d’ancoratge que voleu eliminar
+@msg	select segments, or paths, to add points to	seleccioneu segments, o traçats, als quals afegir punts
+@msg	select open paths to close	seleccioneu traçats oberts per tancar-los
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	massa traçats, o massa enredats, per trobar-ne els encreuaments (10000 segments com a màxim)
+@msg	the paths have too many anchors to edit at once	els traçats tenen massa punts d’ancoratge per editar-los alhora
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Ploma intel·ligent
+	Smart Pen Tool	Eina de ploma intel·ligent
+	Smart Pen Panel	Tauler de ploma intel·ligent
+	Next Segment	Segment següent
+	Curved	Corbat
+	Retract Handles	Retrau les nanses
+	Close or Join	Tanca o uneix
+	Open a document to draw with the Smart Pen.	Obriu un document per dibuixar amb la ploma intel·ligent.
+	Straight or Curved Segment	Segment recte o corbat
+@msg	the path is locked or hidden	el traçat està bloquejat o ocult
+@msg	`id` is not a path	`id` no és un traçat
+@msg	the path has no open subpath	el traçat no té cap subtraçat obert
+@msg	the subpath is closed	el subtraçat és tancat
+@msg	the subpath is closed or too short to close	el subtraçat és tancat o massa curt per tancar-lo
+@msg	the path is too short to remove a point from	el traçat és massa curt per treure’n un punt
+@msg	the segment can't be bent that far	el segment no es pot corbar tant
+@msg	give `{a}` and `{b}`	indiqueu `{a}` i `{b}`
+@msg	`t` must be from 0 to 1	`t` ha de ser de 0 a 1
+@msg	`segment` must be "straight" or "curved"	`segment` ha de ser "straight" o "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` ha de ser "free", "keepAngles" o "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` ha de ser [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Selecciona per tipus de color
+	Objects with Spot Colors	Objectes amb colors directes
+	Objects with Color Effects	Objectes amb efectes de color
+	RGB Images	Imatges RGB
+	CMYK Images	Imatges CMYK
+	Grayscale Images	Imatges en escala de grisos
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` ha de ser spotColors, colorEffects, rgbImages, cmykImages o grayImages

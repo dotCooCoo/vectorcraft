@@ -58,8 +58,8 @@ pub(super) fn length_within(
     range: Option<std::ops::RangeInclusive<f64>>,
 ) -> bool {
     let value = d.fields.contains_key(key).then(|| d.f64(key, 0.0));
-    let Some(v) = crate::widgets::num_field(ui, ("dlg-len", key), value, unit, width) else { return false };
-    let v = range.map_or(v, |r| v.max(*r.start()).min(*r.end()));
+    let bounds = range.unwrap_or(crate::widgets::ANY);
+    let Some(v) = crate::widgets::num_field_within(ui, ("dlg-len", key), value, unit, width, bounds) else { return false };
     d.fields.insert(key.into(), json!(v));
     true
 }

@@ -178,8 +178,8 @@ from G14 and the budget run of G15: **~170–270 h** one agent, ~50–80 h wall 
 
 - **Unconfirmed (2026-10-14):** Tool cursors are painted into the window on Wayland (#1652; not run on Linux, #1645 stays open until confirmed). On Windows the custom title bar's window stays truly borderless, so the pointer lines up with what is drawn on systems where the hidden caption offset it (#1791, #1758; awaiting the reporter's confirmation).
 - **Done:** RPM required dependencies use 64-bit library capabilities and declare glibc 2.35, libm and libgcc_s (#1275); generated metadata and isolated synthetic-provider checks cover x86_64/aarch64. Real-distribution install/start-up QA is still missing.
-- **Done (2026-10-29):** the Linux Flatpak on GNOME no longer reconnects to the compositor and logs a warning every 250 ms when arboard has neither data-control nor X11 (267k warnings in 18 h filled the 16 MB log in 3 h): a clipboard that can't be opened is retried with a wait growing to a minute and logged once. Copy and Paste with other apps still don't work there.
-- **Missing:** the app not starting or staying in the background on some Windows 11 machines (#858, #964 fixed
+- **Done (2026-10-29):** the Linux Flatpak on GNOME no longer reconnects to the compositor and logs a warning every 250 ms when arboard has neither data-control nor X11 (267k warnings in 18 h filled the 16 MB log in 3 h): a clipboard that can't be opened is retried with a wait growing to a minute and logged once. Copy and Paste of text with other apps work there through the core Wayland protocol.
+- **Missing:** pictures (`image/png`) and SVG as `image/svg+xml` on the clipboard of the Flatpak on GNOME, where only text travels (smithay-clipboard 0.7 carries text only); the app not starting or staying in the background on some Windows 11 machines (#858, #964 fixed
   2026-10-10, #620, #818), slow pointer on a Linux AppImage (#575), macOS paste from other apps (#954), a
   web-free crash/hang reporter, a field record.
 - **Evidence:** open issues; the never-crash lints and `guard` stop panics, not driver, windowing or packaging
@@ -655,6 +655,7 @@ trap, and the defaults (0.25 pt, 100%, 40%) are VectorCraft's own, the pages giv
 |---|---|---|
 | 2026-10-30 | minor | G1: Object › Path › Average & Join… (`path.averageJoin`, Cmd+Alt+Shift+J) moves two open path ends to their midpoint and joins them there, the joined anchor a corner or a smooth point as its dialog's Points choice asks, in one undo step; the "Average and Join in one step" entry is done. Estimate unchanged |
 | 2026-10-30 | minor | G12: Preferences audit (#394): 5 options are stored but not acted on (Open Documents As Tabs, Units › East Asian Type, Hyphenation › Default Language, Scratch Disks, Legacy vector clipboard), each waiting on a subsystem; Highlight Alternate Glyphs, Real-time Drawing and the Devices options act. Estimate unchanged. |
+| 2026-10-29 | minor | G10: the Linux Flatpak on GNOME copies and pastes text through the core Wayland protocol; pictures and `image/svg+xml` there listed as missing. Estimate unchanged. |
 | 2026-10-29 | minor | G10: the Linux Flatpak on GNOME stops the clipboard retry storm (retried with a growing wait, logged once). Estimate unchanged. |
 | 2026-10-29 | minor | G12: Pathfinder: live compound shapes (#4522): the panel menu's Make, Release and Expand Compound Shape, Alt-clicking a Shape Mode, a selected member's Shape Mode and the Expand button act. No entry closed, estimates unchanged. |
 | 2026-10-29 | minor | G8: a blend makes at most 100,000 steps in all, the steps of blends nested in its keys and steps included; past it each pair of keys keeps the same share of its steps (#3579). No entry closed, estimates unchanged. |

@@ -5541,3 +5541,132 @@ axis	Y Axis	Y 轴
 	Average & Join	平均并连接
 anchor	Points:	点：
 @msg	select two open path ends, or two open paths, to average and join	请选择两个开放路径的端点或两条开放路径以进行平均并连接
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	图稿清理
+	Simplify Anchors (Keep Shape)…	简化锚点（保持形状）…
+	Health Check	健康检查
+	Show Issue	显示问题
+	Fix All Issues	修复所有问题
+	Fix Issues	修复问题
+	Deep Ungroup…	取消所有层级编组…
+	Rejoin Path Pieces…	重新连接路径片段…
+	Document Health Check	文档健康检查
+	Check Selection	检查所选对象
+	Check Document	检查文档
+	No issues found.	未发现问题。
+	Changed since the last check.	自上次检查后已更改。
+	Fix Selected	修复所选
+	Fix All	全部修复
+	Issues fixed: {count}	已修复的问题：{count}
+	Open a document to check it for issues.	打开文档以检查其中的问题。
+	Empty Text	空文本
+	Unpainted Objects	无上色对象
+	Zero-Opacity Objects	不透明度为零的对象
+	Duplicate Objects	重复对象
+	Off-Artboard Art	画板外的图稿
+	Duplicate Anchors	重复锚点
+	Tiny Handles	极短手柄
+	Collinear Anchors	共线锚点
+	Nearly Coincident Anchors	几乎重合的锚点
+	Nearly Closed Paths	几乎闭合的路径
+	Filled Open Paths	填色的开放路径
+	Needless Clipping Groups	多余的剪切组
+	Needless Compound Paths	多余的复合路径
+	Needless Groups	多余的编组
+	Empty Artboards	空白画板
+	Protect Corners	保护尖角
+	Gap	间隙
+	Include Clip Groups	包括剪切组
+@msg	`tolerance` must be from 1 to 100	`tolerance` 必须介于 1 到 100 之间
+@msg	`gap` must be from 0 to 6 pt	`gap` 必须介于 0 到 6 pt 之间
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	简化锚点：路径的锚点太多，无法一次简化
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	重新连接路径片段：路径太多，无法一次连接
+@msg	None of these issues are left: check again	这些问题都已不存在：请重新检查
+@msg	`kinds` must be a list of issue kinds	`kinds` 必须是问题类型的列表
+@msg	missing `kind`	缺少 `kind`
+	Simplify Anchors (Keep Shape)	简化锚点（保持形状）
+	Deep Ungroup	取消所有层级编组
+	Rejoin Path Pieces	重新连接路径片段
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	颜色效果
+	Color Effects Panel	颜色效果面板
+	Exposure	曝光度
+	Exposure…	曝光度…
+	Desaturate	去色
+	Adjustment	调整
+	Add as Effect	添加为效果
+	Apply as Filter	作为滤镜应用
+	Select objects to adjust their colors.	选择对象以调整其颜色。
+	Brightness/Contrast	亮度/对比
+	Hue/Saturation	色相/饱和度
+	Temperature/Tint	色温/色调
+@msg	`{id}` is not a colour adjustment	`{id}` 不是颜色调整
+@msg	missing `effect`	缺少 `effect`
+@msg	`params` must be an object	`params` 必须是对象
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	路径精确工具
+	Anchor Eraser Brush	锚点橡皮擦画笔
+	Extend Path Tool	延长路径工具
+	Measure & Inspect Tool	测量与检查工具
+	Anchor Inspector	锚点检查器
+	Add Points at Crossings	在交叉处添加锚点
+	Split at Crossings	在交叉处分割
+	Extend Path	延长路径
+	Measure & Inspect	测量与检查
+	Set Anchor	设置锚点
+	Make Smooth	转为平滑
+	Make Corner	转为尖角
+	Equalize Handles	等长手柄
+	Remove Points, Keep Shape	删除锚点并保持形状
+	Add Points to Segments…	在线段中添加锚点…
+	Add Points to Segments	在线段中添加锚点
+	Open a document to edit its anchor points.	打开文档以编辑其锚点。
+	Anchors selected: {count}	已选锚点：{count}
+	Direct-select anchor points to edit them.	直接选择锚点以编辑它们。
+	Length	长度
+	In:	入：
+	Out:	出：
+	Add Points	添加锚点
+	Points per segment	每段锚点数
+	Close Path:	闭合路径：
+	Keep Handles	保留手柄
+	Straight	直线
+	Stretch Curve	拉伸曲线
+@msg	direct-select the anchor points to remove	请直接选择要删除的锚点
+@msg	select segments, or paths, to add points to	请选择要添加锚点的线段或路径
+@msg	select open paths to close	请选择要闭合的开放路径
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	路径太多或太复杂，无法找到交叉处（最多 10000 段）
+@msg	the paths have too many anchors to edit at once	路径的锚点太多，无法一次编辑
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	智能钢笔
+	Smart Pen Tool	智能钢笔工具
+	Smart Pen Panel	智能钢笔面板
+	Next Segment	下一线段
+	Curved	曲线
+	Retract Handles	收回手柄
+	Close or Join	闭合或连接
+	Open a document to draw with the Smart Pen.	打开文档以使用智能钢笔绘制。
+	Straight or Curved Segment	直线或曲线线段
+@msg	the path is locked or hidden	路径已锁定或隐藏
+@msg	`id` is not a path	`id` 不是路径
+@msg	the path has no open subpath	路径没有开放的子路径
+@msg	the subpath is closed	子路径已闭合
+@msg	the subpath is closed or too short to close	子路径已闭合或太短，无法闭合
+@msg	the path is too short to remove a point from	路径太短，无法删除锚点
+@msg	the segment can't be bent that far	线段无法弯曲到这个程度
+@msg	give `{a}` and `{b}`	请提供 `{a}` 和 `{b}`
+@msg	`t` must be from 0 to 1	`t` 必须在 0 到 1 之间
+@msg	`segment` must be "straight" or "curved"	`segment` 必须是 "straight" 或 "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` 必须是 "free"、"keepAngles" 或 "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` 必须是 [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	按颜色类型选择
+	Objects with Spot Colors	使用专色的对象
+	Objects with Color Effects	带颜色效果的对象
+	RGB Images	RGB 图像
+	CMYK Images	CMYK 图像
+	Grayscale Images	灰度图像
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` 必须是 spotColors、colorEffects、rgbImages、cmykImages 或 grayImages

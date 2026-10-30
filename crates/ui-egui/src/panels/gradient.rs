@@ -572,7 +572,7 @@ fn stop_fields(app: &mut VectorcraftApp, ui: &mut Ui, g: &Gradient, is_grad: boo
 
 /// The stop's eyedropper: the Eyedropper tool samples the next colour clicked on the art into the
 /// selected stop, then hands back to the current tool.
-fn stop_eyedropper(app: &mut VectorcraftApp) {
+pub(crate) fn stop_eyedropper(app: &mut VectorcraftApp) {
     let back = app.session.tool_id();
     app.select_tool("eyedropper");
     app.session.set_tool_option("stop", &json!(back));
