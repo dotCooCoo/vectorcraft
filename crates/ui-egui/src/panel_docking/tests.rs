@@ -156,6 +156,25 @@ fn a_tab_dragged_out_floats_and_comes_back_where_it_was_after_its_window_closes(
     assert!(h.tab("layers").is_some());
 }
 
+/// A Character field shortcut with the Character panel in front of its floating window brings
+/// that window forward and leaves the panel showing.
+#[test]
+fn a_character_field_shortcut_brings_the_floating_character_panel_forward() {
+    let mut h = Harness::new();
+    let id = h.app.run("text.create", json!({"x": 20, "y": 50, "text": "AVAX"})).unwrap()["id"].clone();
+    h.app.run("select.set", json!({"ids": [id]})).unwrap();
+    h.app.run("window.panel.float", json!({"panel": "character"})).unwrap();
+    h.frame(vec![]);
+    assert!(showing(&h.app.ui, "character"));
+    assert_eq!(h.app.dock_rt.raise, None);
+    for command in ["type.highlightKerning", "type.highlightTracking", "type.highlightFontName"] {
+        h.app.run(command, json!({})).unwrap();
+        assert_eq!(h.app.dock_rt.raise.as_deref(), Some("character"), "{command}");
+        h.frame(vec![]);
+        assert!(showing(&h.app.ui, "character"), "{command} leaves the panel showing");
+    }
+}
+
 #[test]
 fn the_dock_collapses_to_icons_and_back() {
     let mut h = Harness::new();

@@ -1,5 +1,6 @@
 //! The command registry. Ids follow Illustrator's menu structure.
 
+mod addons;
 pub(crate) mod appearance;
 mod assets;
 mod attributes;
@@ -10,6 +11,7 @@ pub mod clipboard;
 mod colorcmds;
 pub mod colormgmt;
 pub mod colortheme;
+mod compoundshape;
 pub(crate) mod create;
 mod css;
 mod cut;
@@ -31,6 +33,7 @@ mod fonts;
 pub(crate) mod freeform;
 pub mod globaledit;
 pub(crate) mod gradient;
+pub mod gradpresets;
 pub(crate) mod graph;
 mod halftone;
 pub mod help;
@@ -242,6 +245,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(style::specs());
         v.extend(swatch::specs());
         v.extend(gradient::specs());
+        v.extend(gradpresets::specs());
         v.extend(opacitymask::specs());
         v.extend(layer::specs());
         v.extend(layerpanel::specs());
@@ -249,6 +253,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(xform::specs());
         v.extend(effectcmd::specs());
         v.extend(pathops::specs());
+        v.extend(compoundshape::specs());
         v.extend(typecmd::specs());
         v.extend(menucmds::specs());
         v.extend(live::specs());
@@ -320,6 +325,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(perspgrid::specs());
         v.extend(shortcutset::specs());
         v.extend(importmatches::specs());
+        v.extend(addons::specs());
         v
     })
 }
@@ -377,6 +383,15 @@ pub(crate) fn check_switches(p: &Value, keys: &[&str], cmd: &str) -> Result<()> 
 }
 pub(crate) fn str_param<'a>(p: &'a Value, key: &str) -> Option<&'a str> {
     p.get(key).and_then(Value::as_str)
+}
+/// The string `p` gives for `key`, or `None` when `p` leaves it out or gives null. Any other
+/// value, such as `5`, is an error: "`{key}` must be a string".
+pub(crate) fn text_param<'a>(p: &'a Value, key: &str, cmd: &str) -> Result<Option<&'a str>> {
+    match p.get(key) {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(v)) => Ok(Some(v)),
+        Some(_) => Err(bad(cmd, format!("`{key}` must be a string"))),
+    }
 }
 pub(crate) fn id_param(p: &Value, key: &str) -> Option<NodeId> {
     p.get(key).and_then(Value::as_u64).map(NodeId)
@@ -514,26 +529,30 @@ pub(crate) fn ok() -> Result<Value> {
 }
 
 /// Leaves whose appearance a paint command changes: groups and layers expand to their contents,
-/// and compound paths own their children's appearance, so a member stands for its compound path
-/// (#3692), which is listed once.
+/// and compound paths and compound shapes own their members' appearance, so a member stands for
+/// its compound path (#3692) or compound shape, which is listed once.
 pub(crate) fn leaf_targets(s: &Session, ids: &[NodeId]) -> Result<Vec<NodeId>> {
     use vectorcraft_doc::NodeKind;
     let d = &s.doc()?.doc;
-    let compound = |id: NodeId| d.parent_of(id).filter(|p| matches!(d.node(*p).map(|n| &n.kind), Some(NodeKind::Compound { .. })));
+    let owns = |n: &vectorcraft_doc::Node| matches!(n.kind, NodeKind::Compound { .. }) || n.is_compound_shape();
+    let compound = |id: NodeId| d.parent_of(id).filter(|p| d.node(*p).is_some_and(owns));
     let mut out = vec![];
     for id in ids {
         let Some(n) = d.node(*id) else { continue };
         match &n.kind {
-            NodeKind::Group { .. } | NodeKind::Layer { .. } => n.walk(&mut |c| {
-                if !c.is_container() || matches!(c.kind, NodeKind::Compound { .. }) {
+            NodeKind::Group { .. } | NodeKind::Layer { .. } if !n.is_compound_shape() => n.walk(&mut |c| {
+                if !c.is_container() || owns(c) {
                     out.push(c.id)
                 }
             }),
             _ => out.push(compound(*id).unwrap_or(*id)),
         }
     }
-    let comp: Vec<NodeId> = out.iter().filter(|id| matches!(d.node(**id).map(|n| &n.kind), Some(NodeKind::Compound { .. }))).copied().collect();
-    out.retain(|id| !comp.iter().any(|c| d.parent_of(*id) == Some(*c)));
+    let comp: std::collections::HashSet<NodeId> = out.iter().filter(|id| d.node(**id).is_some_and(owns)).copied().collect();
+    if !comp.is_empty() {
+        // A compound shape's members lie at any depth in it.
+        out.retain(|id| !d.ancestry(*id).is_some_and(|up| up.iter().rev().skip(1).any(|a| comp.contains(a))));
+    }
     let mut seen = std::collections::HashSet::new();
     out.retain(|id| seen.insert(*id));
     Ok(out)
@@ -581,6 +600,9 @@ pub use opacitymask::TransparencyInfo;
 /// Eyedropper Options (`Prefs::eyedropper`).
 pub use xform::{AppearanceAttrs, EyedropperAttrs, EyedropperOptions, FillAttrs, StrokeAttrs};
 
+/// The shape modes of the selected compound-shape members (the Pathfinder panel lights theirs).
+pub use compoundshape::selected_member_modes;
+
 /// Pathfinder Options (`Prefs::pathfinder`).
 pub use pathops::{PATHFINDER_PRECISION_RANGE, PathfinderOptions};
 
@@ -592,6 +614,18 @@ pub use flatten::FlattenOptions;
 
 /// A built-in or saved flattener preset ([`crate::Prefs::flattener_presets`]).
 pub use flatten::FlattenerPreset;
+
+/// A saved Gradient panel preset ([`crate::Prefs::gradient_presets`]) and a row of the Presets list.
+pub use gradpresets::{GradientPreset, GradientPresetEntry};
+
+/// A saved Image Trace preset ([`crate::Prefs::trace_presets`]), and a change to the saved presets.
+pub use buildcmds::{TracePreset, TracePresetChange};
+
+/// An Image Trace made off the UI thread, and what it traced (#3098).
+pub use buildcmds::{TraceRun, Traced};
+
+/// The saved Image Trace presets' revision and latest changes ([`crate::Session`] keeps them).
+pub(crate) use buildcmds::TracePresetChanges;
 
 /// The shapes a group selected alone gives the Pathfinder panel.
 pub use pathops::shape_count;

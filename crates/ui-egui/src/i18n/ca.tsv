@@ -277,6 +277,8 @@
 	Anchor Point	Punt d’ancoratge
 	Anchor Point Tool	Eina de punt d’ancoratge
 	Anchor Points	Punts d’ancoratge
+	"In" Control Points	Punts de control «d’entrada»
+	"Out" Control Points	Punts de control «de sortida»
 	Anchor Points, Handle, and Bounding Box Display	Visualització de punts d’ancoratge, nanses i quadre delimitador
 	Anchor/Path Labels	Etiquetes d’ancoratge/traçat
 	Anchors	Ancoratges
@@ -787,6 +789,7 @@
 	Compound	Compost
 	Compound 2	Compost 2
 	Compound Path	Traçat compost
+	Compound Shape	Forma composta
 	Compress (RLE)	Comprimeix (RLE)
 	Compress text and line art	Comprimeix text i dibuix de línies
 	Compression	Compressió
@@ -1016,6 +1019,7 @@
 	Delete Group	Suprimeix el grup
 	Delete Guide	Suprimeix la guia
 	Delete Guides	Suprimeix les guies
+	Delete Image Trace Preset	Suprimeix el preajust de traçat d’imatge
 	Delete Layer	Suprimeix la capa
 	Delete Library	Suprimeix la biblioteca
 	Delete Library Group	Suprimeix el grup de biblioteca
@@ -1038,6 +1042,7 @@
 	Delete Spine Point	Suprimeix el punt de l’espina
 	Delete Stop	Suprimeix la parada
 	Delete Style	Suprimeix l’estil
+	Delete Styles	Suprimeix els estils
 	Delete Swatch	Suprimeix la mostra
 	Delete Symbol	Suprimeix el símbol
 	Delete Tab	Suprimeix la tabulació
@@ -1396,7 +1401,6 @@
 	Expand	Expandeix
 	Expand 1 Selected	Expandeix 1 seleccionat
 	Expand Appearance	Expandeix l’aparença
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Expandeix s’aplica a les formes compostes (fes Alt-clic en un mode de forma) — previst a la llista de funcions
 	Expand Blend	Expandeix la fusió
 	Expand Brush Strokes	Expandeix els traços del pinzell
 	Expand Compound Shape	Expandeix la forma composta
@@ -2283,6 +2287,7 @@
 	Make with Top Object	Crea amb l’objecte superior
 	Make with Warp…	Crea amb deformació…
 	Make/Release Clipping Mask	Crea/Allibera una màscara de retall
+	Manage Presets	Gestiona els preajustos
 	Manage Workspaces	Gestiona els espais de treball
 	Manage Workspaces…	Gestiona els espais de treball…
 	Manually	Manualment
@@ -2415,6 +2420,7 @@
 	Move Library Item to Group	Mou l’element de la biblioteca al grup
 	Move Locked and Hidden Artwork with Artboard	Mou la il·lustració bloquejada i oculta amb el tauler
 	Move Mesh Point	Mou el punt de malla
+	Move Mesh Points	Mou els punts de malla
 	Move Panel	Mou el panell
 	Move Plane	Mou el pla
 	Move Plane and Copy Objects	Mou el pla i copia els objectes
@@ -3260,10 +3266,12 @@
 	Rename Library Group	Canvia el nom del grup de la biblioteca
 	Rename Library…	Canvia el nom de la biblioteca…
 	Rename Paragraph Style	Canvia el nom de l’estil de paràgraf
+	Rename Preset	Canvia el nom del preajust
 	Rename Style	Canvia el nom de l’estil
 	Rename Variable	Canvia el nom de la variable
 	Rename View	Canvia el nom de la vista
 	Rename Workspace	Canvia el nom de l’espai de treball
+	Rename…	Canvia el nom…
 	Render Threads (-1 = Automatic)	Fils de renderització (-1 = automàtic)
 	Rendering intent:	Intenció de renderització:
 	Reorder	Reordena
@@ -3278,6 +3286,7 @@
 	Repeat {name}	Repeteix {name}
 	Repeating	Repetició
 	Replace	Reemplaça
+	Replace:	Reemplaça:
 	Replace Font	Reemplaça el tipus de lletra
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Reemplaça’l per un altre fitxer o ignora’l: les seves imatges continuaran mostrant la previsualització desada amb el document.
 	Replace Spine	Reemplaça l’espina
@@ -3445,6 +3454,7 @@
 	Save a Copy…	Desa una còpia…
 	Save and Close	Desa i tanca
 	Save As	Desa com a
+	Save as New Preset…	Desa com a preajust nou…
 	Save as PDF…	Desa com a PDF…
 	Save as preset:	Desa com a preajust:
 	Save as Template	Desa com a plantilla
@@ -3471,6 +3481,7 @@
 	Save Graphic Style Library…	Desa la biblioteca d’estils gràfics…
 	Save Grid as Preset	Desa la quadrícula com a preajust
 	Save Grid as Preset…	Desa la quadrícula com a preajust…
+	Save Image Trace Preset	Desa el preajust de traçat d’imatge
 	Save PDF	Desa el PDF
 	Save PDF Dialog	Diàleg Desa el PDF
 	Save PDF Preset	Desa el preajust de PDF
@@ -3727,6 +3738,7 @@
 	Shape Builder Regions	Regions del constructor de formes
 	Shape Builder Tool	Eina Constructor de formes
 	Shape Effects	Efectes de forma
+	Shape Mode	Mode de forma
 	Shape Modes:	Modes de forma:
 	Shape Properties:	Propietats de la forma:
 	Shape:	Forma:
@@ -4027,6 +4039,11 @@
 	Stroke	Traç
 	Stroke (X), double-click for the Color Picker	Traç (X), fes doble clic per al selector de color
 	Stroke Color	Color del traç
+	Fill Gradient	Degradat de farciment
+	Stroke Gradient	Degradat del traç
+	Fill Pattern	Motiu de farciment
+	Stroke Pattern	Motiu del traç
+	Patterns	Motius
 	Stroke Direction	Direcció del traç
 	Stroke Length	Longitud del traç
 	Stroke Options	Opcions del traç
@@ -4696,6 +4713,7 @@
 @msg	`colorGroup` needs `palette: "documentLibrary"`	`colorGroup` necessita `palette: "documentLibrary"`
 @msg	`command` must be a command whose menu item opens a dialog (see ui.menuDialog)	`command` ha de ser una ordre que obri un diàleg des del seu element de menú (vegeu ui.menuDialog)
 @msg	`corners` must be an array of anchor indices, not {v}	`corners` ha de ser una matriu d’índexs de punts d’ancoratge, no {v}
+@msg	`Custom` stands for changed settings: save the preset under another name	`Custom` representa una configuració modificada: deseu el preajust amb un altre nom
 @msg	`dither` applies to gradient fills (paint.setFill)	`dither` s’aplica als farciments de degradat (paint.setFill)
 @msg	`dither` applies to gradient fills (stroke: false)	`dither` s’aplica als farciments de degradat (stroke: false)
 @msg	`dither` must be true or false	`dither` ha de ser cert o fals
@@ -4703,6 +4721,7 @@
 @msg	`freeform.lines` must be an array	`freeform.lines` ha de ser una matriu
 @msg	`freeform.points` must be an array	`freeform.points` ha de ser una matriu
 @msg	`gradient` must be an object	`gradient` ha de ser un objecte
+@msg	`groupColors` must be an array	`groupColors` ha de ser una matriu
 @msg	`id` is the step reference {r}, which only `run` and `command_batch` resolve	`id` és la referència del pas {r}, que només resolen `run` i `command_batch`
 @msg	`ids` must be an array of object ids, not {v}	`ids` ha de ser una matriu d’identificadors d’objecte, no {v}
 @msg	`library` is a library id or name (see {list})	`library` és un identificador o un nom de biblioteca (vegeu {list})
@@ -4710,7 +4729,10 @@
 @msg	`minAnchors` and `maxAnchors` must be whole numbers	`minAnchors` i `maxAnchors` han de ser nombres enters
 @msg	`mode` applies to freeform gradients	`mode` s’aplica als degradats de forma lliure
 @msg	`mode` must be grayscale, rgb, hsb, cmyk or websafe	`mode` ha de ser grayscale, rgb, hsb, cmyk o websafe
+@msg	`name` is empty	`name` és buit
+@msg	`newName` is empty	`newName` és buit
 @msg	`pathfinder` must be an object	`pathfinder` ha de ser un objecte
+@msg	`preserve` must be an object	`preserve` ha de ser un objecte
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` ha de ser 1, 3 o 5
 @msg	`select` must be true or false	`select` ha de ser cert o fals
 @msg	`stops` must be an array	`stops` ha de ser una matriu
@@ -4743,6 +4765,8 @@
 @msg	`{k}` must be [x, y]	`{k}` ha de ser [x, y]
 @msg	`{min_key}` is greater than `{max_key}`	`{min_key}` és més gran que `{max_key}`
 @msg	`{name}` has no options	`{name}` no té opcions
+@msg	`{name}` is a built-in preset and can't change: save it under another name	`{name}` és un preajust integrat i no es pot canviar: deseu-lo amb un altre nom
+@msg	`{name}` is a built-in preset and stays	`{name}` és un preajust integrat i no es pot suprimir
 @msg	`{name}` is a built-in workspace; choose another name	`{name}` és un espai de treball integrat; trieu un altre nom
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` és un color de procés: els tons s’apliquen als colors globals i directes
 @msg	`{name}` is no recovery entry name	`{name}` no és un nom d’entrada de recuperació
@@ -5081,6 +5105,7 @@
 @msg	no document	no hi ha document
 @msg	no document open	no hi ha cap document obert
 @msg	no effect applied yet	encara no s’ha aplicat cap efecte
+@msg	no Pathfinder operation applied yet	encara no s’ha aplicat cap operació del Cercador de traçats
 @msg	no effect at index {k}	no hi ha cap efecte a l’índex {k}
 @msg	no empty artboards to delete	no hi ha taulers buits per suprimir
 @msg	no end record	no hi ha registre final
@@ -5092,6 +5117,7 @@
 @msg	No fonts are missing in this document	No falta cap tipus de lletra en aquest document
 @msg	no format to export to	no hi ha cap format per exportar-hi
 @msg	no free recovery area	no hi ha àrea de recuperació lliure
+@msg	no gradient swatch `{name}`	no hi ha la mostra de degradat `{name}`
 @msg	no gradient stop or freeform point is selected	no hi ha cap parada de degradat ni cap punt de forma lliure seleccionat
 @msg	no graphic style `{name}`	no hi ha l’estil gràfic `{name}`
 @msg	no graphic style `{n}`	no hi ha l’estil gràfic `{n}`
@@ -5106,6 +5132,7 @@
 @msg	no native format	no hi ha format natiu
 @msg	no pages	no hi ha pàgines
 @msg	no pattern `{name}`	no hi ha el motiu `{name}`
+@msg	no pattern swatch `{name}`	no hi ha la mostra de motiu `{name}`
 @msg	no perspective grid preset named `{name}`	no hi ha cap preajust de quadrícula de perspectiva anomenat `{name}`
 @msg	no plug-in {0} is installed	no hi ha instal·lat el complement {0}
 @msg	no plug-in {id} is installed	no hi ha instal·lat el complement {id}
@@ -5118,6 +5145,8 @@
 @msg	no print service	no hi ha servei d’impressió
 @msg	no revert command	no hi ha cap ordre de reversió
 @msg	no saved PDF preset named `{name}` (built-in presets are read-only: start a new one from them)	no hi ha cap preajust de PDF desat anomenat `{name}` (els preajustos integrats són de només lectura: creeu-ne un de nou a partir d’ells)
+@msg	no saved preset named `{name}`	no hi ha cap preajust desat anomenat `{name}`
+@msg	no saved preset named `{name}` to rename	no hi ha cap preajust desat anomenat `{name}` per canviar-ne el nom
 @msg	no saved presets	no hi ha preajustos desats
 @msg	no saved print preset named `{name}` ({DEFAULT_PRESET} is protected: start a new one from it)	no hi ha cap preajust d’impressió desat anomenat `{name}` ({DEFAULT_PRESET} està protegit: creeu-ne un de nou a partir d’ell)
 @msg	no saved profiles	no hi ha perfils desats
@@ -5177,6 +5206,7 @@
 @msg	not an RTF file: it doesn't start with {\\rtf	no és un fitxer RTF: no comença amb {\\rtf
 @msg	not found	no s’ha trobat
 @msg	not in pattern editing mode	no esteu en mode d’edició de motius
+@msg	finish editing the pattern first	acabeu primer l’edició del motiu
 @msg	nothing encoded	no s’ha codificat res
 @msg	nothing in data set {name} was applied: no object is bound to a variable it has a value for	no s’ha aplicat res del conjunt de dades {name}: cap objecte està vinculat a una variable per a la qual tingui un valor
 @msg	nothing selected	no hi ha res seleccionat
@@ -5390,6 +5420,7 @@
 @msg	the image's pixels don't match its size	els píxels de la imatge no coincideixen amb la seva mida
 @msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	L’últim inici de VectorCraft va acabar a {name} abans que aparegués la seva finestra, així que s’ha iniciat amb {summary}. Per tornar a provar aquell processador gràfic, canvia Preferències › Rendiment › Processador gràfic o inicia amb WGPU_BACKEND definit
 @msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	L’últim inici de VectorCraft va acabar mentre llistava els processadors gràfics, així que s’ha iniciat amb {summary} només amb OpenGL. Per tornar a provar els altres sistemes gràfics, canvia Preferències › Rendiment › Processador gràfic o inicia amb WGPU_BACKEND definit
+@msg	the library item is damaged	l’element de la biblioteca està malmès
 @msg	the layer has no objects to clip by	la capa no té objectes amb què retallar
 @msg	the layer or group is locked	la capa o el grup està bloquejat
 @msg	the layer to flatten into is hidden	la capa on aplanar està oculta
@@ -5430,6 +5461,10 @@
 @msg	the screen color sampler is already open	el mostrejador de color de pantalla ja és obert
 @msg	the search couldn't start: try again in a moment	la cerca no s’ha pogut iniciar: torna-ho a provar d’aquí a un moment
 @msg	the selected stroke's profile is already listed as {_1}	el perfil del traç seleccionat ja apareix com a {_1}
+@msg	the selection has no gradient fill	la selecció no té farciment de degradat
+@msg	the selection has no gradient stroke	la selecció no té traç de degradat
+@msg	the selection has no pattern fill	la selecció no té farciment de motiu
+@msg	the selection has no pattern stroke	la selecció no té traç de motiu
 @msg	the selection has no URL (or they differ)	la selecció no té cap URL (o difereixen)
 @msg	the selection isn't in perspective	la selecció no és en perspectiva
 @msg	The shape is too complex for a 3D effect	La forma és massa complexa per a un efecte 3D
@@ -5492,6 +5527,7 @@
 @msg	unknown preset `{name}` (high, medium, low or a saved one: see flattener.presets.list)	preajust desconegut `{name}` (high, medium, low o un de desat: consulta flattener.presets.list)
 @msg	unknown preset `{name}` (see flattener.presets.list)	preajust desconegut `{name}` (consulta flattener.presets.list)
 @msg	unknown preset `{name}` (see webExport.presets.list)	preajust desconegut `{name}` (consulta webExport.presets.list)
+@msg	unknown preset `{name}`: not a built-in or saved preset (see imageTrace.presets)	preajust desconegut `{name}`: no és integrat ni desat (consulta imageTrace.presets)
 @msg	unknown side `{other}` (left|right|top|bottom)	costat desconegut `{other}` (left|right|top|bottom)
 @msg	unknown snap option `{key}` (use {options})	opció d’ajustament desconeguda `{key}` (fes servir {options})
 @msg	unknown tool `{tool}`	eina desconeguda `{tool}`
@@ -5641,3 +5677,199 @@ swatch	White, Black	Blanc, negre
 swatch	Yellow	Groc
 swatch	Yellow Green	Verd groc
 theme	Appearance	Aparença
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Text de punt
+	Area Text	Text d’àrea
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Mostra les opcions d’ajust al glif
+	Hide Snap to Glyph Options	Amaga les opcions d’ajust al glif
+	Snap to Glyph Options	Opcions d’ajust al glif
+	x-height	Alçada x
+	Glyph Bounds	Límits del glif
+	Proximity Guides	Guies de proximitat
+	Angular Guides	Guies angulars
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Mitjana i unió…
+	Average & Join	Mitjana i unió
+anchor	Points:	Punts:
+@msg	select two open path ends, or two open paths, to average and join	selecciona dos extrems de traçats oberts, o dos traçats oberts, per fer-ne la mitjana i unir-los
+
+# Artwork Cleanup add-on (Object › Plug-ins › Artwork Cleanup): its panel, tools, issue kinds and messages.
+	Artwork Cleanup	Neteja de l’art
+	Simplify Anchors (Keep Shape)…	Simplifica els punts d’ancoratge (mantén la forma)…
+	Health Check	Revisió de l’estat
+	Show Issue	Mostra el problema
+	Fix All Issues	Corregeix tots els problemes
+	Fix Issues	Corregeix els problemes
+	Deep Ungroup…	Desagrupa tots els nivells…
+	Rejoin Path Pieces…	Torna a unir els trossos de traçat…
+	Document Health Check	Revisió de l’estat del document
+	Check Selection	Revisa la selecció
+	Check Document	Revisa el document
+	No issues found.	No s’ha trobat cap problema.
+	Changed since the last check.	Ha canviat des de l’última revisió.
+	Fix Selected	Corregeix els seleccionats
+	Fix All	Corregeix-ho tot
+	Issues fixed: {count}	Problemes corregits: {count}
+	Open a document to check it for issues.	Obriu un document per revisar-ne els problemes.
+	Empty Text	Text buit
+	Unpainted Objects	Objectes sense pintura
+	Zero-Opacity Objects	Objectes amb opacitat zero
+	Duplicate Objects	Objectes duplicats
+	Off-Artboard Art	Art fora dels taulers
+	Duplicate Anchors	Punts d’ancoratge duplicats
+	Tiny Handles	Nanses minúscules
+	Collinear Anchors	Punts d’ancoratge col·lineals
+	Nearly Coincident Anchors	Punts d’ancoratge gairebé coincidents
+	Nearly Closed Paths	Traçats gairebé tancats
+	Filled Open Paths	Traçats oberts amb emplenament
+	Needless Clipping Groups	Grups de retall innecessaris
+	Needless Compound Paths	Traçats compostos innecessaris
+	Needless Groups	Grups innecessaris
+	Empty Artboards	Taulers buits
+	Protect Corners	Protegeix les cantonades
+	Gap	Separació
+	Include Clip Groups	Inclou els grups de retall
+@msg	`tolerance` must be from 1 to 100	`tolerance` ha d’estar entre 1 i 100
+@msg	`gap` must be from 0 to 6 pt	`gap` ha d’estar entre 0 i 6 pt
+@msg	Simplify Anchors: the paths have too many anchors to simplify at once	Simplifica els punts d’ancoratge: els traçats tenen massa punts d’ancoratge per simplificar-los d’un cop
+@msg	Rejoin Path Pieces: too many paths to rejoin at once	Torna a unir els trossos de traçat: massa traçats per unir-los d’un cop
+@msg	None of these issues are left: check again	Ja no queda cap d’aquests problemes: torneu a revisar
+@msg	`kinds` must be a list of issue kinds	`kinds` ha de ser una llista de tipus de problema
+@msg	missing `kind`	falta `kind`
+	Simplify Anchors (Keep Shape)	Simplifica els punts d’ancoratge (mantén la forma)
+	Deep Ungroup	Desagrupa tots els nivells
+	Rejoin Path Pieces	Torna a unir els trossos de traçat
+
+# Color Effects add-on (Object › Plug-ins › Color Effects, Effect › Color Effects): its effects, panel and messages.
+	Color Effects	Efectes de color
+	Color Effects Panel	Tauler Efectes de color
+	Exposure	Exposició
+	Exposure…	Exposició…
+	Desaturate	Dessaturar
+	Adjustment	Ajust
+	Add as Effect	Afegeix com a efecte
+	Apply as Filter	Aplica com a filtre
+	Select objects to adjust their colors.	Seleccioneu objectes per ajustar-ne els colors.
+	Brightness/Contrast	Lluentor/Contrast
+	Hue/Saturation	To/saturació
+	Temperature/Tint	Temperatura/To
+@msg	`{id}` is not a colour adjustment	`{id}` no és un ajust de color
+@msg	missing `effect`	falta `effect`
+@msg	`params` must be an object	`params` ha de ser un objecte
+# Path Precision Tools add-on (Object › Plug-ins › Path Precision Tools): its tools, Anchor Inspector panel, commands and messages.
+	Path Precision Tools	Eines de precisió de traçats
+	Anchor Eraser Brush	Pinzell esborrador de punts d’ancoratge
+	Extend Path Tool	Eina d’allargar el traçat
+	Measure & Inspect Tool	Eina de mesurar i inspeccionar
+	Anchor Inspector	Inspector de punts d’ancoratge
+	Add Points at Crossings	Afegeix punts als encreuaments
+	Split at Crossings	Divideix als encreuaments
+	Extend Path	Allarga el traçat
+	Measure & Inspect	Mesura i inspecciona
+	Set Anchor	Defineix el punt d’ancoratge
+	Make Smooth	Fes-lo suau
+	Make Corner	Fes-lo vèrtex
+	Equalize Handles	Iguala les nanses
+	Remove Points, Keep Shape	Elimina punts, mantén la forma
+	Add Points to Segments…	Afegeix punts als segments…
+	Add Points to Segments	Afegeix punts als segments
+	Open a document to edit its anchor points.	Obriu un document per editar-ne els punts d’ancoratge.
+	Anchors selected: {count}	Punts d’ancoratge seleccionats: {count}
+	Direct-select anchor points to edit them.	Seleccioneu directament punts d’ancoratge per editar-los.
+	In:	Entrada:
+	Out:	Sortida:
+	Add Points	Afegeix punts
+	Points per segment	Punts per segment
+	Close Path:	Tanca el traçat:
+	Keep Handles	Mantén les nanses
+	Straight	Recte
+	Stretch Curve	Estira la corba
+@msg	direct-select the anchor points to remove	seleccioneu directament els punts d’ancoratge que voleu eliminar
+@msg	select segments, or paths, to add points to	seleccioneu segments, o traçats, als quals afegir punts
+@msg	select open paths to close	seleccioneu traçats oberts per tancar-los
+@msg	the paths are too many or too tangled to find where they cross (at most 10000 segments)	massa traçats, o massa enredats, per trobar-ne els encreuaments (10000 segments com a màxim)
+@msg	the paths have too many anchors to edit at once	els traçats tenen massa punts d’ancoratge per editar-los alhora
+# Path Precision Tools add-on: the Parametric Shape Tool, its panel, commands and messages.
+	Parametric Shape Tool	Eina de forma paramètrica
+	Parametric Shape	Forma paramètrica
+	Edit Parametric Shape	Edita la forma paramètrica
+	Convert to Parametric Shape	Converteix en forma paramètrica
+	Ring	Anell
+	Heart	Cor
+	Gear	Engranatge
+	Speech Bubble	Bafarada
+	Count:	Nombre:
+	Thickness:	Gruix:
+	Inner Radius:	Radi interior:
+	Head:	Cap:
+	Shaft:	Tija:
+	Point:	Punta:
+	Tooth Height:	Alçada de la dent:
+	Tail:	Cua:
+	Tip:	Punta:
+	Open a document to draw parametric shapes.	Obriu un document per dibuixar formes paramètriques.
+	Select a parametric shape to edit it. With none selected, these set the next shape.	Seleccioneu una forma paramètrica per editar-la. Sense cap selecció, aquests valors s’apliquen a la forma següent.
+@msg	the object is not an editable parametric shape	l’objecte no és una forma paramètrica editable
+@msg	select plain rectangles, ellipses or regular polygons to convert	seleccioneu rectangles, el·lipses o polígons regulars simples per convertir-los
+@msg	the shape's numbers are out of range	els valors de la forma són fora de l’interval
+@msg	`kind` must be one of: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble	`kind` ha de ser un de: rectangle, ellipse, polygon, star, ring, arrow, cross, heart, gear, bubble
+@msg	`count` must be a whole number from 3 to 1000	`count` ha de ser un nombre enter de 3 a 1000
+@msg	`{key}` must be from {lo} to {hi}	`{key}` ha de ser de {lo} a {hi}
+# Smart Pen add-on (Object › Plug-ins › Smart Pen): its tool, panel, commands and messages.
+	Smart Pen	Ploma intel·ligent
+	Smart Pen Tool	Eina de ploma intel·ligent
+	Smart Pen Panel	Tauler de ploma intel·ligent
+	Next Segment	Segment següent
+	Curved	Corbat
+	Retract Handles	Retrau les nanses
+	Close or Join	Tanca o uneix
+	Open a document to draw with the Smart Pen.	Obriu un document per dibuixar amb la ploma intel·ligent.
+	Straight or Curved Segment	Segment recte o corbat
+@msg	the path is locked or hidden	el traçat està bloquejat o ocult
+@msg	`id` is not a path	`id` no és un traçat
+@msg	the path has no open subpath	el traçat no té cap subtraçat obert
+@msg	the subpath is closed	el subtraçat és tancat
+@msg	the subpath is closed or too short to close	el subtraçat és tancat o massa curt per tancar-lo
+@msg	the path is too short to remove a point from	el traçat és massa curt per treure’n un punt
+@msg	the segment can't be bent that far	el segment no es pot corbar tant
+@msg	give `{a}` and `{b}`	indiqueu `{a}` i `{b}`
+@msg	`t` must be from 0 to 1	`t` ha de ser de 0 a 1
+@msg	`segment` must be "straight" or "curved"	`segment` ha de ser "straight" o "curved"
+@msg	`mode` must be "free", "keepAngles" or "symmetric"	`mode` ha de ser "free", "keepAngles" o "symmetric"
+@msg	`{key}` must be [x, y]	`{key}` ha de ser [x, y]
+
+# Color Effects add-on: Select by Color Kind.
+	Select by Color Kind	Selecciona per tipus de color
+	Objects with Spot Colors	Objectes amb colors directes
+	Objects with Color Effects	Objectes amb efectes de color
+	RGB Images	Imatges RGB
+	CMYK Images	Imatges CMYK
+	Grayscale Images	Imatges en escala de grisos
+@msg	`kind` must be spotColors, colorEffects, rgbImages, cmykImages or grayImages	`kind` ha de ser spotColors, colorEffects, rgbImages, cmykImages o grayImages
+
+# Color Effects add-on: Vector Halftone (Effect › Color Effects).
+	Dot Color from Art	Color dels punts de la il·lustració
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Bitò…
+	Duotone	Bitò
+	Print Ink Fixes…	Correccions de tinta per a impressió…
+	Print Ink Fixes	Correccions de tinta per a impressió
+	Inks	Tintes
+	Tone 1	To 1
+	Tone 2	To 2
+	Tone 3	To 3
+	Tone 4	To 4
+	Curve	Corba
+	Reset to Linear	Restableix a lineal
+	Reset to Inverse	Restableix a invertida
+	Skip Objects with Spot Colors	Omet els objectes amb colors directes
+	Ink Limit	Límit de tinta
+	Exclude Pure Black	Exclou el negre pur
+	Remove White Overprint	Elimina la sobreimpressió del blanc
+	Overprint Black	Sobreimpressió del negre
+	Text Only	Només text
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	indiqueu `inkLimit`, `removeWhiteOverprint` o `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Les correccions de tinta per a impressió funcionen en documents CMYK: trieu primer Fitxer › Mode de color del document › Color CMYK
+@msg	`{key}` must be 0..{max}	`{key}` ha de ser 0..{max}

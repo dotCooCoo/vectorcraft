@@ -10,7 +10,7 @@ use std::collections::HashSet;
 
 use serde_json::{Value, json};
 use vectorcraft_color::BlendMode;
-use vectorcraft_doc::{Document, Knockout, Node, NodeId, OpacityMask, Selection};
+use vectorcraft_doc::{Document, Knockout, Node, NodeId, NodeKind, OpacityMask, Selection};
 
 use super::maskedit::{begin, finish, mask_group, mask_parts, show_editing};
 use super::pathops::{Beside, separate};
@@ -24,7 +24,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Make Opacity Mask",
             ["Window", "Transparency"],
             None,
-            "{ids?, clip?, invert?} the topmost of the selected objects (or of `ids`) becomes the mask of the others (grouped if several). One object gets an empty mask and enters mask editing: draw the mask, then transparency.stopEditingOpacityMask; one target (an object or a layer) is refused in isolation mode → {id, editing}",
+            "{ids?, clip?, invert?} the topmost of the selected objects (or of `ids`) becomes the mask of the others (grouped if several). One object gets an empty mask and enters mask editing: draw the mask, then transparency.stopEditingOpacityMask; one target (an object or a layer) is refused in isolation mode and in pattern editing mode → {id, editing}",
             can_make,
             make
         ),
@@ -163,19 +163,20 @@ fn masked_targets(s: &Session, p: &Value) -> Result<Vec<NodeId>> {
 }
 
 /// Make Opacity Mask: a document is open, and one selected object, which [`make`] gives an empty
-/// mask and takes into mask editing, is not in isolation mode
-/// ([`super::maskedit::outside_isolation_mode`]). The selection is one object when it has one
-/// subject root, which `make` masks without `ids`, and at most one outermost object, which it
-/// masks with `ids` (a call's `ids` stand in for the selection here). `make` itself refuses any
-/// single target in isolation mode, a layer included, so a selection with a target counts as one
-/// object.
+/// mask and takes into mask editing, is where mask editing can be entered
+/// ([`super::maskedit::can_edit_mask`]: not in isolation mode or pattern editing mode). The
+/// selection is one object when it has one subject root, which `make` masks without `ids`, and at
+/// most one outermost object, which it masks with `ids` (a call's `ids` stand in for the selection
+/// here). A targeted layer is one subject root however many objects it selects. `make` itself
+/// refuses any single target in those modes, a layer included, so a selection with a target counts
+/// as one object.
 fn can_make(s: &Session) -> std::result::Result<(), String> {
     has_doc(s)?;
     let Some(st) = s.active() else { return Ok(()) };
     let roots = super::appearance::subject_roots(s).map_or(0, |r| r.len());
     let outermost = super::edit::outermost(&st.doc, st.selection.in_paint_order(&st.doc)).len();
     let targeted = st.selection.target.is_some();
-    if roots == 1 && (outermost <= 1 || targeted) { super::maskedit::outside_isolation_mode(s) } else { Ok(()) }
+    if roots == 1 && (outermost <= 1 || targeted) { super::maskedit::can_edit_mask(s) } else { Ok(()) }
 }
 
 fn make(s: &mut Session, p: &Value) -> Result<Value> {
@@ -194,9 +195,12 @@ fn make(s: &mut Session, p: &Value) -> Result<Value> {
         None => super::appearance::subject_roots(s)?,
     };
     let Some((&top, below)) = ids.split_last() else { return Err(bad(C, "select the art and, on top of it, the mask object")) };
-    // One target gets an empty mask and enters mask editing, which isolation mode does not allow.
-    if below.is_empty() && super::maskedit::in_isolation_mode(s.doc()?) {
-        return Err(bad(C, "exit isolation mode first"));
+    // One target gets an empty mask and enters mask editing, which isolation mode and pattern
+    // editing mode do not allow.
+    if below.is_empty()
+        && let Some(why) = super::maskedit::mask_editing_refused(s.doc()?)
+    {
+        return Err(bad(C, why));
     }
     let clip = bool_or(p, "clip", !s.menu.new_masks_unclipped);
     let invert = bool_or(p, "invert", s.menu.new_masks_inverted);
@@ -364,12 +368,19 @@ impl TransparencyInfo {
         }
     }
 
-    /// The opacity of the focused gradient mesh `point` (see `transparency.set`) instead of its
-    /// object's.
-    fn with_mesh_point(mut self, point: Option<(NodeId, usize, f32)>) -> Self {
-        if let Some((_, _, o)) = point {
-            self.opacity = Some((o as f64 * 10_000.0).round() / 100.0);
-        }
+    /// The opacity of the picked gradient mesh `points` (see `transparency.set`) instead of their
+    /// objects': `None` where they differ.
+    fn with_mesh_points(mut self, d: &Document, points: Option<Vec<(NodeId, Vec<usize>)>>) -> Self {
+        let Some(points) = points else { return self };
+        let mut all = points.iter().flat_map(|(id, v)| {
+            let m = match d.node(*id).map(|n| &n.kind) {
+                Some(NodeKind::Mesh(m)) => Some(m),
+                _ => None,
+            };
+            v.iter().filter_map(move |i| m?.points.get(*i)).map(|q| (q.opacity as f64 * 10_000.0).round() as i64)
+        });
+        let first = all.next();
+        self.opacity = first.filter(|f| all.all(|o| o == *f)).map(|o| o as f64 / 100.0);
         self
     }
 }
@@ -400,8 +411,8 @@ impl Session {
     pub fn transparency_info(&self) -> TransparencyInfo {
         match (self.active(), transparency_targets(self, &Value::Null)) {
             (Some(st), Ok(ids)) => {
-                let point = super::paint::focused_mesh_point_of(self, &ids);
-                TransparencyInfo::of(&st.doc, ids).with_mesh_point(point)
+                let points = super::paint::picked_mesh_points_of(self, &ids);
+                TransparencyInfo::of(&st.doc, ids).with_mesh_points(&st.doc, points)
             }
             _ => TransparencyInfo::default(),
         }
@@ -411,8 +422,8 @@ impl Session {
 fn info(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
     let ids = transparency_targets(s, p)?;
-    let point = super::paint::focused_mesh_point_of(s, &ids);
-    let i = TransparencyInfo::of(&st.doc, ids).with_mesh_point(point);
+    let points = super::paint::picked_mesh_points_of(s, &ids);
+    let i = TransparencyInfo::of(&st.doc, ids).with_mesh_points(&st.doc, points);
     Ok(json!({
         "ids": i.ids.iter().map(|id| id.0).collect::<Vec<_>>(),
         "opacity": i.opacity,

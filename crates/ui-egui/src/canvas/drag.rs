@@ -78,6 +78,16 @@ pub(super) fn tool_drag_moved(ui: &Ui, xf: &Xf, p: Pos2, pointer: &egui::Pointer
     true
 }
 
+/// Whether the tool should get another drag event at a pointer held still because Shift, Alt,
+/// Cmd/Ctrl or Space went down or up (#4711): a scale switches to proportional or from the centre
+/// at once. Records `m` as the modifiers last seen; only once the press has dragged.
+pub(super) fn tool_drag_mods_changed(ui: &Ui, m: Mods) -> bool {
+    let id = egui::Id::unique("canvas-tool-drag-mods");
+    let (dragged, last) = ui.data(|d| (d.get_temp::<Point>(tool_drag_doc_id()).is_some(), d.get_temp::<Mods>(id)));
+    ui.data_mut(|d| d.insert_temp(id, m));
+    dragged && last.is_some_and(|l| l != m)
+}
+
 /// The pen pressure (0..1) of the press in progress: the force of this frame's pen or touch
 /// input, else the pressure in the host's feed while a pen is the pointer that moved last
 /// ([`crate::Services::stylus`]: [`StylusFeed::press`] for a new press, [`StylusFeed::held`]
@@ -193,10 +203,16 @@ pub(super) fn drop_press(app: &mut VectorcraftApp, ui: &Ui, view: vectorcraft_en
 /// the selected art ([`widgets::PanelDrag::Art`]): the art waits where it last moved on the
 /// canvas, and a panel it is released on takes it (the Graphic Styles panel makes a style of it).
 /// Back on the canvas, [`Drag::Art`] takes the move up again where the pointer is (#2826).
+/// The Direct and Group Selection tools hand over art they move whole too (#4233); a move of
+/// anchor points or segments stays a reshape.
 pub(super) fn drag_art_out(app: &VectorcraftApp, ui: &Ui, resp: &egui::Response, p: Pos2) -> bool {
-    let Some(st) = app.session.active().filter(|_| app.session.tool_id() == "selection") else { return false };
-    // The Selection tool's interaction while it moves (or Alt-copies) the selection.
+    let tool = app.session.tool_id();
+    let Some(st) = app.session.active().filter(|_| matches!(tool, "selection" | "directSelection" | "groupSelection")) else { return false };
+    // The tool's interaction while it moves (or Alt-copies) the selection.
     if !st.interaction.as_ref().is_some_and(|i| i.label == "Move" || i.label == "Copy") {
+        return false;
+    }
+    if tool != "selection" && st.selection.objects.iter().any(|id| st.selection.partial(*id).is_some() || st.selection.segments.contains_key(id)) {
         return false;
     }
     // A floating panel in an OS window of its own takes the art too: craft-ui hands that window

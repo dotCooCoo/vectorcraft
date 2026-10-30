@@ -318,6 +318,42 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "",
         "{} the selected type (or the Type tool's selection) in its family's Italic (or Oblique) face, or back upright when it is italic; keeps the weight. A family without that face is left as it is, with a message. While the Type tool edits text, Cmd+Shift+I",
     ),
+    (
+        "type.highlightFontName",
+        "Highlight Font Name",
+        "Cmd+Alt+Shift+F",
+        "{} show the Character panel if it is hidden and open its font family menu, whose search field takes the keyboard focus: type to search, Enter applies the highlighted font → {field: \"fontName\"}. Without selected type (or text the Type tool edits) the panel shows, and the error says to select type first",
+    ),
+    (
+        "type.highlightKerning",
+        "Highlight Kerning",
+        "Cmd+Alt+K",
+        "{} show the Character panel if it is hidden and give its Kerning field the keyboard focus with its value selected: type a value and press Enter → {field: \"kerning\"}. Without selected type (or text the Type tool edits) the panel shows, and the error says to select type first",
+    ),
+    (
+        "type.highlightTracking",
+        "Highlight Tracking",
+        "",
+        "{} show the Character panel if it is hidden and give its Tracking field the keyboard focus with its value selected: type a value and press Enter → {field: \"tracking\"}. Without selected type (or text the Type tool edits) the panel shows, and the error says to select type first",
+    ),
+    (
+        "type.underline",
+        "Underline",
+        "Cmd+Shift+U",
+        "{} the Character panel's Underline button: underline the selected type (or the Type tool's selection), or remove the underline when the text the Character panel shows is underlined (text.setFormat {underline}) → underlined",
+    ),
+    (
+        "type.lineComposer",
+        "Toggle Line Composer",
+        "Cmd+Alt+Shift+C",
+        "{} the selected type's paragraphs (or those the Type tool's selection touches) use the Single-line Composer when they all use the Every-line Composer, else the Every-line Composer (text.setFormat {composer}) → \"singleLine\" | \"everyLine\"",
+    ),
+    (
+        "type.hyphenate",
+        "Hyphenate",
+        "Cmd+Alt+Shift+H",
+        "{} the Paragraph panel's Hyphenate checkbox: hyphenation off for the selected type's paragraphs (or those the Type tool's selection touches) when they all hyphenate, else on (text.setFormat {hyphenate}) → hyphenate",
+    ),
     ("effect.last", "Last Effect…", "Cmd+Alt+Shift+E", "{} open the dialog of the last effect applied"),
     ("view.zoomIn", "Zoom In", "Cmd+=", "{}"),
     ("view.zoomOut", "Zoom Out", "Cmd+-", "{}"),
@@ -500,6 +536,18 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
     ("window.workspace.rename", "Rename Workspace", "", "{name, to}"),
     ("window.workspace.list", "List Workspaces", "", "{}"),
     ("window.newWindow", "New Window", "", "{}"),
+    (
+        "window.nextDocument",
+        "Next Document",
+        "Cmd+F6",
+        "{} make the open document after the current one in tab order the current one, as a click on its tab does (after the last document it goes to the first, and from the Home screen to the first); returns {index}",
+    ),
+    (
+        "window.previousDocument",
+        "Previous Document",
+        "Cmd+Shift+F6",
+        "{} make the open document before the current one in tab order the current one, as a click on its tab does (before the first document it goes to the last, and from the Home screen to the last); returns {index}",
+    ),
     ("tool.select", "Select Tool", "", "{tool: id} (see tools)"),
     (
         "tool.setOption",
@@ -527,6 +575,12 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "{} show a crop box on the selected image (tool `cropImage`): it starts on the part over the image's artboard; drag its handles or inside it, then Enter or the Control bar's Apply crops the image to it (object.cropImage {rect}), Escape or Cancel leaves it as it is, both back to the Selection tool. tool.setOption {key: \"rect\", value: [x, y, width, height]} sets the box",
     ),
     ("effect.applyLast", "Apply Last Effect", "Cmd+Shift+E", "{}"),
+    (
+        "pathfinder.repeat",
+        "Repeat Pathfinder",
+        "Cmd+4",
+        "{} repeat the last successful Pathfinder panel operation, direct object.pathfinder.* command or command.batch step on the selection with current Pathfinder Options; an error until one has run",
+    ),
     (
         "file.export.pdf",
         "Save as PDF…",
@@ -584,6 +638,18 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "Graphic Style Options…",
         "",
         "{name?} open Graphic Style Options (dialog `graphicStyleOptions`, field `name`): for style `name` OK renames it (graphicStyle.rename); without, OK makes a new style of that name from the selection (graphicStyle.new)",
+    ),
+    (
+        "ui.newCharStyle",
+        "New Character Style…",
+        "",
+        "{} open New Character Style (dialog `newTextStyle`, field `name`, filled in with the name charStyle.new {} would give the style), what Alt-clicking the Character Styles panel's New button opens; OK runs charStyle.new with the name and the Type tool's selected characters (else the selected type) as they were when the dialog opened; Cancel adds no style",
+    ),
+    (
+        "ui.newParaStyle",
+        "New Paragraph Style…",
+        "",
+        "{} open New Paragraph Style (dialog `newTextStyle`, field `name`, filled in with the name paraStyle.new {} would give the style), what Alt-clicking the Paragraph Styles panel's New button opens; OK runs paraStyle.new with the name and the paragraph of the Type tool's selection (else the selected type) as it was when the dialog opened; Cancel adds no style",
     ),
     (
         "ui.symbolOptions",
@@ -716,6 +782,12 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "{selected?: preset name} open the presets manager (dialog `flattenerPresets`, fields `selected`, then the selected preset's `name` and option keys: setting them on a saved preset saves it, a new `name` renames it; built-in presets don't change). New, Delete, Import… and Export… run flattener.presets.save / delete / import / export",
     ),
     (
+        "ui.imageTracePresetDialog",
+        "Save as New Preset…",
+        "",
+        "{params?: tracing settings (default: the Default preset's), rename?: a saved preset's name} the Image Trace panel's Manage Presets: open Save as New Preset… for those settings, or with `rename`, Rename… for that saved preset (dialog `imageTracePreset`, field `name`: a new \"Tracing Preset N\" or the preset's name); OK runs imageTrace.presets.save with the name (as `newName` when renaming), and the panel shows the preset it made from its settings",
+    ),
+    (
         "ui.flattenerPreview",
         "Flattener Preview",
         "",
@@ -814,7 +886,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "ui.expandDialog",
         "Expand…",
         "",
-        "{} open Expand for the selection (dialog `expand`, fields object, fill, stroke (all on; one the selection has nothing for is disabled, see object.expand.info), gradient: objects|mesh, steps 1..1000 (255)): OK runs object.expand with them as one undo step",
+        "{} open Expand for the selection (dialog `expand`, fields object, fill, stroke (all on; one the selection has nothing for is disabled, see object.expand.info), gradient: objects|mesh, steps 1..1000 (255)): OK runs object.expand with them as one undo step; dimmed, and an error, while the selection has an appearance effect.expandAppearance expands (object.expand.info's appearance)",
     ),
     (
         "attributes.openUrl",
@@ -838,7 +910,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "ui.menuDialog",
         "Menu Dialog",
         "",
-        "{command: object.move|object.rotate|object.scale|object.reflect|object.shear|object.transformEach|path.average|object.path.offsetPath|object.path.simplify|object.path.smooth|object.path.splitIntoGrid|object.vectorHalftone|artboard.rearrange|object.envelope.makeWithWarp|object.envelope.resetWithWarp|object.envelope.makeWithMesh|object.envelope.resetWithMesh|object.envelope.options} open the dialog that command's menu item opens (dialog kind: move, rotate, scale, reflect, shear, transformEach, …, vectorHalftone, rearrangeArtboards, envelopeWarp, envelopeMesh, envelopeOptions; Scale and Transform Each have `corners` and `strokes`, from the preferences, which OK updates; Transform Each opens on the values it was last confirmed with (not `copy`), and its Copy button confirms with `copy: true`; the envelope dialogs start from the selected envelope, Make opens as Reset (`reset: true`) while one is selected)",
+        "{command: object.move|object.rotate|object.scale|object.reflect|object.shear|object.transformEach|path.average|path.averageJoin|object.path.offsetPath|object.path.simplify|object.path.smooth|object.path.splitIntoGrid|object.vectorHalftone|artboard.rearrange|object.envelope.makeWithWarp|object.envelope.resetWithWarp|object.envelope.makeWithMesh|object.envelope.resetWithMesh|object.envelope.options} open the dialog that command's menu item opens (dialog kind: move, rotate, scale, reflect, shear, transformEach, …, vectorHalftone, rearrangeArtboards, envelopeWarp, envelopeMesh, envelopeOptions; Scale and Transform Each have `corners` and `strokes`, from the preferences, which OK updates; Transform Each opens on the values it was last confirmed with (not `copy`), and its Copy button confirms with `copy: true`; the envelope dialogs start from the selected envelope, Make opens as Reset (`reset: true`) while one is selected)",
     ),
     (
         "ui.widthPointEdit",
@@ -1108,6 +1180,18 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "Continue in Background",
         "",
         "{} close the progress window of the heavy filters running in the background; they go on, shown in the status bar → {hidden: n}",
+    ),
+    (
+        "imageTrace.cancelRuns",
+        "Cancel Image Trace",
+        "",
+        "{} stop every Image Trace running in the background (its progress window's Cancel): it stops at its next colour and changes nothing → {cancelled: n}",
+    ),
+    (
+        "imageTrace.hideRuns",
+        "Continue in Background",
+        "",
+        "{} close the progress window of the Image Traces running in the background; they go on, shown in the status bar → {hidden: n}",
     ),
     (
         "ui.checkScript",
