@@ -96,6 +96,28 @@ fn start_global_edit_takes_the_objects_of_the_same_shape_at_any_place_and_size()
 }
 
 #[test]
+fn global_edit_updates_art_on_unlocked_template_layers_only() {
+    let mut s = session();
+    let first = rect(&mut s, 10.0, 10.0, 50.0, 50.0);
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let template_art = rect(&mut s, 200.0, 10.0, 50.0, 50.0);
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+
+    assert_eq!(start(&mut s, first, json!({})), [first, template_art]);
+    s.execute("object.move", &json!({"dx": 10, "dy": 0})).unwrap();
+    assert_eq!(bounds(&s, template_art), Rect::new(210.0, 10.0, 260.0, 60.0));
+
+    s.execute("select.globalEdit", &json!({})).unwrap();
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "locked": true})).unwrap();
+    let other = rect(&mut s, 400.0, 10.0, 50.0, 50.0);
+    let template_before = node(&s, template_art);
+    assert_eq!(start(&mut s, first, json!({})), [first, other]);
+    s.execute("object.move", &json!({"dx": 10, "dy": 0})).unwrap();
+    assert_eq!(node(&s, template_art), template_before);
+    assert_eq!(bounds(&s, other), Rect::new(410.0, 10.0, 460.0, 60.0));
+}
+
+#[test]
 fn size_and_appearance_options_narrow_the_match() {
     let mut s = session();
     let [a, b, c, ..] = squares(&mut s);

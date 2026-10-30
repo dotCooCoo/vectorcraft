@@ -330,7 +330,7 @@ pub fn match_count(s: &Session) -> usize {
 
 /// Is `id` there, shown and unlocked, with every layer and group it is in?
 fn editable(d: &Document, id: NodeId) -> bool {
-    d.ancestry(id).is_some_and(|a| a.iter().all(|i| d.node(*i).is_some_and(|n| n.visible && !n.locked && !n.is_template())))
+    d.ancestry(id).is_some_and(|a| a.iter().all(|i| d.node(*i).is_some_and(|n| n.visible && !n.locked)))
 }
 
 /// After the document of `st` was put back to an earlier one (Undo, Redo, a cancelled interaction
