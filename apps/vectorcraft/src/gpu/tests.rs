@@ -451,13 +451,25 @@ fn a_windows_gpu_renders_through_dx12_before_vulkan() {
 #[test]
 fn windows_never_loads_vulkan_drivers_unless_asked() {
     let all = Backends::all();
-    let start = backends(all, false);
+    let start = backends(all, false, false);
+    let fallback = backends(all, false, true);
     if cfg!(windows) {
-        assert_eq!(start, Backends::DX12 | Backends::GL, "#806");
+        assert_eq!(start, Backends::DX12, "#806, and no OpenGL unless needed (#4150)");
+        assert_eq!(fallback, Backends::DX12 | Backends::GL);
     } else {
-        assert_eq!(start, all);
+        assert_eq!((start, fallback), (all, all));
     }
-    assert_eq!(backends(Backends::VULKAN, true), Backends::VULKAN, "WGPU_BACKEND=vulkan still picks it");
+    assert_eq!(backends(Backends::VULKAN, true, false), Backends::VULKAN, "WGPU_BACKEND=vulkan still picks it");
+    assert_eq!(backends(Backends::GL, true, false), Backends::GL, "WGPU_BACKEND=gl still picks it");
+}
+
+#[test]
+fn windows_lists_opengl_once_a_start_leaves_an_adapter_out() {
+    let crashed = LeftOut { adapters: vec!["Dx12:8086:3ea0".into()], ..LeftOut::default() };
+    assert!(windows_opengl(&crashed), "#2243: the next start can fall back to OpenGL");
+    let listing = LeftOut { opengl_only: true, ..LeftOut::default() };
+    assert!(windows_opengl(&listing));
+    assert_eq!(listing.backends(backends(Backends::all(), false, true)), Backends::GL);
 }
 
 #[test]
@@ -548,11 +560,14 @@ fn a_normal_exit_or_another_failure_does_not_restart() {
     assert_eq!(finish(Err("a bug".into()), &startup), Err("a bug".into()));
 }
 
-/// A log folder of its own for each test.
-fn start_dir(tag: &str) -> std::path::PathBuf {
+/// A log folder of its own for each test, and the guard that keeps other tests from starting a
+/// program while it runs: the test releases the start file's lock and takes it again, and a child
+/// starting meanwhile would keep it held (`crate::no_spawns`).
+fn start_dir(tag: &str) -> (std::path::PathBuf, std::sync::RwLockReadGuard<'static, ()>) {
+    let spawns = crate::no_spawns();
     let d = std::env::temp_dir().join(format!("vectorcraft-gpu-start-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
-    d
+    (d, spawns)
 }
 
 /// What a start in `dir` leaves out; it then ends without crashing.
@@ -578,7 +593,7 @@ fn issue_2243() -> Vec<Candidate> {
 /// it, without a status-bar note.
 #[test]
 fn a_start_that_never_showed_a_frame_leaves_its_adapter_out_of_the_next() {
-    let dir = start_dir("crash");
+    let (dir, _spawns) = start_dir("crash");
     let c = issue_2243();
     let first = Startup::default();
     assert_eq!(first.track(&dir, None, false), LeftOut::default());
@@ -609,7 +624,7 @@ fn a_start_that_never_showed_a_frame_leaves_its_adapter_out_of_the_next() {
 /// an error, a restart on another adapter), leaves nothing out of the next.
 #[test]
 fn a_start_that_showed_its_first_frame_or_ended_is_cleared() {
-    let dir = start_dir("shown");
+    let (dir, _spawns) = start_dir("shown");
     let c = issue_2243();
     for end in [Startup::presented as fn(&Startup), Startup::ended] {
         let first = Startup::default();
@@ -633,7 +648,7 @@ fn a_start_that_showed_its_first_frame_or_ended_is_cleared() {
 /// macOS, where wgpu has none.
 #[test]
 fn a_crash_while_listing_lists_opengl_alone() {
-    let dir = start_dir("listing");
+    let (dir, _spawns) = start_dir("listing");
     let first = Startup::default();
     first.track(&dir, None, false);
     drop(first);
@@ -660,7 +675,7 @@ fn a_crash_while_listing_lists_opengl_alone() {
 /// start shows its first frame on the adapter that crashed, the adapter counts again.
 #[test]
 fn wgpu_backend_or_adapter_name_ignores_the_crashes() {
-    let dir = start_dir("explicit");
+    let (dir, _spawns) = start_dir("explicit");
     let c = issue_2243();
     let first = Startup::default();
     first.track(&dir, None, false);
@@ -681,7 +696,7 @@ fn wgpu_backend_or_adapter_name_ignores_the_crashes() {
 /// are ignored: the start goes on with nothing left out.
 #[test]
 fn a_damaged_or_unreadable_start_file_is_ignored() {
-    let dir = start_dir("damaged");
+    let (dir, _spawns) = start_dir("damaged");
     std::fs::create_dir_all(&dir).unwrap();
     let damaged: [&[u8]; 9] = [
         b"",

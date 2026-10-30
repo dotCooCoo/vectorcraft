@@ -26,7 +26,7 @@ pub use flavours::{ImageRead, read_image};
 pub(crate) use resources::SwatchChoices;
 pub use resources::{ArtResources, art_resources};
 
-use super::*;
+use super::{CommandSpec, Result, Session, always, bad, cmd, f64_or, has_doc, point_param, str_param};
 use crate::DocState;
 
 pub fn specs() -> Vec<CommandSpec> {

@@ -179,6 +179,21 @@ pub fn has_multi(s: &Session) -> std::result::Result<(), String> {
     let st = s.active().ok_or("no document open")?;
     if st.selection.len() < 2 { Err("select at least two objects".into()) } else { Ok(()) }
 }
+/// A document is open and it is not in isolation mode: Object › Lock's and Object › Hide's items,
+/// Unlock All and Show All are off in isolation mode. Pattern editing mode and opacity mask
+/// editing isolate their art too, and do not count as isolation mode here while their own layer
+/// is the isolated one. An object isolated inside them counts.
+pub fn outside_isolation(s: &Session) -> std::result::Result<(), String> {
+    let st = s.active().ok_or("no document open")?;
+    let editing_layer = |l| st.doc.pattern_edit.as_ref().is_some_and(|e| e.layer == l) || st.doc.mask_edit.as_ref().is_some_and(|e| e.layer == l);
+    if st.isolation.is_some_and(|l| !editing_layer(l)) { Err("exit isolation mode first".into()) } else { Ok(()) }
+}
+/// Objects are selected ([`has_selection`]) and the document is not in isolation mode
+/// ([`outside_isolation`]).
+pub fn has_selection_outside_isolation(s: &Session) -> std::result::Result<(), String> {
+    outside_isolation(s)?;
+    has_selection(s)
+}
 pub fn can_undo(s: &Session) -> std::result::Result<(), String> {
     s.active().filter(|d| !d.history.undo.is_empty()).map(|_| ()).ok_or_else(|| "nothing to undo".into())
 }
@@ -577,6 +592,15 @@ pub use flatten::FlattenOptions;
 
 /// A built-in or saved flattener preset ([`crate::Prefs::flattener_presets`]).
 pub use flatten::FlattenerPreset;
+
+/// A saved Image Trace preset ([`crate::Prefs::trace_presets`]), and a change to the saved presets.
+pub use buildcmds::{TracePreset, TracePresetChange};
+
+/// An Image Trace made off the UI thread, and what it traced (#3098).
+pub use buildcmds::{TraceRun, Traced};
+
+/// The saved Image Trace presets' revision and latest changes ([`crate::Session`] keeps them).
+pub(crate) use buildcmds::TracePresetChanges;
 
 /// The shapes a group selected alone gives the Pathfinder panel.
 pub use pathops::shape_count;

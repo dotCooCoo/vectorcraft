@@ -10,9 +10,9 @@ use serde_json::{Value, json};
 use vectorcraft_doc::{Document, ImageObject, Node, NodeId, NodeKind, TextObject};
 use vectorcraft_geom::{Affine, Point};
 
-use super::super::fileio;
 use super::super::place::pt_per_px;
-use super::*;
+use super::super::{fileio, links};
+use super::{Clipboard, CommandSpec, Result, Session, always, bad, cmd, f64_or, has_doc, looks_like_svg, point_param, str_param};
 
 /// Plain text: a type-only copy's text, else the SVG markup (Include SVG Code).
 pub const TEXT: &str = "text/plain";
@@ -178,7 +178,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Load Image into Clipboard",
             [],
             None,
-            "{dataBase64 (PNG, JPEG, GIF, WebP, TIFF or BMP bytes), mime?: the type the system clipboard gave (an image/… type; the format is read from the bytes), center?: [x, y]} replace the clipboard with the image, embedded at 100% of its physical size (its resolution, else 72 ppi), centred on `center` (default: the first artboard) → {count, width, height (pt), pixelWidth, pixelHeight}; then run edit.paste",
+            "{dataBase64 (PNG, JPEG, GIF, WebP, TIFF or BMP bytes), mime?: the type the system clipboard gave (an image/… type; the format is read from the bytes), center?: [x, y]} replace the clipboard with the image, embedded at 100% of its physical size (its resolution, else 72 ppi), centred on `center` (default: the first artboard) → {count, width, height (pt), pixelWidth, pixelHeight}; then run edit.paste. A PNG, JPEG, GIF or WebP image whose pixels can't be read (a file cut short) is an error",
             has_doc,
             import_image
         ),
@@ -420,7 +420,9 @@ pub struct ImageRead(fileio::RasterImage);
 /// Read `bytes` as `clipboard.importImage` reads its `dataBase64`, on any thread: the formats it
 /// stores as PNG are decoded and encoded here.
 pub fn read_image(bytes: &[u8]) -> Result<ImageRead> {
-    fileio::raster_image(bytes).map(ImageRead).map_err(|e| bad("clipboard.importImage", e.to_string()))
+    let mut img = fileio::raster_image(bytes).map_err(|e| bad("clipboard.importImage", e.to_string()))?;
+    img.blob = links::readable_and_kept(img.blob, links::kept_unread(bytes), false).map_err(|e| bad("clipboard.importImage", e.to_string()))?;
+    Ok(ImageRead(img))
 }
 
 impl Session {
