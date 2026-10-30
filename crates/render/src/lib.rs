@@ -6,6 +6,7 @@
 //! gradients, images and text (via `vectorcraft-text` glyph outlines).
 #![forbid(unsafe_code)]
 
+pub mod addons;
 mod brush_fx;
 mod changed;
 mod dither;

@@ -576,6 +576,57 @@ fn an_ai_file_whose_pdf_part_draws_nothing_opens_from_its_editing_data() {
     assert_ne!(names(&s.doc().unwrap().doc.layers), ["Art", "Hidden"]);
 }
 
+/// A page that draws nothing only because what it holds couldn't be read (an image that can't be
+/// decoded) isn't an empty page: its notes stay, and the editing data isn't taken in its place
+/// unchecked.
+#[test]
+fn a_page_whose_content_was_skipped_is_not_taken_for_an_empty_one() {
+    let broken = "q 100 0 0 50 0 0 cm BI /W 2 /H 2 /CS /RGB /BPC 8 /F /DCT ID notajpeg EI Q";
+    let mut s = Session::new();
+    let r = open(&mut s, "broken.ai", &ai::ai(&compressed(&ai::sample_data()), broken), json!({})).unwrap();
+    let warnings = r["warnings"].to_string();
+    assert_ne!(r["warnings"], json!([]), "the skipped image is told: {r}");
+    assert!(!warnings.contains("saved without PDF compatibility"), "{r}");
+}
+
+/// Type asked for as outlines on a page that draws nothing: the editing data's type, outlined (the
+/// page has none to give).
+#[test]
+fn an_empty_page_with_type_as_outlines_outlines_the_editing_datas_type() {
+    // One left-aligned story, "Hi", 14 pt Helvetica, anchored at the canvas centre (the template
+    // box's centre), as the editing data's text document gives it.
+    let story = "<< /0 << /0 (Hi\r) /5 << /0 [ << /0 << /0 << /0 () /5 << /0 0 >> /6 0 >> >> /1 3 >> ] >> \
+                 /6 << /0 [ << /0 << /0 << /0 () /5 0 /6 << /0 0 /1 14.0 /53 << /99 /CAITextPaint /0 << /0 2 /1 [ 1.0 0.0 1.0 0.0 0.0 ] >> >> >> >> >> /1 3 >> ] >> >> \
+                 /1 << /0 [ << /0 0 >> ] /2 [ << /99 /PC /6 [ << /99 /F /0 << /0 [ 8191.5 8191.5 ] >> /6 [ << /99 /R /6 [ << /99 /R /6 [ << /99 /L /6 [ \
+                 << /99 /S /0 << /0 [ 0.0 0.0 ] >> /15 << /0 3 >> >> ] >> ] >> ] >> ] >> ] >> ] >> >>";
+    let document = format!(
+        "/0 << /1 << /0 [ << /0 << /0 << /0 (Helvetica) >> >> >> ] >> /8 << /0 [ << /0 << /0 [ 0 0 ] /2 << /2 [ 1 0 0 1 0 0 ] >> >> >> ] >> >>\n/1 << /1 [ {story} ] /2 << /1 12.0 >> >>\n"
+    );
+    let lines: Vec<String> = ascii85(document.as_bytes()).as_bytes().chunks(60).map(|c| format!("%{}", String::from_utf8_lossy(c))).collect();
+    let text = "/AI11Text :\n0 /FreeUndo ,\n0 /FrameIndex ,\n0 /StoryIndex ,\n2 /TextAntialiasing ,\n;\n";
+    let data = format!(
+        "%!PS-Adobe-3.0 \n%%BoundingBox: 0 0 100 100\n%%HiResBoundingBox: 0 0 100 100\n%AI3_Cropmarks: 0 0 100 100\n%AI3_TemplateBox: 50 50 50 50\n\
+         %AI5_NumLayers: 1\n{}%AI11_BeginTextDocument\n/AI11TextDocument : /ASCII85Decode ,\n{}\n%AI11_EndTextDocument\n%%Trailer\n",
+        ai::layer("Art", text),
+        lines.join("\n")
+    );
+    let file = ai::ai(&compressed(data.as_bytes()), "");
+    let texts = |s: &Session| {
+        let mut n = 0;
+        s.doc().unwrap().doc.walk(|c| n += usize::from(matches!(c.kind, NodeKind::Text(_))));
+        n
+    };
+    let mut s = Session::new();
+    let r = open(&mut s, "typed.ai", &file, json!({})).unwrap();
+    assert_eq!(texts(&s), 1, "by default the editing data's type is type: {r}");
+    let r = open(&mut s, "typed.ai", &file, json!({"textAs": "outlines"})).unwrap();
+    assert_eq!(texts(&s), 0, "no type left: {r}");
+    let mut paths = 0;
+    s.doc().unwrap().doc.walk(|c| paths += usize::from(matches!(c.kind, NodeKind::Path { .. } | NodeKind::Compound { .. })));
+    assert!(paths > 0, "the outlines are there: {r}");
+    assert_eq!(names(&s.doc().unwrap().doc.layers), ["Art"], "the editing data's layers");
+}
+
 #[test]
 fn editing_data_false_opens_only_what_the_page_prints() {
     let mut s = Session::new();

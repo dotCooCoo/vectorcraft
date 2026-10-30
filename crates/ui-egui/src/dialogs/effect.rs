@@ -163,6 +163,10 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
         Some(plugin) => form::schema_fields(app, ui, d, plugin.manifest()),
         // The Color Effects add-on's take the plain form of their parameters.
         None if vectorcraft_effects::is_adjustment(&id) && !vectorcraft_effects::addons::color::is_color_effect(&id) => adjust_fields(ui, d),
+        None if id == vectorcraft_effects::addons::halftone::HALFTONE => {
+            super::halftone::screen_fields(ui, d);
+            values_changed(d)
+        }
         None if id == GLASS => glass_fields(app, ui, d, GLASS),
         None if id == TEXTURIZER => glass_fields(app, ui, d, TEXTURIZER),
         None if id == TRANSFORM => transform_fields(ui, d, app.session.general_unit()),
