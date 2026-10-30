@@ -236,13 +236,18 @@ pub fn panel_menu_items(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) -> bool
     true
 }
 
-/// The ≡ panel-menu button drawn into `rect` (the right end of a panel's title/tab strip).
-pub fn panel_menu(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, rect: Rect) {
+/// The ≡ button drawn into `rect` that opens a panel menu.
+fn menu_button(ui: &mut Ui, id: &str, rect: Rect) -> egui::Response {
     let t = Tokens::get(ui.ctx());
     let resp = ui.interact(rect, ui.scope_id().with(("panel-menu", id)), Sense::click());
     icons::paint(ui, "menu", rect.shrink(1.0), if resp.hovered() { t.text_strong } else { t.text_dim });
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), tl!("Panel menu")));
-    let resp = resp.on_hover_text(tl!("Panel menu"));
+    resp.on_hover_text(tl!("Panel menu"))
+}
+
+/// The ≡ panel-menu button drawn into `rect` (the right end of a panel's title/tab strip).
+pub fn panel_menu(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, rect: Rect) {
+    let resp = menu_button(ui, id, rect);
     egui::Popup::menu(&resp).show(|ui| {
         crate::widgets::menu_scroll(ui, |ui| {
             ui.set_min_width(220.0);
@@ -430,6 +435,18 @@ fn paint_popover(app: &mut VectorcraftApp, ui: &mut Ui) {
             if crate::widgets::icon_button(ui, icon, tip, mixer == m, 22.0).clicked() {
                 set_pstate(ui.ctx(), MIXER, m);
             }
+        }
+        // The mixer is the Color panel, so its menu comes along: the color modes (Grayscale,
+        // RGB, HSB, CMYK, Web Safe RGB), Invert, Complement and the rest (#4249).
+        if mixer {
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                let (rect, _) = ui.allocate_exact_size(vec2(18.0, 18.0), Sense::hover());
+                let resp = menu_button(ui, "color-mixer", rect);
+                egui::Popup::menu(&resp).show(|ui| {
+                    ui.set_min_width(200.0);
+                    color::menu(app, ui);
+                });
+            });
         }
     });
     crate::widgets::divider(ui);

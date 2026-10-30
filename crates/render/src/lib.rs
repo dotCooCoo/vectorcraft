@@ -40,7 +40,7 @@ use lru::FrameCache;
 pub use brush_fx::instance_art;
 pub use changed::{Changed, changed, placed_area, view_pixels};
 pub use effects::stroke::width_outline;
-pub use images::{IMAGE_CACHE_MAX, image_cache_bytes, newly_undecodable, set_image_cache_budget};
+pub use images::{IMAGE_CACHE_MAX, image_cache_bytes, installed_memory, newly_undecodable, set_image_cache_budget};
 pub use live::expand_live;
 pub use pattern::render_pattern_swatch;
 pub use vectorcraft_effects as effects;

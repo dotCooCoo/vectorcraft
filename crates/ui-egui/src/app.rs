@@ -298,6 +298,7 @@ impl VectorcraftApp {
             || !self.opening.pending.is_empty()
             || !self.plugin_runs.running.is_empty()
             || !self.placing.pending.is_empty()
+            || !self.trace_runs.running.is_empty()
         {
             // Keep the status bar's progress moving and pick the result up when it arrives.
             ctx.request_repaint_after(std::time::Duration::from_millis(100));

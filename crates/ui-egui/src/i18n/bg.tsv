@@ -550,6 +550,7 @@ font-technology	Variable	Променливи
 	Complexity:	Сложност:
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	Композитните цветове се конвертират в него; сепарациите се сепарират с него, когато е CMYK профил.
 	Compound Path	Съставен път
+	Compound Shape	Съставна фигура
 	Compress (RLE)	Компресиране (RLE)
 	Compress text and line art	Компресиране на текст и линеарна графика
 	Compression	Компресия
@@ -974,7 +975,6 @@ font-technology	Variable	Променливи
 	Exit Isolation Mode	Излизане от режим на изолация
 	Expand	Разширяване
 	Expand Appearance	Разширяване на външния вид
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Разширяването се прилага към съставни фигури (Alt-клик върху режим на фигура) — в план-графика
 	Expand Brush Strokes	Разширяване на щрихи на четка
 	Expand Compound Shape	Разширяване на съставна фигура
 	Expand Gradient Mesh	Разширяване на градиентна мрежа
@@ -1860,6 +1860,7 @@ font-technology	Variable	Променливи
 	Move in Perspective	Преместване в перспектива
 	Move Locked and Hidden Artwork with Artboard	Преместване на заключени и скрити обекти с работната област
 	Move Mesh Point	Преместване на точка от мрежата
+	Move Mesh Points	Преместване на точки от мрежата
 	Move Plane	Преместване на равнина
 	Move Plane to Match Object	Преместване на равнината според обекта
 	Move Rows	Преместване на редове
@@ -1963,6 +1964,7 @@ font-technology	Variable	Променливи
 	Brush Art	Графика на четка
 	New Calligraphic Brush	Нова калиграфска четка
 	New Character Style	Нов стил на знак
+	New Character Style…	Нов стил на знак…
 	New Color Group	Нова цветова група
 	New Color Group…	Нова цветова група…
 	New Document Presets	Предварителни настройки за нов документ
@@ -1978,6 +1980,7 @@ font-technology	Variable	Променливи
 	New Opacity Masks Are Clipping	Новите маски за непрозрачност са изрязващи
 	New Opacity Masks Are Inverted	Новите маски за непрозрачност са инвертирани
 	New Paragraph Style	Нов стил на абзац
+	New Paragraph Style…	Нов стил на абзац…
 	New Pattern Brush from Selection	Нова щампова четка от селекцията
 	New PDF Preset	Нова предварителна настройка за PDF
 	New Print Preset	Нова предварителна настройка за печат
@@ -1991,6 +1994,8 @@ font-technology	Variable	Променливи
 	New View	Нов изглед
 	New View…	Нов изглед…
 	New Window	Нов прозорец
+	Next Document	Следващ документ
+	Previous Document	Предишен документ
 	New Without Dialog	Нов без диалогов прозорец
 	New Workspace	Ново работно пространство
 	New Workspace…	Ново работно пространство…
@@ -2578,6 +2583,7 @@ font-technology	Variable	Променливи
 	Repeat Tab	Повтаряне на табулатора
 	Repeat {name}	Повтаряне на {name}
 	Replace	Замяна
+	Replace:	Замяна:
 	Replace Font	Замяна на шрифт
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Заменете го с друг файл или го игнорирайте: неговите изображения ще продължат да показват записания с документа преглед.
 	Replace Spine	Замяна на оста
@@ -2900,6 +2906,7 @@ font-technology	Variable	Променливи
 	Shape Builder Regions	Области на създателя на фигури
 	Shape Builder Tool	Инструмент „Създател на фигури“
 	Shape Effects	Ефекти за фигури
+	Shape Mode	Режим на фигура
 	Shape Modes:	Режими на фигури:
 	Shape Properties:	Свойства на фигурата:
 	Shaper Tool	Инструмент „Shaper“
@@ -3001,6 +3008,7 @@ font-technology	Variable	Променливи
 	Single Quotes:	Единични кавички:
 	Single Right Quotation Mark	Дясна единична кавичка
 	Single-line Composer	Ред по ред композитор
+	Toggle Line Composer	Превключване на композитора на редове
 	Sixth Space	Шесто разстояние
 	Size	Размер
 	Size Tile to Art	Оразмеряване на плочката според обектите
@@ -5568,3 +5576,19 @@ axis	Y Axis	Y ос
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	Първо разширете външния вид (Обект › Разширяване на външния вид)
 	Live preview	Преглед на живо
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Точков текст
+	Area Text	Текст в зона
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Показване на опциите за прилепване към глиф
+	Hide Snap to Glyph Options	Скриване на опциите за прилепване към глиф
+	Snap to Glyph Options	Опции за прилепване към глиф
+	x-height	Височина на x
+	Glyph Bounds	Граници на глифа
+	Proximity Guides	Водачи за близост
+	Angular Guides	Ъглови водачи
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Усредняване и свързване…
+	Average & Join	Усредняване и свързване
+anchor	Points:	Точки:
+@msg	select two open path ends, or two open paths, to average and join	изберете два края на отворени пътища или два отворени пътя за усредняване и свързване

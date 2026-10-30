@@ -313,8 +313,11 @@ fn blob_brush_sends_keep_selected_and_merge_only_with_selection() {
             "{acts:?}"
         );
     }
-    // The Eraser keeps Size, Angle and Roundness: a round tip by default.
-    assert_eq!(GestureTool::new("eraser").options(), json!({"size": 10.0, "angle": 0.0, "roundness": 100.0}));
+    // The Eraser keeps Size (Fixed by default), Angle and Roundness: a round tip by default.
+    assert_eq!(
+        GestureTool::new("eraser").options(),
+        json!({"size": 10.0, "sizeMode": "fixed", "sizeVariation": 0.0, "angle": 0.0, "roundness": 100.0})
+    );
 }
 
 /// The Blob Brush has a Fidelity, 1.5 pt by default and 0.01 to 100 pt, and its stroke sends it.

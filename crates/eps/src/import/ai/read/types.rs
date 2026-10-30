@@ -18,6 +18,8 @@ pub(super) const MAX_POINTS: usize = 4_000_000;
 
 /// Largest image read (pixels).
 pub(super) const MAX_PIXELS: u64 = 1 << 25;
+/// Most placed files whose other placement ([`super::Structure::placed_elsewhere`]) is kept.
+pub(super) const MAX_PLACED_ELSEWHERE: usize = 4096;
 
 /// The note for an image past [`MAX_PIXELS`]: the file then opens from its PDF part, which reads
 /// larger images (#1479).

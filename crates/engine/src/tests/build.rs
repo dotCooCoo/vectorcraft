@@ -2768,6 +2768,21 @@ fn a_trace_run_hands_its_trace_to_the_command() {
     assert!((bb.center().x - 160.0).abs() < 1.5, "traced where the image is now: {bb:?}");
 }
 
+/// A Document Library trace made away from its command no longer applies once the library's
+/// colours change: the settings' JSON leaves them out (#4605 review).
+#[test]
+fn a_trace_run_needs_the_library_colours_it_traced_with() {
+    let mut s = session();
+    image_doc(&mut s);
+    let p = json!({"preset": "6 Colors", "params": {"palette": "documentLibrary"}});
+    let run = cmd::TraceRun::prepare(&s, "imageTrace.make", &p).unwrap();
+    assert!(run.current(&s));
+    let swatch = |w: &&vectorcraft_color::Swatch| matches!(w.paint, Paint::Solid { .. }) && !w.name.starts_with('[');
+    let name = s.doc().unwrap().doc.swatches_iter().find(swatch).map(|w| w.name.clone()).unwrap();
+    s.execute("swatch.edit", &json!({"name": name, "color": "#123456"})).unwrap();
+    assert!(!run.current(&s), "{name} changed");
+}
+
 /// Shapes: the disc of the test image comes out as a live ellipse where the image lies, the same
 /// circle as its traced path; without the option it is a plain path.
 #[test]

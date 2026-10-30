@@ -543,6 +543,7 @@ font-technology	Variable	Variabel
 	Complexity:	Komplexität:
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	Composite-Farben werden in dieses Profil konvertiert; Separationen werden damit erzeugt, wenn es ein CMYK-Profil ist.
 	Compound Path	Zusammengesetzter Pfad
+	Compound Shape	Zusammengesetzte Form
 	Compress (RLE)	Komprimieren (RLE)
 	Compress text and line art	Text und Strichgrafiken komprimieren
 	Compression	Komprimierung
@@ -968,7 +969,6 @@ font-technology	Variable	Variabel
 	Exit Isolation Mode	Isolationsmodus beenden
 	Expand	Umwandeln
 	Expand Appearance	Aussehen umwandeln
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	„Umwandeln“ gilt für zusammengesetzte Formen (Alt-Klick auf einen Formmodus) – geplant
 	Expand Brush Strokes	Pinselkonturen umwandeln
 	Expand Compound Shape	Zusammengesetzte Form umwandeln
 	Expand Gradient Mesh	Verlaufsgitter umwandeln
@@ -1915,6 +1915,7 @@ file-filter	Templates	Vorlagen
 	Move in Perspective	In Perspektive verschieben
 	Move Locked and Hidden Artwork with Artboard	Gesperrte und ausgeblendete Grafik mit Zeichenfläche verschieben
 	Move Mesh Point	Gitterpunkt verschieben
+	Move Mesh Points	Gitterpunkte verschieben
 	Move Plane	Perspektivebene verschieben
 	Move Plane to Match Object	Perspektivebene an Objekt ausrichten
 	Move Rows	Zeilen verschieben
@@ -1976,6 +1977,7 @@ file-filter	Templates	Vorlagen
 	Brush Art	Pinselgrafik
 	New Calligraphic Brush	Neuer Kalligrafiepinsel
 	New Character Style	Neues Zeichenformat
+	New Character Style…	Neues Zeichenformat…
 	New Color Group	Neue Farbgruppe
 	New Color Group…	Neue Farbgruppe…
 	New Document Presets	Vorgaben für neue Dokumente
@@ -1991,6 +1993,7 @@ file-filter	Templates	Vorlagen
 	New Opacity Masks Are Clipping	Neue Deckkraftmasken sind Schnittmasken
 	New Opacity Masks Are Inverted	Neue Deckkraftmasken sind invertiert
 	New Paragraph Style	Neues Absatzformat
+	New Paragraph Style…	Neues Absatzformat…
 	New Pattern Brush from Selection	Neuer Musterpinsel aus Auswahl
 	New PDF Preset	Neue PDF-Vorgabe
 	New Print Preset	Neue Druckvorgabe
@@ -2004,6 +2007,8 @@ file-filter	Templates	Vorlagen
 	New View	Neue Ansicht
 	New View…	Neue Ansicht…
 	New Window	Neues Fenster
+	Next Document	Nächstes Dokument
+	Previous Document	Vorheriges Dokument
 	New Without Dialog	Neu ohne Dialogfeld
 	New Workspace	Neuer Arbeitsbereich
 	New Workspace…	Neuer Arbeitsbereich…
@@ -2598,6 +2603,7 @@ mark-style	Japanese	Japanisch
 	Repeat Tab	Tabulator wiederholen
 	Repeat {name}	{name} wiederholen
 	Replace	Ersetzen
+	Replace:	Ersetzen:
 	Replace Font	Schrift ersetzen
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Ersetzen Sie sie durch eine andere Datei oder ignorieren Sie sie: Ihre Bilder zeigen weiterhin die mit dem Dokument gespeicherte Vorschau.
 	Replace Spine	Achse ersetzen
@@ -2935,6 +2941,7 @@ mark-style	Japanese	Japanisch
 	Shape Builder Regions	Formerstellungsbereiche
 	Shape Builder Tool	Formerstellungs-Werkzeug
 	Shape Effects	Formeffekte
+	Shape Mode	Formmodus
 	Shape Modes:	Formmodi:
 	Shape Properties:	Formeigenschaften:
 	Shaper Tool	Shaper-Werkzeug
@@ -3038,6 +3045,7 @@ mark-style	Japanese	Japanisch
 	Single Quotes:	Einfache Anführungszeichen:
 	Single Right Quotation Mark	Einfaches schließendes Anführungszeichen
 	Single-line Composer	Einzeilen-Setzer
+	Toggle Line Composer	Zeilensetzer umschalten
 	Sixth Space	Sechstelgeviert-Leerzeichen
 	Size	Größe
 	Size Tile to Art	Kachelgröße an Grafik anpassen
@@ -3851,8 +3859,10 @@ theme	Appearance	Erscheinungsbild
 @msg	`freeform.points` must be an array	`freeform.points` muss ein Array sein
 @msg	`freeform.lines` must be an array	`freeform.lines` muss ein Array sein
 @msg	`gradient` must be an object	`gradient` muss ein Objekt sein
+@msg	`groupColors` must be an array	`groupColors` muss ein Array sein
 @msg	`library` is a library id or name (see {list})	`library` ist die ID oder der Name einer Bibliothek (siehe {list})
 @msg	`mode` applies to freeform gradients	`mode` gilt für Freiformverläufe
+@msg	`preserve` must be an object	`preserve` muss ein Objekt sein
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` muss 1, 3 oder 5 sein
 @msg	`stops` must be an array	`stops` muss ein Array sein
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` muss ein Objekt mit SVG-Optionen sein (siehe document.formats)
@@ -3887,6 +3897,7 @@ theme	Appearance	Erscheinungsbild
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` ist eine Prozessfarbe: Tonwerte gelten für globale Farben und Volltonfarben
 @msg	`{name}` is no recovery entry name	`{name}` ist kein Name eines Wiederherstellungseintrags
 @msg	`{name}` isn't a colour swatch	`{name}` ist kein Farbfeld mit einer Farbe
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	eine Prozessfarbe kann ein Graustufenbild mit Transparenz nicht einfärben: Verwenden Sie eine Volltonfarbe, Schwarz oder Weiß
 @msg	`{path}` must be a bool or an object of bools	`{path}` muss ein boolescher Wert oder ein Objekt mit booleschen Werten sein
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` ist keine Farbe (#rrggbb oder ein Vorgabename)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` ist kein Verflüssigen-Werkzeug
@@ -4607,6 +4618,9 @@ theme	Appearance	Erscheinungsbild
 @msg	the PSD file's header is damaged	der Header der PSD-Datei ist beschädigt
 @msg	the PSD file's image data can't be read: {e}	die Bilddaten der PSD-Datei können nicht gelesen werden: {e}
 @msg	the PSD file's image data uses an unknown compression ({m})	die Bilddaten der PSD-Datei verwenden eine unbekannte Komprimierung ({m})
+@msg	the PCX file is cut short	die PCX-Datei ist unvollständig
+@msg	the PCX file's header is damaged	der Dateikopf der PCX-Datei ist beschädigt
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	PCX-Dateien mit {bits}-Bit-Pixeln in {planes} Ebenen können nicht gelesen werden
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	das PSD-Bild ist zu groß zum Lesen ({_1} × {_2} Pixel)
 @msg	zipped 32-bit PSD image data with prediction can't be read	ZIP-komprimierte 32-Bit-PSD-Bilddaten mit Vorhersage können nicht gelesen werden
 @msg	{depth}-bit PSD files in this colour mode can't be read	{depth}-Bit-PSD-Dateien in diesem Farbmodus können nicht gelesen werden
@@ -5254,3 +5268,19 @@ axis	Y Axis	Y-Achse
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	Wandeln Sie zuerst das Aussehen um (Objekt › Aussehen umwandeln)
 	Live preview	Live-Vorschau
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Punkttext
+	Area Text	Flächentext
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Optionen für „An Glyphe ausrichten“ einblenden
+	Hide Snap to Glyph Options	Optionen für „An Glyphe ausrichten“ ausblenden
+	Snap to Glyph Options	Optionen für „An Glyphe ausrichten“
+	x-height	x-Höhe
+	Glyph Bounds	Glyphenbegrenzung
+	Proximity Guides	Näherungshilfslinien
+	Angular Guides	Winkelhilfslinien
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Durchschnitt berechnen und zusammenfügen…
+	Average & Join	Durchschnitt berechnen und zusammenfügen
+anchor	Points:	Punkte:
+@msg	select two open path ends, or two open paths, to average and join	wählen Sie zwei Enden offener Pfade oder zwei offene Pfade aus, um sie zu mitteln und zusammenzufügen

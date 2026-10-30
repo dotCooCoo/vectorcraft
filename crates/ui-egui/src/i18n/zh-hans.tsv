@@ -511,6 +511,7 @@
 	Complexity:	复杂度：
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	复合颜色会转换为此配置文件；其为 CMYK 配置文件时，分色也会使用它。
 	Compound Path	复合路径
+	Compound Shape	复合形状
 	Compress (RLE)	压缩 (RLE)
 	Compress text and line art	压缩文字与线条图
 	Compression	压缩
@@ -933,7 +934,6 @@
 	Exit Isolation Mode	退出隔离模式
 	Expand	扩展
 	Expand Appearance	扩展外观
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	扩展仅适用于复合形状 (Alt+单击形状模式)——已在路线图中
 	Expand Brush Strokes	扩展画笔描边
 	Expand Compound Shape	扩展复合形状
 	Expand Gradient Mesh	扩展渐变网格
@@ -1811,6 +1811,7 @@ file-filter	Templates	模板
 	Move in Perspective	在透视中移动
 	Move Locked and Hidden Artwork with Artboard	随画板移动锁定和隐藏图稿
 	Move Mesh Point	移动网格点
+	Move Mesh Points	移动网格点
 	Move Plane	移动平面
 	Move Plane to Match Object	移动平面以符合对象
 	Move Slices	移动切片
@@ -1918,6 +1919,7 @@ file-filter	Templates	模板
 	Brush Art	画笔图稿
 	New Calligraphic Brush	新建书法画笔
 	New Character Style	新建字符样式
+	New Character Style…	新建字符样式…
 	New Color Group	新建颜色组
 	New Color Group…	新建颜色组…
 	New Document Presets	新建文档预设
@@ -1931,6 +1933,7 @@ file-filter	Templates	模板
 	New Opacity Masks Are Clipping	新建不透明度蒙版为剪切
 	New Opacity Masks Are Inverted	新建不透明度蒙版为反相
 	New Paragraph Style	新建段落样式
+	New Paragraph Style…	新建段落样式…
 	New Pattern Brush from Selection	从选区新建图案画笔
 	New PDF Preset	新建 PDF 预设
 	New Print Preset	新建打印预设
@@ -1944,6 +1947,8 @@ file-filter	Templates	模板
 	New View	新建视图
 	New View…	新建视图…
 	New Window	新建窗口
+	Next Document	下一个文档
+	Previous Document	上一个文档
 	New Without Dialog	无对话框新建
 	New Workspace	新建工作区
 	New Workspace…	新建工作区…
@@ -2536,6 +2541,7 @@ font-script	Japanese	汉字
 	Repeat Tab	重复制表位
 	Repeat {name}	重复 {name}
 	Replace	替换
+	Replace:	替换：
 	Replace Font	替换字体
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	将其替换为其他文件，或忽略：其图像继续显示随文档保存的预览。
 	Replace Spine	替换脊线
@@ -2837,6 +2843,7 @@ font-script	Japanese	汉字
 	Shape Builder Regions	形状生成器区域
 	Shape Builder Tool	形状生成器工具
 	Shape Effects	形状效果
+	Shape Mode	形状模式
 	Shape Modes:	形状模式：
 	Shape Properties:	形状属性：
 	Shaper Tool	Shaper 工具
@@ -2938,6 +2945,7 @@ font-script	Japanese	汉字
 	Single Quotes:	单引号：
 	Single Right Quotation Mark	右单引号
 	Single-line Composer	单行排版器
+	Toggle Line Composer	切换行排版器
 	Sixth Space	六分之一空格
 	Size	大小
 	Size Tile to Art	使拼贴适合图稿
@@ -3814,7 +3822,9 @@ imageTrace	Outline	轮廓
 @msg	unknown freeform mode `{m}` (points, lines)	未知的任意形状模式 `{m}` (points、lines)
 @msg	`aspect` must be a number (%)	`aspect` 必须是数字 (%)
 @msg	`gradient` must be an object	`gradient` 必须是对象
+@msg	`groupColors` must be an array	`groupColors` 必须是数组
 @msg	`mode` applies to freeform gradients	`mode` 仅适用于任意形状渐变
+@msg	`preserve` must be an object	`preserve` 必须是对象
 @msg	`stops` must be an array	`stops` 必须是数组
 @msg	`{k}` must be [x, y]	`{k}` 必须是 [x, y]
 @msg	a gradient needs at least two stops	渐变至少需要两个色标
@@ -3875,6 +3885,7 @@ imageTrace	Outline	轮廓
 @msg	the object already has an opacity mask	该对象已有不透明度蒙版
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` 是印刷色：色调仅适用于全局色和专色
 @msg	`{name}` isn't a colour swatch	`{name}` 不是颜色色板
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	印刷色无法为带透明度的灰度图像上色：请使用专色、黑色或白色
 @msg	a document needs at least one artboard	文档至少需要一个画板
 @msg	empty path	路径为空
 @msg	join needs open paths	连接需要开放路径
@@ -4384,6 +4395,9 @@ imageTrace	Outline	轮廓
 @msg	not a PSD file	不是 PSD 文件
 @msg	the PSD file has an unknown colour mode ({m})	PSD 文件的颜色模式未知 ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	PSD 文件的图像数据使用了未知的压缩方式 ({m})
+@msg	the PCX file is cut short	PCX 文件不完整
+@msg	the PCX file's header is damaged	PCX 文件头已损坏
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	无法读取 {planes} 个平面中含 {bits} 位像素的 PCX 文件
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	PSD 图像过大，无法读取 ({_1} × {_2} 像素)
 @msg	zipped 32-bit PSD image data with prediction can't be read	无法读取带预测的 ZIP 压缩 32 位 PSD 图像数据
 @msg	{depth}-bit PSD files in this colour mode can't be read	无法读取此颜色模式下的 {depth} 位 PSD 文件
@@ -5511,3 +5525,19 @@ axis	Y Axis	Y 轴
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	请先扩展外观（对象 › 扩展外观）
 	Live preview	实时预览
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	点文字
+	Area Text	区域文字
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	显示靠齐字符选项
+	Hide Snap to Glyph Options	隐藏靠齐字符选项
+	Snap to Glyph Options	靠齐字符选项
+	x-height	x 高度
+	Glyph Bounds	字形边界
+	Proximity Guides	邻近参考线
+	Angular Guides	角度参考线
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	平均并连接…
+	Average & Join	平均并连接
+anchor	Points:	点：
+@msg	select two open path ends, or two open paths, to average and join	请选择两个开放路径的端点或两条开放路径以进行平均并连接

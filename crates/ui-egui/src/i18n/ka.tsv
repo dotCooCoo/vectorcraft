@@ -220,6 +220,7 @@
 	Clipping Mask	მომჭრელი ნიღაბი
 	Edit Clipping Path	მომჭრელი ტრაექტორიის რედაქტირება
 	Compound Path	შედგენილი ტრაექტორია
+	Compound Shape	შედგენილი ფიგურა
 	Artboards	სამუშაო დაფები
 	Convert to Artboards	სამუშაო დაფებად გარდაქმნა
 	Rearrange All Artboards…	ყველა სამუშაო დაფის გადალაგება…
@@ -530,6 +531,8 @@
 	Saved View 25	შენახული ხედი 25
 	Window	ფანჯარა
 	New Window	ახალი ფანჯარა
+	Next Document	შემდეგი დოკუმენტი
+	Previous Document	წინა დოკუმენტი
 	Cascade	კასკადად
 	Tile	ფილებად
 	Float in Window	ცალკე ფანჯარაში გამოტანა
@@ -1538,13 +1541,13 @@ lighting	Light	სინათლე
 	Roman Hanging Punctuation	ლათინური გამოწეული პუნქტუაცია
 	Select a text object to edit its paragraph attributes.	აბზაცის ატრიბუტების რედაქტირებისთვის მონიშნეთ ტექსტური ობიექტი.
 	Single-line Composer	სტრიქონის მიხედვით აწყობა
+	Toggle Line Composer	აწყობის რეჟიმის გადართვა
 	Space After Paragraph	ინტერვალი აბზაცის შემდეგ
 	Space Before Paragraph	ინტერვალი აბზაცის წინ
 	Top-to-Top Leading	სტრიქონთა დაშორება ზედა კიდიდან ზედა კიდემდე
 	Bottom-to-Bottom Leading	სტრიქონთა დაშორება ქვედა კიდიდან ქვედა კიდემდე
 	Burasagari	Burasagari
 	Force	იძულებით
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	გაშლა შედგენილ ფიგურებზე მოქმედებს (Alt-დაწკაპუნება ფიგურის რეჟიმზე) — სამომავლო გეგმაშია
 	Expand Compound Shape	შედგენილი ფიგურის გაშლა
 	Make Compound Shape	შედგენილი ფიგურის შექმნა
 	Pathfinder Options…	ტრაექტორიების ოპერაციების პარამეტრები…
@@ -2882,6 +2885,7 @@ theme	Appearance	იერსახე
 	Make Envelope	გარსის შექმნა
 	Move Envelope Mesh Point	გარსის ბადის წერტილის გადაადგილება
 	Move Mesh Point	ბადის წერტილის გადაადგილება
+	Move Mesh Points	ბადის წერტილების გადაადგილება
 	Move Spine Point	ხერხემლის წერტილის გადაადგილება
 	Reshape Spine Segment	ხერხემლის სეგმენტის ფორმის შეცვლა
 	Reset with Mesh	ბადით ჩამოყრა
@@ -3318,6 +3322,7 @@ axis	Both	ორივე
 	Set Text	ტექსტის დაყენება
 	Insert Character	სიმბოლოს ჩასმა
 	Replace	ჩანაცვლება
+	Replace:	ჩანაცვლება:
 	Type on a Path Options	ტრაექტორიაზე ტექსტის პარამეტრები
 	Highlight Variable	ცვლადის გამოკვეთა
 	New Variable	ახალი ცვლადი
@@ -3504,6 +3509,7 @@ font-technology	Variable	ცვლადი
 	Default Fill and Stroke (D)	ნაგულისხმევი შევსება და კონტური (D)
 	Fill (X), double-click for the Color Picker	შევსება (X), ორმაგი დაწკაპუნება — ფერის ამრჩევი
 	Opacity:	გაუმჭვირვალობა:
+	Shape Mode	ფიგურის რეჟიმი
 	Shape Modes:	ფიგურის რეჟიმები:
 	Stroke (X), double-click for the Color Picker	კონტური (X), ორმაგი დაწკაპუნება — ფერის ამრჩევი
 	Stroke:	კონტური:
@@ -3551,7 +3557,9 @@ font-technology	Variable	ცვლადი
 	Mojikumi	Mojikumi
 	N pt per	N pt თითოზე
 	New Character Style	სიმბოლოს ახალი სტილი
+	New Character Style…	სიმბოლოს ახალი სტილი…
 	New Paragraph Style	აბზაცის ახალი სტილი
+	New Paragraph Style…	აბზაცის ახალი სტილი…
 	Paragraph Style Options	აბზაცის სტილის პარამეტრები
 	Redefine Character Style	სიმბოლოს სტილის ხელახლა განსაზღვრა
 	Redefine Paragraph Style	აბზაცის სტილის ხელახლა განსაზღვრა
@@ -3724,8 +3732,10 @@ font-technology	Variable	ცვლადი
 @msg	`freeform.points` must be an array	`freeform.points` უნდა იყოს მასივი
 @msg	`freeform.lines` must be an array	`freeform.lines` უნდა იყოს მასივი
 @msg	`gradient` must be an object	`gradient` უნდა იყოს ობიექტი
+@msg	`groupColors` must be an array	`groupColors` უნდა იყოს მასივი
 @msg	`library` is a library id or name (see {list})	`library` არის ბიბლიოთეკის id ან სახელი (იხ. {list})
 @msg	`mode` applies to freeform gradients	`mode` ეხება თავისუფალი ფორმის გრადიენტებს
+@msg	`preserve` must be an object	`preserve` უნდა იყოს ობიექტი
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` უნდა იყოს 1, 3 ან 5
 @msg	`stops` must be an array	`stops` უნდა იყოს მასივი
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` უნდა იყოს SVG-ის პარამეტრების ობიექტი (იხ. document.formats)
@@ -3758,6 +3768,7 @@ font-technology	Variable	ცვლადი
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` პროცესული ფერია: ტონირება გამოიყენება გლობალურ და სპოტ-ფერებზე
 @msg	`{name}` is no recovery entry name	`{name}` აღდგენის ჩანაწერის სახელი არ არის
 @msg	`{name}` isn't a colour swatch	`{name}` ფერის ნიმუში არ არის
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	პროცესული ფერი ვერ გააფერადებს გამჭვირვალობის მქონე ნაცრისფერ გამოსახულებას: გამოიყენეთ სპოტ-ფერი, შავი ან თეთრი
 @msg	`{path}` must be a bool or an object of bools	`{path}` უნდა იყოს bool ან bool-ების ობიექტი
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` ფერი არ არის (#rrggbb ან პრესეტის სახელი)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` გათხევადების ხელსაწყო არ არის
@@ -4308,6 +4319,9 @@ font-technology	Variable	ცვლადი
 @msg	not a PSD file	PSD ფაილი არ არის
 @msg	the PSD file has an unknown colour mode ({m})	PSD ფაილს უცნობი ფერის რეჟიმი აქვს ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	PSD ფაილის გამოსახულების მონაცემები უცნობ შეკუმშვას იყენებს ({m})
+@msg	the PCX file is cut short	PCX ფაილი შეკვეცილია
+@msg	the PCX file's header is damaged	PCX ფაილის სათაური დაზიანებულია
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	{planes} სიბრტყეში {bits}-ბიტიანი პიქსელების მქონე PCX ფაილების წაკითხვა ვერ ხერხდება
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	PSD გამოსახულება ზედმეტად დიდია წასაკითხად ({_1} × {_2} პიქსელი)
 @msg	zipped 32-bit PSD image data with prediction can't be read	zip-ით შეკუმშული 32-ბიტიანი PSD გამოსახულების მონაცემების წაკითხვა პროგნოზირებით ვერ ხერხდება
 @msg	{depth}-bit PSD files in this colour mode can't be read	ამ ფერის რეჟიმში {depth}-ბიტიანი PSD ფაილების წაკითხვა ვერ ხერხდება
@@ -5661,3 +5675,19 @@ swatch	Bright Violet	კაშკაშა იისფერი
 	Line Weight:	ხაზის სისქე:
 	Position:	პოზიცია:
 	Font Size:	შრიფტის ზომა:
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	წერტილოვანი ტექსტი
+	Area Text	არის ტექსტი
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	გლიფზე მიბმის პარამეტრების ჩვენება
+	Hide Snap to Glyph Options	გლიფზე მიბმის პარამეტრების დამალვა
+	Snap to Glyph Options	გლიფზე მიბმის პარამეტრები
+	x-height	x სიმაღლე
+	Glyph Bounds	გლიფის საზღვრები
+	Proximity Guides	სიახლოვის დამხმარე ხაზები
+	Angular Guides	კუთხური დამხმარე ხაზები
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	საშუალო და შეერთება…
+	Average & Join	საშუალო და შეერთება
+anchor	Points:	წერტილები:
+@msg	select two open path ends, or two open paths, to average and join	მონიშნეთ ღია ტრაექტორიების ორი ბოლო ან ორი ღია ტრაექტორია საშუალოსა და შეერთებისთვის

@@ -156,6 +156,11 @@ dialog open); without `name` it names a new style made from the selection (`grap
 `ui.mergeGraphicStyles {names}` opens the same dialog to name the style `ui.dialog.confirm` merges from them
 (`graphicStyle.merge`). Deleting styles from the panel asks first with a `confirm` dialog (`graphicStyle.delete`).
 
+Text styles: `ui.newCharStyle` and `ui.newParaStyle`, what Alt-click on New in the Character Styles and Paragraph
+Styles panels runs, open the `newTextStyle` dialog (field `name`) for a style made from the text selected when it
+opened; `ui.dialog.confirm` makes it with `charStyle.new` / `paraStyle.new` (a name another style has returns an error
+and keeps the dialog open).
+
 Symbols: `ui.symbolOptions` opens the `symbolOptions` dialog (field `name`) that the Symbols panel's New Symbol asks
 first; `ui.dialog.confirm` makes the symbol from the selection with that name (`symbol.new`). F8 runs
 `ui.symbolOptions` without params.
@@ -450,6 +455,9 @@ value: true}` then `ui.dialog.confirm` does the same.
 Use Preview Bounds: the Align panel flyout's Use Preview Bounds item shows and toggles the `usePreviewBounds`
 preference (`prefs.set`); while it is on, the bounding box and the Transform panel, Properties and Control bar
 fields measure visual bounds.
+
+Align to Glyph Bounds: the Align panel flyout's Align to Glyph Bounds submenu shows and toggles the
+`alignGlyphBoundsPoint` (Point Text) and `alignGlyphBoundsArea` (Area Text) preferences (`prefs.set`), checked while on.
 
 Align To: the Align panel's Align To choice is saved with the preferences, and `ui.inspect` reports it as
 `ui.align_to` (`"selection"` or `"artboard"`; Align to Key Object stores no choice). The align buttons of the Align

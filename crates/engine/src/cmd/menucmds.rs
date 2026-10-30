@@ -183,7 +183,7 @@ fn ids_json(ids: &[NodeId]) -> Value {
 /// The whole number `p` gives for `key`, written `4` or `4.0`, or `default` when `p` gives none or null. A value that
 /// is not a number gives the [`check_numbers`] error, and a fraction or a negative number gives
 /// "`{key}` must be a whole number".
-fn whole_or(p: &Value, key: &str, default: u64, cmd: &str) -> Result<u64> {
+pub(crate) fn whole_or(p: &Value, key: &str, default: u64, cmd: &str) -> Result<u64> {
     check_numbers(p, &[key], cmd)?;
     let Some(v) = p.get(key).filter(|v| !v.is_null()) else { return Ok(default) };
     match (v.as_u64(), v.as_f64()) {

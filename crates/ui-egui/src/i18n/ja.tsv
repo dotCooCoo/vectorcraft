@@ -15,6 +15,11 @@
 # Left in English on purpose (`MENU_KEEP_AS_IS` in the tests): the product name, language
 # names, OpenType, the built-in workspace names and the bracketed perspective grid preset names.
 	About VectorCraft	VectorCraft について
+	Check for Updates…	アップデートを確認…
+	Checking for updates…	アップデートを確認中…
+	Could not check for updates:\n{error}	アップデートを確認できませんでした:\n{error}
+	VectorCraft Updates	VectorCraft のアップデート
+	VectorCraft {version} is currently the newest version available.	VectorCraft {version} は最新バージョンです。
 	All Scripts	すべての文字
 	Anchors:	アンカー:
 	Any Kind	すべての種類
@@ -294,6 +299,7 @@ font-technology	Variable	バリアブル
 	Clipping Mask	クリッピングマスク
 	Edit Clipping Path	クリッピングパスを編集
 	Compound Path	複合パス
+	Compound Shape	複合シェイプ
 	Artboards	アートボード
 	Convert to Artboards	アートボードに変換
 	Rearrange All Artboards…	すべてのアートボードを再配置…
@@ -585,6 +591,8 @@ font-technology	Variable	バリアブル
 	Snap to Pixel	ピクセルにスナップ
 	Precise Cursors	精密カーソル
 	Image Trace Preview	画像トレースのプレビュー
+	Preparing the image…	画像を準備中…
+	Tracing the colors…	色をトレース中…
 	Snap to Point	ポイントにスナップ
 	Snap to Glyph	グリフにスナップ
 	New View…	新規表示…
@@ -616,6 +624,8 @@ font-technology	Variable	バリアブル
 	Saved View 25	保存した表示 25
 	Window	ウィンドウ
 	New Window	新規ウィンドウ
+	Next Document	次のドキュメント
+	Previous Document	前のドキュメント
 	Cascade	重ねて表示
 	Tile	並べて表示
 	Float in Window	ウィンドウを分離
@@ -1461,7 +1471,6 @@ font-technology	Variable	バリアブル
 	Expand Layers Panel Rows	レイヤーパネルの行を展開
 	Expand Options	拡張オプション
 	Expand Repeat	リピートを拡張
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	拡張は複合シェイプ (Alt キーを押しながらシェイプモードをクリック)に適用されます。今後対応予定です。
 	Expand:	拡張:
 	Export All…	すべて書き出し…
 	Export Artboard	アートボードを書き出し
@@ -2080,6 +2089,7 @@ font-technology	Variable	バリアブル
 	Move Guide	ガイドを移動
 	Move Locked and Hidden Artwork with Artboard	ロックおよび非表示のアートワークをアートボードと一緒に移動
 	Move Mesh Point	メッシュポイントを移動
+	Move Mesh Points	メッシュポイントを移動
 	Move Plane	面を移動
 	Move Rows	行を移動
 	Move Slices	スライスを移動
@@ -2177,6 +2187,7 @@ font-technology	Variable	バリアブル
 	Brush Art	ブラシのアート
 	New Calligraphic Brush	新規絵筆ブラシ
 	New Character Style	新規文字スタイル
+	New Character Style…	新規文字スタイル…
 	New Color Group	新規カラーグループ
 	New Color Group…	新規カラーグループ…
 	New Document Presets	新規ドキュメントプリセット
@@ -2190,6 +2201,7 @@ font-technology	Variable	バリアブル
 	New Opacity Masks Are Inverted	新規不透明マスクを反転に設定
 	New PDF Preset	新規 PDF プリセット
 	New Paragraph Style	新規段落スタイル
+	New Paragraph Style…	新規段落スタイル…
 	New Pattern Brush from Selection	選択範囲から新規パターンブラシ
 	New Print Preset	新規プリントプリセット
 	New Scatter Brush from Selection	選択範囲から新規散布ブラシ
@@ -2640,6 +2652,7 @@ mark-style	Japanese	日本式
 	Repeat Tab	タブを繰り返し
 	Repeat {name}	{name}を繰り返す
 	Replace	置換
+	Replace:	置換:
 	Replace Font	フォントを置換
 	Replace Symbol	シンボルを置き換え
 	Replace With Font	置換するフォント
@@ -2842,6 +2855,7 @@ mark-style	Japanese	日本式
 	Shape Builder	シェイプ形成ツール
 	Shape Builder Regions	シェイプ形成ツールの領域
 	Shape Builder Tool	シェイプ形成ツール
+	Shape Mode	シェイプモード
 	Shape Modes:	シェイプモード:
 	Shape Properties:	シェイプのプロパティ:
 	Shaper Tool	Shaper ツール
@@ -2903,6 +2917,7 @@ mark-style	Japanese	日本式
 	Simulate Paper	紙色をシミュレート
 	Single Quotes:	一重引用符:
 	Single-line Composer	1 行ずつ組む
+	Toggle Line Composer	行の組版方式を切り替え
 	Size Tile to Art	タイルをアートワークのサイズに合わせる
 	Size/Leading	サイズ/行送り
 	Size:	サイズ:
@@ -4080,7 +4095,9 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	unknown freeform mode `{m}` (points, lines)	`{m}` は不明なフリーフォームのモードです (points、lines)
 @msg	`aspect` must be a number (%)	`aspect` には数値 (%) を指定してください
 @msg	`gradient` must be an object	`gradient` にはオブジェクトを指定してください
+@msg	`groupColors` must be an array	`groupColors` には配列を指定してください
 @msg	`mode` applies to freeform gradients	`mode` はフリーフォームグラデーションにのみ適用されます
+@msg	`preserve` must be an object	`preserve` にはオブジェクトを指定してください
 @msg	`stops` must be an array	`stops` には配列を指定してください
 @msg	`{k}` must be [x, y]	`{k}` は [x, y] の形式で指定してください
 @msg	a gradient needs at least two stops	グラデーションには 2 つ以上の分岐点が必要です
@@ -4142,6 +4159,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	the object already has an opacity mask	オブジェクトにはすでに不透明マスクがあります
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` はプロセスカラーです: 濃淡を適用できるのはグローバルカラーと特色だけです
 @msg	`{name}` isn't a colour swatch	`{name}` はカラースウォッチではありません
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	プロセスカラーでは透明部分のあるグレースケール画像に色を付けられません: 特色、黒、白のいずれかを使用してください
 @msg	a document needs at least one artboard	ドキュメントには少なくとも 1 つのアートボードが必要です
 @msg	empty path	パスが空です
 @msg	join needs open paths	連結にはオープンパスが必要です
@@ -4666,6 +4684,9 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	not a PSD file	PSD ドキュメントではありません
 @msg	the PSD file has an unknown colour mode ({m})	PSD ファイルのカラーモードが不明です（{m}）
 @msg	the PSD file's image data uses an unknown compression ({m})	PSD ファイルの画像データの圧縮方式が不明です（{m}）
+@msg	the PCX file is cut short	PCX ファイルが途中で切れています
+@msg	the PCX file's header is damaged	PCX ファイルのヘッダーが壊れています
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	{planes} プレーンに {bits} bit のピクセルを持つ PCX ファイルは読み込めません
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	PSD 画像が大きすぎて読み込めません（{_1} × {_2} ピクセル）
 @msg	zipped 32-bit PSD image data with prediction can't be read	予測付き ZIP 圧縮の 32 bit PSD 画像データは読み込めません
 @msg	{depth}-bit PSD files in this colour mode can't be read	このカラーモードの {depth} bit PSD ファイルは読み込めません
@@ -5350,3 +5371,19 @@ axis	Y Axis	Y 軸
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	先にアピアランスを分割してください（オブジェクト › アピアランスを分割）
 	Live preview	ライブプレビュー
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	ポイント文字
+	Area Text	エリア内文字
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	グリフにスナップのオプションを表示
+	Hide Snap to Glyph Options	グリフにスナップのオプションを隠す
+	Snap to Glyph Options	グリフにスナップのオプション
+	x-height	x ハイト
+	Glyph Bounds	字形の境界
+	Proximity Guides	近接ガイド
+	Angular Guides	角度ガイド
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	平均と連結…
+	Average & Join	平均と連結
+anchor	Points:	ポイント:
+@msg	select two open path ends, or two open paths, to average and join	平均と連結には、オープンパスの端点を 2 つ、またはオープンパスを 2 つ選択してください

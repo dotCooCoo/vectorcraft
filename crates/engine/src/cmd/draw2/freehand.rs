@@ -1,6 +1,6 @@
 use super::common::{
-    brush_region, path_kind, path_mut, path_of, points_param, poly_bounds, samples_param, stroke_paint, stroke_pressure, subpath_len, target_paths,
-    within_input_bound,
+    brush_region, path_kind, path_mut, path_of, poly_bounds, pressure_region, samples_param, size_pressure, stroke_paint, stroke_pressure,
+    subpath_len, target_paths, within_input_bound,
 };
 use super::{
     Anchor, Appearance, BTreeSet, BoolOp, Cap, Color, Document, EngineError, FillRule, Join, NewArt, Node, NodeId, NodeKind, Paint, PathData, Point,
@@ -368,11 +368,15 @@ fn adjacent_to_topmost(doc: &Document, touched: &[NodeId], paint: &Paint) -> Vec
 
 pub(super) fn blob(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "path.blob";
-    let pts = points_param(p, "points", C)?;
+    let samples = samples_param(p, "points", C)?;
     let size = number_or(p, "size", 10.0, C)?;
     if !(size.is_finite() && size > 0.0) {
         return Err(bad(C, "size must be positive"));
     }
+    let pressure = size_pressure(p, &samples, C)?;
+    let pts: Vec<Point> = samples.into_iter().map(|(pt, _)| pt).collect();
+    // The widest the brush gets: the area merges look in.
+    let reach = pressure.as_ref().map_or(size, |(_, v)| size + v);
     // With `fidelity` (pt), the brush follows the stroke fitted by [`fit_freehand`], as a Pencil
     // stroke is fitted. Without it, or when the fitted stroke has no length (a short stroke back to
     // its start), the brush follows every point.
@@ -380,11 +384,31 @@ pub(super) fn blob(s: &mut Session, p: &Value) -> Result<Value> {
         None | Some(Value::Null) => None,
         Some(_) => Some(number_or(p, "fidelity", 0.0, C)?.clamp(vectorcraft_tools::draw2::MIN_FIDELITY, 100.0)),
     };
-    let fitted = fidelity
-        .filter(|_| pts.len() > 1)
-        .map(|tol| po::outline_stroke(&PathData::single(fit_freehand(&pts, tol, false)), size, Cap::Round, Join::Round, 4.0))
-        .filter(|r| !r.is_empty());
-    let region = fitted.unwrap_or_else(|| brush_region(&pts, size));
+    let spine = |tol: Option<f64>| match tol {
+        Some(tol) => PathData::single(fit_freehand(&pts, tol, false)),
+        None => PathData::single(SubPath::polyline(&pts, false)),
+    };
+    let region = match (&pressure, pts.len() > 1) {
+        (Some((prof, variation)), true) => {
+            let fitted = match fidelity {
+                Some(tol) => Some(pressure_region(&spine(Some(tol)), size, *variation, prof)?).filter(|r| !r.is_empty()),
+                None => None,
+            };
+            match fitted {
+                Some(r) => r,
+                None => pressure_region(&spine(None), size, *variation, prof)?,
+            }
+        }
+        // A click: one dab as wide as the pen pressed.
+        (Some((prof, variation)), false) => brush_region(&pts, vectorcraft_tools::draw2::pressure_size(size, *variation, prof.at(0.0))),
+        (None, _) => {
+            let fitted = fidelity
+                .filter(|_| pts.len() > 1)
+                .map(|tol| po::outline_stroke(&spine(Some(tol)), size, Cap::Round, Join::Round, 4.0))
+                .filter(|r| !r.is_empty());
+            fitted.unwrap_or_else(|| brush_region(&pts, size))
+        }
+    };
     if region.is_empty() {
         return Err(EngineError::Other("empty brush stroke".into()));
     }
@@ -404,7 +428,7 @@ pub(super) fn blob(s: &mut Session, p: &Value) -> Result<Value> {
         let all = Selection::default();
         let from = if only_selection { &st.selection } else { &all };
         // A fitted stroke can curve outside the points' bounds, so the area also takes in the shape.
-        let area = region.control_bounds().map_or_else(|| poly_bounds(&pts, size), |b| b.union(poly_bounds(&pts, size)));
+        let area = region.control_bounds().map_or_else(|| poly_bounds(&pts, reach), |b| b.union(poly_bounds(&pts, reach)));
         for id in target_paths(&st.doc, from, area) {
             let Some(n) = st.doc.node(id) else { continue };
             if !blob_match(n, &paint) {

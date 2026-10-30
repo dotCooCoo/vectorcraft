@@ -620,8 +620,10 @@ fn spin_generic(
             ui.painter().line_segment([m + vec2(0.0, d), m + vec2(3.0, -d)], Stroke::new(1.2, c));
         }
         sresp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, enabled, tl!("Step up or down")));
-        // A blank field (values that differ) has nothing to step from.
-        if sresp.clicked()
+        // A blank field (values that differ) has nothing to step from. A click steps once; an
+        // arrow held down steps again and again after a pause, as a spin button does (#4267).
+        let repeat = held_repeat(ui, &sresp);
+        if (repeat == Some(true) || (sresp.clicked() && repeat.is_none()))
             && let Some(p) = sresp.interact_pointer_pos()
             && let Some(v) = value
         {
@@ -651,6 +653,29 @@ fn spin_generic(
         }
     });
     out
+}
+
+/// How long a spinner arrow is held before it repeats, and how often it repeats then, in seconds.
+const REPEAT_DELAY: f64 = 0.45;
+const REPEAT_EVERY: f64 = 0.06;
+
+/// A spinner arrow (`resp`) held down. `None` until it has been held for [`REPEAT_DELAY`]: a
+/// click then steps once, on release. After that, `Some(true)` on each frame it steps again
+/// (every [`REPEAT_EVERY`]) and `Some(false)` on the frames between and on the release, which
+/// must not step once more.
+fn held_repeat(ui: &Ui, resp: &egui::Response) -> Option<bool> {
+    let id = resp.id.with("repeat");
+    let now = ui.input(|i| i.time);
+    let state: Option<(f64, f64, bool)> = ui.data(|d| d.get_temp(id));
+    if !resp.is_pointer_button_down_on() {
+        ui.data_mut(|d| d.remove::<(f64, f64, bool)>(id));
+        return state.filter(|(_, _, repeated)| *repeated).map(|_| false);
+    }
+    let (start, last, repeated) = state.unwrap_or((now, now, false));
+    let due = now - start >= REPEAT_DELAY && now - last >= REPEAT_EVERY;
+    ui.data_mut(|d| d.insert_temp(id, (start, if due { now } else { last }, repeated || due)));
+    ui.ctx().request_repaint_after(std::time::Duration::from_millis(30));
+    (repeated || due).then_some(due)
 }
 
 /// Spinner buttons follow the same modifier sizes as ↑/↓ in a focused number field:

@@ -239,6 +239,9 @@ fn run_ui_part3(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
         "type.highlightFontName" => crate::panels::character::highlight(app, crate::panels::character::Field::FontName),
         "type.highlightKerning" => crate::panels::character::highlight(app, crate::panels::character::Field::Kerning),
         "type.highlightTracking" => crate::panels::character::highlight(app, crate::panels::character::Field::Tracking),
+        "type.underline" => crate::panels::character::toggle_underline(app),
+        "type.lineComposer" => crate::panels::paragraph::toggle_composer(app),
+        "type.hyphenate" => crate::panels::paragraph::toggle_hyphenate(app),
         id if let Some((_, justify)) = crate::panels::paragraph::ALIGN_COMMANDS.iter().find(|c| c.0 == id) => {
             crate::panels::paragraph::align(app, justify)
         }
@@ -511,6 +514,8 @@ fn run_ui_part6(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
             None => Err("brightness must be dark|mediumDark|mediumLight|light".into()),
         },
         "window.newWindow" => Err("New Window isn't available yet: a document opens in one window".into()),
+        "window.nextDocument" => crate::chrome::step_document(app, true),
+        "window.previousDocument" => crate::chrome::step_document(app, false),
         "tool.select" => match s("tool") {
             Some(t) if vectorcraft_tools::tool_info(&t).is_some() => {
                 app.select_tool(&t);
@@ -582,6 +587,8 @@ fn run_ui_part7(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
         "ui.colorPicker" => crate::dialogs::open_color_picker(app, p),
         "ui.sampleScreenColor" => crate::screen_color::start(app, p),
         "ui.graphicStyleOptions" => crate::dialogs::graphic_style_options::open(app, s("name").as_deref()),
+        "ui.newCharStyle" => crate::panels::text_styles::open_new(app, crate::panels::text_styles::Kind::Char),
+        "ui.newParaStyle" => crate::panels::text_styles::open_new(app, crate::panels::text_styles::Kind::Para),
         "ui.symbolOptions" => {
             let name = s("name");
             let edit = p.get("edit").and_then(Value::as_bool).unwrap_or(false);

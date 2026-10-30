@@ -44,8 +44,22 @@ pub(super) fn length_field(ui: &mut egui::Ui, d: &mut Dialog, key: &str, label: 
 /// "5 mm", wins), kept in points (a string with a unit, "12 pt", also reads). Returns true when it
 /// changed.
 pub(super) fn length(ui: &mut egui::Ui, d: &mut Dialog, key: &str, unit: Unit, width: f32) -> bool {
+    length_within(ui, d, key, unit, width, None)
+}
+
+/// [`length`] whose value is kept within `range` (points): a value typed outside it becomes the
+/// nearer end, so the field shows the distance the command applies (#4637).
+pub(super) fn length_within(
+    ui: &mut egui::Ui,
+    d: &mut Dialog,
+    key: &str,
+    unit: Unit,
+    width: f32,
+    range: Option<std::ops::RangeInclusive<f64>>,
+) -> bool {
     let value = d.fields.contains_key(key).then(|| d.f64(key, 0.0));
     let Some(v) = crate::widgets::num_field(ui, ("dlg-len", key), value, unit, width) else { return false };
+    let v = range.map_or(v, |r| v.max(*r.start()).min(*r.end()));
     d.fields.insert(key.into(), json!(v));
     true
 }
@@ -365,7 +379,9 @@ pub(super) fn param_fields(
                     return;
                 }
                 if is_length(&k) {
-                    changed |= length(ui, d, &k, unit, 140.0);
+                    // An effect's documented range keeps the field to the distance it applies.
+                    let range = vectorcraft_effects::length_range(&d.str("__effect"), &k);
+                    changed |= length_within(ui, d, &k, unit, 140.0, range);
                     return;
                 }
                 if let Some(options) = choices(&k) {

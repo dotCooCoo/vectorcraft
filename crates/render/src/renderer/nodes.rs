@@ -1,8 +1,8 @@
 use super::{
     Affine, Arc, BezPath, ClipEntry, ClipPaintEntry, Compose, Composite, Document, FillRule, Frame, GeomEntry, ISOLATION_DIM, Ink, MAX_GUIDE_DASHES,
     Node, NodeId, NodeKind, Rect, RenderContext, RenderOptions, Renderer, Shape, SymbolBoxes, TraceView, blend_mode, brush_fx, effects, fx, group,
-    holds_instance, holds_plugin_effect, kurbo, lru, mask_value, painted_items, plain_image, polygon_length, rects_overlap, shape_masked_image,
-    single_plain_fill, text_geom_snapped, white_shape_mask,
+    holds_instance, holds_plugin_effect, images, kurbo, lru, mask_value, painted_items, plain_image, polygon_length, rects_overlap,
+    shape_masked_image, single_plain_fill, text_geom_snapped, white_shape_mask,
 };
 
 impl Renderer {
@@ -153,7 +153,7 @@ impl Renderer {
             && let Some(region) = self.clip_of(&m.art)
             && shape_masked_image(a, im, &region.0)
         {
-            self.draw_image_in(ctx, f, im, Some(&region), a.extras().pixelated);
+            self.draw_image_in(ctx, f, im, Some(&region), images::image_tint(a, f.ink), a.extras().pixelated);
             self.stats.drawn += 1;
             return;
         }
@@ -388,7 +388,7 @@ impl Renderer {
                         && let NodeKind::Image(im) = &image.kind
                         && plain_image(image, im, &region.0)
                     {
-                        self.draw_image_in(ctx, f, im, Some(&region), image.extras().pixelated);
+                        self.draw_image_in(ctx, f, im, Some(&region), images::image_tint(image, f.ink), image.extras().pixelated);
                         self.stats.drawn += 1;
                         return;
                     }
@@ -442,7 +442,7 @@ impl Renderer {
                 self.draw_shape(ctx, f, n, &bp, *rule);
             }
             NodeKind::Text(t) => self.draw_text(ctx, f, n, t),
-            NodeKind::Image(im) => self.draw_image_in(ctx, f, im, None, n.extras().pixelated),
+            NodeKind::Image(im) => self.draw_image_in(ctx, f, im, None, images::image_tint(n, f.ink), n.extras().pixelated),
             NodeKind::SymbolInstance { symbol, xf } => {
                 if let Some(sym) = f.doc.symbols.iter().find(|s| &s.name == symbol)
                     && self.charge_symbol(&sym.art)

@@ -552,6 +552,7 @@ font-technology	Variable	Variabla
 	Complexity:	Komplexitet:
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	Sammansatta färger konverteras till den; separationer separeras med den när den är en CMYK-profil.
 	Compound Path	Sammansatt bana
+	Compound Shape	Sammansatt form
 	Compress (RLE)	Komprimera (RLE)
 	Compress text and line art	Komprimera text och linjegrafik
 	Compression	Komprimering
@@ -976,7 +977,6 @@ font-technology	Variable	Variabla
 	Exit Isolation Mode	Avsluta isoleringsläge
 	Expand	Expandera
 	Expand Appearance	Expandera utseende
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Expandera gäller för sammansatta former (Alt-klicka på ett formläge) – planerat
 	Expand Brush Strokes	Expandera penseldrag
 	Expand Compound Shape	Expandera sammansatt form
 	Expand Gradient Mesh	Expandera gradientnät
@@ -1860,6 +1860,7 @@ font-technology	Variable	Variabla
 	Move in Perspective	Flytta i perspektiv
 	Move Locked and Hidden Artwork with Artboard	Flytta låst och dold grafik med ritytan
 	Move Mesh Point	Flytta nätpunkt
+	Move Mesh Points	Flytta nätpunkter
 	Move Plane	Flytta plan
 	Move Plane to Match Object	Flytta plan så att det matchar objekt
 	Move Rows	Flytta rader
@@ -1963,6 +1964,7 @@ font-technology	Variable	Variabla
 	Brush Art	Penselgrafik
 	New Calligraphic Brush	Ny kalligrafisk pensel
 	New Character Style	Ny teckenstil
+	New Character Style…	Ny teckenstil…
 	New Color Group	Ny färggrupp
 	New Color Group…	Ny färggrupp…
 	New Document Presets	Förinställningar för nytt dokument
@@ -1978,6 +1980,7 @@ font-technology	Variable	Variabla
 	New Opacity Masks Are Clipping	Nya opacitetsmasker är klippande
 	New Opacity Masks Are Inverted	Nya opacitetsmasker är inverterade
 	New Paragraph Style	Ny styckestil
+	New Paragraph Style…	Ny styckestil…
 	New Pattern Brush from Selection	Ny mönsterpensel från markeringen
 	New PDF Preset	Ny PDF-förinställning
 	New Print Preset	Ny utskriftsförinställning
@@ -1991,6 +1994,8 @@ font-technology	Variable	Variabla
 	New View	Ny vy
 	New View…	Ny vy…
 	New Window	Nytt fönster
+	Next Document	Nästa dokument
+	Previous Document	Föregående dokument
 	New Without Dialog	Ny utan dialogruta
 	New Workspace	Ny arbetslayout
 	New Workspace…	Ny arbetslayout…
@@ -2578,6 +2583,7 @@ font-technology	Variable	Variabla
 	Repeat Tab	Upprepa tabb
 	Repeat {name}	Upprepa {name}
 	Replace	Ersätt
+	Replace:	Ersätt:
 	Replace Font	Ersätt typsnitt
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Ersätt den med en annan fil eller ignorera den: dess bilder fortsätter att visa förhandsgranskningen som sparats med dokumentet.
 	Replace Spine	Ersätt ryggrad
@@ -2900,6 +2906,7 @@ font-technology	Variable	Variabla
 	Shape Builder Regions	Formbyggarområden
 	Shape Builder Tool	Formbyggarverktyg
 	Shape Effects	Figureffekter
+	Shape Mode	Formläge
 	Shape Modes:	Formlägen:
 	Shape Properties:	Formegenskaper:
 	Shaper Tool	Formningsverktyg
@@ -3001,6 +3008,7 @@ font-technology	Variable	Variabla
 	Single Quotes:	Enkla citattecken:
 	Single Right Quotation Mark	Enkelt höger citattecken
 	Single-line Composer	Enradssättare
+	Toggle Line Composer	Växla radsättare
 	Sixth Space	Sjättedelsblanksteg
 	Size	Storlek
 	Size Tile to Art	Anpassa rutans storlek efter grafiken
@@ -3848,8 +3856,10 @@ axis	Both	Båda
 @msg	`freeform.points` must be an array	`freeform.points` måste vara en array
 @msg	`freeform.lines` must be an array	`freeform.lines` måste vara en array
 @msg	`gradient` must be an object	`gradient` måste vara ett objekt
+@msg	`groupColors` must be an array	`groupColors` måste vara en array
 @msg	`library` is a library id or name (see {list})	`library` är ett biblioteks-id eller biblioteksnamn (se {list})
 @msg	`mode` applies to freeform gradients	`mode` gäller för fria gradienter
+@msg	`preserve` must be an object	`preserve` måste vara ett objekt
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` måste vara 1, 3 eller 5
 @msg	`stops` must be an array	`stops` måste vara en array
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` måste vara ett objekt med SVG-alternativ (se document.formats)
@@ -3883,6 +3893,7 @@ axis	Both	Båda
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` är en processfärg: nyanser gäller för globala färger och dekorfärger
 @msg	`{name}` is no recovery entry name	`{name}` är inget namn på en återställningspost
 @msg	`{name}` isn't a colour swatch	`{name}` är inte en färgruta
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	en processfärg kan inte färglägga en gråskalebild med genomskinlighet: använd en dekorfärg, svart eller vitt
 @msg	`{path}` must be a bool or an object of bools	`{path}` måste vara ett booleskt värde eller ett objekt med booleska värden
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` är inte en färg (#rrggbb eller namnet på en förinställning)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` är inte ett verktyg för Gör flytande
@@ -4505,6 +4516,9 @@ axis	Both	Båda
 @msg	not a PSD file	inte en PSD-fil
 @msg	the PSD file has an unknown colour mode ({m})	PSD-filen har ett okänt färgläge ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	PSD-filens bilddata använder en okänd komprimering ({m})
+@msg	the PCX file is cut short	PCX-filen är avkortad
+@msg	the PCX file's header is damaged	PCX-filens huvud är skadat
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	PCX-filer med {bits}-bitars pixlar i {planes} plan kan inte läsas
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	PSD-bilden är för stor för att läsas ({_1} × {_2} pixlar)
 @msg	zipped 32-bit PSD image data with prediction can't be read	zippad 32-bitars PSD-bilddata med prediktion kan inte läsas
 @msg	{depth}-bit PSD files in this colour mode can't be read	{depth}-bitars PSD-filer i det här färgläget kan inte läsas
@@ -5696,3 +5710,19 @@ axis	Y Axis	Y-axel
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	Expandera utseendet först (Objekt › Expandera utseende)
 	Live preview	Direkt förhandsgranskning
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Punkttext
+	Area Text	Områdestext
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Visa alternativ för fäst mot glyf
+	Hide Snap to Glyph Options	Dölj alternativ för fäst mot glyf
+	Snap to Glyph Options	Alternativ för fäst mot glyf
+	x-height	x-höjd
+	Glyph Bounds	Glyfgränser
+	Proximity Guides	Närhetsstödlinjer
+	Angular Guides	Vinkelstödlinjer
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Medelvärde och foga samman…
+	Average & Join	Medelvärde och foga samman
+anchor	Points:	Punkter:
+@msg	select two open path ends, or two open paths, to average and join	markera två ändar av öppna banor, eller två öppna banor, att medelvärdesberäkna och foga samman

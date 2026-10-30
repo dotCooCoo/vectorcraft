@@ -527,6 +527,7 @@ font-technology	Variable	可變
 	Complexity:	複雜度：
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	複合顏色會轉換為此描述檔；其為 CMYK 描述檔時，分色也會使用它。
 	Compound Path	複合路徑
+	Compound Shape	複合形狀
 	Compress (RLE)	壓縮 (RLE)
 	Compress text and line art	壓縮文字與線條圖
 	Compression	壓縮
@@ -955,7 +956,6 @@ font-technology	Variable	可變
 	Exit Isolation Mode	結束隔離模式
 	Expand	展開
 	Expand Appearance	展開外觀
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	展開適用於複合形狀 (按住 Alt 按一下形狀模式)，已列入開發計畫
 	Expand Brush Strokes	展開筆刷筆畫
 	Expand Compound Shape	展開複合形狀
 	Expand Gradient Mesh	展開漸層網格
@@ -1763,7 +1763,9 @@ file-filter	Templates	範本
 @msg	unknown freeform mode `{m}` (points, lines)	未知的任意形狀模式 `{m}` (points、lines)
 @msg	`aspect` must be a number (%)	`aspect` 必須是數字 (%)
 @msg	`gradient` must be an object	`gradient` 必須是物件
+@msg	`groupColors` must be an array	`groupColors` 必須是陣列
 @msg	`mode` applies to freeform gradients	`mode` 只適用於任意形狀漸層
+@msg	`preserve` must be an object	`preserve` 必須是物件
 @msg	`stops` must be an array	`stops` 必須是陣列
 @msg	`{k}` must be [x, y]	`{k}` 必須是 [x, y]
 @msg	a gradient needs at least two stops	漸層至少需要兩個色標
@@ -1824,6 +1826,7 @@ file-filter	Templates	範本
 @msg	the object already has an opacity mask	物件已有不透明度遮色片
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` 是印刷色：色調只適用於全域色和特別色
 @msg	`{name}` isn't a colour swatch	`{name}` 不是顏色色票
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	印刷色無法為帶有透明度的灰階影像上色：請使用特別色、黑色或白色
 @msg	a document needs at least one artboard	文件至少需要一個工作區域
 @msg	empty path	路徑是空的
 @msg	join needs open paths	連接需要開放路徑
@@ -2328,6 +2331,9 @@ file-filter	Templates	範本
 @msg	not a PSD file	不是 PSD 檔案
 @msg	the PSD file has an unknown colour mode ({m})	PSD 檔案的色彩模式不明 ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	PSD 檔案的影像資料使用了不明的壓縮方式 ({m})
+@msg	the PCX file is cut short	PCX 檔案不完整
+@msg	the PCX file's header is damaged	PCX 檔案標頭已損毀
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	無法讀取 {planes} 個平面中含 {bits} 位元像素的 PCX 檔案
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	PSD 影像過大，無法讀取 ({_1} × {_2} 像素)
 @msg	zipped 32-bit PSD image data with prediction can't be read	無法讀取使用預測的 ZIP 壓縮 32 位元 PSD 影像資料
 @msg	{depth}-bit PSD files in this colour mode can't be read	無法讀取此色彩模式的 {depth} 位元 PSD 檔案
@@ -2725,6 +2731,7 @@ file-filter	Templates	範本
 	Move in Perspective	在透視中移動
 	Move Locked and Hidden Artwork with Artboard	移動工作區域時一併移動鎖定與隱藏的圖稿
 	Move Mesh Point	移動網格點
+	Move Mesh Points	移動網格點
 	Move Plane	移動平面
 	Move Plane to Match Object	移動平面以符合物件
 	Move Rows	移動列
@@ -2843,6 +2850,7 @@ file-filter	Templates	範本
 	Brush Art	筆刷圖稿
 	New Calligraphic Brush	新增書法筆刷
 	New Character Style	新增字元樣式
+	New Character Style…	新增字元樣式…
 	New Color Group	新增顏色群組
 	New Color Group…	新增顏色群組…
 	New Document Presets	新增文件預設集
@@ -2858,6 +2866,7 @@ file-filter	Templates	範本
 	New Opacity Masks Are Clipping	新的不透明度遮色片為剪裁
 	New Opacity Masks Are Inverted	新的不透明度遮色片為反轉
 	New Paragraph Style	新增段落樣式
+	New Paragraph Style…	新增段落樣式…
 	New Pattern Brush from Selection	從選取範圍新增圖樣筆刷
 	New PDF Preset	新增 PDF 預設集
 	New Print Preset	新增列印預設集
@@ -2871,6 +2880,8 @@ file-filter	Templates	範本
 	New View	新增檢視
 	New View…	新增檢視…
 	New Window	新增視窗
+	Next Document	下一個文件
+	Previous Document	上一個文件
 	New Without Dialog	新增但不開啟對話方塊
 	New Workspace	新增工作區
 	New Workspace…	新增工作區…
@@ -3469,6 +3480,7 @@ font-script	Japanese	漢字
 	Repeat Tab	重複定位點
 	Repeat {name}	重複 {name}
 	Replace	取代
+	Replace:	取代：
 	Replace Font	取代字體
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	以其他檔案取代，或忽略：其影像會繼續顯示隨文件儲存的預覽。
 	Replace Spine	取代脊線
@@ -3804,6 +3816,7 @@ font-script	Japanese	漢字
 	Shape Builder Regions	形狀建立區域
 	Shape Builder Tool	形狀建立工具
 	Shape Effects	形狀效果
+	Shape Mode	形狀模式
 	Shape Modes:	形狀模式：
 	Shape Properties:	形狀內容：
 	Shaper Tool	Shaper 工具
@@ -3907,6 +3920,7 @@ font-script	Japanese	漢字
 	Single Quotes:	單引號：
 	Single Right Quotation Mark	右單引號
 	Single-line Composer	單行排版程式
+	Toggle Line Composer	切換行排版程式
 	Sixth Space	六分之一空格
 	Size	大小
 	Size Tile to Art	拼貼符合圖稿大小
@@ -5307,3 +5321,19 @@ axis	Y Axis	Y 軸
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	請先展開外觀（物件 › 展開外觀）
 	Live preview	即時預覽
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	點狀文字
+	Area Text	區域文字
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	顯示靠齊字符選項
+	Hide Snap to Glyph Options	隱藏靠齊字符選項
+	Snap to Glyph Options	靠齊字符選項
+	x-height	x 高度
+	Glyph Bounds	字符邊界
+	Proximity Guides	鄰近參考線
+	Angular Guides	角度參考線
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	平均並連接…
+	Average & Join	平均並連接
+anchor	Points:	點：
+@msg	select two open path ends, or two open paths, to average and join	請選取兩個開放路徑的端點或兩條開放路徑以進行平均並連接

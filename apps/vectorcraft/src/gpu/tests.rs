@@ -472,6 +472,31 @@ fn windows_lists_opengl_once_a_start_leaves_an_adapter_out() {
     assert_eq!(listing.backends(backends(Backends::all(), false, true)), Backends::GL);
 }
 
+/// OpenGL stays where it drew before #4150's fix: a GPU without a Direct3D 12 driver (DX12 lists
+/// WARP alone) and an adapter `WGPU_ADAPTER_NAME` names; a start with a DX12 GPU lists DX12 alone.
+#[test]
+fn windows_lists_opengl_without_a_dx12_gpu_or_with_an_adapter_named() {
+    let start = LeftOut::default();
+    let asked = std::cell::Cell::new(false);
+    let hardware = |found: bool| {
+        asked.set(true);
+        found
+    };
+    assert!(!opengl_needed(&start, false, false, || hardware(true)), "a DX12 GPU: DX12 alone (#4150)");
+    assert!(asked.replace(false));
+    assert!(opengl_needed(&start, false, false, || hardware(false)), "WARP alone: the GPU draws through OpenGL, not the CPU");
+    assert!(opengl_needed(&start, false, true, || hardware(true)), "a named adapter may be an OpenGL one");
+    assert!(opengl_needed(&start, true, false, || hardware(true)), "a restart left an adapter out");
+    let listing = LeftOut { opengl_only: true, ..LeftOut::default() };
+    asked.set(false);
+    assert!(opengl_needed(&listing, false, false, || hardware(true)));
+    assert!(!asked.get(), "DX12 isn't listed once OpenGL must be");
+    assert!(any_hardware(&[DeviceType::Cpu, DeviceType::IntegratedGpu]));
+    assert!(any_hardware(&[DeviceType::VirtualGpu]));
+    assert!(!any_hardware(&[DeviceType::Cpu]), "WARP");
+    assert!(!any_hardware(&[]), "Windows 7");
+}
+
 #[test]
 fn power_preference_follows_the_environment_then_the_preference() {
     assert_eq!(power_preference(None, None), AUTOMATIC);

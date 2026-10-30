@@ -566,6 +566,7 @@ font-technology	Variable	Variables
 	Complexity:	Complexité :
 	Composite colours are converted to it; separations separate with it when it is a CMYK profile.	Les couleurs composites sont converties vers ce profil ; les séparations l’utilisent lorsqu’il s’agit d’un profil CMJN.
 	Compound Path	Tracé transparent
+	Compound Shape	Forme composée
 	Compress (RLE)	Compresser (RLE)
 	Compress text and line art	Compresser le texte et les dessins au trait
 	Compression	Compression
@@ -991,7 +992,6 @@ font-technology	Variable	Variables
 	Exit Isolation Mode	Quitter le mode Isolation
 	Expand	Décomposer
 	Expand Appearance	Décomposer l’aspect
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Décomposer s’applique aux formes composées (Alt+clic sur un mode de forme) — prévu dans la feuille de route
 	Expand Brush Strokes	Décomposer les contours de forme
 	Expand Compound Shape	Décomposer la forme composée
 	Expand Gradient Mesh	Décomposer le filet de dégradé
@@ -1912,6 +1912,7 @@ font-technology	Variable	Variables
 	Move in Perspective	Déplacer en perspective
 	Move Locked and Hidden Artwork with Artboard	Déplacer les illustrations verrouillées et masquées avec le plan de travail
 	Move Mesh Point	Déplacer le point de filet
+	Move Mesh Points	Déplacer les points de filet
 	Move Plane	Déplacer le plan
 	Move Plane to Match Object	Déplacer le plan pour l’aligner sur l’objet
 	Move Rows	Déplacer les lignes
@@ -2015,6 +2016,7 @@ font-technology	Variable	Variables
 	Brush Art	Illustration de la forme
 	New Calligraphic Brush	Nouvelle forme calligraphique
 	New Character Style	Nouveau style de caractère
+	New Character Style…	Nouveau style de caractère…
 	New Color Group	Nouveau groupe de couleurs
 	New Color Group…	Nouveau groupe de couleurs…
 	New Document Presets	Paramètres prédéfinis de nouveau document
@@ -2030,6 +2032,7 @@ font-technology	Variable	Variables
 	New Opacity Masks Are Clipping	Les nouveaux masques d’opacité sont des masques d’écrêtage
 	New Opacity Masks Are Inverted	Les nouveaux masques d’opacité sont inversés
 	New Paragraph Style	Nouveau style de paragraphe
+	New Paragraph Style…	Nouveau style de paragraphe…
 	New Pattern Brush from Selection	Nouvelle forme de motif à partir de la sélection
 	New PDF Preset	Nouveau paramètre prédéfini PDF
 	New Print Preset	Nouveau paramètre prédéfini d’impression
@@ -2043,6 +2046,8 @@ font-technology	Variable	Variables
 	New View	Nouvelle vue
 	New View…	Nouvelle vue…
 	New Window	Nouvelle fenêtre
+	Next Document	Document suivant
+	Previous Document	Document précédent
 	New Without Dialog	Nouveau sans boîte de dialogue
 	New Workspace	Nouvel espace de travail
 	New Workspace…	Nouvel espace de travail…
@@ -2633,6 +2638,7 @@ font-technology	Variable	Variables
 	Repeat Tab	Répéter la tabulation
 	Repeat {name}	Répéter {name}
 	Replace	Remplacer
+	Replace:	Remplacer :
 	Replace Font	Remplacer la police
 	Replace it with another file, or ignore it: its images keep showing the preview saved with the document.	Remplacez-le par un autre fichier ou ignorez-le : ses images continueront d’afficher l’aperçu enregistré avec le document.
 	Replace Spine	Remplacer la dorsale
@@ -2967,6 +2973,7 @@ font-technology	Variable	Variables
 	Shape Builder Regions	Zones du Concepteur de forme
 	Shape Builder Tool	Outil Concepteur de forme
 	Shape Effects	Effets de forme
+	Shape Mode	Mode de forme
 	Shape Modes:	Modes de forme :
 	Shape Properties:	Propriétés de la forme :
 	Shaper Tool	Outil Shaper
@@ -3070,6 +3077,7 @@ font-technology	Variable	Variables
 	Single Quotes:	Guillemets simples :
 	Single Right Quotation Mark	Guillemet simple fermant
 	Single-line Composer	Compositeur ligne par ligne
+	Toggle Line Composer	Basculer le compositeur de lignes
 	Sixth Space	Espace d’un sixième
 	Size	Taille
 	Size Tile to Art	Ajuster le carreau à l’illustration
@@ -3928,8 +3936,10 @@ axis	Both	Les deux
 @msg	`freeform.points` must be an array	`freeform.points` doit être un tableau
 @msg	`freeform.lines` must be an array	`freeform.lines` doit être un tableau
 @msg	`gradient` must be an object	`gradient` doit être un objet
+@msg	`groupColors` must be an array	`groupColors` doit être un tableau
 @msg	`library` is a library id or name (see {list})	`library` est l’identifiant ou le nom d’une bibliothèque (voir {list})
 @msg	`mode` applies to freeform gradients	`mode` s’applique aux dégradés de forme libre
+@msg	`preserve` must be an object	`preserve` doit être un objet
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` doit valoir 1, 3 ou 5
 @msg	`stops` must be an array	`stops` doit être un tableau
 @msg	`svg` must be an object of SVG options (see document.formats)	`svg` doit être un objet d’options SVG (voir document.formats)
@@ -3964,6 +3974,7 @@ axis	Both	Les deux
 @msg	`{name}` is a process colour: tints apply to global and spot colours	`{name}` est une couleur quadrichromique : les teintes s’appliquent aux couleurs globales et aux tons directs
 @msg	`{name}` is no recovery entry name	`{name}` n’est pas le nom d’une entrée de récupération
 @msg	`{name}` isn't a colour swatch	`{name}` n’est pas une nuance de couleur
+@msg	a process color can't colorize a grayscale image with transparency: use a spot color, black or white	une couleur quadrichromique ne peut pas coloriser une image en niveaux de gris avec transparence : utilisez un ton direct, le noir ou le blanc
 @msg	`{path}` must be a bool or an object of bools	`{path}` doit être un booléen ou un objet de booléens
 @msg	`{s}` is not a colour (#rrggbb or a preset name)	`{s}` n’est pas une couleur (#rrggbb ou le nom d’un paramètre prédéfini)
 @msg	`{tool}` isn't a Liquify tool	`{tool}` n’est pas un outil Fluidité
@@ -4599,6 +4610,9 @@ axis	Both	Les deux
 @msg	not a PSD file	ce n'est pas un document PSD
 @msg	the PSD file has an unknown colour mode ({m})	le fichier PSD a un mode colorimétrique inconnu ({m})
 @msg	the PSD file's image data uses an unknown compression ({m})	les données d'image du fichier PSD utilisent une compression inconnue ({m})
+@msg	the PCX file is cut short	le fichier PCX est tronqué
+@msg	the PCX file's header is damaged	l'en-tête du fichier PCX est endommagé
+@msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	les fichiers PCX à pixels de {bits} bits sur {planes} plans ne peuvent pas être lus
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	l'image PSD est trop grande pour être lue ({_1} × {_2} pixels)
 @msg	zipped 32-bit PSD image data with prediction can't be read	les données d'image PSD 32 bits compressées en ZIP avec prédiction ne peuvent pas être lues
 @msg	{depth}-bit PSD files in this colour mode can't be read	les fichiers PSD {depth} bits dans ce mode colorimétrique ne peuvent pas être lus
@@ -5671,3 +5685,19 @@ axis	Y Axis	Axe Y
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	Décomposez d’abord l’aspect (Objet › Décomposer l’aspect)
 	Live preview	Aperçu en direct
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Texte de point
+	Area Text	Texte captif
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Afficher les options de magnétisme du glyphe
+	Hide Snap to Glyph Options	Masquer les options de magnétisme du glyphe
+	Snap to Glyph Options	Options de magnétisme du glyphe
+	x-height	Hauteur d’x
+	Glyph Bounds	Limites du glyphe
+	Proximity Guides	Repères de proximité
+	Angular Guides	Repères angulaires
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Alignement et jonction…
+	Average & Join	Alignement et jonction
+anchor	Points:	Points :
+@msg	select two open path ends, or two open paths, to average and join	sélectionnez deux extrémités de tracés ouverts, ou deux tracés ouverts, à aligner et joindre

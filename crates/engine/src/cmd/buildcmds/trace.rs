@@ -377,8 +377,11 @@ fn grouped(d: &mut Document, nodes: Vec<Node>, parents: &[Option<usize>]) -> Vec
 struct TraceInputs {
     target: NodeId,
     image: Box<ImageObject>,
-    /// The settings traced with, as JSON, the library's colours in.
+    /// The settings traced with, as JSON.
     params: Value,
+    /// Document Library: the library's colours, which the JSON leaves out
+    /// ([`tr::TraceParams::swatches`]).
+    swatches: Vec<[u8; 3]>,
 }
 
 /// What `imageTrace.make` and `imageTrace.makeAndExpand` take from the session before they trace.
@@ -431,7 +434,7 @@ fn prepare(s: &Session, c: &str, p: &Value) -> Result<Prepared> {
     let bytes = Arc::clone(&blob.bytes);
     let library = trace_library(c, s, &mut params)?;
     let traced_with = serde_json::to_value(&params).map_err(|e| EngineError::Other(e.to_string()))?;
-    let inputs = TraceInputs { target, image, params: traced_with };
+    let inputs = TraceInputs { target, image, params: traced_with, swatches: params.swatches.clone() };
     Ok(Prepared { inputs, trace: params, view, params_json, preset_label, library, bytes })
 }
 
@@ -544,7 +547,7 @@ pub(super) fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Val
         Some(traced) if traced.inputs == inputs => traced,
         _ => trace_now(&inputs, &trace, &bytes, &|_, _| true)?,
     };
-    let TraceInputs { target, image: img, params: _ } = inputs;
+    let TraceInputs { target, image: img, .. } = inputs;
     let warnings = trace_warnings((img.width, img.height), raster, res.worked_at);
     // Pixel space of the decoded raster → the image object's pixel space → document.
     let sx = img.width.max(1) as f64 / raster.0.max(1) as f64;

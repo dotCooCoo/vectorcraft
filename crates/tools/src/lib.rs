@@ -55,7 +55,7 @@ mod context;
 mod cursor;
 mod input;
 
-pub use context::{PaintDefaults, ScreenFrame, ToolContext};
+pub use context::{GlyphSnap, PaintDefaults, ScreenFrame, ToolContext};
 pub use cursor::Cursor;
 pub use input::{Action, Mods, PointerEvent, PointerKind, ToolKey};
 
@@ -463,6 +463,7 @@ pub(crate) mod testutil {
             snap_tangent: true,
             snap_perpendicular: true,
             snap_to_glyph: false,
+            glyph_snap: GlyphSnap::default(),
             corner_widgets: true,
             fill_active: true,
             gradient_stop: None,

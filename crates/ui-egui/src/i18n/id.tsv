@@ -259,6 +259,7 @@
 	Clipping Mask	Masker kliping
 	Edit Clipping Path	Edit jalur kliping
 	Compound Path	Jalur majemuk
+	Compound Shape	Bentuk majemuk
 	Artboards	Artboard
 	Convert to Artboards	Konversi ke artboard
 	Rearrange All Artboards…	Atur ulang semua artboard…
@@ -578,6 +579,8 @@
 	Saved View 25	Tampilan tersimpan 25
 	Window	Jendela
 	New Window	Jendela baru
+	Next Document	Dokumen berikutnya
+	Previous Document	Dokumen sebelumnya
 	Cascade	Bertingkat
 	Tile	Ubin
 	Float in Window	Mengambang di jendela
@@ -1635,13 +1638,13 @@ lighting	Light	Cahaya
 	Roman Hanging Punctuation	Tanda baca gantung Romawi
 	Select a text object to edit its paragraph attributes.	Pilih objek teks untuk mengedit atribut paragrafnya.
 	Single-line Composer	Komposer satu baris
+	Toggle Line Composer	Alihkan komposer baris
 	Space After Paragraph	Spasi setelah paragraf
 	Space Before Paragraph	Spasi sebelum paragraf
 	Top-to-Top Leading	Leading dari atas ke atas
 	Bottom-to-Bottom Leading	Leading dari bawah ke bawah
 	Burasagari	Burasagari
 	Force	Paksa
-	Expand applies to compound shapes (Alt-click a shape mode) — on the roadmap	Perluas berlaku untuk bentuk majemuk (Alt+klik mode bentuk) — masih dalam roadmap
 	Expand Compound Shape	Perluas bentuk majemuk
 	Make Compound Shape	Buat bentuk majemuk
 	Pathfinder Options…	Opsi Pathfinder…
@@ -3069,6 +3072,7 @@ theme	Appearance	Tampilan
 	Make Envelope	Buat envelope
 	Move Envelope Mesh Point	Pindahkan titik mesh envelope
 	Move Mesh Point	Pindahkan titik mesh
+	Move Mesh Points	Pindahkan titik-titik mesh
 	Move Spine Point	Pindahkan titik spine
 	Reshape Spine Segment	Bentuk ulang segmen spine
 	Reset with Mesh	Atur ulang dengan mesh
@@ -3533,6 +3537,7 @@ axis	Both	Keduanya
 	Set Text	Atur teks
 	Insert Character	Sisipkan karakter
 	Replace	Ganti
+	Replace:	Ganti:
 	Type on a Path Options	Opsi teks pada jalur
 	Highlight Variable	Sorot variabel
 	New Variable	Variabel baru
@@ -3722,6 +3727,7 @@ font-technology	Variable	Variabel
 	Default Fill and Stroke (D)	Isi dan goresan default (D)
 	Fill (X), double-click for the Color Picker	Isi (X), klik ganda untuk pemilih warna
 	Opacity:	Opasitas:
+	Shape Mode	Mode bentuk
 	Shape Modes:	Mode bentuk:
 	Stroke (X), double-click for the Color Picker	Goresan (X), klik ganda untuk pemilih warna
 	Stroke:	Goresan:
@@ -3770,7 +3776,9 @@ font-technology	Variable	Variabel
 	Mojikumi	Mojikumi
 	N pt per	N pt per
 	New Character Style	Gaya karakter baru
+	New Character Style…	Gaya karakter baru…
 	New Paragraph Style	Gaya paragraf baru
+	New Paragraph Style…	Gaya paragraf baru…
 	Paragraph Style Options	Opsi gaya paragraf
 	Redefine Character Style	Definisikan ulang gaya karakter
 	Redefine Paragraph Style	Definisikan ulang gaya paragraf
@@ -5583,3 +5591,19 @@ axis	Y Axis	Sumbu Y
 # Object › Expand… dimmed until Expand Appearance (#3089).
 	Expand Appearance first (Object › Expand Appearance)	Perluas tampilan terlebih dahulu (Objek › Perluas tampilan)
 	Live preview	Pratinjau langsung
+# Align panel menu › Align to Glyph Bounds (#4231).
+	Point Text	Teks titik
+	Area Text	Teks area
+# Character panel menu › Show Snap to Glyph Options (#4232).
+	Show Snap to Glyph Options	Tampilkan opsi snap ke glif
+	Hide Snap to Glyph Options	Sembunyikan opsi snap ke glif
+	Snap to Glyph Options	Opsi snap ke glif
+	x-height	Tinggi-x
+	Glyph Bounds	Batas glif
+	Proximity Guides	Panduan kedekatan
+	Angular Guides	Panduan sudut
+# Average & Join (Object › Path, Cmd+Alt+Shift+J).
+	Average & Join…	Rata-rata dan sambungkan…
+	Average & Join	Rata-rata dan sambungkan
+anchor	Points:	Titik:
+@msg	select two open path ends, or two open paths, to average and join	pilih dua ujung jalur terbuka, atau dua jalur terbuka, untuk dirata-ratakan dan disambungkan
