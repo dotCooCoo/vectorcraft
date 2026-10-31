@@ -579,6 +579,15 @@ fn structured_junk() {
         ("addon.pathtools.movePointsTogether", json!({"enabled": true})),
         ("addon.pathtools.slideAnchor", json!({"id": 2, "anchor": 1, "t": 0.5})),
         ("addon.pathtools.movePointsTogether", json!({"enabled": false})),
+        // Arrange Tools add-on.
+        ("addon.arrange.grid", json!({"columns": u64::MAX, "gapX": 1e6, "gapY": -1e6, "centerOnArtboard": true})),
+        ("addon.arrange.grid", json!({"layout": "row", "gapX": f64::MAX, "columns": -1})),
+        ("addon.arrange.grid", json!({"layout": "column", "gapX": -1e6})),
+        ("addon.arrange.swap", json!({"size": true, "scaleStrokes": true})),
+        ("addon.arrange.replace", json!({"fit": "proportional", "keep": true})),
+        ("addon.arrange.replace", json!({"fit": "bounds", "scaleStrokes": true})),
+        ("addon.arrange.size", json!({"width": 1e6, "height": 0.001, "reference": 8, "scaleStrokes": true})),
+        ("addon.arrange.size", json!({"width": 0.001, "proportional": true, "reference": u64::MAX})),
         // Smart Pen add-on.
         ("addon.pen.append", json!({"id": 2, "x": 1e308, "y": 0, "in": [1e308, -1e308]})),
         ("addon.pen.append", json!({"id": 2, "subpath": u64::MAX, "x": 0, "y": 0, "segment": "curved"})),

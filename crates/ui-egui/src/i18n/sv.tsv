@@ -651,6 +651,13 @@ font-technology	Variable	Variabla
 	Create Report	Skapa rapport
 	Create Slice	Skapa skiva
 	Create Sub-folders	Skapa undermappar
+	Clear Selection	Rensa markering
+	Export PDFs As:	Exportera PDF-filer som:
+	Single File	En fil
+	Multiple Files	Flera filer
+	Format Presets	Formatförinställningar
+	Grid View	Rutnätsvy
+	Selected: {n}, Total number of files to export: {m}	Markerade: {n}, totalt antal filer att exportera: {m}
 	Create Text	Skapa text
 	Create Trim Marks	Skapa skärmärken
 	Created	Skapad
@@ -3979,6 +3986,7 @@ axis	Both	Båda
 @msg	cannot split an open path at its end point	kan inte dela en öppen bana vid dess slutpunkt
 @msg	closing needs three anchors	att sluta banan kräver tre ankarpunkter
 @msg	check an asset to export	kryssa för en resurs att exportera
+@msg	check an artboard to export	kryssa för en rityta att exportera
 @msg	check a layer to export	markera ett lager att exportera
 @msg	select the art to export first	markera först teckningen som ska exporteras
 @msg	choice must be "merge" or "add", not `{choice}`	choice måste vara "merge" eller "add", inte `{choice}`
@@ -6046,3 +6054,15 @@ breakText	Glyphs	Glyfer
 	Gap 4	Mellanrum 4
 	Dash 5	Streck 5
 	Gap 5	Mellanrum 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Ordningsverktyg
+	Arrange in Grid…	Ordna i rutnät…
+	Arrange in Grid	Ordna i rutnät
+	Swap Objects	Byt plats på objekt
+	Swap Objects and Sizes	Byt plats och storlek på objekt
+	Replace with Top Object…	Ersätt med översta objektet…
+	Replace with Top Object	Ersätt med översta objektet
+	Set Size of Each…	Ange storlek för vart och ett…
+	Set Size of Each	Ange storlek för vart och ett
+@msg	select exactly two objects	markera exakt två objekt
+@msg	give `width` or `height`	ange `width` eller `height`

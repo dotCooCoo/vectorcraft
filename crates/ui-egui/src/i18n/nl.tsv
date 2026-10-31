@@ -2075,6 +2075,13 @@ lighting	Light	Licht
 	Use Artboards	Tekenborden gebruiken
 	Choose a folder	Kies een map
 	Create Sub-folders	Submappen maken
+	Clear Selection	Selectie wissen
+	Export PDFs As:	PDF's exporteren als:
+	Single File	Eén bestand
+	Multiple Files	Meerdere bestanden
+	Format Presets	Indelingsvoorinstellingen
+	Grid View	Rasterweergave
+	Selected: {n}, Total number of files to export: {m}	Geselecteerd: {n}, totaal aantal te exporteren bestanden: {m}
 	Export Asset	Asset exporteren
 	Export to:	Exporteren naar:
 	Format Settings	Indelingsinstellingen
@@ -4081,6 +4088,7 @@ imageTrace	Outline	Contour
 @msg	cannot split an open path at its end point	kan een open pad niet splitsen op zijn eindpunt
 @msg	closing needs three anchors	voor sluiten zijn drie ankers nodig
 @msg	check an asset to export	vink een asset aan om te exporteren
+@msg	check an artboard to export	vink een tekengebied aan om te exporteren
 @msg	choice must be "merge" or "add", not `{choice}`	choice moet "merge" of "add" zijn, niet `{choice}`
 @msg	choose a direction to divide in	kies een richting om in te verdelen
 @msg	choose a folder to export to	kies een map om naar te exporteren
@@ -5942,3 +5950,15 @@ breakText	Glyphs	Glyphs
 	Gap 4	Tussenruimte 4
 	Dash 5	Streepje 5
 	Gap 5	Tussenruimte 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Schikgereedschappen
+	Arrange in Grid…	In raster schikken…
+	Arrange in Grid	In raster schikken
+	Swap Objects	Objecten omwisselen
+	Swap Objects and Sizes	Objecten en formaten omwisselen
+	Replace with Top Object…	Vervangen door bovenste object…
+	Replace with Top Object	Vervangen door bovenste object
+	Set Size of Each…	Formaat van elk instellen…
+	Set Size of Each	Formaat van elk instellen
+@msg	select exactly two objects	selecteer precies twee objecten
+@msg	give `width` or `height`	geef `width` of `height` op

@@ -1961,6 +1961,13 @@ lighting	Light	სინათლე
 	Use Artboards	სამუშაო დაფების გამოყენება
 	Choose a folder	საქაღალდის არჩევა
 	Create Sub-folders	ქვესაქაღალდეების შექმნა
+	Clear Selection	მონიშვნის გასუფთავება
+	Export PDFs As:	PDF-ების ექსპორტი როგორც:
+	Single File	ერთი ფაილი
+	Multiple Files	რამდენიმე ფაილი
+	Format Presets	ფორმატის პრესეტები
+	Grid View	ბადის ხედი
+	Selected: {n}, Total number of files to export: {m}	არჩეულია: {n}, ექსპორტის ფაილების საერთო რაოდენობა: {m}
 	Export Asset	რესურსის ექსპორტირება
 	Export to:	ექსპორტის ადგილი:
 	Format Settings	ფორმატის პარამეტრები
@@ -3851,6 +3858,7 @@ font-technology	Variable	ცვლადი
 @msg	cannot split an open path at its end point	ღია ტრაექტორიის ბოლო წერტილში გაყოფა შეუძლებელია
 @msg	closing needs three anchors	შეკვრას სამი საყრდენი წერტილი სჭირდება
 @msg	check an asset to export	მონიშნეთ ექსპორტის რესურსი
+@msg	check an artboard to export	მონიშნეთ ექსპორტის სახატავი დაფა
 @msg	choice must be "merge" or "add", not `{choice}`	choice უნდა იყოს "merge" ან "add" და არა `{choice}`
 @msg	choose a direction to divide in	აირჩიეთ დაყოფის მიმართულება
 @msg	choose a folder to export to	აირჩიეთ ექსპორტის საქაღალდე
@@ -5983,3 +5991,15 @@ breakText	Glyphs	გლიფები
 	Gap 4	შუალედი 4
 	Dash 5	ტირე 5
 	Gap 5	შუალედი 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	განლაგების ხელსაწყოები
+	Arrange in Grid…	ბადეში განლაგება…
+	Arrange in Grid	ბადეში განლაგება
+	Swap Objects	ობიექტების გაცვლა
+	Swap Objects and Sizes	ობიექტებისა და ზომების გაცვლა
+	Replace with Top Object…	ზედა ობიექტით ჩანაცვლება…
+	Replace with Top Object	ზედა ობიექტით ჩანაცვლება
+	Set Size of Each…	თითოეულის ზომის დაყენება…
+	Set Size of Each	თითოეულის ზომის დაყენება
+@msg	select exactly two objects	მონიშნეთ ზუსტად ორი ობიექტი
+@msg	give `width` or `height`	მიუთითეთ `width` ან `height`

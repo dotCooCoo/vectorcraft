@@ -206,7 +206,7 @@ pub fn enabled(app: &VectorcraftApp, id: &str) -> bool {
         | "view.fitAll"
         | "view.actualSize"
         | "view.rotate" => app.session.active().is_some(),
-        "view.rotateToSelection" => app.session.active().is_some_and(|d| !d.selection.objects.is_empty()),
+        "view.rotateToSelection" | crate::addons::arrange::ZOOM => app.session.active().is_some_and(|d| !d.selection.objects.is_empty()),
         id if id.starts_with("file.openRecent") => recent_slot(app, id).is_some(),
         "file.clearRecent" => !app.ui.recent_files.is_empty(),
         id if id.starts_with("type.recentFont") => {

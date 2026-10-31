@@ -1231,6 +1231,13 @@ font-technology	Variable	バリアブル
 	Create Path	パスを作成
 	Create Slice	スライスを作成
 	Create Sub-folders	サブフォルダーを作成
+	Clear Selection	選択を解除
+	Export PDFs As:	PDF の書き出し形式：
+	Single File	単一ファイル
+	Multiple Files	複数ファイル
+	Format Presets	形式プリセット
+	Grid View	グリッド表示
+	Selected: {n}, Total number of files to export: {m}	選択済み：{n}、書き出すファイルの合計数：{m}
 	Create Text	テキストを作成
 	Created	作成日
 	Created:	作成日:
@@ -4425,6 +4432,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	書き出すものがありません: ドキュメントに表示されているアートがありません (または「アートボードを使用」をオンにしてください)
 @msg	add a format to export	書き出す形式を追加してください
 @msg	check an asset to export	書き出すアセットにチェックを入れてください
+@msg	check an artboard to export	書き出すアートボードにチェックを入れてください
 @msg	check a layer to export	書き出すレイヤーにチェックを入れてください
 @msg	select the art to export first	先に書き出すアートを選択してください
 @msg	`{tool}` isn't a freehand tool	`{tool}` はフリーハンドツールではありません
@@ -5679,3 +5687,15 @@ breakText	Glyphs	字形
 	Gap 4	間隔 4
 	Dash 5	線分 5
 	Gap 5	間隔 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	配置ツール
+	Arrange in Grid…	グリッドに配置…
+	Arrange in Grid	グリッドに配置
+	Swap Objects	オブジェクトを入れ替え
+	Swap Objects and Sizes	オブジェクトとサイズを入れ替え
+	Replace with Top Object…	最前面のオブジェクトで置き換え…
+	Replace with Top Object	最前面のオブジェクトで置き換え
+	Set Size of Each…	個別にサイズを設定…
+	Set Size of Each	個別にサイズを設定
+@msg	select exactly two objects	オブジェクトをちょうど 2 つ選択してください
+@msg	give `width` or `height`	`width` または `height` を指定してください

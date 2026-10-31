@@ -608,6 +608,13 @@
 	Create Report	创建报告
 	Create Slice	创建切片
 	Create Sub-folders	创建子文件夹
+	Clear Selection	清除选择
+	Export PDFs As:	PDF 导出为：
+	Single File	单个文件
+	Multiple Files	多个文件
+	Format Presets	格式预设
+	Grid View	网格视图
+	Selected: {n}, Total number of files to export: {m}	已选择：{n}，要导出的文件总数：{m}
 	Create Text	创建文字
 	Create Trim Marks	创建裁切标记
 	Created	创建时间
@@ -4148,6 +4155,7 @@ imageTrace	Outline	轮廓
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	没有可导出的内容：文档中没有可见的图稿 (或请打开“使用画板”)
 @msg	add a format to export	请添加要导出的格式
 @msg	check an asset to export	请勾选要导出的资源
+@msg	check an artboard to export	请勾选要导出的画板
 @msg	`{tool}` isn't a freehand tool	`{tool}` 不是手绘工具
 @msg	bad colour `{hex}` (#rrggbb)	颜色 `{hex}` 无效 (#rrggbb)
 @msg	no gradient stop or freeform point is selected	未选择渐变色标或任意形状点
@@ -5835,3 +5843,15 @@ breakText	Glyphs	字形
 	Gap 4	间隔 4
 	Dash 5	虚线 5
 	Gap 5	间隔 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	排列工具
+	Arrange in Grid…	按网格排列…
+	Arrange in Grid	按网格排列
+	Swap Objects	交换对象
+	Swap Objects and Sizes	交换对象和大小
+	Replace with Top Object…	替换为顶层对象…
+	Replace with Top Object	替换为顶层对象
+	Set Size of Each…	分别设置大小…
+	Set Size of Each	分别设置大小
+@msg	select exactly two objects	请恰好选择两个对象
+@msg	give `width` or `height`	请提供 `width` 或 `height`

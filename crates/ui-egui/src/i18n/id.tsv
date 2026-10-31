@@ -2061,6 +2061,13 @@ lighting	Light	Cahaya
 	Use Artboards	Gunakan artboard
 	Choose a folder	Pilih folder
 	Create Sub-folders	Buat subfolder
+	Clear Selection	Hapus pilihan
+	Export PDFs As:	Ekspor PDF sebagai:
+	Single File	Satu file
+	Multiple Files	Beberapa file
+	Format Presets	Preset format
+	Grid View	Tampilan kisi
+	Selected: {n}, Total number of files to export: {m}	Dipilih: {n}, jumlah total file yang akan diekspor: {m}
 	Export Asset	Ekspor aset
 	Export to:	Ekspor ke:
 	Format Settings	Pengaturan format
@@ -4067,6 +4074,7 @@ imageTrace	Outline	Kontur
 @msg	cannot split an open path at its end point	tidak dapat membelah jalur terbuka pada titik ujungnya
 @msg	closing needs three anchors	penutupan memerlukan tiga jangkar
 @msg	check an asset to export	centang aset yang akan diekspor
+@msg	check an artboard to export	centang artboard yang akan diekspor
 @msg	choice must be "merge" or "add", not `{choice}`	choice harus "merge" atau "add", bukan `{choice}`
 @msg	choose a direction to divide in	pilih arah untuk membagi
 @msg	choose a folder to export to	pilih folder tujuan ekspor
@@ -5898,3 +5906,15 @@ breakText	Glyphs	Glif
 	Gap 4	Jarak 4
 	Dash 5	Garis 5
 	Gap 5	Jarak 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Alat penyusunan
+	Arrange in Grid…	Susun dalam grid…
+	Arrange in Grid	Susun dalam grid
+	Swap Objects	Tukar objek
+	Swap Objects and Sizes	Tukar objek dan ukuran
+	Replace with Top Object…	Ganti dengan objek teratas…
+	Replace with Top Object	Ganti dengan objek teratas
+	Set Size of Each…	Atur ukuran masing-masing…
+	Set Size of Each	Atur ukuran masing-masing
+@msg	select exactly two objects	pilih tepat dua objek
+@msg	give `width` or `height`	berikan `width` atau `height`

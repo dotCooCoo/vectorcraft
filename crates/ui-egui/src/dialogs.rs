@@ -39,7 +39,7 @@ pub mod find_links;
 pub mod flare_options;
 pub mod flatten;
 pub mod flattener_presets;
-mod form;
+pub(crate) mod form;
 pub(crate) mod free_distort;
 pub mod freehand;
 mod gradient_stop;
@@ -387,6 +387,7 @@ registry! {
     PathfinderOptions: [pathfinder_options::KIND] => pathfinder_options::SPEC,
     RearrangeArtboards: [rearrange_artboards::KIND] => rearrange_artboards::SPEC,
     PathToolOptions: [crate::addons::pathtools::KIND] => crate::addons::pathtools::OPTIONS_SPEC,
+    ArrangeTools: [crate::addons::arrange::GRID, crate::addons::arrange::REPLACE, crate::addons::arrange::SIZE] => crate::addons::arrange::SPEC,
     ShortcutImport: [shortcut_import::KIND] => DialogSpec::window(shortcut_import::show, shortcut_import::confirm),
 }
 

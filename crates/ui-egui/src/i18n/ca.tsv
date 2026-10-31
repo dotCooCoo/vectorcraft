@@ -918,6 +918,13 @@
 	Create Slice from Selection	Crea un tall a partir de la selecció
 	Create Slices from Guides	Crea talls a partir de guies
 	Create Sub-folders	Crea subcarpetes
+	Clear Selection	Esborra la selecció
+	Export PDFs As:	Exporta els PDF com a:
+	Single File	Un sol fitxer
+	Multiple Files	Diversos fitxers
+	Format Presets	Preajustos de format
+	Grid View	Vista de quadrícula
+	Selected: {n}, Total number of files to export: {m}	Seleccionats: {n}, nombre total de fitxers per exportar: {m}
 	Create Text	Crea text
 	Create Trim Marks	Crea marques de retall
 	Create:	Crea:
@@ -4886,6 +4893,7 @@
 @msg	cannot split an open path at its end point	no es pot dividir un traçat obert al seu punt final
 @msg	check a layer to export	marqueu una capa per exportar
 @msg	check an asset to export	marqueu un recurs per exportar
+@msg	check an artboard to export	marqueu una mesa de treball per exportar
 @msg	choice must be "merge" or "add", not `{choice}`	l’opció ha de ser "merge" o "add", no `{choice}`
 @msg	Choose a circle or a perfect arc	Trieu un cercle o un arc perfecte
 @msg	choose a destination folder	trieu una carpeta de destinació
@@ -5984,3 +5992,15 @@ breakText	Glyphs	Glifs
 	Gap 4	Separació 4
 	Dash 5	Guió 5
 	Gap 5	Separació 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Eines d’organització
+	Arrange in Grid…	Organitza en quadrícula…
+	Arrange in Grid	Organitza en quadrícula
+	Swap Objects	Intercanvia els objectes
+	Swap Objects and Sizes	Intercanvia els objectes i les mides
+	Replace with Top Object…	Reemplaça per l’objecte superior…
+	Replace with Top Object	Reemplaça per l’objecte superior
+	Set Size of Each…	Defineix la mida de cadascun…
+	Set Size of Each	Defineix la mida de cadascun
+@msg	select exactly two objects	selecciona exactament dos objectes
+@msg	give `width` or `height`	indica `width` o `height`

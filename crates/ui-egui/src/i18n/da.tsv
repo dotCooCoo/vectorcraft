@@ -2061,6 +2061,13 @@ lighting	Light	Lys
 	Use Artboards	Brug tegnebrætter
 	Choose a folder	Vælg en mappe
 	Create Sub-folders	Opret undermapper
+	Clear Selection	Ryd markering
+	Export PDFs As:	Eksportér PDF'er som:
+	Single File	Én fil
+	Multiple Files	Flere filer
+	Format Presets	Formatforudindstillinger
+	Grid View	Gittervisning
+	Selected: {n}, Total number of files to export: {m}	Valgt: {n}, samlet antal filer, der eksporteres: {m}
 	Export Asset	Eksportér aktiv
 	Export to:	Eksportér til:
 	Format Settings	Formatindstillinger
@@ -4067,6 +4074,7 @@ imageTrace	Outline	Kontur
 @msg	cannot split an open path at its end point	kan ikke opdele en åben kurve i dens endepunkt
 @msg	closing needs three anchors	lukning kræver tre ankerpunkter
 @msg	check an asset to export	afkryds et aktiv, der skal eksporteres
+@msg	check an artboard to export	afkryds en tegneflade, der skal eksporteres
 @msg	choice must be "merge" or "add", not `{choice}`	valget skal være "merge" eller "add", ikke `{choice}`
 @msg	choose a direction to divide in	vælg en retning at opdele i
 @msg	choose a folder to export to	vælg en mappe at eksportere til
@@ -5898,3 +5906,15 @@ breakText	Glyphs	Glyffer
 	Gap 4	Mellemrum 4
 	Dash 5	Streg 5
 	Gap 5	Mellemrum 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Arrangeringsværktøjer
+	Arrange in Grid…	Arrangér i gitter…
+	Arrange in Grid	Arrangér i gitter
+	Swap Objects	Byt objekter
+	Swap Objects and Sizes	Byt objekter og størrelser
+	Replace with Top Object…	Erstat med øverste objekt…
+	Replace with Top Object	Erstat med øverste objekt
+	Set Size of Each…	Angiv størrelse for hver…
+	Set Size of Each	Angiv størrelse for hver
+@msg	select exactly two objects	markér præcis to objekter
+@msg	give `width` or `height`	angiv `width` eller `height`

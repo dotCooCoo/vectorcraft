@@ -623,6 +623,13 @@ font-technology	Variable	Μεταβλητές
 	Create Report	Δημιουργία αναφοράς
 	Create Slice	Δημιουργία τομής
 	Create Sub-folders	Δημιουργία υποφακέλων
+	Clear Selection	Απαλοιφή επιλογής
+	Export PDFs As:	Εξαγωγή PDF ως:
+	Single File	Ένα αρχείο
+	Multiple Files	Πολλά αρχεία
+	Format Presets	Προεπιλογές μορφής
+	Grid View	Προβολή πλέγματος
+	Selected: {n}, Total number of files to export: {m}	Επιλεγμένα: {n}, συνολικός αριθμός αρχείων για εξαγωγή: {m}
 	Create Text	Δημιουργία κειμένου
 	Create Trim Marks	Δημιουργία σημαδιών ξακρίσματος
 	Created	Δημιουργήθηκε
@@ -4028,6 +4035,7 @@ theme	Appearance	Εμφάνιση
 @msg	cannot split an open path at its end point	δεν είναι δυνατή η διαίρεση ανοιχτής διαδρομής στο τελικό σημείο της
 @msg	closing needs three anchors	το κλείσιμο απαιτεί τρία σημεία αγκύρωσης
 @msg	check an asset to export	επιλέξτε στοιχείο για εξαγωγή
+@msg	check an artboard to export	επιλέξτε πινακίδα σχεδίασης για εξαγωγή
 @msg	check a layer to export	επιλέξτε ένα επίπεδο για εξαγωγή
 @msg	select the art to export first	επιλέξτε πρώτα το γραφικό για εξαγωγή
 @msg	choice must be "merge" or "add", not `{choice}`	η επιλογή πρέπει να είναι "merge" ή "add", όχι `{choice}`
@@ -5946,3 +5954,15 @@ breakText	Glyphs	Γλύφοι
 	Gap 4	Διάκενο 4
 	Dash 5	Παύλα 5
 	Gap 5	Διάκενο 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Εργαλεία διάταξης
+	Arrange in Grid…	Διάταξη σε πλέγμα…
+	Arrange in Grid	Διάταξη σε πλέγμα
+	Swap Objects	Εναλλαγή αντικειμένων
+	Swap Objects and Sizes	Εναλλαγή αντικειμένων και μεγεθών
+	Replace with Top Object…	Αντικατάσταση με το επάνω αντικείμενο…
+	Replace with Top Object	Αντικατάσταση με το επάνω αντικείμενο
+	Set Size of Each…	Ορισμός μεγέθους καθενός…
+	Set Size of Each	Ορισμός μεγέθους καθενός
+@msg	select exactly two objects	επιλέξτε ακριβώς δύο αντικείμενα
+@msg	give `width` or `height`	δώστε `width` ή `height`

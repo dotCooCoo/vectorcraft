@@ -1222,6 +1222,13 @@ font-technology	Variable	가변
 	Create Path	패스 만들기
 	Create Slice	슬라이스 만들기
 	Create Sub-folders	하위 폴더 만들기
+	Clear Selection	선택 지우기
+	Export PDFs As:	PDF 내보내기 방식:
+	Single File	단일 파일
+	Multiple Files	여러 파일
+	Format Presets	형식 사전 설정
+	Grid View	격자 보기
+	Selected: {n}, Total number of files to export: {m}	선택됨: {n}, 내보낼 총 파일 수: {m}
 	Create Text	텍스트 만들기
 	Created	만든 날짜
 	Created:	만든 날짜:
@@ -4353,6 +4360,7 @@ theme	Appearance	외관
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	내보낼 항목이 없습니다: 문서에 보이는 아트웍이 없습니다(또는 아트보드 사용을 켜세요)
 @msg	add a format to export	내보낼 형식을 추가하세요
 @msg	check an asset to export	내보낼 자산을 체크하세요
+@msg	check an artboard to export	내보낼 대지를 체크하세요
 @msg	check a layer to export	내보낼 레이어를 선택하십시오
 @msg	select the art to export first	먼저 내보낼 아트를 선택하십시오
 @msg	`{tool}` isn't a freehand tool	`{tool}`은(는) 프리핸드 도구가 아닙니다
@@ -5576,3 +5584,15 @@ breakText	Glyphs	글리프
 	Gap 4	간격 4
 	Dash 5	대시 5
 	Gap 5	간격 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	배치 도구
+	Arrange in Grid…	격자로 배치…
+	Arrange in Grid	격자로 배치
+	Swap Objects	개체 맞바꾸기
+	Swap Objects and Sizes	개체와 크기 맞바꾸기
+	Replace with Top Object…	맨 위 개체로 바꾸기…
+	Replace with Top Object	맨 위 개체로 바꾸기
+	Set Size of Each…	각각 크기 설정…
+	Set Size of Each	각각 크기 설정
+@msg	select exactly two objects	개체를 정확히 두 개 선택하세요
+@msg	give `width` or `height`	`width` 또는 `height`를 지정하세요

@@ -649,6 +649,13 @@ font-technology	Variable	Променливи
 	Create Report	Създаване на отчет
 	Create Slice	Създаване на отрязък
 	Create Sub-folders	Създаване на подпапки
+	Clear Selection	Изчистване на избора
+	Export PDFs As:	Експортиране на PDF като:
+	Single File	Един файл
+	Multiple Files	Няколко файла
+	Format Presets	Предварителни настройки на формата
+	Grid View	Изглед на мрежа
+	Selected: {n}, Total number of files to export: {m}	Избрани: {n}, общ брой файлове за експортиране: {m}
 	Create Text	Създаване на текст
 	Create Trim Marks	Създаване на режещи знаци
 	Created	Създадено
@@ -3952,6 +3959,7 @@ axis	Both	И двете
 @msg	cannot split an open path at its end point	отворен път не може да бъде разделен в крайната му точка
 @msg	closing needs three anchors	затварянето изисква три опорни точки
 @msg	check an asset to export	изберете актив за експортиране
+@msg	check an artboard to export	изберете монтажна област за експортиране
 @msg	check a layer to export	отметнете слой за експортиране
 @msg	select the art to export first	първо изберете графиката за експортиране
 @msg	choice must be "merge" or "add", not `{choice}`	изборът трябва да бъде "merge" или "add", а не `{choice}`
@@ -5884,3 +5892,15 @@ breakText	Glyphs	Глифи
 	Gap 4	Разстояние 4
 	Dash 5	Тире 5
 	Gap 5	Разстояние 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Инструменти за подреждане
+	Arrange in Grid…	Подреждане в мрежа…
+	Arrange in Grid	Подреждане в мрежа
+	Swap Objects	Размяна на обекти
+	Swap Objects and Sizes	Размяна на обекти и размери
+	Replace with Top Object…	Замяна с горния обект…
+	Replace with Top Object	Замяна с горния обект
+	Set Size of Each…	Задаване на размер на всеки…
+	Set Size of Each	Задаване на размер на всеки
+@msg	select exactly two objects	изберете точно два обекта
+@msg	give `width` or `height`	задайте `width` или `height`

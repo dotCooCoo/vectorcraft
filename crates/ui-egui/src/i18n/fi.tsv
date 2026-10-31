@@ -2213,6 +2213,13 @@ lighting	Light	Valo
 	Use Artboards	Käytä piirtoalustoja
 	Choose a folder	Valitse kansio
 	Create Sub-folders	Luo alikansiot
+	Clear Selection	Tyhjennä valinta
+	Export PDFs As:	Vie PDF-tiedostot muodossa:
+	Single File	Yksi tiedosto
+	Multiple Files	Useita tiedostoja
+	Format Presets	Muotoesiasetukset
+	Grid View	Ruudukkonäkymä
+	Selected: {n}, Total number of files to export: {m}	Valittu: {n}, vietävien tiedostojen määrä yhteensä: {m}
 	Export Asset	Vie resurssi
 	Export to:	Vie kohteeseen:
 	Format Settings	Muotoasetukset
@@ -4284,6 +4291,7 @@ imageTrace	Outline	Ääriviiva
 @msg	cannot split an open path at its end point	avointa polkua ei voi jakaa sen päätepisteestä
 @msg	closing needs three anchors	sulkeminen vaatii kolme ankkuria
 @msg	check an asset to export	valitse vietävä resurssi
+@msg	check an artboard to export	valitse vietävä piirtoalue
 @msg	check a layer to export	valitse vietävä taso
 @msg	select the art to export first	valitse ensin vietävä kuvitus
 @msg	choice must be "merge" or "add", not `{choice}`	choice-arvon on oltava "merge" tai "add", ei `{choice}`
@@ -6024,3 +6032,15 @@ breakText	Glyphs	Merkit
 	Gap 4	Väli 4
 	Dash 5	Viiva 5
 	Gap 5	Väli 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Järjestelytyökalut
+	Arrange in Grid…	Järjestä ruudukkoon…
+	Arrange in Grid	Järjestä ruudukkoon
+	Swap Objects	Vaihda objektien paikat
+	Swap Objects and Sizes	Vaihda objektien paikat ja koot
+	Replace with Top Object…	Korvaa ylimmällä objektilla…
+	Replace with Top Object	Korvaa ylimmällä objektilla
+	Set Size of Each…	Aseta kunkin koko…
+	Set Size of Each	Aseta kunkin koko
+@msg	select exactly two objects	valitse täsmälleen kaksi objektia
+@msg	give `width` or `height`	anna `width` tai `height`

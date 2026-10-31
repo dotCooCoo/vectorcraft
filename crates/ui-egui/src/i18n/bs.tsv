@@ -2228,6 +2228,13 @@ lighting	Light	Svjetlo
 	Use Artboards	Koristi radne ploče
 	Choose a folder	Odaberite folder
 	Create Sub-folders	Kreiraj podfoldere
+	Clear Selection	Poništi odabir
+	Export PDFs As:	Izvezi PDF kao:
+	Single File	Jedna datoteka
+	Multiple Files	Više datoteka
+	Format Presets	Postavke formata
+	Grid View	Prikaz mreže
+	Selected: {n}, Total number of files to export: {m}	Odabrano: {n}, ukupan broj datoteka za izvoz: {m}
 	Export Asset	Izvezi resurs
 	Export to:	Izvezi u:
 	Format Settings	Postavke formata
@@ -4339,6 +4346,7 @@ imageTrace	Outline	Obris
 @msg	cannot split an open path at its end point	nije moguće razdvojiti otvorenu putanju na njenoj krajnjoj tački
 @msg	closing needs three anchors	zatvaranje zahtijeva tri sidra
 @msg	check an asset to export	označite resurs za izvoz
+@msg	check an artboard to export	označite radnu površinu za izvoz
 @msg	check a layer to export	označite sloj za izvoz
 @msg	select the art to export first	prvo odaberite crtež za izvoz
 @msg	choice must be "merge" or "add", not `{choice}`	choice mora biti "merge" ili "add", a ne `{choice}`
@@ -5917,3 +5925,15 @@ shape	Open	Otvoren
 @msg	`follow` must be "average", "a" or "b"	`follow` mora biti "average", "a" ili "b"
 @msg	the paths have nothing to merge there	putanje tu nemaju šta spojiti
 @msg	the path is locked or hidden	putanja je zaključana ili skrivena
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Alati za raspoređivanje
+	Arrange in Grid…	Rasporedi u mrežu…
+	Arrange in Grid	Rasporedi u mrežu
+	Swap Objects	Zamijeni objekte
+	Swap Objects and Sizes	Zamijeni objekte i veličine
+	Replace with Top Object…	Zamijeni gornjim objektom…
+	Replace with Top Object	Zamijeni gornjim objektom
+	Set Size of Each…	Postavi veličinu svakog…
+	Set Size of Each	Postavi veličinu svakog
+@msg	select exactly two objects	odaberite tačno dva objekta
+@msg	give `width` or `height`	zadajte `width` ili `height`

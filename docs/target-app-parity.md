@@ -1,6 +1,6 @@
 # Parity with Adobe Illustrator
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-31 · **Change:** minor (Artwork Cleanup add-on: Join Point Text, #4826; scores unchanged; previously: G13: Direct Selection snaps a dragged line end square to straight paths and grazing curves; Path Precision Tools add-on: Shared Edge Merge Tool; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-31 · **Change:** minor (New Document: Save Preset in More Settings, #4893; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
 
 ## Feature submission evidence
 
@@ -19,6 +19,10 @@ Artboard Options forwards the active Artboard tool's Scale Artwork with Artboard
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-31 | minor | New Document: More Settings has the Save Preset button beside the name too, saving its settings (artboard layout included) as a preset (#4893); scores unchanged. |
+| 2026-10-31 | minor | Object › Rasterize in a CMYK document with its CMYK colour model makes a CMYK image of the art's ink amounts (as CMYK exports draw them), so the Properties panel says CMYK and CMYK exports keep its inks; a transparent background becomes the image's opacity mask (#4882); scores unchanged. |
+| 2026-10-31 | minor | Export for Screens is laid out as Illustrator's: Artboards and Assets tabs with a grid or list of thumbnails, Clear Selection and Prefix under them, Create Sub-folders by Scale or Format (on by default), Export PDFs As Single File or Multiple Files (`pdfs`), iOS and Android rows, the format presets in a ☰ menu, and a Selected / files-to-export count; the naming pattern, Layers and Selection pages and folders list stay in `document.exportForScreens` for scripts and MCP; scores unchanged. |
+| 2026-10-31 | minor | Export for Screens is laid out as the reference app's: Artboards and Assets tabs with a grid or list of thumbnails, Clear Selection and Prefix under them, Create Sub-folders by Scale or Format (on by default), Export PDFs As Single File or Multiple Files (`pdfs`), iOS and Android rows, the format presets in a ☰ menu, and a Selected / files-to-export count; the naming pattern, Layers and Selection pages and folders list stay in `document.exportForScreens` for scripts and MCP; scores unchanged. |
 | 2026-10-31 | minor | Artwork Cleanup add-on: Join Point Text (`addon.cleanup.joinText`) joins stacked one-line point type into one object, a paragraph per line keeping its baseline (#4826); scores unchanged. |
 | 2026-10-31 | minor | Width tool: a stroke with a width profile keeps its shape while the view zooms out; the minimum visible width goes to its widest point instead of scaling the whole profile (#995); scores unchanged. |
 | 2026-10-31 | minor | Patterns: Grid Repeat Options has a Preview checkbox, as the public grid options page lists (#2651); scores unchanged. |
@@ -542,7 +546,7 @@ Moved from the ROADMAP's "Shipped so far" on 2026-10-10. Update it when a featur
   - Batch…: Override Save and Override Export name each file with the extension of the format the step writes, however the step spells the format (`.svg` and `SVG` give `.svg`, `png8` gives `.png`), in `action.batch`.
   - Actions panel (record/playback, persisted), generic parameter dialogs for every "…" command.
   - Batch… over data sets names each file after the document and the data set (`action.batch`). It writes `/`, `\`, `:`, `<`, `>`, `"`, `|`, `?`, `*` and control characters in the data set's name as `-`, and adds `-2`, `-3`… to a name an earlier data set used.
-  - Export for Screens: the dialog's Example line shows the path of the file the export writes first, sub-folder included, named as the export names it, for the first chosen artboard, asset, layer or object (`document.exportForScreens`).
+  - Export for Screens is laid out as the reference app's dialog: on the left the Artboards and Assets tabs (thumbnails with their checkboxes, number and name, in a grid or a list), Clear Selection and Prefix; on the right Select (All, Range, Include Bleed, Full Document), Export to, Open Location after Export, Create Sub-folders by Scale or by Format (on by default), Export PDFs As (Single File writes the chosen artboards as the pages of one PDF named after the document, `pdfs: "single"`), and the format rows with the iOS and Android buttons, the format presets (☰) and Format Settings; under them, how many items are selected and how many files the export writes. File name patterns, the Layers and Selection sources and per-item folders stay available through `document.exportForScreens` (scripts and MCP). Tests: `dialogs::tests_screens` (layout, iOS/Android, Clear Selection, sub-folders, Single File) and `fileio::tests_screens::single_file_pdfs_hold_every_chosen_artboard`.
   - Save for Web: Preview in Browser writes each preview's page and images to a folder of its own inside `VectorCraft Save for Web` in the system's temporary folder. A later preview, from the same app or another one running, does not overwrite an earlier one. Each preview first removes the preview folders there that are an hour old or older and, on Linux, macOS and FreeBSD, belong to the current user; it leaves other files and folders alone. The folders a preview makes there are open to their owner only on those systems. When `VectorCraft Save for Web` is a link or is not a folder, or on those systems belongs to another user or can be written by other users, the preview goes to a new folder of its own in the temporary folder, which a later preview removes once it is an hour old (`file.saveForWeb.browser`).
   - Export for Screens, Save for Web (slice images, and files named after the document's title) and the Libraries panel name files with the characters Windows does not allow written as `-` and with a `-` after a Windows device name such as `CON`, on every platform (`document.exportForScreens`, `document.exportForWeb`, `library.create`).
   - Variables (data merge): text, visibility and image variables bound to objects (an object may carry several), dataset rows applied in one undo step (`variable.*`, `dataset.*`) from a Variables panel and Window › Variables, with dialogs to define, bind and edit, Make Text/Visibility/Image Dynamic, Capture/Update Data Set, CSV import/export (`dataset.import` / `dataset.export`), and a row in italics when an edit leaves the art not matching it; an image dataset value is a file path and apply keeps the object's bounds; bindings let go of deleted art and locked art is left alone; every command, like the rest, is drivable over MCP and the CLI.
@@ -703,8 +707,10 @@ Moved from the ROADMAP's "Shipped so far" on 2026-10-10. Update it when a featur
     `path.reshapeSegment`, `object.blend.spine.reshapeSegment`, `path.convertAnchor`, `path.curvatureEdit`, `path.insertAnchor`, `path.moveAnchors`, `path.reshape`, `path.close` and the Pencil, Curvature, Knife, Eraser, Path Eraser, Smooth, Join and Blob Brush commands refuse a number, point or handle given as text, such as "10", and leave the document unchanged; `path.convertAnchor` refuses an `x` without a `y`, or a `y` without an `x`.
     `path.close` and `path.setHandle` (`independent`), `path.moveAnchors` (`patterns`), the Pencil (`closed`, `keepSelected`, `fill`), Curvature (`closed` and a point's `corner`), `path.curvatureEdit` (`corner`), `path.reshapeSegment` (`perpendicular`) and the Blob Brush (`keepSelected`, `mergeOnlySelection`, `merge`) refuse a value other than true, false or null, such as "true", and leave the document unchanged.
     Direct Selection's marquee selects the frame anchors of area type that lie inside it, and a click on a frame anchor selects that one; Shift toggles them. The selected frame anchors show filled. A drag of one of them moves all of them, the arrow keys nudge them, and the type reflows at its size (`text.reshapeArea`, which takes `items` to move the anchors of several frames in one step), as [Create text](http://web.archive.org/web/20220127090642/https://helpx.adobe.com/illustrator/using/creating-text.html) and [Selecting objects](http://web.archive.org/web/20211230015528/https://helpx.adobe.com/illustrator/using/selecting-objects.html) describe. When the selection also holds other objects, path anchors or ruler guides, or when another change to the document or the selection follows the pick, the type is selected whole.
+    A press on a selected object's centre point (Attributes panel › Show Center) selects the object whole, and a drag from it moves the object as one Move, held by that point (#4891; test `the_centre_point_selects_and_moves_the_object_whole`).
   - **Group Selection (#2441):** a click picks one path of a compound path (its outline within the pick tolerance, else the innermost path whose area holds the click: the outer shape or a hole), Shift-click adds another, and a click on a selected path adds the compound path, as a click on a group member climbs to its group. A path selected this way moves, rotates and scales on its own; paint still goes to the compound path.
     With Direct Selection, an Alt-click on a path selected whole adds its group, and each further Alt-click adds the next group up, as Group Selection's clicks do; the climb stops below the layer and its sublayers and at the isolated object. An Alt-drag still copies the selection, and Alt+Shift-click on a segment or the fill still adds or removes the path. Public references: [Select objects](https://web.archive.org/web/20250904012025/https://helpx.adobe.com/illustrator/using/selecting-objects.html) and [Default keyboard shortcuts](https://web.archive.org/web/20260726060015/https://helpx.adobe.com/illustrator/using/default-keyboard-shortcuts.html) (archived copies).
+    With Alt held at the press, a Direct Selection marquee is Group Selection's for the drag: it selects every path it touches, whole (Shift toggles them), not the anchors inside it, and the Group Selection pointer stays until the release (#4890; test `an_alt_marquee_selects_the_paths_it_touches_whole`).
     With Direct Selection, Shift pressed during the drag of a curved segment keeps both of its handles at right angles to the line between its anchors, on the same side and at the same length (`path.reshapeSegment {perpendicular}`). Shift held while any segment is dragged with the Anchor Point tool or the Pen with Alt does the same. With the Anchor Point tool, Shift held at the press on an anchor (or a selected blend's spine point) moves it, handles and all, instead of pulling out handles; Shift kept down keeps the move at 45° steps, and a Shift-click that doesn't move leaves the anchor as it was (`path.moveAnchor`). A selected blend spine's segment dragged with the Anchor Point tool, or a curved one dragged with Direct Selection, bends the same way (`object.blend.spine.reshapeSegment`).
   - **Live Corners:** drag a live rectangle's corner widgets (Selection or Direct Selection) to round all corners, with a radius readout; with Direct Selection, select corner anchors to show and round just those corners (#381). Each corner keeps its own radius and kind (Round, Inverted Round, Chamfer): Alt-click a widget to cycle the kind, double-click it for the Corners dialog, and the Properties and Transform radius fields set the selected corners (`object.setLiveShape {corners, radius, kind}`). A link toggle behind Corner Radius (the `singleCornerRadius` preference) switches the panels to a field for each corner of a live rectangle: Top Left, Top Right, Bottom Right and Bottom Left. Corners stay circular when the rectangle is scaled unevenly or along its own sides when rotated (the radius keeps its size, or scales by the mean scale with Scale Corners on); only a shear distorts them. On a rectangle that isn't square every corner is the same circle: a radius past half the shorter side stops there for all of them, the widgets sit on the corners as drawn and turn the edited corners red at that limit, CSS export writes the drawn radii, and rectangles saved stretched by older versions get circular corners when their corners are next set (#442). Live Corners work on any path's corners too, as on a rectangle's (#511): a star's, a live polygon's (which also shows them to the Selection tool, has a Corner Radius field in the Properties and Transform panels and keeps its radius as its sides change) and a pen path's, wherever two sides meet at an angle at an anchor that isn't smooth: curved sides too, trimmed to what the cut leaves of them (#1144). Direct Selection shows the widgets of every corner, or of the corners holding selected anchors; each corner is a circle tangent to both sides, drawn no larger than takes its cut halfway along its shorter side; a path keeps its uncut outline so its corners stay editable, and the same command, dialog, angle preference and View › Hide Corner Widget apply. With Direct Selection a click on a widget (no drag) selects its corner, as a click on the corner's anchor does, so the next drag on it rounds that corner alone; Shift-click toggles it (#1239). While a corner widget is dragged with the Selection tool the bounding box hides, so the rounding shows against the path alone (#1229). A round corner next to a curved side curves smoothly instead of sticking out of the shape (#1547, fixes #1512).
     View › Hide Edges hides the Live Corners widgets, the bounding box and the type widget, and the selection tools then do not answer a press on them or change the cursor over them.
@@ -1235,7 +1241,7 @@ applies to fills). Tests: `color::gradient::tests` (perceptual midpoint, expansi
 
 ## Artwork Cleanup add-on (2026-10-30)
 
-A VectorCraft addition, not an Illustrator feature, so no area score moves. Object › Plug-ins › Artwork Cleanup and its
+A VectorCraft addition, not a feature of the reference app, so no area score moves. Object › Plug-ins › Artwork Cleanup and its
 panel run `addon.cleanup.*`: Simplify Anchors (Keep Shape) on the shared kernel
 `vectorcraft_pathops::addons::keep_shape`, a health check of 16 kinds of issue on the selection or the document with
 Show, Fix Selected and Fix All (each one undo step), Deep Ungroup and Rejoin Path Pieces. Tests: `addons::` in
@@ -1254,7 +1260,7 @@ refusals), `addons::cleanup::tests` in `vectorcraft-ui-egui` (the submenu and th
 
 ## Path Precision Tools add-on (2026-10-30)
 
-A VectorCraft addition, not an Illustrator feature, so no area score moves. Object › Plug-ins › Path Precision Tools,
+A VectorCraft addition, not a feature of the reference app, so no area score moves. Object › Plug-ins › Path Precision Tools,
 its Anchor Inspector panel and three tools kept out of the shipped toolbars (listed in the All Tools drawer) run
 `addon.pathtools.*`: an Anchor Eraser Brush on the shared keep-shape kernel, an Extend Path tool (straight, stretched
 curve or arc; shortening back along the path), a Measure & Inspect tool with hover readouts (lengths, area, curvature,
@@ -1317,7 +1323,7 @@ ends), `addons::shared_edge` in `vectorcraft-tools`, `cmd::addons::pathtools::sh
 
 ## Smart Pen add-on (2026-10-30)
 
-A VectorCraft addition, not an Illustrator feature, so no area score moves. Object › Plug-ins › Smart Pen selects the
+A VectorCraft addition, not a feature of the reference app, so no area score moves. Object › Plug-ins › Smart Pen selects the
 Smart Pen Tool (kept out of the shipped toolbars, listed in the All Tools drawer, no shortcut) and opens its panel. The
 tool draws with a straight or curved next segment (a curve after a straight segment leaves it tangent), smooth drags
 with Alt, Shift and Space, Tab to switch a segment, a rubber band, closing, joining and continuing open ends; and edits
@@ -1332,7 +1338,7 @@ through the session) and `addons::pen::tests` in `vectorcraft-ui-egui` (the subm
 
 ## Color Effects add-on (2026-10-30)
 
-A VectorCraft addition, not an Illustrator feature, so no area score moves. Effect › Color Effects adds live Exposure
+A VectorCraft addition, not a feature of the reference app, so no area score moves. Effect › Color Effects adds live Exposure
 (stops of linear light, offset and gamma), Desaturate and Invert Colors as colour adjustments evaluated with those of
 Effect › Color Adjustments (`vectorcraft_effects::addons::color`), and `addon.color.filter` applies any colour adjustment
 to the colours themselves through the Edit Colors pass. Object › Plug-ins › Color Effects and its panel reach them.
@@ -1359,10 +1365,30 @@ tints, curves, multiplied inks, skip spot), `duotone_*` and `cmd::addons::color:
 params and RGB documents refused), and `the_duotone_dialog_has_a_row_per_tone_and_the_curve_of_one` and
 `print_ink_fixes_opens_its_options_and_runs_on_ok` in `vectorcraft-ui-egui`. Commands: `docs/mcp.md` › Color Effects
 add-on.
+## Arrange Tools add-on (2026-10-31)
+
+A VectorCraft addition, not a feature of the reference app, so no area score moves. Object › Plug-ins › Arrange Tools: Arrange in
+Grid… lays the top-level selected objects out in their stacking order from the back, in rows and columns (⌈√count⌉ by
+default), one row or one column, each centred in a cell as wide as its column's widest object and as tall as its row's
+tallest (visual bounds), with horizontal and vertical gaps, from the selection's top-left or centred on the artboard;
+Swap Objects swaps the bounds centres of two objects, and Swap Objects and Sizes their widths and heights too; Replace
+with Top Object… puts a copy of the topmost selected object centred on each of the others, in its stacking place, at its
+own size, the replaced object's size or fitted inside it in proportion, deleting or keeping the replaced objects; Set
+Size of Each… gives every object an exact width and/or height (one side may follow in proportion) about one of the nine
+reference points; Zoom to Selection fits the active view to the selection. Sizes and places are measured as
+`object.setBounds` measures them (Use Preview Bounds), strokes and effects scale as Scale Strokes & Effects says, each
+command is one undo step, and the three dialogs preview on the canvas. Tests: `cmd::addons::arrange::tests` in
+`vectorcraft-engine` (grid, row, column and artboard centring, visual bounds, swap with and without sizes and stroke
+scaling, replace with each fit and kept originals in stacking order, size with proportions and reference points, one
+undo step, off states, bad params refused), `addons::arrange::tests` in `vectorcraft-ui-egui` (the submenu, the
+dialogs, Preview and Cancel, Zoom to Selection) and `command_sweep`. Commands: `docs/mcp.md` › Arrange Tools add-on.
+
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-31 | minor | Selection tools: with Alt held at the press, a Direct Selection marquee selects every path it touches whole and keeps the Group Selection pointer (#4890); a press on a selected object's centre point selects the object whole and a drag from it moves it (#4891); regression tests in `direct/tests.rs`; scores and estimates unchanged. |
+| 2026-10-31 | minor | Arrange Tools add-on (a VectorCraft addition): evidence added; scores unchanged. |
 | 2026-10-31 | minor | Guides and snapping: Snap to Perpendicular and Snap to Tangent apply to an existing line's end dragged with Direct Selection, as the public pages describe for editing existing lines (the end anchor of a straight segment, not mid-line anchors or curved segments); a regression test covers both snaps, both toggles and non-snapping controls (#2530); scores and estimates unchanged. |
 | 2026-10-30 | minor | File formats: `.ai`/EPS editing data: a blend takes the transparency (opacity, blend mode, knockout) in its state block after its record, so its steps knock each other out as the page draws them; a user's file comes in 0.6% from its page instead of 1.3%. Scores and estimates unchanged. |
 | 2026-10-31 | minor | Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together; evidence added; scores unchanged. |

@@ -859,6 +859,13 @@ font-technology	Variable	Változó
 	Create Report	Jelentés készítése
 	Create Slice	Szelet létrehozása
 	Create Sub-folders	Almappák létrehozása
+	Clear Selection	Kijelölés törlése
+	Export PDFs As:	PDF-ek exportálása:
+	Single File	Egy fájlba
+	Multiple Files	Több fájlba
+	Format Presets	Formátum-előbeállítások
+	Grid View	Rácsnézet
+	Selected: {n}, Total number of files to export: {m}	Kijelölve: {n}, exportálandó fájlok száma összesen: {m}
 	Create Text	Szöveg létrehozása
 	Create Trim Marks	Vágójelek létrehozása
 	Create:	Létrehozás:
@@ -4624,6 +4631,7 @@ imageTrace	Outline	Körvonal
 @msg	cannot read PDF: {0}	a PDF nem olvasható: {0}
 @msg	cannot split an open path at its end point	nyitott útvonal a végpontjánál nem vágható ketté
 @msg	check an asset to export	jelölj be egy exportálandó elemet
+@msg	check an artboard to export	jelölj be egy exportálandó rajztáblát
 @msg	check a layer to export	jelöljön be egy exportálandó réteget
 @msg	select the art to export first	először jelölje ki az exportálandó grafikát
 @msg	choice must be "merge" or "add", not `{choice}`	a choice értéke "merge" vagy "add" lehet, ez nem az: `{choice}`
@@ -5980,3 +5988,15 @@ breakText	Glyphs	Glifák
 	Gap 4	Hézag 4
 	Dash 5	Vonal 5
 	Gap 5	Hézag 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Elrendezőeszközök
+	Arrange in Grid…	Elrendezés rácsba…
+	Arrange in Grid	Elrendezés rácsba
+	Swap Objects	Objektumok cseréje
+	Swap Objects and Sizes	Objektumok és méretek cseréje
+	Replace with Top Object…	Csere a legfelső objektumra…
+	Replace with Top Object	Csere a legfelső objektumra
+	Set Size of Each…	Egyenkénti méret beállítása…
+	Set Size of Each	Egyenkénti méret beállítása
+@msg	select exactly two objects	jelölj ki pontosan két objektumot
+@msg	give `width` or `height`	add meg a `width` vagy a `height` értéket

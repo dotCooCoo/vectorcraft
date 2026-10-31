@@ -642,6 +642,13 @@ font-technology	Variable	Variabel
 	Create Report	Bericht erstellen
 	Create Slice	Slice erstellen
 	Create Sub-folders	Unterordner erstellen
+	Clear Selection	Auswahl aufheben
+	Export PDFs As:	PDFs exportieren als:
+	Single File	Einzelne Datei
+	Multiple Files	Mehrere Dateien
+	Format Presets	Formatvorgaben
+	Grid View	Rasteransicht
+	Selected: {n}, Total number of files to export: {m}	Ausgewählt: {n}, Gesamtzahl der zu exportierenden Dateien: {m}
 	Create Text	Text erstellen
 	Create Trim Marks	Schnittmarken erstellen
 	Created	Erstellt
@@ -3988,6 +3995,7 @@ theme	Appearance	Erscheinungsbild
 @msg	cannot split an open path at its end point	ein offener Pfad kann nicht an seinem Endpunkt geteilt werden
 @msg	closing needs three anchors	zum Schließen sind drei Ankerpunkte nötig
 @msg	check an asset to export	markieren Sie ein Asset für den Export
+@msg	check an artboard to export	markieren Sie eine Zeichenfläche für den Export
 @msg	check a layer to export	wählen Sie eine Ebene für den Export
 @msg	select the art to export first	wählen Sie zuerst das zu exportierende Bildmaterial aus
 @msg	choice must be "merge" or "add", not `{choice}`	choice muss "merge" oder "add" sein, nicht `{choice}`
@@ -5579,3 +5587,15 @@ breakText	Glyphs	Glyphen
 	Gap 4	Lücke 4
 	Dash 5	Strich 5
 	Gap 5	Lücke 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Anordnungswerkzeuge
+	Arrange in Grid…	In Raster anordnen…
+	Arrange in Grid	In Raster anordnen
+	Swap Objects	Objekte vertauschen
+	Swap Objects and Sizes	Objekte und Größen vertauschen
+	Replace with Top Object…	Durch oberstes Objekt ersetzen…
+	Replace with Top Object	Durch oberstes Objekt ersetzen
+	Set Size of Each…	Größe einzeln festlegen…
+	Set Size of Each	Größe einzeln festlegen
+@msg	select exactly two objects	wählen Sie genau zwei Objekte aus
+@msg	give `width` or `height`	geben Sie `width` oder `height` an

@@ -3990,8 +3990,9 @@ each file deflated, or stored when deflating does not make it smaller.
 A row is `{format, scale?}` where `scale` is a factor (`2`, `"2x"`), a pixel width (`"100w"` or `width: 100`), a
 height (`"100h"`) or a resolution (`"72ppi"`); raster rows name their files `@2x`, `@100w`… unless `suffix` says
 otherwise. `fullDocument` writes one file per row instead (a PDF of every artboard, other formats the bounds of all
-art), `includeBleed` grows each artboard by the document's bleed, `subfolders` puts each row's files in a sub-folder
-(its size or format, or its own `folder`), `preset: "mobile"` or `"density"` (Android-style ldpi…xxxhdpi
+art), `includeBleed` grows each artboard by the document's bleed, `pdfs: "single"` (Export PDFs As › Single file)
+writes the artboards a PDF row exports as the pages of one PDF named after the document, `subfolders` puts each
+row's files in a sub-folder (its size or format, or its own `folder`; `folders: "format"` sorts by format instead), `preset: "mobile"` or `"density"` (Android-style ldpi…xxxhdpi
 sub-folders) replaces the rows, and `settings: {png: {…}, jpg: {…}, svg: {…}, pdf: {preset}}` gives every row of a
 format its options. On every platform, `/`, `\`, `:`, `<`, `>`, `"`, `|`, `?`, `*` and control characters from a
 prefix, a suffix, a name pattern or an item's name become `-` in file and folder names, a folder name ends without
@@ -6161,4 +6162,30 @@ one, out of range values and a request with no fix on.
 
 ```json
 {"name":"run_command","arguments":{"command":"addon.color.printFixes","params":{"scope":"document","inkLimit":300,"removeWhiteOverprint":true,"overprintBlack":100}}}
+```
+
+## Arrange Tools add-on
+
+Arrange Tools is a built-in add-on that lays out, swaps, replaces and sizes selected objects: its commands are
+`addon.arrange.*`, and in the desktop app it lives in Object › Plug-ins › Arrange Tools. Each command acts on the
+top-level selected objects and is one undo step; a run that moves nothing makes no step. Places and sizes are measured
+as `object.setBounds` measures them (Use Preview Bounds), except Arrange in Grid, which uses visual bounds.
+
+| Command | Parameters (default) | Does |
+|---|---|---|
+| `addon.arrange.grid` | `layout`: `grid`, `row`, `column` (`grid`); `columns`: 1…10000 (⌈√count⌉, never more than the count); `gapX` pt (10), `gapY` pt (`gapX`), each −1000000…1000000; `centerOnArtboard` (false) | Lays the objects out in their stacking order from the back, left to right and top to bottom. Each cell is as wide as the widest object in its column and as tall as the tallest in its row, and each object is centred in its cell. The grid starts at the selection's top-left, or is centred on the artboard under the selection's centre (the first artboard when none is there). → `{count}` |
+| `addon.arrange.swap` | `size` (false); `scaleStrokes` (the Scale Strokes & Effects preference) | Swaps the bounds centres of exactly two selected objects (off otherwise); with `size`, each also takes the other's width and height. |
+| `addon.arrange.replace` | `fit`: `keep`, `bounds` (the replaced object's width and height), `proportional` (fits inside them) (`keep`); `scaleStrokes`; `keep` (false) | Puts a copy of the topmost selected object centred on each of the other selected objects, in that object's place in the stacking order; the replaced objects are deleted unless `keep` (the copy then goes right above each). Needs two objects or more; the copies are selected. → `{ids}` |
+| `addon.arrange.size` | `width`, `height` pt, 0.001…1000000 (at least one); `proportional` (false: a side not given stays; true: it follows the given one in proportion); `reference` 0…8 (4, the centre); `scaleStrokes` | Gives every selected object that width and height, keeping its reference point in place (the 9-point grid row by row from the top-left). |
+
+Zoom to Selection is the UI command `addon.arrange.zoomSelection {}` (remote mode only): it zooms and centres the
+active view so the selection's visual bounds fill the window with a margin, as `view.fitArtboard` fits the artboard,
+and fails with nothing selected. Arrange in Grid…, Replace with Top Object… and Set Size of Each… open dialogs
+(`ui.menuDialog {command}`, dialog kinds `arrangeGrid`, `arrangeReplace` and `arrangeSize`) whose fields are the
+command's parameters, with Preview; Set Size of Each's `__width` and `__height` say which sizes OK applies.
+
+```json
+{"name":"run_command","arguments":{"command":"addon.arrange.grid","params":{"columns":4,"gapX":12,"gapY":12}}}
+{"name":"run_command","arguments":{"command":"addon.arrange.replace","params":{"fit":"proportional"}}}
+{"name":"run_command","arguments":{"command":"addon.arrange.size","params":{"width":72,"proportional":true}}}
 ```

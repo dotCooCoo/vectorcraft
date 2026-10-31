@@ -663,6 +663,13 @@ font-technology	Variable	Variabili
 	Create Report	Crea rapporto
 	Create Slice	Crea sezione
 	Create Sub-folders	Crea sottocartelle
+	Clear Selection	Cancella selezione
+	Export PDFs As:	Esporta PDF come:
+	Single File	File singolo
+	Multiple Files	Più file
+	Format Presets	Predefiniti formato
+	Grid View	Vista griglia
+	Selected: {n}, Total number of files to export: {m}	Selezionati: {n}, numero totale di file da esportare: {m}
 	Create Text	Crea testo
 	Create Trim Marks	Crea segni di taglio
 	Created	Creato
@@ -4108,6 +4115,7 @@ axis	Both	Entrambi
 @msg	cannot split an open path at its end point	impossibile dividere un tracciato aperto nel suo punto finale
 @msg	closing needs three anchors	per chiudere servono tre punti di ancoraggio
 @msg	check an asset to export	spunta una risorsa da esportare
+@msg	check an artboard to export	spunta una tavola da disegno da esportare
 @msg	check a layer to export	seleziona un livello da esportare
 @msg	select the art to export first	seleziona prima la grafica da esportare
 @msg	choice must be "merge" or "add", not `{choice}`	choice deve essere "merge" o "add", non `{choice}`
@@ -5613,3 +5621,15 @@ breakText	Glyphs	Glifi
 	Gap 4	Spazio 4
 	Dash 5	Tratto 5
 	Gap 5	Spazio 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Strumenti di disposizione
+	Arrange in Grid…	Disponi in griglia…
+	Arrange in Grid	Disponi in griglia
+	Swap Objects	Scambia oggetti
+	Swap Objects and Sizes	Scambia oggetti e dimensioni
+	Replace with Top Object…	Sostituisci con l’oggetto superiore…
+	Replace with Top Object	Sostituisci con l’oggetto superiore
+	Set Size of Each…	Imposta dimensione di ciascuno…
+	Set Size of Each	Imposta dimensione di ciascuno
+@msg	select exactly two objects	seleziona esattamente due oggetti
+@msg	give `width` or `height`	indica `width` o `height`

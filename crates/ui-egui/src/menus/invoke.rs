@@ -37,6 +37,9 @@ fn queried_dialog(id: &str) -> Option<(&'static str, &'static [&'static str])> {
 
 /// The dialog (kind, fields) the menu item of command `id` opens, as the reference app's does.
 pub(super) fn menu_dialog(app: &VectorcraftApp, id: &str) -> Option<(&'static str, Value)> {
+    if let Some(found) = crate::addons::arrange::dialog(app, id) {
+        return Some(found);
+    }
     Some(match id {
         // Move opens on the offset moved last and the checkboxes it was last confirmed with.
         "object.move" => ("move", crate::dialogs::transform::move_fields(app)),

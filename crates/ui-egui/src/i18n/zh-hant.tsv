@@ -625,6 +625,13 @@ font-technology	Variable	可變
 	Create Report	建立報告
 	Create Slice	建立切片
 	Create Sub-folders	建立子資料夾
+	Clear Selection	清除選取
+	Export PDFs As:	PDF 轉存為：
+	Single File	單一檔案
+	Multiple Files	多個檔案
+	Format Presets	格式預設集
+	Grid View	格點檢視
+	Selected: {n}, Total number of files to export: {m}	已選取：{n}，要轉存的檔案總數：{m}
 	Create Text	建立文字
 	Create Trim Marks	建立剪裁標記
 	Created	建立時間
@@ -2088,6 +2095,7 @@ file-filter	Templates	範本
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	沒有可匯出的內容：文件中沒有可見的圖稿 (或請開啟「使用工作區域」)
 @msg	add a format to export	請新增要匯出的格式
 @msg	check an asset to export	請勾選要匯出的資產
+@msg	check an artboard to export	請勾選要匯出的工作區域
 @msg	`{tool}` isn't a freehand tool	`{tool}` 不是手繪工具
 @msg	bad colour `{hex}` (#rrggbb)	顏色 `{hex}` 無效 (#rrggbb)
 @msg	no gradient stop or freeform point is selected	未選取漸層色標或任意形狀點
@@ -5632,3 +5640,15 @@ breakText	Glyphs	字符
 	Gap 4	間隙 4
 	Dash 5	虛線 5
 	Gap 5	間隙 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	排列工具
+	Arrange in Grid…	依格狀排列…
+	Arrange in Grid	依格狀排列
+	Swap Objects	對調物件
+	Swap Objects and Sizes	對調物件和大小
+	Replace with Top Object…	以最上層物件取代…
+	Replace with Top Object	以最上層物件取代
+	Set Size of Each…	個別設定大小…
+	Set Size of Each	個別設定大小
+@msg	select exactly two objects	請選取正好兩個物件
+@msg	give `width` or `height`	請提供 `width` 或 `height`

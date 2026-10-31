@@ -585,6 +585,13 @@
 	Create Path	Criar Caminho
 	Create Slice	Criar Fatia
 	Create Sub-folders	Criar Subpastas
+	Clear Selection	Limpar Seleção
+	Export PDFs As:	Exportar PDFs Como:
+	Single File	Arquivo Único
+	Multiple Files	Vários Arquivos
+	Format Presets	Predefinições de Formato
+	Grid View	Exibição em Grade
+	Selected: {n}, Total number of files to export: {m}	Selecionados: {n}, número total de arquivos a exportar: {m}
 	Create Text	Criar Texto
 	Create Trim Marks	Criar Marcas de Corte
 	Create from Guides	Criar a partir de Guias
@@ -3646,6 +3653,7 @@ axis	Both	Ambos
 @msg	cannot split an open path at its end point	não é possível dividir um traçado aberto em sua extremidade
 @msg	closing needs three anchors	fechar exige três âncoras
 @msg	check an asset to export	marque um recurso para exportar
+@msg	check an artboard to export	marque uma prancheta para exportar
 @msg	check a layer to export	marque uma camada para exportar
 @msg	select the art to export first	selecione primeiro a arte a exportar
 @msg	choice must be "merge" or "add", not `{choice}`	choice deve ser "merge" ou "add", não `{choice}`
@@ -5913,3 +5921,15 @@ breakText	Glyphs	Glifos
 	Gap 4	Lacuna 4
 	Dash 5	Traço 5
 	Gap 5	Lacuna 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Ferramentas de Organização
+	Arrange in Grid…	Organizar em Grade…
+	Arrange in Grid	Organizar em Grade
+	Swap Objects	Trocar Objetos
+	Swap Objects and Sizes	Trocar Objetos e Tamanhos
+	Replace with Top Object…	Substituir pelo Objeto Superior…
+	Replace with Top Object	Substituir pelo Objeto Superior
+	Set Size of Each…	Definir Tamanho de Cada Um…
+	Set Size of Each	Definir Tamanho de Cada Um
+@msg	select exactly two objects	selecione exatamente dois objetos
+@msg	give `width` or `height`	informe `width` ou `height`

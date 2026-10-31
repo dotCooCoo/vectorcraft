@@ -2257,6 +2257,13 @@ lighting	Light	Světlo
 	Use Artboards	Použít pracovní plochy
 	Choose a folder	Vyberte složku
 	Create Sub-folders	Vytvořit podsložky
+	Clear Selection	Vymazat výběr
+	Export PDFs As:	Exportovat PDF jako:
+	Single File	Jeden soubor
+	Multiple Files	Více souborů
+	Format Presets	Přednastavení formátů
+	Grid View	Zobrazení mřížky
+	Selected: {n}, Total number of files to export: {m}	Vybráno: {n}, celkový počet souborů k exportu: {m}
 	Export Asset	Exportovat prvek
 	Export to:	Exportovat do:
 	Format Settings	Nastavení formátu
@@ -4375,6 +4382,7 @@ imageTrace	Outline	Obrys
 @msg	cannot split an open path at its end point	otevřenou cestu nelze rozdělit v jejím koncovém bodu
 @msg	closing needs three anchors	uzavření vyžaduje tři kotevní body
 @msg	check an asset to export	zaškrtněte prvek k exportu
+@msg	check an artboard to export	zaškrtněte kreslicí plátno k exportu
 @msg	check a layer to export	zaškrtněte vrstvu k exportu
 @msg	select the art to export first	nejprve vyberte kresbu k exportu
 @msg	choice must be "merge" or "add", not `{choice}`	volba musí být "merge" nebo "add", ne `{choice}`
@@ -5993,3 +6001,15 @@ breakText	Glyphs	Glyfy
 	Gap 4	Mezera 4
 	Dash 5	Čárka 5
 	Gap 5	Mezera 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Nástroje uspořádání
+	Arrange in Grid…	Uspořádat do mřížky…
+	Arrange in Grid	Uspořádat do mřížky
+	Swap Objects	Prohodit objekty
+	Swap Objects and Sizes	Prohodit objekty a velikosti
+	Replace with Top Object…	Nahradit horním objektem…
+	Replace with Top Object	Nahradit horním objektem
+	Set Size of Each…	Nastavit velikost jednotlivě…
+	Set Size of Each	Nastavit velikost jednotlivě
+@msg	select exactly two objects	vyberte právě dva objekty
+@msg	give `width` or `height`	zadejte `width` nebo `height`
