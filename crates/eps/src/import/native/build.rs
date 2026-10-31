@@ -479,7 +479,7 @@ fn copy_page_resources(doc: &mut Document, page: &Document, nodes: &[&Node]) -> 
     }
     for key in images {
         let Some(blob) = page.images.get(&key) else { return Err(format!("page art is missing image data for {key}")) };
-        if doc.images.get(&key).is_some_and(|existing| existing != blob) {
+        if doc.images.get(&key).is_some_and(|existing| existing.bytes != blob.bytes) {
             return Err(format!("page art conflicts with image data for {key}"));
         }
         doc.images.entry(key).or_insert_with(|| blob.clone());
@@ -936,6 +936,55 @@ pub(super) fn prune_unseen(frame: &Frame<'_>, view: &mut PageView, doc: &mut Doc
 #[cfg(test)]
 mod candidate_tests {
     use super::*;
+
+    use vectorcraft_doc::{ImageBlob, ImageObject};
+
+    /// A page image with a different proxy keeps its editing layer and original blob.
+    #[test]
+    fn page_image_with_different_proxy_keeps_editing_layer() {
+        let mut doc = Document::new(100.0, 100.0);
+        let placeholder_id = doc.alloc_id();
+        let placeholder = Node::path(placeholder_id, vectorcraft_geom::shapes::rectangle(Rect::new(50.0, 50.0, 54.0, 54.0)), Default::default());
+        doc.insert(Some(doc.layers[0].id), 0, placeholder).unwrap();
+
+        let mut page = Document::new(100.0, 100.0);
+        let mut editing_blob = ImageBlob::new("image/png", vec![1, 2, 3]);
+        editing_blob.proxy = Some(Arc::new(vec![4, 5, 6]));
+        let page_blob = ImageBlob::new("image/png", vec![1, 2, 3]);
+        let key = editing_blob.content_key();
+        assert_eq!(key, page_blob.content_key());
+        doc.images.insert(key.clone(), editing_blob.clone());
+        page.images.insert(key.clone(), page_blob);
+        let image = Node::new(
+            page.alloc_id(),
+            NodeKind::Image(Box::new(ImageObject {
+                key: key.clone(),
+                width: 4,
+                height: 4,
+                xf: Affine::translate(Vec2::new(50.0, 50.0)),
+                link: None,
+                placement: Default::default(),
+                pixels: None,
+            })),
+        );
+        page.insert(Some(page.layers[0].id), 0, image).unwrap();
+
+        let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let frame = Frame { page: &page, page_rect: rect, rect, whole: false, pages: vec![(rect, Affine::IDENTITY)] };
+        let kinds = replace_unread(
+            &mut doc,
+            &frame,
+            &[(placeholder_id, vec!["placed files".into()])],
+            &[(placeholder_id, Rect::new(50.0, 50.0, 54.0, 54.0))],
+            &BTreeSet::new(),
+        )
+        .unwrap();
+        assert_eq!(kinds, ["placed files (1)"]);
+        let replacement = doc.node(placeholder_id).unwrap();
+        let [image] = replacement.children().unwrap().as_slice() else { panic!("{replacement:?}") };
+        assert!(matches!(image.kind, NodeKind::Image(_)));
+        assert_eq!(doc.images.get(&key), Some(&editing_blob));
+    }
 
     /// A nested placeholder's corner cannot replace its readable sibling.
     #[test]
