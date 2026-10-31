@@ -444,10 +444,10 @@ fn expand_pattern_fills(s: &mut Session) -> Result<()> {
     })
 }
 
-/// Expand the pattern fills under `root` that paint a transparent image into the tiles they paint
+/// Expand the pattern fills under `root` that paint a transparent or colorized image into the tiles they paint
 /// ([`expand_patterns_where`]), so each tile image becomes an object of its own; the other
-/// pattern fills stay. A tile image counts as
-/// transparent when its key is in `see_through` (it has see-through pixels), or when it, a group
+/// pattern fills stay. A tile image counts when its key is in `see_through` (it has see-through
+/// pixels), when it has a colorize paint, or when it, a group
 /// in the tile art, the fill, the shape or a group the shape is in has opacity or a blending
 /// mode. Returns how many shapes changed.
 pub(crate) fn expand_transparent_image_patterns(d: &mut Document, root: NodeId, see_through: &BTreeSet<String>) -> Result<usize> {
@@ -473,12 +473,12 @@ fn blended(n: &Node) -> bool {
     n.opacity < 1.0 || n.blend != BlendMode::Normal
 }
 
-/// Whether `n` is or holds a transparent image: one with see-through pixels (key in `keys`), or
-/// with opacity or a blending mode of its own or of a group in `n`, or anywhere when `on`.
+/// Whether `n` is or holds an image with see-through pixels (key in `keys`), a colorize paint,
+/// opacity or a blending mode of its own or of a group in `n`, or anywhere when `on`.
 fn transparent_image(n: &Node, keys: &BTreeSet<String>, on: bool) -> bool {
     let on = on || blended(n);
     match &n.kind {
-        NodeKind::Image(im) => on || keys.contains(&im.key),
+        NodeKind::Image(im) => on || keys.contains(&im.key) || n.extras().colorize.is_some(),
         _ => n.children().is_some_and(|ch| ch.iter().any(|c| transparent_image(c, keys, on))),
     }
 }

@@ -62,6 +62,10 @@ impl Renderer {
             Some(e) => {
                 e.stamp = stamp;
                 self.stats.moved += usize::from(e.moved);
+                crate::paint::add_decode_failures(e.failed);
+                if e.image_left_out {
+                    self.image_left_out = self.image_left_out.map(|_| true);
+                }
                 let p = f.view * e.anchor;
                 (e.image.clone(), (p.x + e.rel.0).round(), (p.y + e.rel.1).round(), e.scale, e.moved, e.view.map(|v| v.served(f.view)))
             }
@@ -118,7 +122,13 @@ impl Renderer {
                 let ink = darkness.map_or(f.ink, |d| f.ink.darkened(d));
                 let crop = Frame { mt: false, view, visible, ink, ..*f };
                 let before = self.stats.moved;
+                let decoded = crate::paint::decode_failures();
+                let outer_image_left_out = self.image_left_out.replace(false);
+                let pattern_images_left_out = crate::pattern::images_left_out();
                 self.inside_layer(|r| paint(r, &mut off, &shifted(&crop, dx, dy)));
+                let failed = crate::paint::decode_failures() - decoded;
+                let image_left_out = self.image_left_out.unwrap_or(false) || crate::pattern::images_left_out() > pattern_images_left_out;
+                self.image_left_out = outer_image_left_out.map(|outer| outer || image_left_out);
                 // A silhouette drawn over moved rasters makes a moved shadow.
                 let moved = self.stats.moved > before;
                 off.flush();
@@ -165,7 +175,10 @@ impl Renderer {
                 let node = Drawn::of(n, owner);
                 let rel = (x0 - p.x, y0 - p.y);
                 let view = cropped.map(|room| ViewCrop::of(f.view, room));
-                self.shadows.insert(key, ShadowEntry { node, linear, anchor, rel, image: image.clone(), scale, view, made, inputs, moved, stamp });
+                self.shadows.insert(
+                    key,
+                    ShadowEntry { node, linear, anchor, rel, image: image.clone(), scale, view, made, inputs, moved, failed, image_left_out, stamp },
+                );
                 self.trim_fx_rasters(FX_RASTER_BUDGET);
                 (image, x0, y0, scale, moved, cropped)
             }

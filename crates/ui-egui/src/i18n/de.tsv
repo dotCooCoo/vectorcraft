@@ -491,7 +491,7 @@ font-technology	Variable	Variabel
 	Collect in New Layer	In neuer Ebene sammeln
 	Collect Links in a Separate Folder	Verknüpfungen in separatem Ordner sammeln
 	Color	Farbe
-	Color (,)	Farbe (,)
+	Color (, or <)	Farbe (, oder <)
 	Color Adjustments	Farbkorrekturen
 	Color bars	Farbkontrollstreifen
 	Color blindness – Deuteranopia-type	Farbenblindheit – Deuteranopie
@@ -1264,7 +1264,7 @@ file-filter	Templates	Vorlagen
 	GPL palettes keep solid colours only, as RGB.	GPL-Paletten enthalten nur einfarbige Farben, als RGB.
 	GPU Performance	GPU-Leistung
 	Gradient	Verlauf
-	Gradient (.)	Verlauf (.)
+	Gradient (. or >)	Verlauf (. oder >)
 	Gradient across stroke	Verlauf quer zur Kontur
 	Gradient along stroke	Verlauf entlang der Kontur
 	Gradient and Mesh Resolution:	Auflösung für Verläufe und Gitter:
@@ -5472,3 +5472,111 @@ anchor	Points:	Punkte:
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	geben Sie `inkLimit`, `removeWhiteOverprint` oder `overprintBlack` an
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Druckfarbkorrekturen wirken in CMYK-Dokumenten: Wählen Sie zuerst Datei › Dokumentfarbmodus › CMYK-Farbe
 @msg	`{key}` must be 0..{max}	`{key}` muss 0..{max} sein
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Ecken-Werkzeug
+	Slide Anchor Along Path	Ankerpunkt entlang des Pfads verschieben
+	Set Corners	Ecken festlegen
+	Remove Corners	Ecken entfernen
+	Corners selected: {count}	Ausgewählte Ecken: {count}
+	Apply to Selected Anchors	Auf ausgewählte Ankerpunkte anwenden
+@msg	`radius` must be from 0 to 1000000 pt	`radius` muss von 0 bis 1000000 pt sein
+@msg	`t` must be a number from -0.98 to 0.98	`t` muss eine Zahl von -0.98 bis 0.98 sein
+@msg	choose anchors where two sides meet at an angle: only those take a corner	Ankerpunkte wählen, an denen zwei Seiten im Winkel aufeinandertreffen: nur diese können eine Ecke bekommen
+@msg	give `anchor`, the index of the anchor to slide	`anchor` angeben, den Index des zu verschiebenden Ankerpunkts
+@msg	that anchor can't slide: an end of an open path has nowhere to go	dieser Ankerpunkt lässt sich nicht verschieben: das Ende eines offenen Pfads kann nirgendwohin
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Gemeinsame-Kante-Werkzeug
+	Merge Shared Edge	Gemeinsame Kante zusammenfügen
+	Keep Shared Points Together	Gemeinsame Punkte zusammenhalten
+	Shared Edges	Gemeinsame Kanten
+	Coincidence:	Übereinstimmung:
+@msg	`a` and `b` must be two different paths	`a` und `b` müssen zwei verschiedene Pfade sein
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` muss von 0.25 bis 200 pt sein
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` muss von 0 bis 3 pt sein
+@msg	`follow` must be "average", "a" or "b"	`follow` muss "average", "a" oder "b" sein
+@msg	the paths have nothing to merge there	die Pfade haben hier nichts zusammenzufügen
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Text aufteilen
+	Combine Point Text	Punkttext zusammenfügen
+	Remove Breaks	Umbrüche entfernen
+	Split Text at Cursor	Text an der Einfügemarke teilen
+	Set Alignment, Keep Position	Ausrichtung festlegen, Position beibehalten
+	Reset Text Transform	Texttransformation zurücksetzen
+	Replace Missing Fonts…	Fehlende Schriften ersetzen…
+	Replace Missing Fonts	Fehlende Schriften ersetzen
+	Remove Line Breaks	Zeilenumbrüche entfernen
+	Remove Paragraph Breaks	Absatzumbrüche entfernen
+	Break Text into Lines	Text in Zeilen aufteilen
+	Break Text into Paragraphs	Text in Absätze aufteilen
+	Break Text into Words	Text in Wörter aufteilen
+	Break Text into Glyphs	Text in Glyphen aufteilen
+	Reset Text Transform and Scale	Texttransformation und Skalierung zurücksetzen
+	Set Alignment, Keep Position:	Ausrichtung festlegen, Position beibehalten:
+	Break Text into:	Text aufteilen in:
+	Split at Cursor	An Einfügemarke teilen
+	Reset Transform	Transformation zurücksetzen
+	Shift-click: break into paragraphs	Shift-Klick: in Absätze aufteilen
+	Alt-click: reset the horizontal scale too	Alt-Klick: auch die horizontale Skalierung zurücksetzen
+breakText	Lines	Zeilen
+breakText	Words	Wörter
+breakText	Glyphs	Glyphen
+@msg	Click in type with a Type tool to split it	Klicken Sie mit einem Text-Werkzeug in Text, um ihn zu teilen
+@msg	Too many type objects to change at once	Zu viele Textobjekte, um sie auf einmal zu ändern
+@msg	Too many pieces to make at once	Zu viele Teile, um sie auf einmal zu erstellen
+@msg	Select horizontal point or area type whose text fits	Wählen Sie horizontalen Punkt- oder Flächentext aus, dessen Text hineinpasst
+@msg	Nothing to split at the cursor	An der Einfügemarke gibt es nichts zu teilen
+@msg	Select two or more one-line point type objects on one baseline to combine	Wählen Sie zwei oder mehr einzeilige Punkttextobjekte auf einer Grundlinie aus, um sie zusammenzufügen
+@msg	No line breaks to remove	Keine Zeilenumbrüche zu entfernen
+@msg	No paragraph breaks to remove	Keine Absatzumbrüche zu entfernen
+@msg	Too many breaks to remove at once	Zu viele Umbrüche, um sie auf einmal zu entfernen
+@msg	Select point type	Wählen Sie Punkttext aus
+@msg	The point type is aligned that way already	Der Punkttext ist bereits so ausgerichtet
+@msg	The point type has no transform to reset	Der Punkttext hat keine Transformation zum Zurücksetzen
+@msg	No fonts are missing	Es fehlen keine Schriften
+@msg	the replacement font is not available	die Ersatzschrift ist nicht verfügbar
+@msg	missing `align`	`align` fehlt
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` muss lines, paragraphs, words oder glyphs sein, nicht {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` muss "line" oder "paragraph" sein, nicht {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` muss "left", "center" oder "right" sein, nicht {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Pfadeffekte
+	Reverse Direction	Richtung umkehren
+	Align to Corners and Ends	An Ecken und Enden ausrichten
+	Count	Anzahl
+	Max Count	Höchstanzahl
+	Start Length	Startlänge
+	Start Percent	Start in Prozent
+	Start Shape	Startform
+	End Length	Endlänge
+	End Percent	Ende in Prozent
+	End Shape	Endform
+	By Count	Nach Anzahl
+	By Distance	Nach Abstand
+	Both	Beide
+	Shorter Than Length	Kürzer als Länge
+	Anchors	Ankerpunkte
+	Dashes to Geometry	Striche in Geometrie
+	Dashes to Geometry…	Striche in Geometrie…
+	Add Anchors	Ankerpunkte hinzufügen
+	Add Anchors…	Ankerpunkte hinzufügen…
+	Smooth Anchors	Ankerpunkte glätten
+	Smooth Anchors…	Ankerpunkte glätten…
+	Simplify Anchors	Ankerpunkte vereinfachen
+	Simplify Anchors…	Ankerpunkte vereinfachen…
+	Split at Anchors	An Ankerpunkten teilen
+	Split at Anchors…	An Ankerpunkten teilen…
+	Extend Path…	Pfad verlängern…
+	Close Path…	Pfad schließen…
+	Retract Handles…	Griffe einziehen…
+	Dash 1	Strich 1
+	Gap 1	Lücke 1
+	Dash 2	Strich 2
+	Gap 2	Lücke 2
+	Dash 3	Strich 3
+	Gap 3	Lücke 3
+	Dash 4	Strich 4
+	Gap 4	Lücke 4
+	Dash 5	Strich 5
+	Gap 5	Lücke 5

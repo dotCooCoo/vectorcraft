@@ -419,6 +419,18 @@ fn structured_junk() {
             "addon.color.filter",
             json!({"effect": "addon.color.duotone", "params": {"tones": [{"color": "#ff0000", "swatch": "[Registration]"}], "skipSpot": true}}),
         ),
+        ("effect.apply", json!({"effect": "addon.path.dashes", "params": {"dash1": 1e308, "gap1": 1e308, "offset": -1e308, "alignCorners": true}})),
+        ("effect.apply", json!({"effect": "addon.path.dashes", "params": {"dash1": -1e308, "gap1": 1e-308, "dash5": 1e-9, "gap5": 0}})),
+        ("effect.apply", json!({"effect": "addon.path.addAnchors", "params": {"target": "x", "spacing": "x", "count": 1e308, "maxCount": 1e308}})),
+        ("effect.apply", json!({"effect": "addon.path.addAnchors", "params": {"spacing": "distance", "distance": 1e-308, "maxCount": -1e308}})),
+        ("effect.apply", json!({"effect": "addon.path.extend", "params": {"startLength": 1e308, "endLength": -1e308, "startPercent": -1e308}})),
+        ("effect.apply", json!({"effect": "addon.path.extend", "params": {"endPercent": 1e308, "endShape": "arc", "startShape": "x"}})),
+        ("effect.apply", json!({"effect": "addon.path.close", "params": {"mode": "x"}})),
+        ("effect.apply", json!({"effect": "addon.path.smooth", "params": {"ratio": 1e308}})),
+        ("effect.apply", json!({"effect": "addon.path.retract", "params": {"handles": "shorter", "length": 1e308}})),
+        ("effect.apply", json!({"effect": "addon.path.reverse"})),
+        ("effect.apply", json!({"effect": "addon.path.simplify", "params": {"tolerance": 1e308, "protectCorners": false}})),
+        ("effect.apply", json!({"effect": "addon.path.split", "params": {"anchors": "x"}})),
         ("addon.color.printFixes", json!({"inkLimit": 1e308, "overprintBlack": -1e308})),
         ("addon.color.printFixes", json!({"inkLimit": 1, "overprintBlack": 1, "removeWhiteOverprint": true, "scope": "document", "textOnly": true})),
         ("addon.color.printFixes", json!({"inkLimit": [300], "scope": 3, "ids": "x"})),
@@ -543,6 +555,30 @@ fn structured_junk() {
         ("addon.pathtools.shape.set", json!({"id": 2, "center": [1, 2, 3], "radius": "big"})),
         ("addon.pathtools.shape.convert", json!({"ids": [0, 1, 2, 3, u64::MAX]})),
         ("addon.pathtools.shape.convert", json!({"ids": "all"})),
+        // Path Precision Tools: the Corner Tool and Slide Anchor Along Path.
+        ("addon.pathtools.cornerSet", json!({"ids": [2], "radius": 1e6, "kind": "chamfer"})),
+        ("addon.pathtools.cornerSet", json!({"ids": [2, 3], "anchors": [0, 1, u64::MAX], "radius": 5})),
+        ("addon.pathtools.cornerSet", json!({"items": [{"id": 2, "anchors": [0]}, {"id": u64::MAX}], "radius": 1e-300})),
+        ("addon.pathtools.cornerSet", json!({"items": [1, null, {"anchors": "x"}], "radius": 1})),
+        ("addon.pathtools.cornerSet", json!({"ids": [2], "radius": 1e308, "kind": "spiky"})),
+        ("addon.pathtools.cornerSet", json!({"items": "all", "radius": f64::NAN, "anchors": [-1, 1.5, "x"]})),
+        ("addon.pathtools.cornerRemove", json!({"ids": [0, 1, 2, 3, u64::MAX]})),
+        ("addon.pathtools.cornerRemove", json!({"items": [{"id": 2, "anchors": [u64::MAX]}]})),
+        ("addon.pathtools.slideAnchor", json!({"id": 2, "anchor": 1, "t": 0.98})),
+        ("addon.pathtools.slideAnchor", json!({"id": 2, "subpath": u64::MAX, "anchor": 0, "t": -0.5})),
+        ("addon.pathtools.slideAnchor", json!({"id": 2, "anchor": u64::MAX, "t": 1e308})),
+        ("addon.pathtools.slideAnchor", json!({"id": u64::MAX, "anchor": "x", "t": "y"})),
+        // Path Precision Tools: the Shared Edge Merge Tool and Keep Shared Points Together.
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": 3, "at": [0, 0]})),
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": 3, "at": [10, 10], "diameter": 200, "tolerance": 3, "ends": true})),
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": 2, "at": [0, 0]})),
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": u64::MAX, "at": [1e308, -1e308]})),
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": 3, "at": [1, 2, 3], "diameter": 1e308, "tolerance": -1, "follow": "up"})),
+        ("addon.pathtools.mergeEdge", json!({"a": "x", "b": null, "at": "y", "follow": 3, "ends": "z"})),
+        ("addon.pathtools.movePointsTogether", json!({"enabled": "maybe"})),
+        ("addon.pathtools.movePointsTogether", json!({"enabled": true})),
+        ("addon.pathtools.slideAnchor", json!({"id": 2, "anchor": 1, "t": 0.5})),
+        ("addon.pathtools.movePointsTogether", json!({"enabled": false})),
         // Smart Pen add-on.
         ("addon.pen.append", json!({"id": 2, "x": 1e308, "y": 0, "in": [1e308, -1e308]})),
         ("addon.pen.append", json!({"id": 2, "subpath": u64::MAX, "x": 0, "y": 0, "segment": "curved"})),
@@ -559,12 +595,66 @@ fn structured_junk() {
         ("addon.pen.reshape", json!({"id": 2, "segment": 0, "t": "x", "dx": 1, "dy": 1, "mode": "symmetric"})),
         ("addon.pen.nextSegment", json!({"curved": "yes"})),
         ("addon.pen.closeJoin", json!({"ids": [u64::MAX]})),
+        ("addon.cleanup.breakText", json!({"by": "glyphs", "ids": [0, 1, 2, 3, 4, 5, 6, 7, 8, u64::MAX]})),
+        ("addon.cleanup.breakText", json!({"by": ["lines"]})),
+        ("addon.cleanup.breakText", json!({"by": "paragraphs"})),
+        ("addon.cleanup.breakText", json!({"by": "words", "ids": "all"})),
+        ("addon.cleanup.combineText", json!({"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})),
+        ("addon.cleanup.combineText", json!({"ids": [-1, 1e308]})),
+        ("addon.cleanup.removeBreaks", json!({"kind": "paragraph", "ids": [1, 2, 3, 4, 5, 6, 7, 8, u64::MAX]})),
+        ("addon.cleanup.removeBreaks", json!({"kind": 3})),
+        ("addon.cleanup.removeBreaks", json!({"kind": "line", "ids": null})),
+        ("addon.cleanup.splitText", json!({"at": 1e308})),
+        ("addon.cleanup.alignInPlace", json!({"align": "right", "ids": [1, 2, 3, 4, 5, 6, 7, 8]})),
+        ("addon.cleanup.alignInPlace", json!({"align": null, "ids": [-1]})),
+        ("addon.cleanup.resetTextTransform", json!({"scale": "yes"})),
+        ("addon.cleanup.resetTextTransform", json!({"scale": true, "ids": [1, 2, 3, 4, 5, 6, 7, 8]})),
+        ("addon.cleanup.replaceFonts", json!({"font": ""})),
+        ("addon.cleanup.replaceFonts", json!({"font": ["Source Sans 3"]})),
+        ("addon.cleanup.replaceFonts", json!({"font": "\u{0}"})),
     ];
     let mut failures = vec![];
     for fx in Fixture::ALL {
         for (id, p) in &cases {
             if let Some(f) = probe(fx, id, p) {
                 failures.push(f);
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
+}
+
+/// Artwork Cleanup's text tools while a Type tool edits type with junk ranges (past the end,
+/// reversed, inside a character): never a panic, and the document stays sound.
+#[test]
+fn cleanup_text_tools_with_junk_editing_ranges() {
+    let ranges = [(0, u64::MAX / 4), (u64::MAX, 1), (5, 5), (1, 2), (u64::MAX / 4, u64::MAX / 4)];
+    let mut failures = vec![];
+    for fx in Fixture::ALL {
+        let mut texts = vec![];
+        for l in &fx.session().doc().unwrap().doc.layers {
+            l.walk(&mut |n| {
+                if matches!(n.kind, vectorcraft_doc::NodeKind::Text(_)) {
+                    texts.push(n.id.0);
+                }
+            });
+        }
+        for id in texts {
+            for (anchor, caret) in ranges {
+                for (cmd, p) in [("addon.cleanup.splitText", json!({})), ("addon.cleanup.removeBreaks", json!({"kind": "paragraph"}))] {
+                    let mut s = fx.session();
+                    let r = catch_quiet(|| {
+                        let _ = s.execute("select.set", &json!({"ids": [id]}));
+                        let _ = s.select_tool("type", Default::default());
+                        s.set_tool_option("textSelection", &json!({"editing": id, "anchor": anchor, "caret": caret}));
+                        no_panic(s.execute(cmd, &p))
+                    });
+                    if let Err(msg) = r {
+                        failures.push(format!("PANIC {cmd} {id} {anchor}..{caret} [{fx:?}]: {msg}"));
+                    } else if let Err(e) = check_session(&s) {
+                        failures.push(format!("{cmd} {id} {anchor}..{caret} [{fx:?}]: {e}"));
+                    }
+                }
             }
         }
     }

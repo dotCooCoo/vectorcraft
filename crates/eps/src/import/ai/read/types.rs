@@ -142,6 +142,8 @@ pub(super) struct Frame {
     pub(super) hidden: bool,
     /// [`Reader::after_object`] when it opened.
     pub(super) after: bool,
+    /// [`Reader::mesh_ended`] when it opened.
+    pub(super) mesh_ended: bool,
     /// The state when it opened (a container's lock and visibility; a dictionary's state to go
     /// back to).
     pub(super) gs: GState,
@@ -246,6 +248,9 @@ pub(super) const SKIPPED: &[(&str, &str)] = &[
     ("BeginSymbolList", "EndSymbolList"),
     ("BeginTextDocument", "EndTextDocument"),
     ("BeginEncoding", "EndEncoding"),
+    // The printer's crop marks, drawn after the layers (`userdict /AI3_noCropMarks known not {
+    // … } if`); the crop area they mark is `%AI3_Cropmarks`.
+    ("BeginCrops", "EndCrops"),
 ];
 
 /// The note for versioned content whose `%AI17_End_Versioned_Content` is missing: every

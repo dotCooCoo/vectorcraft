@@ -1061,12 +1061,12 @@ lighting	Light	სინათლე
 	 to set spacing and orientation	 — ინტერვალისა და ორიენტაციის დასაყენებლად
 	Apply	გამოყენება
 	Change Screen Mode (F)	ეკრანის რეჟიმის შეცვლა (F)
-	Color (,)	ფერი (,)
+	Color (, or <)	ფერი (, ან <)
 	Draw Behind	უკან ხატვა
 	Draw Inside	შიგნით ხატვა
 	Draw Normal	ჩვეულებრივი ხატვა
 	Expand:	გაშლა:
-	Gradient (.)	გრადიენტი (.)
+	Gradient (. or >)	გრადიენტი (. ან >)
 	H:	სიმ.:
 	Modify	შეცვლა
 	Navigate	ნავიგაცია
@@ -5877,3 +5877,110 @@ anchor	Points:	წერტილები:
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	მიუთითეთ `inkLimit`, `removeWhiteOverprint` ან `overprintBlack`
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	საბეჭდი მელნის შესწორებები მუშაობს CMYK დოკუმენტებზე: ჯერ აირჩიეთ ფაილი › დოკუმენტის ფერის რეჟიმი › CMYK ფერი
 @msg	`{key}` must be 0..{max}	`{key}` უნდა იყოს 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	კუთხეების ხელსაწყო
+	Slide Anchor Along Path	საყრდენი წერტილის სრიალი ტრაექტორიაზე
+	Set Corners	კუთხეების დაყენება
+	Remove Corners	კუთხეების მოცილება
+	Corners selected: {count}	მონიშნული კუთხეები: {count}
+	Apply to Selected Anchors	მონიშნულ საყრდენ წერტილებზე გამოყენება
+@msg	`radius` must be from 0 to 1000000 pt	`radius` უნდა იყოს 0-დან 1000000 pt-მდე
+@msg	`t` must be a number from -0.98 to 0.98	`t` უნდა იყოს რიცხვი -0.98-დან 0.98-მდე
+@msg	choose anchors where two sides meet at an angle: only those take a corner	აირჩიეთ საყრდენი წერტილები, სადაც ორი გვერდი კუთხით ხვდება ერთმანეთს: მხოლოდ მათ შეუძლიათ კუთხის მიღება
+@msg	give `anchor`, the index of the anchor to slide	მიუთითეთ `anchor`, სასრიალო საყრდენი წერტილის ინდექსი
+@msg	that anchor can't slide: an end of an open path has nowhere to go	ეს საყრდენი წერტილი ვერ ისრიალებს: ღია ტრაექტორიის ბოლოს წასასვლელი არ აქვს
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	საერთო წიბოს შერწყმის ხელსაწყო
+	Merge Shared Edge	საერთო წიბოს შერწყმა
+	Keep Shared Points Together	საერთო წერტილების ერთად შენარჩუნება
+	Shared Edges	საერთო წიბოები
+	Coincidence:	დამთხვევა:
+@msg	`a` and `b` must be two different paths	`a` და `b` ორი სხვადასხვა ტრაექტორია უნდა იყოს
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` უნდა იყოს 0.25-დან 200 pt-მდე
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` უნდა იყოს 0-დან 3 pt-მდე
+@msg	`follow` must be "average", "a" or "b"	`follow` უნდა იყოს "average", "a" ან "b"
+@msg	the paths have nothing to merge there	ტრაექტორიებს აქ შესარწყმელი არაფერი აქვთ
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	ტექსტის დაყოფა
+	Combine Point Text	წერტილის ტექსტის გაერთიანება
+	Remove Breaks	წყვეტების წაშლა
+	Split Text at Cursor	ტექსტის დაყოფა კურსორთან
+	Set Alignment, Keep Position	სწორების დაყენება მდებარეობის შენარჩუნებით
+	Reset Text Transform	ტექსტის გარდაქმნის ჩამოყრა
+	Replace Missing Fonts…	დაკარგული შრიფტების ჩანაცვლება…
+	Replace Missing Fonts	დაკარგული შრიფტების ჩანაცვლება
+	Remove Line Breaks	სტრიქონის წყვეტების წაშლა
+	Remove Paragraph Breaks	აბზაცის წყვეტების წაშლა
+	Break Text into Lines	ტექსტის დაყოფა სტრიქონებად
+	Break Text into Paragraphs	ტექსტის დაყოფა აბზაცებად
+	Break Text into Words	ტექსტის დაყოფა სიტყვებად
+	Break Text into Glyphs	ტექსტის დაყოფა გლიფებად
+	Reset Text Transform and Scale	ტექსტის გარდაქმნისა და მასშტაბის ჩამოყრა
+	Set Alignment, Keep Position:	სწორების დაყენება მდებარეობის შენარჩუნებით:
+	Break Text into:	ტექსტის დაყოფა:
+	Split at Cursor	დაყოფა კურსორთან
+	Reset Transform	გარდაქმნის ჩამოყრა
+	Shift-click: break into paragraphs	Shift-დაწკაპუნება: დაყოფა აბზაცებად
+	Alt-click: reset the horizontal scale too	Alt-დაწკაპუნება: ჰორიზონტალური მასშტაბის ჩამოყრაც
+breakText	Lines	სტრიქონები
+breakText	Words	სიტყვები
+breakText	Glyphs	გლიფები
+@msg	Click in type with a Type tool to split it	დასაყოფად დააწკაპუნეთ ტექსტში ტექსტის ხელსაწყოთი
+@msg	Too many type objects to change at once	ერთდროულად შესაცვლელად ძალიან ბევრი ტექსტური ობიექტია
+@msg	Too many pieces to make at once	ერთდროულად შესაქმნელად ძალიან ბევრი ნაწილია
+@msg	Select horizontal point or area type whose text fits	აირჩიეთ ჰორიზონტალური წერტილის ან არის ტექსტი, რომლის ტექსტიც ეტევა
+@msg	Nothing to split at the cursor	კურსორთან დასაყოფი არაფერია
+@msg	Select two or more one-line point type objects on one baseline to combine	გასაერთიანებლად აირჩიეთ ერთ საბაზისო ხაზზე მდებარე ორი ან მეტი ერთსტრიქონიანი წერტილის ტექსტის ობიექტი
+@msg	No line breaks to remove	წასაშლელი სტრიქონის წყვეტები არ არის
+@msg	No paragraph breaks to remove	წასაშლელი აბზაცის წყვეტები არ არის
+@msg	Too many breaks to remove at once	ერთდროულად წასაშლელად ძალიან ბევრი წყვეტაა
+@msg	Select point type	აირჩიეთ წერტილის ტექსტი
+@msg	The point type is aligned that way already	წერტილის ტექსტი უკვე ასეა სწორებული
+@msg	The point type has no transform to reset	წერტილის ტექსტს ჩამოსაყრელი გარდაქმნა არ აქვს
+@msg	No fonts are missing	დაკარგული შრიფტები არ არის
+@msg	the replacement font is not available	ჩამნაცვლებელი შრიფტი მიუწვდომელია
+@msg	missing `align`	`align` აკლია
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` უნდა იყოს lines, paragraphs, words ან glyphs და არა {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` უნდა იყოს "line" ან "paragraph" და არა {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` უნდა იყოს "left", "center" ან "right" და არა {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	ტრაექტორიის ეფექტები
+	Reverse Direction	მიმართულების შებრუნება
+	Align to Corners and Ends	კუთხეებთან და ბოლოებთან სწორება
+	Count	რაოდენობა
+	Max Count	მაქსიმალური რაოდენობა
+	Start Length	საწყისი სიგრძე
+	Start Percent	საწყისი პროცენტი
+	Start Shape	საწყისი ფორმა
+	End Length	საბოლოო სიგრძე
+	End Percent	საბოლოო პროცენტი
+	End Shape	საბოლოო ფორმა
+	By Count	რაოდენობით
+	By Distance	მანძილით
+	Both	ორივე
+	Shorter Than Length	სიგრძეზე მოკლე
+	Dashes to Geometry	ტირეები გეომეტრიად
+	Dashes to Geometry…	ტირეები გეომეტრიად…
+	Add Anchors	საყრდენი წერტილების დამატება
+	Add Anchors…	საყრდენი წერტილების დამატება…
+	Smooth Anchors	საყრდენი წერტილების მოგლუვება
+	Smooth Anchors…	საყრდენი წერტილების მოგლუვება…
+	Simplify Anchors	საყრდენი წერტილების გამარტივება
+	Simplify Anchors…	საყრდენი წერტილების გამარტივება…
+	Split at Anchors	დაყოფა საყრდენ წერტილებზე
+	Split at Anchors…	დაყოფა საყრდენ წერტილებზე…
+	Extend Path…	ტრაექტორიის გაგრძელება…
+	Close Path…	ტრაექტორიის შეკვრა…
+	Retract Handles…	სახელურების შეკეცვა…
+	Dash 1	ტირე 1
+	Gap 1	შუალედი 1
+	Dash 2	ტირე 2
+	Gap 2	შუალედი 2
+	Dash 3	ტირე 3
+	Gap 3	შუალედი 3
+	Dash 4	ტირე 4
+	Gap 4	შუალედი 4
+	Dash 5	ტირე 5
+	Gap 5	შუალედი 5
