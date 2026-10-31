@@ -111,10 +111,12 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     section_header(ui, tl!("Quick Actions"));
     let is_group = matches!(first.as_ref().map(|n| &n.kind), Some(NodeKind::Group { .. }));
     let is_live = matches!(first.as_ref().map(|n| &n.kind), Some(NodeKind::Path { live: Some(l), .. }) if !matches!(**l, LiveShape::Path { .. }));
-    // Blend Options for one blend while the Blend tool is in use, Merge Live Paint for a Live
-    // Paint group selected with more to merge into it, as the Properties panel overview lists them
+    // Blend Options for one selected blend, Merge Live Paint for a Live Paint group selected with
+    // more to merge into it, as the Properties panel overview lists them
     // (<https://helpx.adobe.com/illustrator/desktop/get-started/learn-the-basics/properties-panel-overview.html>).
-    let blend_options = n_sel == 1 && app.session.tool_id() == "blend" && matches!(first.as_ref().map(|n| &n.kind), Some(NodeKind::Blend { .. }));
+    // The overview names the Blend tool; the blending page has the button for a blend selected with
+    // any tool (<https://helpx.adobe.com/illustrator/using/blending-objects.html>, #4817).
+    let blend_options = n_sel == 1 && matches!(first.as_ref().map(|n| &n.kind), Some(NodeKind::Blend { .. }));
     let merge_live_paint = n_sel > 1 && can_merge_live_paint(app);
     let mut actions: Vec<(&str, &str)> = vec![];
     if n_sel > 1 {
@@ -142,8 +144,16 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         actions.push((tl!("Crop Image"), "ui.cropImage"));
         actions.push((tl!("Mask"), "object.maskImage"));
     }
-    actions.push((tl!("Offset Path"), "object.path.offsetPath"));
-    actions.push((tl!("Simplify"), "object.path.simplify"));
+    // Object › Path's Offset Path and Simplify take paths: type alone could only fail, and offsets
+    // live through the Appearance panel's Effect › Path › Offset Path (#2238).
+    let type_only = app.session.active().is_some_and(|st| {
+        let mut nodes = st.selection.objects.iter().filter_map(|id| st.doc.node(*id));
+        nodes.all(|n| matches!(n.kind, NodeKind::Text(_)))
+    });
+    if !type_only {
+        actions.push((tl!("Offset Path"), "object.path.offsetPath"));
+        actions.push((tl!("Simplify"), "object.path.simplify"));
+    }
     actions.push((tl!("Arrange: Bring to Front"), "object.arrange.bringToFront"));
     actions.push((tl!("Lock"), "object.lock"));
     // Lock and Isolate Group are left out while their commands are off (in isolation mode, while

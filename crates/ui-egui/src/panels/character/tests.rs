@@ -704,3 +704,39 @@ fn reset_panel_resets_every_attribute_but_the_font() {
     reset_panel(&mut app);
     assert_eq!(runs(&app), [("One ".to_string(), styled), ("12".to_string(), plain)]);
 }
+
+/// #4232: the panel menu's Show Snap to Glyph Options shows the Snap to Glyph section (with no
+/// type selected too) and Hide Snap to Glyph Options hides it; its checkboxes, dimmed while View ›
+/// Snap to Glyph is off, set the options.
+#[test]
+fn snap_to_glyph_options_show_from_the_menu_and_set_the_options() {
+    use super::super::tests_appearance::{click, frame_events, text_rect};
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let ctx = egui::Context::default();
+    let toggle = |app: &mut VectorcraftApp, label: &str| {
+        let texts = frame_events(&ctx, app, vec![], menu);
+        let at = texts.iter().find(|(t, _)| t.trim() == label).unwrap_or_else(|| panic!("{label} in {texts:?}")).1;
+        click(&ctx, app, at.center(), menu);
+    };
+    let section = |app: &mut VectorcraftApp| frame_events(&ctx, app, vec![], show);
+    let labels = ["Baseline", "x-height", "Glyph Bounds", "Proximity Guides", "Angular Guides", "Anchor Point"];
+    assert!(!section(&mut app).iter().any(|(t, _)| t == "Proximity Guides"), "hidden at first");
+    toggle(&mut app, "Show Snap to Glyph Options");
+    let texts = section(&mut app);
+    assert!(labels.iter().all(|l| texts.iter().any(|(t, _)| t == l)), "{texts:?}");
+    let check = |app: &mut VectorcraftApp, label: &str| {
+        let at = text_rect(&section(app), label).center();
+        click(&ctx, app, at, show);
+    };
+    check(&mut app, "Angular Guides");
+    assert!(app.session.prefs.glyph_snap.angular, "dimmed while Snap to Glyph is off");
+    app.ui.view.snap_to_glyph = true;
+    check(&mut app, "Angular Guides");
+    check(&mut app, "x-height");
+    let o = app.session.prefs.glyph_snap;
+    assert!(!o.angular && !o.x_height && o.baseline && o.bounds && o.proximity && o.anchors, "{o:?}");
+    check(&mut app, "Angular Guides");
+    assert!(app.session.prefs.glyph_snap.angular);
+    toggle(&mut app, "Hide Snap to Glyph Options");
+    assert!(!section(&mut app).iter().any(|(t, _)| t == "Proximity Guides"));
+}

@@ -308,7 +308,7 @@ fn select_range(app: &mut VectorcraftApp, anchor: Option<usize>, i: usize, n: us
 /// Ctrl/Cmd-click on artboard `i`'s row while the Artboard tool is in use: adds its artboard to the
 /// tool's selection and makes it the active one, or takes it out and makes the lowest-numbered
 /// remaining artboard active. The only selected artboard stays selected.
-fn toggle(app: &mut VectorcraftApp, i: usize, n: usize) {
+pub(crate) fn toggle(app: &mut VectorcraftApp, i: usize, n: usize) {
     let mut all = picked(app, n);
     match all.iter().position(|j| *j == i) {
         Some(at) if all.len() > 1 => {

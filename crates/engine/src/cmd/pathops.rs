@@ -226,7 +226,7 @@ fn ids_json(ids: &[NodeId]) -> Value {
 
 /// Paint identity carried through a Pathfinder operation.
 #[derive(Clone, Debug, PartialEq)]
-struct Style {
+pub(crate) struct Style {
     appearance: Appearance,
     opacity: f32,
     blend: BlendMode,
@@ -236,7 +236,7 @@ impl Style {
     fn of(n: &Node) -> Self {
         Style { appearance: (*n.appearance).clone(), opacity: n.opacity, blend: n.blend }
     }
-    fn apply(&self, n: &mut Node) {
+    pub(crate) fn apply(&self, n: &mut Node) {
         n.appearance = self.appearance.clone().into();
         n.opacity = self.opacity;
         n.blend = self.blend;
@@ -267,7 +267,7 @@ pub(crate) fn text_outline(t: &TextObject) -> PathData {
     PathData::from_bezpath(&lay.to_bezpath()).transformed(t.xf)
 }
 
-fn style_of(n: &Node) -> Style {
+pub(crate) fn style_of(n: &Node) -> Style {
     match &n.kind {
         NodeKind::Text(t) => Style { appearance: t.first_style().appearance(), opacity: n.opacity, blend: n.blend },
         _ => Style::of(n),
@@ -291,6 +291,20 @@ fn each_leaf(n: &Node, f: &mut impl FnMut(&Node)) {
             }
         }
         _ => {}
+    }
+}
+
+/// [`leaves`] as a Pathfinder operation takes them: a compound shape is one shape, the area it
+/// draws painted as it is (its members as they are past a live Pathfinder's budget).
+pub(crate) fn pf_leaves(n: &Node, out: &mut Vec<Node>) {
+    match &n.kind {
+        NodeKind::Group { children, .. } | NodeKind::Layer { children, .. } => {
+            match vectorcraft_render::effects::compound_shape_art(n, vectorcraft_render::effects::text_outliner()) {
+                Some(art) => out.push(art),
+                None => children.iter().for_each(|c| pf_leaves(c, out)),
+            }
+        }
+        _ => leaves(n, out),
     }
 }
 
@@ -554,7 +568,7 @@ fn run_pf(s: &mut Session, p: &Value, op: PathfinderOp) -> Result<Value> {
         for id in &roots {
             let n = d.node(*id).ok_or(EngineError::NoNode(*id))?;
             let mut lv = vec![];
-            leaves(n, &mut lv);
+            pf_leaves(n, &mut lv);
             if lv.is_empty() {
                 continue;
             }
@@ -874,11 +888,13 @@ pub(crate) fn outline_strokes(d: &mut Document, brushes: &[vectorcraft_brush::Br
 }
 
 /// A plain copy of path `l` (new ids, no transparency, name or mask) painted with `items`.
+/// The copy is shown and unlocked.
 pub(crate) fn styled_copy(d: &mut Document, l: &Node, items: Vec<AppearanceItem>) -> Node {
     let mut f = d.reid(l);
     f.appearance = Appearance { items, ..Default::default() }.into();
     f.opacity = 1.0;
     f.blend = BlendMode::Normal;
+    (f.visible, f.locked, f.knockout_shape) = (true, false, false);
     f.name = None;
     f.extras_mut().mask = None;
     if let NodeKind::Path { live, .. } = &mut f.kind {
@@ -889,7 +905,7 @@ pub(crate) fn styled_copy(d: &mut Document, l: &Node, items: Vec<AppearanceItem>
 
 /// What stands for object `l` once its appearance became `parts` (paint order): the one part (in a
 /// group when it has effects of its own) or a group of them, with `l`'s transparency, name, opacity
-/// mask and effects. `None` without parts.
+/// mask, effects, and hidden, locked and knockout-shape states. `None` without parts.
 pub(crate) fn assemble(d: &mut Document, l: &Node, mut parts: Vec<Node>) -> Option<Node> {
     let root = match parts.len() {
         0 => return None,
@@ -897,6 +913,7 @@ pub(crate) fn assemble(d: &mut Document, l: &Node, mut parts: Vec<Node>) -> Opti
         _ => Node::group(d.alloc_id(), parts.into_iter().map(Arc::new).collect()),
     };
     let mut root = with_transparency(d, root, l.opacity, l.blend);
+    (root.visible, root.locked, root.knockout_shape) = (l.visible, l.locked, l.knockout_shape);
     root.name = l.name.clone();
     root.extras_mut().mask = l.extras().mask.clone();
     root.appearance.effects = l.appearance.effects.clone();
