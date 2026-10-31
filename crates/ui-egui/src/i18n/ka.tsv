@@ -1061,12 +1061,12 @@ lighting	Light	სინათლე
 	 to set spacing and orientation	 — ინტერვალისა და ორიენტაციის დასაყენებლად
 	Apply	გამოყენება
 	Change Screen Mode (F)	ეკრანის რეჟიმის შეცვლა (F)
-	Color (, or <)	ფერი (, ან <)
+	Color (, or Shift+,)	ფერი (, ან Shift+,)
 	Draw Behind	უკან ხატვა
 	Draw Inside	შიგნით ხატვა
 	Draw Normal	ჩვეულებრივი ხატვა
 	Expand:	გაშლა:
-	Gradient (. or >)	გრადიენტი (. ან >)
+	Gradient (. or Shift+.)	გრადიენტი (. ან Shift+.)
 	H:	სიმ.:
 	Modify	შეცვლა
 	Navigate	ნავიგაცია
@@ -1658,7 +1658,6 @@ lighting	Light	სინათლე
 	Weight:	სისქე:
 	Art using a deleted global swatch keeps its colour.	წაშლილი გლობალური ფერის ნიმუშის მქონე ნახატი თავის ფერს ინარჩუნებს.
 	Color Group: {name}	ფერთა ჯგუფი: {name}
-	Delete these {count} swatches and groups?	წაიშალოს ეს ფერის ნიმუშები და ჯგუფები ({count})?
 	Delete “{name}”?	წაიშალოს „{name}“?
 	Document Swatches	დოკუმენტის ფერის ნიმუშები
 	Edit or Apply Color Group	ფერთა ჯგუფის რედაქტირება ან გამოყენება
@@ -1962,6 +1961,13 @@ lighting	Light	სინათლე
 	Use Artboards	სამუშაო დაფების გამოყენება
 	Choose a folder	საქაღალდის არჩევა
 	Create Sub-folders	ქვესაქაღალდეების შექმნა
+	Clear Selection	მონიშვნის გასუფთავება
+	Export PDFs As:	PDF-ების ექსპორტი როგორც:
+	Single File	ერთი ფაილი
+	Multiple Files	რამდენიმე ფაილი
+	Format Presets	ფორმატის პრესეტები
+	Grid View	ბადის ხედი
+	Selected: {n}, Total number of files to export: {m}	არჩეულია: {n}, ექსპორტის ფაილების საერთო რაოდენობა: {m}
 	Export Asset	რესურსის ექსპორტირება
 	Export to:	ექსპორტის ადგილი:
 	Format Settings	ფორმატის პარამეტრები
@@ -3620,6 +3626,7 @@ font-technology	Variable	ცვლადი
 @plural	{n} item|{n} items	ელემენტი: {n}
 @plural	Color Table ({n} color)|Color Table ({n} colors)	ფერების ცხრილი (ფერი: {n})
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	წაიშალოს გრაფიკული სტილები ({n})?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	წაიშალოს ეს ფერის ნიმუშები და ჯგუფები ({n})?
 @plural	{n} Layer|{n} Layers	შრე: {n}
 @plural	{n} Object|{n} Objects	ობიექტი: {n}
 @plural	{n} area highlighted|{n} areas highlighted	გამოკვეთილი არე: {n}
@@ -3851,6 +3858,7 @@ font-technology	Variable	ცვლადი
 @msg	cannot split an open path at its end point	ღია ტრაექტორიის ბოლო წერტილში გაყოფა შეუძლებელია
 @msg	closing needs three anchors	შეკვრას სამი საყრდენი წერტილი სჭირდება
 @msg	check an asset to export	მონიშნეთ ექსპორტის რესურსი
+@msg	check an artboard to export	მონიშნეთ ექსპორტის სახატავი დაფა
 @msg	choice must be "merge" or "add", not `{choice}`	choice უნდა იყოს "merge" ან "add" და არა `{choice}`
 @msg	choose a direction to divide in	აირჩიეთ დაყოფის მიმართულება
 @msg	choose a folder to export to	აირჩიეთ ექსპორტის საქაღალდე
@@ -3986,6 +3994,7 @@ font-technology	Variable	ცვლადი
 @msg	no such perspective grid preset	პერსპექტივის ბადის ასეთი პრესეტი არ არის
 @msg	no such recent file	ასეთი ბოლოს გახსნილი ფაილი არ არის
 @msg	no such recent font	ასეთი ბოლოდროინდელი შრიფტი არ არის
+@msg	some text is hidden or locked, so its font wasn't replaced	ზოგიერთი ტექსტი დამალული ან ჩაკეტილია, ამიტომ მისი შრიფტი არ შეიცვალა
 @msg	no such saved selection	ასეთი შენახული მონიშვნა არ არის
 @msg	no such segment	ასეთი სეგმენტი არ არის
 @msg	no such subpath	ასეთი ქვეტრაექტორია არ არის
@@ -5899,6 +5908,7 @@ anchor	Points:	წერტილები:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	ტექსტის დაყოფა
 	Combine Point Text	წერტილის ტექსტის გაერთიანება
+	Join Point Text	წერტილის ტექსტის შეერთება
 	Remove Breaks	წყვეტების წაშლა
 	Split Text at Cursor	ტექსტის დაყოფა კურსორთან
 	Set Alignment, Keep Position	სწორების დაყენება მდებარეობის შენარჩუნებით
@@ -5927,6 +5937,7 @@ breakText	Glyphs	გლიფები
 @msg	Select horizontal point or area type whose text fits	აირჩიეთ ჰორიზონტალური წერტილის ან არის ტექსტი, რომლის ტექსტიც ეტევა
 @msg	Nothing to split at the cursor	კურსორთან დასაყოფი არაფერია
 @msg	Select two or more one-line point type objects on one baseline to combine	გასაერთიანებლად აირჩიეთ ერთ საბაზისო ხაზზე მდებარე ორი ან მეტი ერთსტრიქონიანი წერტილის ტექსტის ობიექტი
+@msg	Select two or more one-line point type objects to join	შესაერთებლად აირჩიეთ ორი ან მეტი ერთსტრიქონიანი წერტილის ტექსტის ობიექტი
 @msg	No line breaks to remove	წასაშლელი სტრიქონის წყვეტები არ არის
 @msg	No paragraph breaks to remove	წასაშლელი აბზაცის წყვეტები არ არის
 @msg	Too many breaks to remove at once	ერთდროულად წასაშლელად ძალიან ბევრი წყვეტაა
@@ -5981,3 +5992,16 @@ breakText	Glyphs	გლიფები
 	Gap 5	შუალედი 5
 
 @msg	{_1}: they came in as the page's art	{_1}: იმპორტირებულია გვერდის გამოსახულების სახით
+
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	განლაგების ხელსაწყოები
+	Arrange in Grid…	ბადეში განლაგება…
+	Arrange in Grid	ბადეში განლაგება
+	Swap Objects	ობიექტების გაცვლა
+	Swap Objects and Sizes	ობიექტებისა და ზომების გაცვლა
+	Replace with Top Object…	ზედა ობიექტით ჩანაცვლება…
+	Replace with Top Object	ზედა ობიექტით ჩანაცვლება
+	Set Size of Each…	თითოეულის ზომის დაყენება…
+	Set Size of Each	თითოეულის ზომის დაყენება
+@msg	select exactly two objects	მონიშნეთ ზუსტად ორი ობიექტი
+@msg	give `width` or `height`	მიუთითეთ `width` ან `height`

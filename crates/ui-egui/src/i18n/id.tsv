@@ -1127,12 +1127,12 @@ lighting	Light	Cahaya
 	 to set spacing and orientation	 untuk mengatur jarak dan orientasi
 	Apply	Terapkan
 	Change Screen Mode (F)	Ganti mode layar (F)
-	Color (, or <)	Warna (, atau <)
+	Color (, or Shift+,)	Warna (, atau Shift+,)
 	Draw Behind	Gambar di belakang
 	Draw Inside	Gambar di dalam
 	Draw Normal	Gambar normal
 	Expand:	Perluas:
-	Gradient (. or >)	Gradien (. atau >)
+	Gradient (. or Shift+.)	Gradien (. atau Shift+.)
 	H:	H:
 	Modify	Ubah
 	Navigate	Navigasi
@@ -1755,7 +1755,6 @@ lighting	Light	Cahaya
 	Weight:	Ketebalan:
 	Art using a deleted global swatch keeps its colour.	Karya seni yang memakai swatch global terhapus tetap mempertahankan warnanya.
 	Color Group: {name}	Grup warna: {name}
-	Delete these {count} swatches and groups?	Hapus {count} swatch dan grup ini?
 	Delete “{name}”?	Hapus “{name}”?
 	Document Swatches	Swatch dokumen
 	Edit or Apply Color Group	Edit atau terapkan grup warna
@@ -2062,6 +2061,13 @@ lighting	Light	Cahaya
 	Use Artboards	Gunakan artboard
 	Choose a folder	Pilih folder
 	Create Sub-folders	Buat subfolder
+	Clear Selection	Hapus pilihan
+	Export PDFs As:	Ekspor PDF sebagai:
+	Single File	Satu file
+	Multiple Files	Beberapa file
+	Format Presets	Preset format
+	Grid View	Tampilan kisi
+	Selected: {n}, Total number of files to export: {m}	Dipilih: {n}, jumlah total file yang akan diekspor: {m}
 	Export Asset	Ekspor aset
 	Export to:	Ekspor ke:
 	Format Settings	Pengaturan format
@@ -3854,6 +3860,7 @@ imageTrace	Outline	Kontur
 @plural	{n} item|{n} items	{n} item
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Tabel warna ({n} warna)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Hapus {n} gaya grafis ini?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Hapus {n} swatch dan grup ini?
 @plural	{n} Layer|{n} Layers	{n} lapisan
 @plural	{n} Object|{n} Objects	{n} objek
 @plural	{n} area highlighted|{n} areas highlighted	{n} area disorot
@@ -4067,6 +4074,7 @@ imageTrace	Outline	Kontur
 @msg	cannot split an open path at its end point	tidak dapat membelah jalur terbuka pada titik ujungnya
 @msg	closing needs three anchors	penutupan memerlukan tiga jangkar
 @msg	check an asset to export	centang aset yang akan diekspor
+@msg	check an artboard to export	centang artboard yang akan diekspor
 @msg	choice must be "merge" or "add", not `{choice}`	choice harus "merge" atau "add", bukan `{choice}`
 @msg	choose a direction to divide in	pilih arah untuk membagi
 @msg	choose a folder to export to	pilih folder tujuan ekspor
@@ -4199,6 +4207,7 @@ imageTrace	Outline	Kontur
 @msg	no such perspective grid preset	tidak ada preset kisi perspektif seperti itu
 @msg	no such recent file	tidak ada berkas terbaru seperti itu
 @msg	no such recent font	tidak ada font terbaru seperti itu
+@msg	some text is hidden or locked, so its font wasn't replaced	sebagian teks tersembunyi atau terkunci, sehingga fontnya tidak diganti
 @msg	no such saved selection	tidak ada seleksi tersimpan seperti itu
 @msg	no such segment	tidak ada segmen seperti itu
 @msg	no such subpath	tidak ada subjalur seperti itu
@@ -5814,6 +5823,7 @@ anchor	Points:	Titik:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Pisahkan teks
 	Combine Point Text	Gabungkan teks titik
+	Join Point Text	Satukan teks titik
 	Remove Breaks	Hapus pemisah
 	Split Text at Cursor	Pisahkan teks di kursor
 	Set Alignment, Keep Position	Atur perataan, pertahankan posisi
@@ -5842,6 +5852,7 @@ breakText	Glyphs	Glif
 @msg	Select horizontal point or area type whose text fits	Pilih teks titik atau teks area horizontal yang teksnya muat
 @msg	Nothing to split at the cursor	Tidak ada yang dapat dipisahkan di kursor
 @msg	Select two or more one-line point type objects on one baseline to combine	Pilih dua atau lebih objek teks titik satu baris pada satu garis dasar untuk menggabungkannya
+@msg	Select two or more one-line point type objects to join	Pilih dua atau lebih objek teks titik satu baris untuk menyatukannya
 @msg	No line breaks to remove	Tidak ada putus baris untuk dihapus
 @msg	No paragraph breaks to remove	Tidak ada putus paragraf untuk dihapus
 @msg	Too many breaks to remove at once	Terlalu banyak pemisah untuk dihapus sekaligus
@@ -5896,3 +5907,16 @@ breakText	Glyphs	Glif
 	Gap 5	Jarak 5
 
 @msg	{_1}: they came in as the page's art	{_1}: diimpor sebagai gambar halaman
+
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Alat penyusunan
+	Arrange in Grid…	Susun dalam grid…
+	Arrange in Grid	Susun dalam grid
+	Swap Objects	Tukar objek
+	Swap Objects and Sizes	Tukar objek dan ukuran
+	Replace with Top Object…	Ganti dengan objek teratas…
+	Replace with Top Object	Ganti dengan objek teratas
+	Set Size of Each…	Atur ukuran masing-masing…
+	Set Size of Each	Atur ukuran masing-masing
+@msg	select exactly two objects	pilih tepat dua objek
+@msg	give `width` or `height`	berikan `width` atau `height`

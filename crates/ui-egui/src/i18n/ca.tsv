@@ -708,7 +708,7 @@
 	Collect in New Layer	Recull en una capa nova
 	Collect Links in a Separate Folder	Recull els enllaços en una carpeta a part
 	Color	Color
-	Color (, or <)	Color (, o <)
+	Color (, or Shift+,)	Color (, o Maj+,)
 	Color Adjustments	Ajustos de color
 	Color bars	Barres de color
 	Color blindness – Deuteranopia-type	Daltonisme – tipus deuteranòpsia
@@ -918,6 +918,13 @@
 	Create Slice from Selection	Crea un tall a partir de la selecció
 	Create Slices from Guides	Crea talls a partir de guies
 	Create Sub-folders	Crea subcarpetes
+	Clear Selection	Esborra la selecció
+	Export PDFs As:	Exporta els PDF com a:
+	Single File	Un sol fitxer
+	Multiple Files	Diversos fitxers
+	Format Presets	Preajustos de format
+	Grid View	Vista de quadrícula
+	Selected: {n}, Total number of files to export: {m}	Seleccionats: {n}, nombre total de fitxers per exportar: {m}
 	Create Text	Crea text
 	Create Trim Marks	Crea marques de retall
 	Create:	Crea:
@@ -1050,7 +1057,6 @@
 	Delete the library “{name}”?	Voleu suprimir la biblioteca “{name}”?
 	Delete Theme	Suprimeix el tema
 	Delete theme	Suprimeix el tema
-	Delete these {count} swatches and groups?	Voleu suprimir aquestes {count} mostres i grups?
 	Delete these {n} graphic styles?	Voleu suprimir aquests {n} estils gràfics?
 	Delete this saved preset	Suprimeix aquest preajust desat
 	Delete this {n} graphic style?	Voleu suprimir aquest {n} estil gràfic?
@@ -1691,7 +1697,7 @@
 	GPU Performance	Rendiment de la GPU
 	Grab bag	Calaix de sastre
 	Gradient	Degradat
-	Gradient (. or >)	Degradat (. o >)
+	Gradient (. or Shift+.)	Degradat (. o Maj+.)
 	Gradient across stroke	Degradat transversal al traç
 	Gradient along stroke	Degradat al llarg del traç
 	Gradient and Mesh Resolution:	Resolució de degradat i malla:
@@ -4678,6 +4684,7 @@
 @plural	agrees with {n} default shortcut|agrees with {n} default shortcuts	coincideix amb {n} drecera per defecte|coincideix amb {n} dreceres per defecte
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Taula de colors ({n} color)|Taula de colors ({n} colors)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Voleu suprimir aquest {n} estil gràfic?|Voleu suprimir aquests {n} estils gràfics?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Voleu suprimir aquesta {n} mostra o grup?|Voleu suprimir aquestes {n} mostres i grups?
 @plural	{n} area highlighted|{n} areas highlighted	{n} àrea ressaltada|{n} àrees ressaltades
 @plural	{n} color|{n} colors	{n} color|{n} colors
 @plural	{n} commit|{n} commits	{n} commit|{n} commits
@@ -4885,6 +4892,7 @@
 @msg	cannot split an open path at its end point	no es pot dividir un traçat obert al seu punt final
 @msg	check a layer to export	marqueu una capa per exportar
 @msg	check an asset to export	marqueu un recurs per exportar
+@msg	check an artboard to export	marqueu una mesa de treball per exportar
 @msg	choice must be "merge" or "add", not `{choice}`	l’opció ha de ser "merge" o "add", no `{choice}`
 @msg	Choose a circle or a perfect arc	Trieu un cercle o un arc perfecte
 @msg	choose a destination folder	trieu una carpeta de destinació
@@ -5170,6 +5178,7 @@
 @msg	no such perspective grid preset	no existeix aquest preajust de quadrícula de perspectiva
 @msg	no such recent file	no existeix aquest fitxer recent
 @msg	no such recent font	no existeix aquest tipus de lletra recent
+@msg	some text is hidden or locked, so its font wasn't replaced	part del text està amagat o bloquejat, així que el seu tipus de lletra no s'ha substituït
 @msg	no such saved selection	no existeix aquesta selecció desada
 @msg	no such segment	no existeix aquest segment
 @msg	no such spine point	no existeix aquest punt de l’espina
@@ -5900,6 +5909,7 @@ anchor	Points:	Punts:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Divideix el text
 	Combine Point Text	Combina el text de punt
+	Join Point Text	Uneix el text de punt
 	Remove Breaks	Elimina els salts
 	Split Text at Cursor	Divideix el text al cursor
 	Set Alignment, Keep Position	Defineix l’alineació i manté la posició
@@ -5928,6 +5938,7 @@ breakText	Glyphs	Glifs
 @msg	Select horizontal point or area type whose text fits	Seleccioneu text de punt o d’àrea horitzontal el text del qual hi càpiga
 @msg	Nothing to split at the cursor	No hi ha res a dividir al cursor
 @msg	Select two or more one-line point type objects on one baseline to combine	Seleccioneu dos o més objectes de text de punt d’una línia sobre una mateixa línia de base per combinar-los
+@msg	Select two or more one-line point type objects to join	Seleccioneu dos o més objectes de text de punt d’una línia per unir-los
 @msg	No line breaks to remove	No hi ha salts de línia per eliminar
 @msg	No paragraph breaks to remove	No hi ha salts de paràgraf per eliminar
 @msg	Too many breaks to remove at once	Massa salts per eliminar-los alhora
@@ -5982,3 +5993,16 @@ breakText	Glyphs	Glifs
 	Gap 5	Separació 5
 
 @msg	{_1}: they came in as the page's art	{_1}: han entrat com a art de la pàgina
+
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Eines d’organització
+	Arrange in Grid…	Organitza en quadrícula…
+	Arrange in Grid	Organitza en quadrícula
+	Swap Objects	Intercanvia els objectes
+	Swap Objects and Sizes	Intercanvia els objectes i les mides
+	Replace with Top Object…	Reemplaça per l’objecte superior…
+	Replace with Top Object	Reemplaça per l’objecte superior
+	Set Size of Each…	Defineix la mida de cadascun…
+	Set Size of Each	Defineix la mida de cadascun
+@msg	select exactly two objects	selecciona exactament dos objectes
+@msg	give `width` or `height`	indica `width` o `height`

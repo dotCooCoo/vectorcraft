@@ -1,5 +1,6 @@
 # Development
 
+> **Last updated:** 2026-10-31 · **Change:** files opened while the app runs open in its window on Windows and Linux (#4892); `--new-instance`.
 > **Last updated:** 2026-10-29 · **Change:** Linux clipboard: the Flatpak on GNOME copies and pastes text through the core Wayland protocol.
 > **Last updated:** 2026-10-29 · **Change:** Linux clipboard: a clipboard that can't be opened is retried with a growing wait and logged once.
 > **Last updated:** 2026-10-25 · **Change:** Linux Wayland drag-and-drop note names eframe 0.37 (still on winit 0.30).
@@ -109,6 +110,10 @@ On macOS the menus live in the system menu bar, not in the window's app bar (whi
 - **Keys stay with egui.** AppKit runs a menu's key equivalents before the window sees the key, so the item's key goes back to egui as the key press it was (⌘X/⌘C/⌘V as egui's Cut/Copy/Paste events), through `raw_input_hook`: `shortcuts::handle` runs it once, user shortcuts apply, and a focused text field keeps ⌘A, ⌘C, ⌘V and ⌘Z. A click runs the item like an in-window click. Bare keys and ⌥/⇧ chords are never key equivalents (they type).
 - Built and clippy-checked for `aarch64-apple-darwin` and `x86_64-apple-darwin` from any host: `cargo clippy -p vectorcraft --target aarch64-apple-darwin --all-targets -- -D warnings`.
 
+## Files opened while the app runs (Windows and Linux)
+
+A file opened from the file manager (double-click, Open With, a drop on the executable) or given on the command line while VectorCraft already runs opens as a new document tab in that window, which comes to the front; the second launch exits (#4892). `apps/vectorcraft/src/single_instance.rs`: the running app listens on a loopback port and records the port and two random tokens in `instance.json` next to the preferences (owner-only on Unix). A launch with files reads it, connects, checks the app's greeting, sends the token and the absolute paths as one JSON line and waits for the acknowledgement; the app keeps only existing files (at most 256, 64 KiB per message). A stale file (no listener, a wrong greeting) is ignored and replaced; the app removes its file when its window closes. Launches with `--control` or `VECTORCRAFT_NO_PREFS` neither hand files over nor listen, so tests and agents start as many apps as before; `--new-instance` opens a launch's files in a window of its own. macOS hands Finder's files to the running app as open-document events (`open_documents.rs`).
+
 ## Linux: Wayland and X11
 
 On GNOME/Wayland, enable **Preferences › User Interface › System Title Bar** and restart to use winit's font-free Adwaita window controls (`wayland-csd-adwaita-notitle`); the existing custom title bar remains the Linux default.
@@ -125,8 +130,7 @@ The window runs natively on Wayland (eframe's `wayland` feature) and on X11. On 
 ## Fonts: craft-fonts (optional build input)
 
 Font files are never committed to this repository. Fonts shared by the Crafting Apps live in
-[storytold/craft-fonts](https://github.com/storytold/craft-fonts); the rules are in craftrules
-[`standards/fonts.md`](https://github.com/storytold/craftrules/blob/main/standards/fonts.md). To add
+[storytold/craft-fonts](https://github.com/storytold/craft-fonts). To add
 a font, add it there. (The Latin fonts in `assets/fonts/` predate the rule and stay.)
 
 VectorCraft builds, tests and runs without craft-fonts. To embed its Japanese fonts (BIZ UDPGothic
@@ -494,6 +498,7 @@ Scores and hour estimates are unchanged.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-31 | minor | Files opened while the app runs open in its window on Windows and Linux (#4892); `--new-instance` opts out. |
 | 2026-10-29 | minor | Linux clipboard: core Wayland protocol text fallback where arboard has neither data-control nor X11 (the Flatpak on GNOME).; its reads wait 2 s at most. |
 | 2026-10-29 | minor | Linux clipboard: a clipboard arboard can't open is retried after 1 s doubling to 60 s and logged once, instead of every 250 ms. |
 | 2026-10-28 | minor | Localisation: Catalan (`ca`) catalog and registry entry (every `ca-*` locale); complete under the catalog tests. |

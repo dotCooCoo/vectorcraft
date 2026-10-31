@@ -510,7 +510,7 @@ font-technology	Variable	Variables
 	Collect in New Layer	Rassembler dans un nouveau calque
 	Collect Links in a Separate Folder	Rassembler les liens dans un dossier distinct
 	Color	Couleur
-	Color (, or <)	Couleur (, ou <)
+	Color (, or Shift+,)	Couleur (, ou Maj+,)
 	Color Adjustments	Réglages de couleur
 	Color bars	Barres de couleurs
 	Color blindness – Deuteranopia-type	Daltonisme – type deutéranopie
@@ -665,6 +665,13 @@ font-technology	Variable	Variables
 	Create Report	Créer un rapport
 	Create Slice	Créer une tranche
 	Create Sub-folders	Créer des sous-dossiers
+	Clear Selection	Effacer la sélection
+	Export PDFs As:	Exporter les PDF sous :
+	Single File	Un seul fichier
+	Multiple Files	Plusieurs fichiers
+	Format Presets	Paramètres prédéfinis de format
+	Grid View	Vue en grille
+	Selected: {n}, Total number of files to export: {m}	Sélectionnés : {n}, nombre total de fichiers à exporter : {m}
 	Create Text	Créer du texte
 	Create Trim Marks	Créer des traits de coupe
 	Created	Création
@@ -749,7 +756,7 @@ font-technology	Variable	Variables
 	Delete the graphic style “{name}”?	Supprimer le style graphique « {name} » ?
 	Delete Theme	Supprimer le thème
 	Delete theme	Supprimer le thème
-	Delete these {count} swatches and groups?	Supprimer ces {count} nuances et groupes ?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Supprimer {n} nuance ou groupe ?|Supprimer ces {n} nuances et groupes ?
 	Delete these {n} graphic styles?	Supprimer ces {n} styles graphiques ?
 	Delete this saved preset	Supprimer ce paramètre prédéfini enregistré
 	Delete this {n} graphic style?	Supprimer {n} style graphique ?
@@ -1272,7 +1279,7 @@ font-technology	Variable	Variables
 	GPL palettes keep solid colours only, as RGB.	Les palettes GPL ne conservent que les couleurs unies, en RVB.
 	GPU Performance	Performances GPU
 	Gradient	Dégradé
-	Gradient (. or >)	Dégradé (. ou >)
+	Gradient (. or Shift+.)	Dégradé (. ou Maj+.)
 	Gradient across stroke	Dégradé sur la largeur du contour
 	Gradient along stroke	Dégradé le long du contour
 	Gradient and Mesh Resolution:	Résolution des dégradés et des filets :
@@ -4065,6 +4072,7 @@ axis	Both	Les deux
 @msg	cannot split an open path at its end point	impossible de scinder un tracé ouvert à son extrémité
 @msg	closing needs three anchors	la fermeture nécessite trois points d’ancrage
 @msg	check an asset to export	cochez une ressource à exporter
+@msg	check an artboard to export	cochez un plan de travail à exporter
 @msg	check a layer to export	cochez un calque à exporter
 @msg	select the art to export first	sélectionnez d’abord l’illustration à exporter
 @msg	choice must be "merge" or "add", not `{choice}`	choice doit valoir "merge" ou "add", pas `{choice}`
@@ -4207,6 +4215,7 @@ axis	Both	Les deux
 @msg	no such perspective grid preset	paramètre prédéfini de grille de perspective inexistant
 @msg	no such recent file	fichier récent inexistant
 @msg	no such recent font	police récente inexistante
+@msg	some text is hidden or locked, so its font wasn't replaced	une partie du texte est masquée ou verrouillée : sa police n'a pas été remplacée
 @msg	no such saved selection	sélection enregistrée inexistante
 @msg	no such segment	segment inexistant
 @msg	no such spine point	point de la dorsale inexistant
@@ -5908,6 +5917,7 @@ anchor	Points:	Points :
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Diviser le texte
 	Combine Point Text	Combiner le texte de point
+	Join Point Text	Joindre le texte de point
 	Remove Breaks	Supprimer les sauts
 	Split Text at Cursor	Diviser le texte au curseur
 	Set Alignment, Keep Position	Définir l’alignement en conservant la position
@@ -5936,6 +5946,7 @@ breakText	Glyphs	Glyphes
 @msg	Select horizontal point or area type whose text fits	Sélectionnez du texte de point ou captif horizontal dont le texte tient dans son cadre
 @msg	Nothing to split at the cursor	Rien à diviser au curseur
 @msg	Select two or more one-line point type objects on one baseline to combine	Sélectionnez au moins deux objets texte de point d’une ligne sur une même ligne de base pour les combiner
+@msg	Select two or more one-line point type objects to join	Sélectionnez au moins deux objets texte de point d’une ligne pour les joindre
 @msg	No line breaks to remove	Aucun saut de ligne à supprimer
 @msg	No paragraph breaks to remove	Aucun saut de paragraphe à supprimer
 @msg	Too many breaks to remove at once	Trop de sauts à supprimer en une fois
@@ -5990,3 +6001,16 @@ breakText	Glyphs	Glyphes
 	Gap 5	Écart 5
 
 @msg	{_1}: they came in as the page's art	{_1} : ils ont été importés comme le dessin de la page
+
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Outils de disposition
+	Arrange in Grid…	Disposer en grille…
+	Arrange in Grid	Disposer en grille
+	Swap Objects	Permuter les objets
+	Swap Objects and Sizes	Permuter les objets et leurs tailles
+	Replace with Top Object…	Remplacer par l’objet supérieur…
+	Replace with Top Object	Remplacer par l’objet supérieur
+	Set Size of Each…	Définir la taille de chaque objet…
+	Set Size of Each	Définir la taille de chaque objet
+@msg	select exactly two objects	sélectionnez exactement deux objets
+@msg	give `width` or `height`	indiquez `width` ou `height`

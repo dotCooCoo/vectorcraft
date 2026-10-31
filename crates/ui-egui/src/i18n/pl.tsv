@@ -1140,12 +1140,12 @@ lighting	Light	Światło
 	 to set spacing and orientation	 aby ustawić odstęp i orientację
 	Apply	Zastosuj
 	Change Screen Mode (F)	Zmień tryb ekranu (F)
-	Color (, or <)	Kolor (, lub <)
+	Color (, or Shift+,)	Kolor (, lub Shift+,)
 	Draw Behind	Rysuj pod spodem
 	Draw Inside	Rysuj wewnątrz
 	Draw Normal	Rysuj normalnie
 	Expand:	Rozszerz:
-	Gradient (. or >)	Gradient (. lub >)
+	Gradient (. or Shift+.)	Gradient (. lub Shift+.)
 	H:	W:
 	Modify	Modyfikuj
 	Navigate	Nawigacja
@@ -1864,7 +1864,6 @@ lighting	Light	Światło
 	Weight:	Grubość:
 	Art using a deleted global swatch keeps its colour.	Kompozycja używająca usuniętej próbki globalnej zachowa swój kolor.
 	Color Group: {name}	Grupa kolorów: {name}
-	Delete these {count} swatches and groups?	Usunąć te próbki i grupy ({count})?
 	Delete “{name}”?	Usunąć „{name}”?
 	Document Swatches	Próbki dokumentu
 	Edit or Apply Color Group	Edytuj lub zastosuj grupę kolorów
@@ -2175,6 +2174,13 @@ lighting	Light	Światło
 	Use Artboards	Użyj obszarów kompozycji
 	Choose a folder	Wybierz folder
 	Create Sub-folders	Utwórz podfoldery
+	Clear Selection	Wyczyść zaznaczenie
+	Export PDFs As:	Eksportuj pliki PDF jako:
+	Single File	Jeden plik
+	Multiple Files	Wiele plików
+	Format Presets	Ustawienia formatów
+	Grid View	Widok siatki
+	Selected: {n}, Total number of files to export: {m}	Zaznaczono: {n}, łączna liczba plików do eksportu: {m}
 	Export Asset	Eksportuj zasób
 	Export to:	Eksportuj do:
 	Format Settings	Ustawienia formatu
@@ -3948,6 +3954,7 @@ imageTrace	Outline	Kontur
 @plural	{n} item|{n} items	{n} element|{n} elementy|{n} elementów
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Tablica kolorów ({n} kolor)|Tablica kolorów ({n} kolory)|Tablica kolorów ({n} kolorów)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Usunąć {n} styl graficzny?|Usunąć {n} style graficzne?|Usunąć {n} stylów graficznych?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Usunąć {n} próbkę lub grupę?|Usunąć {n} próbki i grupy?|Usunąć {n} próbek i grup?
 @plural	{n} Layer|{n} Layers	{n} warstwa|{n} warstwy|{n} warstw
 @plural	{n} Object|{n} Objects	{n} obiekt|{n} obiekty|{n} obiektów
 @plural	{n} area highlighted|{n} areas highlighted	Wyróżniono {n} obszar|Wyróżniono {n} obszary|Wyróżniono {n} obszarów
@@ -4199,6 +4206,7 @@ imageTrace	Outline	Kontur
 @msg	cannot split an open path at its end point	nie można podzielić otwartej ścieżki w jej punkcie końcowym
 @msg	closing needs three anchors	zamknięcie wymaga trzech punktów
 @msg	check an asset to export	zaznacz zasób do eksportu
+@msg	check an artboard to export	zaznacz obszar kompozycji do eksportu
 @msg	check a layer to export	zaznacz warstwę do eksportu
 @msg	select the art to export first	najpierw zaznacz grafikę do eksportu
 @msg	choice must be "merge" or "add", not `{choice}`	wybór musi mieć wartość "merge" lub "add", nie `{choice}`
@@ -4341,6 +4349,7 @@ imageTrace	Outline	Kontur
 @msg	no such perspective grid preset	brak takiego ustawienia siatki perspektywy
 @msg	no such recent file	brak takiego ostatniego pliku
 @msg	no such recent font	brak takiej ostatniej czcionki
+@msg	some text is hidden or locked, so its font wasn't replaced	część tekstu jest ukryta lub zablokowana, więc jego czcionka nie została zastąpiona
 @msg	no such saved selection	brak takiego zapisanego zaznaczenia
 @msg	no such segment	brak takiego segmentu
 @msg	no such spine point	brak takiego punktu grzbietu
@@ -5764,6 +5773,7 @@ anchor	Points:	Punkty:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Podziel tekst
 	Combine Point Text	Połącz tekst punktowy
+	Join Point Text	Złącz tekst punktowy
 	Remove Breaks	Usuń podziały
 	Split Text at Cursor	Podziel tekst w miejscu kursora
 	Set Alignment, Keep Position	Ustaw wyrównanie, zachowaj położenie
@@ -5792,6 +5802,7 @@ breakText	Glyphs	Glify
 @msg	Select horizontal point or area type whose text fits	Zaznacz poziomy tekst punktowy lub akapitowy, którego tekst się mieści
 @msg	Nothing to split at the cursor	Nie ma nic do podzielenia w miejscu kursora
 @msg	Select two or more one-line point type objects on one baseline to combine	Zaznacz co najmniej dwa jednowierszowe obiekty tekstu punktowego na jednej linii bazowej, aby je połączyć
+@msg	Select two or more one-line point type objects to join	Zaznacz co najmniej dwa jednowierszowe obiekty tekstu punktowego, aby je złączyć
 @msg	No line breaks to remove	Brak podziałów wiersza do usunięcia
 @msg	No paragraph breaks to remove	Brak podziałów akapitu do usunięcia
 @msg	Too many breaks to remove at once	Zbyt wiele podziałów do usunięcia naraz
@@ -5847,3 +5858,16 @@ breakText	Glyphs	Glify
 	Gap 5	Odstęp 5
 
 @msg	{_1}: they came in as the page's art	{_1}: zaimportowano je jako grafikę strony
+
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Narzędzia układania
+	Arrange in Grid…	Ułóż w siatce…
+	Arrange in Grid	Ułóż w siatce
+	Swap Objects	Zamień obiekty miejscami
+	Swap Objects and Sizes	Zamień obiekty miejscami i rozmiarami
+	Replace with Top Object…	Zastąp górnym obiektem…
+	Replace with Top Object	Zastąp górnym obiektem
+	Set Size of Each…	Ustaw rozmiar każdego…
+	Set Size of Each	Ustaw rozmiar każdego
+@msg	select exactly two objects	zaznacz dokładnie dwa obiekty
+@msg	give `width` or `height`	podaj `width` lub `height`

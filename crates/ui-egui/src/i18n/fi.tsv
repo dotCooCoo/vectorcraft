@@ -1187,12 +1187,12 @@ lighting	Light	Valo
 	 to set spacing and orientation	 asettaaksesi välit ja suunnan
 	Apply	Käytä
 	Change Screen Mode (F)	Vaihda näyttötilaa (F)
-	Color (, or <)	Väri (, tai <)
+	Color (, or Shift+,)	Väri (, tai Shift+,)
 	Draw Behind	Piirrä taakse
 	Draw Inside	Piirrä sisään
 	Draw Normal	Piirrä normaalisti
 	Expand:	Laajenna:
-	Gradient (. or >)	Liukuväri (. tai >)
+	Gradient (. or Shift+.)	Liukuväri (. tai Shift+.)
 	H:	K:
 	Modify	Muokkaa
 	Navigate	Siirry
@@ -1906,7 +1906,6 @@ lighting	Light	Valo
 	Weight:	Paksuus:
 	Art using a deleted global swatch keeps its colour.	Poistettua globaalia värimallia käyttävä kuvitus säilyttää värinsä.
 	Color Group: {name}	Väriryhmä: {name}
-	Delete these {count} swatches and groups?	Poistetaanko nämä {count} värimallia ja ryhmää?
 	Delete “{name}”?	Poistetaanko ”{name}”?
 	Document Swatches	Asiakirjan värimallit
 	Edit or Apply Color Group	Muokkaa tai käytä väriryhmää
@@ -2214,6 +2213,13 @@ lighting	Light	Valo
 	Use Artboards	Käytä piirtoalustoja
 	Choose a folder	Valitse kansio
 	Create Sub-folders	Luo alikansiot
+	Clear Selection	Tyhjennä valinta
+	Export PDFs As:	Vie PDF-tiedostot muodossa:
+	Single File	Yksi tiedosto
+	Multiple Files	Useita tiedostoja
+	Format Presets	Muotoesiasetukset
+	Grid View	Ruudukkonäkymä
+	Selected: {n}, Total number of files to export: {m}	Valittu: {n}, vietävien tiedostojen määrä yhteensä: {m}
 	Export Asset	Vie resurssi
 	Export to:	Vie kohteeseen:
 	Format Settings	Muotoasetukset
@@ -4040,6 +4046,7 @@ imageTrace	Outline	Ääriviiva
 @plural	{n} item|{n} items	{n} kohde|{n} kohdetta
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Väritaulukko ({n} väri)|Väritaulukko ({n} väriä)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Poistetaanko tämä {n} grafiikkatyyli?|Poistetaanko nämä {n} grafiikkatyyliä?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Poistetaanko tämä {n} värimalli tai ryhmä?|Poistetaanko nämä {n} värimallia ja ryhmää?
 @plural	{n} Layer|{n} Layers	{n} taso|{n} tasoa
 @plural	{n} Object|{n} Objects	{n} objekti|{n} objektia
 @plural	{n} area highlighted|{n} areas highlighted	{n} alue korostettu|{n} aluetta korostettu
@@ -4284,6 +4291,7 @@ imageTrace	Outline	Ääriviiva
 @msg	cannot split an open path at its end point	avointa polkua ei voi jakaa sen päätepisteestä
 @msg	closing needs three anchors	sulkeminen vaatii kolme ankkuria
 @msg	check an asset to export	valitse vietävä resurssi
+@msg	check an artboard to export	valitse vietävä piirtoalue
 @msg	check a layer to export	valitse vietävä taso
 @msg	select the art to export first	valitse ensin vietävä kuvitus
 @msg	choice must be "merge" or "add", not `{choice}`	choice-arvon on oltava "merge" tai "add", ei `{choice}`
@@ -4426,6 +4434,7 @@ imageTrace	Outline	Ääriviiva
 @msg	no such perspective grid preset	perspektiiviruudukon esiasetusta ei ole
 @msg	no such recent file	viimeisintä tiedostoa ei ole
 @msg	no such recent font	viimeisintä fonttia ei ole
+@msg	some text is hidden or locked, so its font wasn't replaced	osa tekstistä on piilotettu tai lukittu, joten sen fonttia ei korvattu
 @msg	no such saved selection	tallennettua valintaa ei ole
 @msg	no such segment	segmenttiä ei ole
 @msg	no such spine point	selkärangan pistettä ei ole
@@ -5940,6 +5949,7 @@ anchor	Points:	Pisteet:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Jaa teksti
 	Combine Point Text	Yhdistä pisteteksti
+	Join Point Text	Liitä pisteteksti
 	Remove Breaks	Poista vaihdot
 	Split Text at Cursor	Jaa teksti kohdistimen kohdalta
 	Set Alignment, Keep Position	Aseta tasaus, säilytä sijainti
@@ -5968,6 +5978,7 @@ breakText	Glyphs	Merkit
 @msg	Select horizontal point or area type whose text fits	Valitse vaakasuora piste- tai alueteksti, jonka teksti mahtuu
 @msg	Nothing to split at the cursor	Kohdistimen kohdalla ei ole jaettavaa
 @msg	Select two or more one-line point type objects on one baseline to combine	Valitse kaksi tai useampia yksirivisiä pistetekstiobjekteja samalla perusviivalla yhdistääksesi ne
+@msg	Select two or more one-line point type objects to join	Valitse kaksi tai useampia yksirivisiä pistetekstiobjekteja liittääksesi ne
 @msg	No line breaks to remove	Ei poistettavia rivinvaihtoja
 @msg	No paragraph breaks to remove	Ei poistettavia kappaleenvaihtoja
 @msg	Too many breaks to remove at once	Liian monta vaihtoa poistettavaksi kerralla
@@ -6022,3 +6033,16 @@ breakText	Glyphs	Merkit
 	Gap 5	Väli 5
 
 @msg	{_1}: they came in as the page's art	{_1}: ne tuotiin sivun piirroksena
+
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Järjestelytyökalut
+	Arrange in Grid…	Järjestä ruudukkoon…
+	Arrange in Grid	Järjestä ruudukkoon
+	Swap Objects	Vaihda objektien paikat
+	Swap Objects and Sizes	Vaihda objektien paikat ja koot
+	Replace with Top Object…	Korvaa ylimmällä objektilla…
+	Replace with Top Object	Korvaa ylimmällä objektilla
+	Set Size of Each…	Aseta kunkin koko…
+	Set Size of Each	Aseta kunkin koko
+@msg	select exactly two objects	valitse täsmälleen kaksi objektia
+@msg	give `width` or `height`	anna `width` tai `height`

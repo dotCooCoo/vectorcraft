@@ -1188,12 +1188,12 @@ lighting	Light	Svjetlo
 	 to set spacing and orientation	 za postavljanje razmaka i orijentacije
 	Apply	Primijeni
 	Change Screen Mode (F)	Promijeni način prikaza ekrana (F)
-	Color (,)	Boja (,)
+	Color (, or Shift+,)	Boja (, ili Shift+,)
 	Draw Behind	Crtaj iza
 	Draw Inside	Crtaj unutra
 	Draw Normal	Crtaj normalno
 	Expand:	Proširi:
-	Gradient (.)	Gradijent (.)
+	Gradient (. or Shift+.)	Gradijent (. ili Shift+.)
 	H:	V:
 	Modify	Izmijeni
 	Navigate	Navigacija
@@ -1917,7 +1917,6 @@ lighting	Light	Svjetlo
 	Weight:	Debljina:
 	Art using a deleted global swatch keeps its colour.	Crtež koji koristi izbrisani globalni uzorak boje zadržava svoju boju.
 	Color Group: {name}	Grupa boja: {name}
-	Delete these {count} swatches and groups?	Izbrisati ove uzorke boja i grupe ({count})?
 	Delete “{name}”?	Izbrisati „{name}”?
 	Document Swatches	Uzorci boja dokumenta
 	Edit or Apply Color Group	Uredi ili primijeni grupu boja
@@ -2229,6 +2228,13 @@ lighting	Light	Svjetlo
 	Use Artboards	Koristi radne ploče
 	Choose a folder	Odaberite folder
 	Create Sub-folders	Kreiraj podfoldere
+	Clear Selection	Poništi odabir
+	Export PDFs As:	Izvezi PDF kao:
+	Single File	Jedna datoteka
+	Multiple Files	Više datoteka
+	Format Presets	Postavke formata
+	Grid View	Prikaz mreže
+	Selected: {n}, Total number of files to export: {m}	Odabrano: {n}, ukupan broj datoteka za izvoz: {m}
 	Export Asset	Izvezi resurs
 	Export to:	Izvezi u:
 	Format Settings	Postavke formata
@@ -4088,6 +4094,7 @@ imageTrace	Outline	Obris
 @plural	{n} item|{n} items	{n} stavka|{n} stavke|{n} stavki
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Tabela boja ({n} boja)|Tabela boja ({n} boje)|Tabela boja ({n} boja)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Izbrisati ovaj {n} grafički stil?|Izbrisati ova {n} grafička stila?|Izbrisati ovih {n} grafičkih stilova?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Izbrisati uzorke boja i grupe ({n})?|Izbrisati {n} uzorka boja i grupe?|Izbrisati {n} uzoraka boja i grupa?
 @plural	{n} Layer|{n} Layers	{n} sloj|{n} sloja|{n} slojeva
 @plural	{n} Object|{n} Objects	{n} objekat|{n} objekta|{n} objekata
 @plural	{n} area highlighted|{n} areas highlighted	Istaknuto {n} područje|Istaknuta {n} područja|Istaknuto {n} područja
@@ -4339,6 +4346,7 @@ imageTrace	Outline	Obris
 @msg	cannot split an open path at its end point	nije moguće razdvojiti otvorenu putanju na njenoj krajnjoj tački
 @msg	closing needs three anchors	zatvaranje zahtijeva tri sidra
 @msg	check an asset to export	označite resurs za izvoz
+@msg	check an artboard to export	označite radnu površinu za izvoz
 @msg	check a layer to export	označite sloj za izvoz
 @msg	select the art to export first	prvo odaberite crtež za izvoz
 @msg	choice must be "merge" or "add", not `{choice}`	choice mora biti "merge" ili "add", a ne `{choice}`
@@ -4480,6 +4488,7 @@ imageTrace	Outline	Obris
 @msg	no such perspective grid preset	nema takvog predloška mreže perspektive
 @msg	no such recent file	nema takve nedavne datoteke
 @msg	no such recent font	nema takvog nedavnog fonta
+@msg	some text is hidden or locked, so its font wasn't replaced	dio teksta je skriven ili zaključan, pa njegov font nije zamijenjen
 @msg	no such saved selection	nema takvog sačuvanog odabira
 @msg	no such segment	nema takvog segmenta
 @msg	no such spine point	nema takve tačke kičme
@@ -5832,10 +5841,7 @@ swatch	White, Black	Bijela, crna
 swatch	Yellow	Žuta
 swatch	Yellow Green	Žuto-zelena
 	Check for Updates…	Provjeri ažuriranja…
-	Checking for updates…	Provjera ažuriranja…
-	Could not check for updates:\n{error}	Nije moguće provjeriti ažuriranja:\n{error}
 	VectorCraft Updates	VectorCraft ažuriranja
-	VectorCraft {version} is currently the newest version available.	VectorCraft {version} je trenutno najnovija dostupna verzija.
 	Preparing the image…	Priprema slike…
 	Tracing the colors…	Praćenje boja…
 	Units & Scale	Jedinice i skala
@@ -5919,3 +5925,16 @@ shape	Open	Otvoren
 @msg	the paths have nothing to merge there	putanje tu nemaju šta spojiti
 @msg	the path is locked or hidden	putanja je zaključana ili skrivena
 @msg	{_1}: they came in as the page's art	{_1}: uvezeni su kao ilustracija stranice
+
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Alati za raspoređivanje
+	Arrange in Grid…	Rasporedi u mrežu…
+	Arrange in Grid	Rasporedi u mrežu
+	Swap Objects	Zamijeni objekte
+	Swap Objects and Sizes	Zamijeni objekte i veličine
+	Replace with Top Object…	Zamijeni gornjim objektom…
+	Replace with Top Object	Zamijeni gornjim objektom
+	Set Size of Each…	Postavi veličinu svakog…
+	Set Size of Each	Postavi veličinu svakog
+@msg	select exactly two objects	odaberite tačno dva objekta
+@msg	give `width` or `height`	zadajte `width` ili `height`
