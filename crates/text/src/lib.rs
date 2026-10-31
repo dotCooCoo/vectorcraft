@@ -43,7 +43,7 @@ pub use hyphen::{hyphenation_exceptions, set_hyphenation_exceptions};
 use std::sync::Arc;
 pub use svg_glyph::{SvgGlyphReader, set_svg_glyph_reader};
 
-use kurbo::{Affine, BezPath, Point, Rect, Vec2};
+use kurbo::{Affine, BezPath, Point, Rect, Shape, Vec2};
 pub use layout::{decorations, fit_first_line, layout, layout_with, scaled};
 pub use vectorcraft_doc::TextObject;
 
@@ -136,6 +136,9 @@ pub struct PositionedGlyph {
     /// the path ([`GlyphBend`]) so it meets its neighbours, and `xf` is only the straight glyph
     /// nearest it (for the caret, hit testing and tools). `None`: the glyph is drawn through `xf`.
     pub bend: Option<GlyphBend>,
+    /// Font units → font units: `xf * unturned` places the glyph as it would be placed without
+    /// its Character Rotation. The identity for a glyph without one.
+    pub unturned: Affine,
 }
 
 /// How a glyph on a path is bent along it: a point of its pen space (x along its advance from its
@@ -337,6 +340,21 @@ impl TextLayout {
             (self.physical_point(Point::new(l.x0, y)), self.physical_point(Point::new(l.x1, y)))
         };
         self.lines.iter().filter(|l| l.x1 > l.x0).map(line).collect()
+    }
+    /// The ink of the type in text space: its glyphs (and ruby) as drawn, colour glyphs, images and
+    /// inline graphics included, without the lines' em boxes that [`Self::bounds`] also covers.
+    /// What Align to Glyph Bounds aligns. `None` when nothing draws (only spaces, or no text).
+    pub fn ink_bounds(&self) -> Option<Rect> {
+        let outlined = |g: &PositionedGlyph| (!g.outline.elements().is_empty()).then(|| g.outline.bounding_box());
+        let glyphs = self.glyphs.iter().flat_map(|g| {
+            let image = g.placed_image().map(|(image, xf)| xf.transform_rect_bbox(image.rect()));
+            let colour = g.colour.as_ref().and_then(|c| c.geometric_bounds()).map(|b| g.xf.transform_rect_bbox(b));
+            [outlined(g), image, colour]
+        });
+        // Ruby is covered by its line's ascent, but its ink can overhang sideways past the line.
+        let ruby = self.ruby.iter().map(outlined);
+        let inlines = self.inlines.iter().map(|i| Some(i.bounds));
+        glyphs.chain(ruby).chain(inlines).flatten().reduce(|a, b| a.union(b))
     }
     /// All glyph outlines combined (e.g. for Create Outlines).
     pub fn to_bezpath(&self) -> BezPath {
@@ -698,50 +716,6 @@ pub fn logical_order(visual: &str) -> Option<(Vec<usize>, bool)> {
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
-mod tests_axes;
-#[cfg(test)]
-mod tests_bidi;
-#[cfg(test)]
-mod tests_bitmaps;
-#[cfg(test)]
-mod tests_colr;
-#[cfg(test)]
-mod tests_combos;
-#[cfg(test)]
-mod tests_devanagari;
-#[cfg(test)]
-mod tests_embed;
-#[cfg(test)]
-mod tests_fit;
-#[cfg(test)]
-mod tests_hang;
-#[cfg(test)]
-mod tests_inline;
-#[cfg(test)]
-mod tests_joiners;
-#[cfg(test)]
-mod tests_justify;
-#[cfg(test)]
-mod tests_path_joins;
-#[cfg(test)]
-mod tests_ruby;
-#[cfg(test)]
-mod tests_scripts;
-#[cfg(test)]
-mod tests_snap;
-#[cfg(test)]
-mod tests_svg_glyphs;
-#[cfg(test)]
-mod tests_sysfonts;
-#[cfg(test)]
-mod tests_typo;
-#[cfg(test)]
-mod tests_variable;
-#[cfg(test)]
-mod tests_versions;
-#[cfg(test)]
-mod tests_vertical;
 #[cfg(test)]
 #[path = "../build/web_fonts.rs"]
 mod web_fonts_build;
