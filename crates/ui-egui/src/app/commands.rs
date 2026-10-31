@@ -12,11 +12,12 @@ fn completed_pathfinder_operation<'a>(id: &'a str, params: &'a Value) -> Option<
 }
 
 fn skips_hidden_templates(id: &str) -> bool {
-    matches!(id, "select.all" | "select.allOnArtboard" | "select.inverse" | "select.magicWand")
+    matches!(id, "select.all" | "select.allOnArtboard" | "select.color" | "select.font" | "select.inverse" | "select.magicWand" | "select.reselect")
         || id.starts_with("select.same.")
         || id.starts_with("select.object.")
         || id.starts_with("select.next")
         || id == "select.recall"
+        || id == "document.find"
         || id.starts_with("select.globalEdit")
         || id == "addon.color.select"
         || id == "object.hide.unselected"

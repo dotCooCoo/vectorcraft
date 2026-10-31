@@ -33,7 +33,15 @@ pub fn specs() -> Vec<CommandSpec> {
             all_on_artboard
         ),
         cmd!("select.none", "Deselect", ["Select"], Some("Cmd+Shift+A"), "{}", has_doc, none),
-        cmd!("select.reselect", "Reselect", ["Select"], Some("Cmd+6"), "{}", has_doc, reselect),
+        cmd!(
+            "select.reselect",
+            "Reselect",
+            ["Select"],
+            Some("Cmd+6"),
+            "{skipTemplates?: bool (default false)} repeat the last selection command using the current template visibility",
+            has_doc,
+            reselect
+        ),
         cmd!("select.inverse", "Inverse", ["Select"], None, "{skipTemplates?: bool (default false)}", has_doc, inverse),
         cmd!(
             "select.nextAbove",
@@ -113,7 +121,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Select by Color",
             [],
             None,
-            "{fill?: colour, stroke?: colour (as paint.setFill's color; at least one)} select the objects whose fill (and stroke) reads as that colour in #rrggbb, as document.inspect reports colours, whatever its swatch or tint; with both, the objects that match both. No object needs to be selected first; Select > Reselect repeats it → {count}",
+            "{fill?: colour, stroke?: colour (as paint.setFill's color; at least one), skipTemplates?: bool (default false)} select the objects whose fill (and stroke) reads as that colour in #rrggbb, as document.inspect reports colours, whatever its swatch or tint; with both, the objects that match both. No object needs to be selected first; Select > Reselect repeats it → {count}",
             has_doc,
             select_color
         ),
@@ -349,9 +357,12 @@ fn none(s: &mut Session, _: &Value) -> Result<Value> {
     ok()
 }
 
-fn reselect(s: &mut Session, _: &Value) -> Result<Value> {
+fn reselect(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
-    let Some((c, p, from)) = st.last_selection_cmd.clone() else { return ok() };
+    let Some((c, mut saved, from)) = st.last_selection_cmd.clone() else { return ok() };
+    if let Some(params) = saved.as_object_mut() {
+        params.insert("skipTemplates".into(), json!(bool_or(p, "skipTemplates", false)));
+    }
     // After Deselect, a Same command takes its reference again from the objects that were selected
     // when it ran, those still there (#903).
     let from: Vec<NodeId> = from.into_iter().filter(|id| st.doc.node(*id).is_some()).collect();
@@ -359,7 +370,7 @@ fn reselect(s: &mut Session, _: &Value) -> Result<Value> {
     if restore {
         s.select(|_, sel| sel.set(from))?;
     }
-    let r = s.execute(&c, &p);
+    let r = s.execute(&c, &saved);
     if restore && r.is_err() {
         s.select(|_, sel| sel.clear())?;
     }

@@ -38,7 +38,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Select Text by Font",
             [],
             None,
-            "{family, style?} select the text objects using the font → {count}",
+            "{family, style?, skipTemplates?: bool (default false)} select the text objects using the font → {count}",
             has_doc,
             select_font
         ),
@@ -457,11 +457,12 @@ fn select_font(s: &mut Session, p: &Value) -> Result<Value> {
     let hits: Vec<NodeId> = ids
         .into_iter()
         .filter(|id| {
-            text(d, *id).is_some_and(|t| {
-                t.runs.iter().any(|r| {
-                    r.style.font_family.eq_ignore_ascii_case(&family) && style.as_ref().is_none_or(|x| r.style.font_style.eq_ignore_ascii_case(x))
+            (!bool_or(p, "skipTemplates", false) || !d.has_template_ancestor(*id))
+                && text(d, *id).is_some_and(|t| {
+                    t.runs.iter().any(|r| {
+                        r.style.font_family.eq_ignore_ascii_case(&family) && style.as_ref().is_none_or(|x| r.style.font_style.eq_ignore_ascii_case(x))
+                    })
                 })
-            })
         })
         .collect();
     let n = hits.len();

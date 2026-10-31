@@ -166,6 +166,63 @@ fn select_same_and_object_skip_template_art_when_requested() {
 }
 
 #[test]
+fn reselect_uses_current_template_visibility_after_select_same() {
+    let mut s = session();
+    let ordinary = rect(&mut s, 10.0, 10.0, 50.0, 50.0);
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let template = rect(&mut s, 100.0, 10.0, 50.0, 50.0);
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+
+    sel(&mut s, &[ordinary]);
+    s.execute("select.same.shapeType", &json!({})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary, template]);
+    s.execute("select.none", &json!({})).unwrap();
+    s.execute("select.reselect", &json!({"skipTemplates": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary]);
+    s.execute("select.none", &json!({})).unwrap();
+    s.execute("select.reselect", &json!({"skipTemplates": false})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary, template]);
+}
+
+#[test]
+fn reselect_filters_color_and_find_selection_commands() {
+    let mut s = session();
+    let ordinary = rect(&mut s, 10.0, 10.0, 50.0, 50.0);
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let template = rect(&mut s, 100.0, 10.0, 50.0, 50.0);
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+
+    s.execute("paint.setFill", &json!({"ids": [ordinary.0, template.0], "color": "#ff0000"})).unwrap();
+    s.execute("select.color", &json!({"fill": "#ff0000"})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary, template]);
+    s.execute("select.reselect", &json!({"skipTemplates": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary]);
+
+    s.execute("document.find", &json!({"minWidth": 50, "select": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary, template]);
+    s.execute("select.reselect", &json!({"skipTemplates": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary]);
+}
+
+#[test]
+fn select_font_skips_template_art_when_requested() {
+    let mut s = session();
+    let ordinary = NodeId(
+        s.execute("text.create", &json!({"x": 10, "y": 20, "text": "ordinary", "font": "No Such Font Family"})).unwrap()["id"].as_u64().unwrap(),
+    );
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let template = NodeId(
+        s.execute("text.create", &json!({"x": 100, "y": 20, "text": "template", "font": "No Such Font Family"})).unwrap()["id"].as_u64().unwrap(),
+    );
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+
+    s.execute("select.font", &json!({"family": "No Such Font Family", "skipTemplates": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary]);
+    s.execute("select.font", &json!({"family": "No Such Font Family", "skipTemplates": false})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary, template]);
+}
+
+#[test]
 fn select_text_commands_skip_template_art_when_requested() {
     let mut s = session();
     let ordinary = NodeId(s.execute("text.create", &json!({"x": 10, "y": 10, "text": "ordinary"})).unwrap()["id"].as_u64().unwrap());
