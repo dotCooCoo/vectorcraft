@@ -760,6 +760,8 @@ fn hit_any(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes) -> Option
             }
             children.iter().rev().find_map(|c| hit_any(c, p, opt, symbols))
         }
+        // An intertwine group hits by its members, as on the canvas.
+        NodeKind::Intertwine { children } => children.iter().rev().find_map(|c| hit_any(c, p, opt, symbols)),
         _ => hit_leaf(n, p, opt, symbols),
     }
 }

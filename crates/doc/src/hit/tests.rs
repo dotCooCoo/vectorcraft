@@ -457,6 +457,18 @@ fn a_click_in_a_blends_stroke_band_tests_only_the_steps_that_reach_it() {
     assert!(tested < 20, "{tested} objects tested");
 }
 
+/// An intertwine group in a live object's evaluated art (a blend key a spine moves) hits by its
+/// members.
+#[test]
+fn evaluated_art_hits_an_intertwine_group_by_its_members() {
+    let d = Document::new(200.0, 200.0);
+    let square = Arc::new(Node::path(NodeId(7), shapes::rectangle(Rect::new(0.0, 0.0, 20.0, 20.0)), Appearance::default_art()));
+    let group = Node::new(NodeId(8), NodeKind::Intertwine { children: vec![square] });
+    let symbols = d.symbol_boxes();
+    assert_eq!(hit_any(&group, Point::new(10.0, 10.0), HitOptions::default(), &symbols), Some(HitKind::Fill));
+    assert_eq!(hit_any(&group, Point::new(50.0, 50.0), HitOptions::default(), &symbols), None);
+}
+
 /// The pointer moving in a blend's stroke band evaluates the blend once, and again after the blend
 /// or a symbol of the document changes.
 #[test]
