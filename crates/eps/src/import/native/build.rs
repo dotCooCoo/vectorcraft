@@ -580,6 +580,11 @@ fn replace_unread(
                 first_rejection.get_or_insert("an unread object's bounds also contain live art");
                 continue;
             }
+            // Each page has its own copy of art across artboards: one page's art can't stand in for it.
+            if destination_pages.iter().filter(|page| page.intersect(candidate).area() > 0.0).count() > 1 {
+                first_rejection.get_or_insert("an unread object lies on more than one artboard");
+                continue;
+            }
             let candidate_page = page_for(candidate, &destination_pages);
             let start = by_x.partition_point(|i| art[*i].bounds.x0 < candidate.x0 - ART_MARGIN);
             let end = by_x.partition_point(|i| art[*i].bounds.x0 <= candidate.x1 + ART_MARGIN);
@@ -996,6 +1001,37 @@ mod candidate_tests {
         let [image] = replacement.children().unwrap().as_slice() else { panic!("{replacement:?}") };
         assert!(matches!(image.kind, NodeKind::Image(_)));
         assert_eq!(doc.images.get(&key), Some(&editing_blob));
+    }
+
+    /// An unread object across two artboards isn't replaced by the art of one page only.
+    #[test]
+    fn unread_object_across_two_pages_is_not_replaced() {
+        let mut doc = Document::new(200.0, 100.0);
+        let id = doc.alloc_id();
+        doc.insert(
+            Some(doc.layers[0].id),
+            0,
+            Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(90.0, 10.0, 110.0, 20.0)), Default::default()),
+        )
+        .unwrap();
+        let mut page = Document::new(200.0, 100.0);
+        for bounds in [Rect::new(91.0, 11.0, 99.0, 19.0), Rect::new(101.0, 11.0, 109.0, 19.0)] {
+            let art = Node::path(
+                page.alloc_id(),
+                vectorcraft_geom::shapes::rectangle(bounds),
+                vectorcraft_doc::Appearance::basic(
+                    vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK),
+                    vectorcraft_color::Paint::None,
+                    0.0,
+                ),
+            );
+            page.insert(Some(page.layers[0].id), page.layers[0].children().unwrap().len(), art).unwrap();
+        }
+        let (first, second) = (Rect::new(0.0, 0.0, 100.0, 100.0), Rect::new(100.0, 0.0, 200.0, 100.0));
+        let frame =
+            Frame { page: &page, page_rect: first, rect: first, whole: false, pages: vec![(first, Affine::IDENTITY), (second, Affine::IDENTITY)] };
+        let result = replace_unread(&mut doc, &frame, &[(id, vec!["placed files".into()])], &[], &BTreeSet::new());
+        assert_eq!(result.unwrap_err(), "an unread object lies on more than one artboard");
     }
 
     /// A nested placeholder's corner cannot replace its readable sibling.
