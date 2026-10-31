@@ -546,6 +546,11 @@ mod tests {
         assert_eq!(crate::xform::eyedropper::sample_color_at(&cx(&d, &s, &p), at).map(|c| c.to_hex()), Some("#ff0000".into()));
         // Where the turned key leaves the point empty, the click passes the blend by.
         assert_eq!(crate::xform::eyedropper::sample_color_at(&cx(&d, &s, &p), Point::new(60.0, 90.0)).map(|c| c.to_hex()), Some("#00ff00".into()));
+        // A hidden red key does not hit there.
+        if let Some(NodeKind::Blend { children, .. }) = d.node_mut(id).map(|n| &mut n.kind) {
+            std::sync::Arc::make_mut(&mut children[0]).visible = false;
+        }
+        assert_eq!(hit_test(&d, at, cx(&d, &s, &p).hit_options()).map(|h| h.leaf), Some(d.layers[0].children().unwrap()[1].id));
         // A red key clipped to its right half, centred on (125, 100): the line to the blue key's
         // centre turns it about 53°, and its hidden left half reaches (89, 52).
         let mut clip = solid_rect(&mut d, Rect::new(100.0, 95.0, 150.0, 105.0), Color::BLACK);

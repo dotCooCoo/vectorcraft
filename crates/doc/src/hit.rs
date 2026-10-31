@@ -678,13 +678,17 @@ fn on_type_path(n: &Node, t: &crate::TextObject, p: Point, tol: f64) -> bool {
 
 /// Hit anywhere in an evaluated subtree (groups recurse; leaves use [`hit_leaf`]).
 fn hit_any(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes) -> Option<HitKind> {
+    // Hidden art does not hit.
+    if !n.visible {
+        return None;
+    }
     match &n.kind {
-        // A clip group only hits inside its clipping path, and hidden members do not hit.
+        // A clip group only hits inside its clipping path.
         NodeKind::Group { children, clip } => {
             if *clip && children.first().is_some_and(|c| !clip_contains(c, p)) {
                 return None;
             }
-            children.iter().rev().filter(|c| c.visible).find_map(|c| hit_any(c, p, opt, symbols))
+            children.iter().rev().find_map(|c| hit_any(c, p, opt, symbols))
         }
         _ => hit_leaf(n, p, opt, symbols),
     }
