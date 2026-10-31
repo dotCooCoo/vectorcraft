@@ -679,7 +679,7 @@ font-technology	Variable	Változó
 	Collect in New Layer	Összegyűjtés új rétegbe
 	Collect Links in a Separate Folder	Csatolások gyűjtése külön mappába
 	Color	Szín
-	Color (, or <)	Szín (, vagy <)
+	Color (, or Shift+,)	Szín (, vagy Shift+,)
 	Color Adjustments	Színkorrekciók
 	Color bars	Színsávok
 	Color blindness – Deuteranopia-type	Színvakság – deuteranópia
@@ -859,6 +859,13 @@ font-technology	Variable	Változó
 	Create Report	Jelentés készítése
 	Create Slice	Szelet létrehozása
 	Create Sub-folders	Almappák létrehozása
+	Clear Selection	Kijelölés törlése
+	Export PDFs As:	PDF-ek exportálása:
+	Single File	Egy fájlba
+	Multiple Files	Több fájlba
+	Format Presets	Formátum-előbeállítások
+	Grid View	Rácsnézet
+	Selected: {n}, Total number of files to export: {m}	Kijelölve: {n}, exportálandó fájlok száma összesen: {m}
 	Create Text	Szöveg létrehozása
 	Create Trim Marks	Vágójelek létrehozása
 	Create:	Létrehozás:
@@ -972,7 +979,6 @@ font-technology	Variable	Változó
 	Delete the library “{name}”?	Törlöd ezt a könyvtárat: „{name}”?
 	Delete Theme	Téma törlése
 	Delete theme	Téma törlése
-	Delete these {count} swatches and groups?	{count} színminta és csoport törlése?
 	Delete these {n} graphic styles?	{n} grafikai stílus törlése?
 	Delete this saved preset	A mentett előbeállítás törlése
 	Delete this {n} graphic style?	{n} grafikai stílus törlése?
@@ -1591,7 +1597,7 @@ file-filter	Templates	Sablonok
 	GPU Performance	GPU-teljesítmény
 	Grab bag	Vegyes
 	Gradient	Színátmenet
-	Gradient (. or >)	Színátmenet (. vagy >)
+	Gradient (. or Shift+.)	Színátmenet (. vagy Shift+.)
 	Gradient across stroke	Színátmenet a körvonalon keresztben
 	Gradient along stroke	Színátmenet a körvonal mentén
 	Gradient and Mesh Resolution:	Színátmenet és háló felbontása:
@@ -4443,6 +4449,7 @@ theme	Appearance	Kinézet
 imageTrace	Outline	Körvonal
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Színtábla ({n} szín)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	{n} grafikai stílus törlése?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	{n} színminta és csoport törlése?
 @plural	{n} area highlighted|{n} areas highlighted	Kiemelt terület: {n}
 @plural	{n} color|{n} colors	{n} szín
 @plural	{n} fill|{n} fills	{n} kitöltés
@@ -4624,6 +4631,7 @@ imageTrace	Outline	Körvonal
 @msg	cannot read PDF: {0}	a PDF nem olvasható: {0}
 @msg	cannot split an open path at its end point	nyitott útvonal a végpontjánál nem vágható ketté
 @msg	check an asset to export	jelölj be egy exportálandó elemet
+@msg	check an artboard to export	jelölj be egy exportálandó rajztáblát
 @msg	check a layer to export	jelöljön be egy exportálandó réteget
 @msg	select the art to export first	először jelölje ki az exportálandó grafikát
 @msg	choice must be "merge" or "add", not `{choice}`	a choice értéke "merge" vagy "add" lehet, ez nem az: `{choice}`
@@ -4874,6 +4882,7 @@ imageTrace	Outline	Körvonal
 @msg	no such perspective grid preset	nincs ilyen perspektivikusrács-előbeállítás
 @msg	no such recent file	nincs ilyen legutóbbi fájl
 @msg	no such recent font	nincs ilyen legutóbbi betűtípus
+@msg	some text is hidden or locked, so its font wasn't replaced	néhány szöveg rejtett vagy zárolt, ezért a betűtípusa nem lett lecserélve
 @msg	no such saved selection	nincs ilyen mentett kijelölés
 @msg	no such segment	nincs ilyen szakasz
 @msg	no such spine point	nincs ilyen gerincpont
@@ -5896,6 +5905,7 @@ anchor	Points:	Pontok:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Szöveg felosztása
 	Combine Point Text	Pontszöveg egyesítése
+	Join Point Text	Pontszöveg összekapcsolása
 	Remove Breaks	Törések eltávolítása
 	Split Text at Cursor	Szöveg felosztása a kurzornál
 	Set Alignment, Keep Position	Igazítás beállítása, helyzet megtartása
@@ -5924,6 +5934,7 @@ breakText	Glyphs	Glifák
 @msg	Select horizontal point or area type whose text fits	Jelöljön ki vízszintes pont- vagy területszöveget, amelynek szövege elfér
 @msg	Nothing to split at the cursor	A kurzornál nincs mit felosztani
 @msg	Select two or more one-line point type objects on one baseline to combine	Az egyesítéshez jelöljön ki legalább két egysoros pontszöveg-objektumot egy alapvonalon
+@msg	Select two or more one-line point type objects to join	Az összekapcsoláshoz jelöljön ki legalább két egysoros pontszöveg-objektumot
 @msg	No line breaks to remove	Nincs eltávolítandó sortörés
 @msg	No paragraph breaks to remove	Nincs eltávolítandó bekezdéstörés
 @msg	Too many breaks to remove at once	Túl sok törés az egyszerre történő eltávolításhoz
@@ -5976,3 +5987,15 @@ breakText	Glyphs	Glifák
 	Gap 4	Hézag 4
 	Dash 5	Vonal 5
 	Gap 5	Hézag 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Elrendezőeszközök
+	Arrange in Grid…	Elrendezés rácsba…
+	Arrange in Grid	Elrendezés rácsba
+	Swap Objects	Objektumok cseréje
+	Swap Objects and Sizes	Objektumok és méretek cseréje
+	Replace with Top Object…	Csere a legfelső objektumra…
+	Replace with Top Object	Csere a legfelső objektumra
+	Set Size of Each…	Egyenkénti méret beállítása…
+	Set Size of Each	Egyenkénti méret beállítása
+@msg	select exactly two objects	jelölj ki pontosan két objektumot
+@msg	give `width` or `height`	add meg a `width` vagy a `height` értéket

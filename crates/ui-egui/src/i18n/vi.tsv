@@ -591,7 +591,7 @@ font-technology	Variable	Biến thiên
 	Collect in New Layer	Thu thập vào lớp mới
 	Collect Links in a Separate Folder	Thu thập liên kết vào thư mục riêng
 	Color	Màu
-	Color (, or <)	Màu (, hoặc <)
+	Color (, or Shift+,)	Màu (, hoặc Shift+,)
 	Color Adjustments	Điều chỉnh màu sắc
 	Color bars	Thanh màu
 	Color blindness – Deuteranopia-type	Mù màu – loại Deuteranopia
@@ -760,6 +760,13 @@ font-technology	Variable	Biến thiên
 	Create Report	Tạo báo cáo
 	Create Slice	Tạo lát cắt
 	Create Sub-folders	Tạo thư mục con
+	Clear Selection	Xóa lựa chọn
+	Export PDFs As:	Xuất PDF dưới dạng:
+	Single File	Một tệp
+	Multiple Files	Nhiều tệp
+	Format Presets	Thiết lập sẵn định dạng
+	Grid View	Chế độ lưới
+	Selected: {n}, Total number of files to export: {m}	Đã chọn: {n}, tổng số tệp sẽ xuất: {m}
 	Create Text	Tạo văn bản
 	Create Trim Marks	Tạo dấu cắt xén
 	Create:	Tạo:
@@ -868,7 +875,6 @@ font-technology	Variable	Biến thiên
 	Delete the library “{name}”?	Xóa thư viện “{name}”?
 	Delete Theme	Xóa bộ màu
 	Delete theme	Xóa bộ màu
-	Delete these {count} swatches and groups?	Xóa {count} mẫu màu và nhóm này?
 	Delete these {n} graphic styles?	Xóa {n} kiểu đồ họa này?
 	Delete this saved preset	Xóa thiết lập sẵn đã lưu này
 	Delete this {n} graphic style?	Xóa {n} kiểu đồ họa này?
@@ -1491,7 +1497,7 @@ file-filter	Templates	Mẫu
 	GPU Performance	Hiệu suất GPU
 	Grab bag	Tổng hợp
 	Gradient	Chuyển sắc
-	Gradient (. or >)	Chuyển sắc (. hoặc >)
+	Gradient (. or Shift+.)	Chuyển sắc (. hoặc Shift+.)
 	Gradient across stroke	Chuyển sắc ngang qua nét
 	Gradient along stroke	Chuyển sắc dọc theo nét
 	Gradient and Mesh Resolution:	Độ phân giải chuyển sắc và lưới:
@@ -4084,6 +4090,7 @@ gradient-kind	Radial	Hướng tâm
 imageTrace	Outline	Đường viền
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Bảng màu ({n} màu)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Xóa {n} kiểu đồ họa này?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Xóa {n} mẫu màu và nhóm này?
 @plural	{n} area highlighted|{n} areas highlighted	{n} vùng được tô sáng
 @plural	{n} color|{n} colors	{n} màu
 @plural	{n} fill|{n} fills	{n} tô
@@ -4274,6 +4281,7 @@ theme	Appearance	Giao diện
 @msg	cannot read PDF: {0}	không thể đọc PDF: {0}
 @msg	cannot split an open path at its end point	không thể tách đường dẫn mở tại điểm cuối
 @msg	check an asset to export	hãy chọn một asset để xuất
+@msg	check an artboard to export	hãy chọn một bảng vẽ để xuất
 @msg	check a layer to export	hãy đánh dấu một lớp để xuất
 @msg	select the art to export first	hãy chọn hình cần xuất trước
 @msg	choice must be "merge" or "add", not `{choice}`	lựa chọn phải là "merge" hoặc "add", không phải `{choice}`
@@ -4523,6 +4531,7 @@ theme	Appearance	Giao diện
 @msg	no such perspective grid preset	không có thiết lập sẵn lưới phối cảnh như vậy
 @msg	no such recent file	không có tệp gần đây như vậy
 @msg	no such recent font	không có phông chữ gần đây như vậy
+@msg	some text is hidden or locked, so its font wasn't replaced	một số văn bản bị ẩn hoặc bị khóa nên phông chữ của chúng không được thay thế
 @msg	no such saved selection	không có vùng chọn đã lưu như vậy
 @msg	no such segment	không có đoạn như vậy
 @msg	no such spine point	không có điểm trục như vậy
@@ -5510,6 +5519,7 @@ anchor	Points:	Điểm:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Tách văn bản
 	Combine Point Text	Kết hợp chữ điểm
+	Join Point Text	Nối chữ điểm
 	Remove Breaks	Xóa ngắt
 	Split Text at Cursor	Tách văn bản tại con trỏ
 	Set Alignment, Keep Position	Đặt căn lề, giữ vị trí
@@ -5538,6 +5548,7 @@ breakText	Glyphs	Glyph
 @msg	Select horizontal point or area type whose text fits	Chọn chữ điểm hoặc chữ vùng nằm ngang có văn bản vừa khung
 @msg	Nothing to split at the cursor	Không có gì để tách tại con trỏ
 @msg	Select two or more one-line point type objects on one baseline to combine	Chọn hai đối tượng chữ điểm một dòng trở lên trên cùng một đường cơ sở để kết hợp
+@msg	Select two or more one-line point type objects to join	Chọn hai đối tượng chữ điểm một dòng trở lên để nối
 @msg	No line breaks to remove	Không có xuống dòng nào để xóa
 @msg	No paragraph breaks to remove	Không có ngắt đoạn nào để xóa
 @msg	Too many breaks to remove at once	Quá nhiều ngắt để xóa cùng lúc
@@ -5591,3 +5602,15 @@ breakText	Glyphs	Glyph
 	Gap 4	Khoảng hở 4
 	Dash 5	Nét 5
 	Gap 5	Khoảng hở 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Công cụ sắp xếp
+	Arrange in Grid…	Sắp xếp theo lưới…
+	Arrange in Grid	Sắp xếp theo lưới
+	Swap Objects	Hoán đổi đối tượng
+	Swap Objects and Sizes	Hoán đổi đối tượng và kích thước
+	Replace with Top Object…	Thay bằng đối tượng trên cùng…
+	Replace with Top Object	Thay bằng đối tượng trên cùng
+	Set Size of Each…	Đặt kích thước từng cái…
+	Set Size of Each	Đặt kích thước từng cái
+@msg	select exactly two objects	hãy chọn đúng hai đối tượng
+@msg	give `width` or `height`	hãy cho `width` hoặc `height`

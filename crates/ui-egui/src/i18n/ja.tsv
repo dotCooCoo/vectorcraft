@@ -16,10 +16,7 @@
 # names, OpenType, the built-in workspace names and the bracketed perspective grid preset names.
 	About VectorCraft	VectorCraft について
 	Check for Updates…	アップデートを確認…
-	Checking for updates…	アップデートを確認中…
-	Could not check for updates:\n{error}	アップデートを確認できませんでした:\n{error}
 	VectorCraft Updates	VectorCraft のアップデート
-	VectorCraft {version} is currently the newest version available.	VectorCraft {version} は最新バージョンです。
 	All Scripts	すべての文字
 	Anchors:	アンカー:
 	Any Kind	すべての種類
@@ -1234,6 +1231,13 @@ font-technology	Variable	バリアブル
 	Create Path	パスを作成
 	Create Slice	スライスを作成
 	Create Sub-folders	サブフォルダーを作成
+	Clear Selection	選択を解除
+	Export PDFs As:	PDF の書き出し形式：
+	Single File	単一ファイル
+	Multiple Files	複数ファイル
+	Format Presets	形式プリセット
+	Grid View	グリッド表示
+	Selected: {n}, Total number of files to export: {m}	選択済み：{n}、書き出すファイルの合計数：{m}
 	Create Text	テキストを作成
 	Created	作成日
 	Created:	作成日:
@@ -1300,7 +1304,6 @@ font-technology	Variable	バリアブル
 	Delete Workspace	ワークスペースを削除
 	Delete the graphic style “{name}”?	グラフィックスタイル「{name}」を削除しますか？
 	Delete theme	テーマを削除
-	Delete these {count} swatches and groups?	これら {count} 個のスウォッチとグループを削除しますか？
 	Delete this saved preset	この保存済みプリセットを削除
 	Delete {kind} Style	{kind}スタイルを削除
 	Delete “{name}”?	「{name}」を削除しますか？
@@ -3368,7 +3371,7 @@ gradient-kind	Radial	円形
 	Client-side (.html)	クライアントサイド (.html)
 	Cmd	Cmd
 	Collect Links in a Separate Folder	リンクを別フォルダーに収集
-	Color (, or <)	カラー (, または <)
+	Color (, or Shift+,)	カラー (, または Shift+,)
 	Color Group	カラーグループ
 	Color Library	カラーライブラリ
 	Color Management	カラーマネジメント
@@ -3463,7 +3466,7 @@ file-filter	Templates	テンプレート
 	General › Placement › X	一般 › 位置 › X
 	General › Thumbnails	一般 › サムネール
 	Global Process Color, CMYK	グローバルプロセスカラー、CMYK
-	Gradient (. or >)	グラデーション (. または >)
+	Gradient (. or Shift+.)	グラデーション (. または Shift+.)
 	Graph Data	グラフデータ
 	Graph Type	グラフの種類
 	Graph Design	グラフのデザイン
@@ -3712,6 +3715,7 @@ file-filter	Templates	テンプレート
 imageTrace	Outline	アウトライン
 @plural	Color Table ({n} color)|Color Table ({n} colors)	カラーテーブル ({n} 色)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	{n} 個のグラフィックスタイルを削除しますか？
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	これら {n} 個のスウォッチとグループを削除しますか？
 @plural	{n} Layer|{n} Layers	{n} レイヤー
 @plural	{n} Object|{n} Objects	{n} オブジェクト
 @plural	{n} area highlighted|{n} areas highlighted	{n} 個の範囲を強調表示
@@ -4428,6 +4432,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	書き出すものがありません: ドキュメントに表示されているアートがありません (または「アートボードを使用」をオンにしてください)
 @msg	add a format to export	書き出す形式を追加してください
 @msg	check an asset to export	書き出すアセットにチェックを入れてください
+@msg	check an artboard to export	書き出すアートボードにチェックを入れてください
 @msg	check a layer to export	書き出すレイヤーにチェックを入れてください
 @msg	select the art to export first	先に書き出すアートを選択してください
 @msg	`{tool}` isn't a freehand tool	`{tool}` はフリーハンドツールではありません
@@ -4547,6 +4552,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	no such perspective grid preset	指定された遠近グリッドプリセットが見つかりません
 @msg	no such recent file	指定された最近使ったファイルが見つかりません
 @msg	no such recent font	指定された最近使ったフォントが見つかりません
+@msg	some text is hidden or locked, so its font wasn't replaced	一部のテキストが非表示またはロックされているため、そのフォントは置換されませんでした
 @msg	no such saved selection	指定された選択範囲は保存されていません
 @msg	no such user library	指定されたユーザーライブラリが見つかりません
 @msg	no such view	指定された表示が見つかりません
@@ -5597,6 +5603,7 @@ anchor	Points:	ポイント:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	テキストを分割
 	Combine Point Text	ポイント文字を結合
+	Join Point Text	ポイント文字を連結
 	Remove Breaks	改行を削除
 	Split Text at Cursor	カーソル位置でテキストを分割
 	Set Alignment, Keep Position	位置を保って行揃えを設定
@@ -5625,6 +5632,7 @@ breakText	Glyphs	字形
 @msg	Select horizontal point or area type whose text fits	テキストが収まっている横組みのポイント文字またはエリア内文字を選択してください
 @msg	Nothing to split at the cursor	カーソル位置で分割するものがありません
 @msg	Select two or more one-line point type objects on one baseline to combine	結合するには、同じベースライン上にある 1 行のポイント文字オブジェクトを 2 つ以上選択してください
+@msg	Select two or more one-line point type objects to join	連結するには、1 行のポイント文字オブジェクトを 2 つ以上選択してください
 @msg	No line breaks to remove	削除する強制改行がありません
 @msg	No paragraph breaks to remove	削除する段落の区切りがありません
 @msg	Too many breaks to remove at once	一度に削除する改行が多すぎます
@@ -5678,3 +5686,15 @@ breakText	Glyphs	字形
 	Gap 4	間隔 4
 	Dash 5	線分 5
 	Gap 5	間隔 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	配置ツール
+	Arrange in Grid…	グリッドに配置…
+	Arrange in Grid	グリッドに配置
+	Swap Objects	オブジェクトを入れ替え
+	Swap Objects and Sizes	オブジェクトとサイズを入れ替え
+	Replace with Top Object…	最前面のオブジェクトで置き換え…
+	Replace with Top Object	最前面のオブジェクトで置き換え
+	Set Size of Each…	個別にサイズを設定…
+	Set Size of Each	個別にサイズを設定
+@msg	select exactly two objects	オブジェクトをちょうど 2 つ選択してください
+@msg	give `width` or `height`	`width` または `height` を指定してください

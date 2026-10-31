@@ -455,7 +455,7 @@
 	Collect in New Layer	收集到新图层
 	Collect Links in a Separate Folder	将链接收集到单独的文件夹
 	Color	颜色
-	Color (, or <)	颜色 (, 或 <)
+	Color (, or Shift+,)	颜色 (, 或 Shift+,)
 	Color Adjustments	色彩调整
 	Color bars	色彩条
 	Color blindness – Deuteranopia-type	色盲 – 绿色盲型
@@ -608,6 +608,13 @@
 	Create Report	创建报告
 	Create Slice	创建切片
 	Create Sub-folders	创建子文件夹
+	Clear Selection	清除选择
+	Export PDFs As:	PDF 导出为：
+	Single File	单个文件
+	Multiple Files	多个文件
+	Format Presets	格式预设
+	Grid View	网格视图
+	Selected: {n}, Total number of files to export: {m}	已选择：{n}，要导出的文件总数：{m}
 	Create Text	创建文字
 	Create Trim Marks	创建裁切标记
 	Created	创建时间
@@ -690,7 +697,6 @@
 	Delete the graphic style “{name}”?	要删除图形样式“{name}”吗？
 	Delete Theme	删除主题
 	Delete theme	删除主题
-	Delete these {count} swatches and groups?	要删除这 {count} 个色板和编组吗？
 	Delete these {n} graphic styles?	要删除这 {n} 个图形样式吗？
 	Delete this saved preset	删除此已存储的预设
 	Delete this {n} graphic style?	要删除这 {n} 个图形样式吗？
@@ -1221,7 +1227,7 @@ file-filter	Templates	模板
 	GPL palettes keep solid colours only, as RGB.	GPL 调板仅保留为 RGB 的纯色。
 	GPU Performance	GPU 性能
 	Gradient	渐变
-	Gradient (. or >)	渐变 (. 或 >)
+	Gradient (. or Shift+.)	渐变 (. 或 Shift+.)
 	Gradient across stroke	横跨描边的渐变
 	Gradient along stroke	沿描边的渐变
 	Gradient and Mesh Resolution:	渐变和网格分辨率：
@@ -3565,6 +3571,7 @@ imageTrace	Outline	轮廓
 @plural	{n} item|{n} items	{n} 个项目
 @plural	Color Table ({n} color)|Color Table ({n} colors)	颜色表 ({n} 色)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	要删除这 {n} 个图形样式吗？
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	要删除这 {n} 个色板和编组吗？
 @plural	{n} Layer|{n} Layers	{n} 个图层
 @plural	{n} Object|{n} Objects	{n} 个对象
 @plural	{n} area highlighted|{n} areas highlighted	已标示 {n} 个区域
@@ -4148,6 +4155,7 @@ imageTrace	Outline	轮廓
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	没有可导出的内容：文档中没有可见的图稿 (或请打开“使用画板”)
 @msg	add a format to export	请添加要导出的格式
 @msg	check an asset to export	请勾选要导出的资源
+@msg	check an artboard to export	请勾选要导出的画板
 @msg	`{tool}` isn't a freehand tool	`{tool}` 不是手绘工具
 @msg	bad colour `{hex}` (#rrggbb)	颜色 `{hex}` 无效 (#rrggbb)
 @msg	no gradient stop or freeform point is selected	未选择渐变色标或任意形状点
@@ -4261,6 +4269,7 @@ imageTrace	Outline	轮廓
 @msg	no such perspective grid preset	没有此透视网格预设
 @msg	no such recent file	没有此最近使用的文件
 @msg	no such recent font	没有此最近使用的字体
+@msg	some text is hidden or locked, so its font wasn't replaced	部分文字已隐藏或锁定，因此其字体未被替换
 @msg	no such saved selection	没有此已保存的选区
 @msg	no such user library	没有此用户库
 @msg	no such view	没有此视图
@@ -5751,6 +5760,7 @@ anchor	Points:	点：
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	拆分文本
 	Combine Point Text	合并点文字
+	Join Point Text	连接点文字
 	Remove Breaks	删除换行
 	Split Text at Cursor	在光标处拆分文本
 	Set Alignment, Keep Position	设置对齐并保持位置
@@ -5779,6 +5789,7 @@ breakText	Glyphs	字形
 @msg	Select horizontal point or area type whose text fits	请选择文本能完全容纳的横排点文字或区域文字
 @msg	Nothing to split at the cursor	光标处没有可拆分的内容
 @msg	Select two or more one-line point type objects on one baseline to combine	请选择同一基线上两个或更多单行点文字对象以合并
+@msg	Select two or more one-line point type objects to join	请选择两个或更多单行点文字对象以连接
 @msg	No line breaks to remove	没有要删除的强制换行
 @msg	No paragraph breaks to remove	没有要删除的段落换行
 @msg	Too many breaks to remove at once	一次要删除的换行过多
@@ -5831,3 +5842,15 @@ breakText	Glyphs	字形
 	Gap 4	间隔 4
 	Dash 5	虚线 5
 	Gap 5	间隔 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	排列工具
+	Arrange in Grid…	按网格排列…
+	Arrange in Grid	按网格排列
+	Swap Objects	交换对象
+	Swap Objects and Sizes	交换对象和大小
+	Replace with Top Object…	替换为顶层对象…
+	Replace with Top Object	替换为顶层对象
+	Set Size of Each…	分别设置大小…
+	Set Size of Each	分别设置大小
+@msg	select exactly two objects	请恰好选择两个对象
+@msg	give `width` or `height`	请提供 `width` 或 `height`

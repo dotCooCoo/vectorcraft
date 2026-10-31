@@ -1813,6 +1813,48 @@ fn select_same_matches_compound_paths_on_their_own_paint() {
     assert_eq!(same(&mut s, outer, "select.same.shapeType"), vec![outer, inner]);
 }
 
+/// Select > Same > Fill Color and Fill & Stroke from a Live Paint face select the faces of that
+/// Live Paint group with the same fill, and nothing outside it. From an object outside every Live
+/// Paint group, they select no face.
+#[test]
+fn select_same_fill_keeps_live_paint_faces_to_their_group() {
+    let mut s = session();
+    let live = |s: &mut Session, y: f64| {
+        let a = rect(s, 0.0, y, 100.0, 100.0);
+        let b = rect(s, 50.0, y, 100.0, 100.0);
+        sel(s, &[a, b]);
+        id_of(&s.execute("livePaint.make", &json!({})).unwrap())
+    };
+    let paint = |s: &mut Session, g: NodeId, x: f64, y: f64, hex: &str| {
+        NodeId(s.execute("livePaint.fill", &json!({"group": g.0, "point": [x, y], "color": hex})).unwrap()["face"].as_u64().unwrap())
+    };
+    let g1 = live(&mut s, 0.0);
+    let g2 = live(&mut s, 300.0);
+    let [left, right] = [25.0, 125.0].map(|x| paint(&mut s, g1, x, 50.0, "#ff0000"));
+    let middle = paint(&mut s, g1, 75.0, 50.0, "#0000ff");
+    let other = paint(&mut s, g2, 25.0, 350.0, "#ff0000");
+    let [r1, r2] = [400.0, 450.0].map(|x| rect(&mut s, x, 0.0, 10.0, 10.0));
+    for r in [r1, r2] {
+        fill(&mut s, r, "#ff0000");
+        s.execute("paint.setStroke", &json!({"none": true, "ids": [r.0]})).unwrap();
+    }
+    let same = |s: &mut Session, from: NodeId, cmd: &str| {
+        sel(s, &[from]);
+        s.execute(cmd, &json!({})).unwrap();
+        let mut v = selected(s);
+        v.sort();
+        v
+    };
+    for cmd in ["select.same.fillColor", "select.same.fillAndStroke"] {
+        let mut faces = vec![left, right];
+        faces.sort();
+        assert_eq!(same(&mut s, left, cmd), faces, "{cmd} from a face");
+        assert_eq!(same(&mut s, middle, cmd), vec![middle], "{cmd} from the blue face");
+        assert_eq!(same(&mut s, other, cmd), vec![other], "{cmd} from the other group's face");
+        assert_eq!(same(&mut s, r1, cmd), vec![r1, r2], "{cmd} from a path outside");
+    }
+}
+
 /// Select by Color needs no object to start from: it matches fills and strokes as
 /// `document.inspect` reports them, `#rrggbb`.
 #[test]

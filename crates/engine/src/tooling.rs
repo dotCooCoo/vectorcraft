@@ -457,6 +457,11 @@ impl Session {
         // 1–4 pick the active perspective plane while the grid is shown.
         if let Some(plane) = self.plane_key(key) {
             self.execute("perspective.plane.set", &serde_json::json!({ "plane": plane.id() }))?;
+            if self.tool_id() == "perspectiveSelection" {
+                let acts = self.with_tool_cx(view, |t, cx| t.key(cx, key, mods));
+                self.take_tool_panic()?;
+                return self.apply_actions(acts);
+            }
             return Ok(vec![]);
         }
         let acts = self.with_tool_cx(view, |t, cx| t.key(cx, key, mods));
