@@ -204,7 +204,7 @@ fn attach(s: &mut Session, p: &Value) -> Result<Value> {
     // Without them in `p`, the tool's options (Objects on Path Tool Options) give Pivot and Rotate.
     let saved = s.tool_options_of(TOOL);
     let tool_pivot = saved.get("pivot").and_then(Value::as_u64).filter(|n| *n <= 8).map_or(CENTER, |n| n as u8);
-    let tool_rotate = saved.get("rotate").and_then(Value::as_f64).filter(|r| r.is_finite()).unwrap_or(0.0);
+    let tool_rotate = saved.get("rotate").and_then(Value::as_f64).filter(|r| r.is_finite()).map_or(0.0, |r| r.clamp(-360.0, 360.0));
     let (pivot, rotate) = pivot_rotate(p, C, tool_pivot, tool_rotate)?;
     let roots = match p.get("ids") {
         Some(_) => roots_of(&s.doc()?.doc, checked_ids_param(s, p, "ids", C)?),

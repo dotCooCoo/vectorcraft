@@ -98,8 +98,8 @@ impl Tool for ObjectsOnPathTool {
         json!({ "pivot": self.pivot, "rotate": self.rotate })
     }
 
-    /// `pivot` takes a whole number from 0 to 8 and `rotate` a finite number; other values are
-    /// ignored.
+    /// `pivot` takes a whole number from 0 to 8 and `rotate` a finite number, clamped to -360 to
+    /// 360; other values are ignored.
     fn set_option(&mut self, key: &str, value: &Value) {
         match key {
             "pivot" => {
@@ -109,7 +109,7 @@ impl Tool for ObjectsOnPathTool {
             }
             "rotate" => {
                 if let Some(r) = value.as_f64().filter(|r| r.is_finite()) {
-                    self.rotate = r;
+                    self.rotate = r.clamp(-360.0, 360.0);
                 }
             }
             _ => {}
@@ -180,6 +180,12 @@ mod tests {
         t.set_option("pivot", &json!(9));
         t.set_option("rotate", &json!("x"));
         assert_eq!(t.options(), json!({ "pivot": 0, "rotate": 45.5 }));
+        // Rotate is kept within the dialog's -360 to 360.
+        t.set_option("rotate", &json!(450));
+        assert_eq!(t.options()["rotate"], 360.0);
+        t.set_option("rotate", &json!(-720.5));
+        assert_eq!(t.options()["rotate"], -360.0);
+        t.set_option("rotate", &json!(45.5));
         t.pointer(&cx, &ev(PointerKind::Down, 200.0, 300.0));
         let acts = t.pointer(&cx, &ev(PointerKind::Up, 200.0, 300.0));
         assert!(matches!(acts.as_slice(), [Action::Exec(_, p)] if p["pivot"] == 0 && p["rotate"] == 45.5), "{acts:?}");
