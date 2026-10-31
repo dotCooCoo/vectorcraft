@@ -1,7 +1,13 @@
 use super::encoding::{
     Ink, average, direct_fill, direct_stroke, finite, font_of, invertible, latin_string, lost_attributes, segment_point, unit, writable,
 };
-use super::*;
+use super::{
+    Affine, AppearanceItem, Arc, BezPath, BlendMode, CharStyle, Cms, Color, Document, ELLIPTICAL, FREEFORM, FillLayer, FillRule, Gradient,
+    GradientKind, GradientPaint, HEX_LINE, HIDDEN, HIDDEN_LAYER, HIDDEN_SHOWN, HiddenObjects, IMAGE_ALPHA, ImageBlob, Justify, LARGE_IMAGE,
+    LAYER_COLORS, LAYER_NAME, LIVE, LayerColor, LegacyAiOptions, MAX_IMAGE_PIXELS, MAX_NEST, NAMES, Node, NodeKind, PATTERNS, Paint, ParaDirection,
+    ParaStyle, PathData, Rect, STROKES, SUBLAYERS, Shape, StrokeLayer, SubPath, TITLE_AND_COLOR_NAMES, TRANSPARENCY, TYPE, TYPE_ATTRIBUTES, TextKind,
+    TextObject, UNDECODED, Vec2, Write, ai_ops, latin, ps, stroke,
+};
 
 pub(super) struct Writer<'a> {
     doc: &'a Document,
