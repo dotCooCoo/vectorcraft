@@ -61,6 +61,7 @@ impl Renderer {
             blends: PtrMap::default(),
             clip_paths: vec![],
             picture: None,
+            image_left_out: None,
             offscreen_live: 0,
             offscreen_budget: 0,
             symbol_nodes: 0,
@@ -120,7 +121,12 @@ impl Renderer {
         self.begin_frame();
         // View Opacity Mask: the mask's coverage in greyscale instead of the artwork.
         if let Some(m) = opts.mask_view.and_then(|id| doc.node(id)).and_then(|n| n.extras().mask.as_deref()) {
-            let pixels = self.mask_values(&frame, m, w, h).into_iter().flat_map(|v| [v, v, v, 255]).collect();
+            let pixels = self
+                .mask_values(&frame, m, w, h)
+                .unwrap_or_else(|| vec![0; w as usize * h as usize])
+                .into_iter()
+                .flat_map(|v| [v, v, v, 255])
+                .collect();
             self.end_frame();
             self.stats.symbol_art = symbols.art_measured();
             self.stats.micros = now().saturating_sub(start);
@@ -355,7 +361,7 @@ impl Renderer {
         self.begin_frame();
         (self.knockout, self.nested, self.backdrop, self.picture) = (false, 0, None, None);
         self.clip_paths.clear();
-        self.draw_node(&mut ctx, &frame, n, true);
+        self.draw_forced_arc(&mut ctx, &frame, &Arc::new(n.clone()));
         let pm = self.finish(&mut ctx, vello_cpu::RasterizerSettings::default());
         self.end_frame();
         Some(Rendered { width: size, height: size, pixels: pm.data_as_u8_slice().to_vec() })

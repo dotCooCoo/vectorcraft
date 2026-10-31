@@ -888,11 +888,13 @@ pub(crate) fn outline_strokes(d: &mut Document, brushes: &[vectorcraft_brush::Br
 }
 
 /// A plain copy of path `l` (new ids, no transparency, name or mask) painted with `items`.
+/// The copy is shown and unlocked.
 pub(crate) fn styled_copy(d: &mut Document, l: &Node, items: Vec<AppearanceItem>) -> Node {
     let mut f = d.reid(l);
     f.appearance = Appearance { items, ..Default::default() }.into();
     f.opacity = 1.0;
     f.blend = BlendMode::Normal;
+    (f.visible, f.locked, f.knockout_shape) = (true, false, false);
     f.name = None;
     f.extras_mut().mask = None;
     if let NodeKind::Path { live, .. } = &mut f.kind {
@@ -903,7 +905,7 @@ pub(crate) fn styled_copy(d: &mut Document, l: &Node, items: Vec<AppearanceItem>
 
 /// What stands for object `l` once its appearance became `parts` (paint order): the one part (in a
 /// group when it has effects of its own) or a group of them, with `l`'s transparency, name, opacity
-/// mask and effects. `None` without parts.
+/// mask, effects, and hidden, locked and knockout-shape states. `None` without parts.
 pub(crate) fn assemble(d: &mut Document, l: &Node, mut parts: Vec<Node>) -> Option<Node> {
     let root = match parts.len() {
         0 => return None,
@@ -911,6 +913,7 @@ pub(crate) fn assemble(d: &mut Document, l: &Node, mut parts: Vec<Node>) -> Opti
         _ => Node::group(d.alloc_id(), parts.into_iter().map(Arc::new).collect()),
     };
     let mut root = with_transparency(d, root, l.opacity, l.blend);
+    (root.visible, root.locked, root.knockout_shape) = (l.visible, l.locked, l.knockout_shape);
     root.name = l.name.clone();
     root.extras_mut().mask = l.extras().mask.clone();
     root.appearance.effects = l.appearance.effects.clone();

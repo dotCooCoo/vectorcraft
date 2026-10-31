@@ -79,13 +79,14 @@ pub(super) fn tool_drag_moved(ui: &Ui, xf: &Xf, p: Pos2, pointer: &egui::Pointer
 }
 
 /// Whether the tool should get another drag event at a pointer held still because Shift, Alt,
-/// Cmd/Ctrl or Space went down or up (#4711): a scale switches to proportional or from the centre
-/// at once. Records `m` as the modifiers last seen; only once the press has dragged.
-pub(super) fn tool_drag_mods_changed(ui: &Ui, m: Mods) -> bool {
+/// Cmd/Ctrl, Space or Backtick went down or up (#4711): a scale switches to proportional or from the centre
+/// at once. Records `m` and the Backtick state as last seen; only once the press has dragged.
+pub(super) fn tool_drag_mods_changed(ui: &Ui, m: Mods, backquote: bool) -> bool {
     let id = egui::Id::unique("canvas-tool-drag-mods");
-    let (dragged, last) = ui.data(|d| (d.get_temp::<Point>(tool_drag_doc_id()).is_some(), d.get_temp::<Mods>(id)));
-    ui.data_mut(|d| d.insert_temp(id, m));
-    dragged && last.is_some_and(|l| l != m)
+    let held = (m, backquote);
+    let (dragged, last) = ui.data(|d| (d.get_temp::<Point>(tool_drag_doc_id()).is_some(), d.get_temp::<(Mods, bool)>(id)));
+    ui.data_mut(|d| d.insert_temp(id, held));
+    dragged && last.is_some_and(|l| l != held)
 }
 
 /// The pen pressure (0..1) of the press in progress: the force of this frame's pen or touch
@@ -169,7 +170,7 @@ pub(super) fn drop_press(app: &mut VectorcraftApp, ui: &Ui, view: vectorcraft_en
             // and would otherwise outlive the drag that owns it (#2826).
             // Nothing to roll back without a document; the tool still gets its mouse-up.
             let _ = app.session.cancel_interaction();
-            dispatch(app, &PointerEvent { kind: PointerKind::Up, pos: Point::ZERO, mods: Mods::default(), pressure: 1.0 }, view);
+            dispatch(app, &PointerEvent { kind: PointerKind::Up, pos: Point::ZERO, mods: Mods::default(), backquote: false, pressure: 1.0 }, view);
             egui::DragAndDrop::clear_payload(ui.ctx());
         }
         Some(_) => {}
@@ -249,7 +250,7 @@ fn end_art_move(app: &mut VectorcraftApp, ctx: &egui::Context) {
     // With no document open there is nothing to roll back; the tool still gets its mouse-up.
     let _ = app.session.cancel_interaction();
     let view = app.view_info();
-    dispatch(app, &PointerEvent { kind: PointerKind::Up, pos: Point::ZERO, mods: Mods::default(), pressure: 1.0 }, view);
+    dispatch(app, &PointerEvent { kind: PointerKind::Up, pos: Point::ZERO, mods: Mods::default(), backquote: false, pressure: 1.0 }, view);
     ctx.data_mut(|d| {
         d.remove::<Drag>(drag_id());
         d.remove::<bool>(drag_id().with("art-gone"));

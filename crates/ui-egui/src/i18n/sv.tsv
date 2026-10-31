@@ -497,7 +497,7 @@ font-technology	Variable	Variabla
 	Collect in New Layer	Samla i nytt lager
 	Collect Links in a Separate Folder	Samla länkar i en separat mapp
 	Color	Färg
-	Color (,)	Färg (,)
+	Color (, or Shift+,)	Färg (, eller Shift+,)
 	Color Adjustments	Färgjusteringar
 	Color bars	Färgstaplar
 	Color blindness – Deuteranopia-type	Färgblindhet – deuteranopi
@@ -651,6 +651,13 @@ font-technology	Variable	Variabla
 	Create Report	Skapa rapport
 	Create Slice	Skapa skiva
 	Create Sub-folders	Skapa undermappar
+	Clear Selection	Rensa markering
+	Export PDFs As:	Exportera PDF-filer som:
+	Single File	En fil
+	Multiple Files	Flera filer
+	Format Presets	Formatförinställningar
+	Grid View	Rutnätsvy
+	Selected: {n}, Total number of files to export: {m}	Markerade: {n}, totalt antal filer att exportera: {m}
 	Create Text	Skapa text
 	Create Trim Marks	Skapa skärmärken
 	Created	Skapad
@@ -734,7 +741,6 @@ font-technology	Variable	Variabla
 	Delete the graphic style “{name}”?	Radera grafikstilen ”{name}”?
 	Delete Theme	Radera tema
 	Delete theme	Radera tema
-	Delete these {count} swatches and groups?	Radera dessa {count} färgrutor och grupper?
 	Delete these {n} graphic styles?	Radera dessa {n} grafikstilar?
 	Delete this saved preset	Radera den här sparade förinställningen
 	Delete this {n} graphic style?	Radera denna {n} grafikstil?
@@ -1238,7 +1244,7 @@ font-technology	Variable	Variabla
 	GPL palettes keep solid colours only, as RGB.	GPL-paletter sparar bara enfärgade färger, som RGB.
 	GPU Performance	GPU-prestanda
 	Gradient	Gradient
-	Gradient (.)	Gradient (.)
+	Gradient (. or Shift+.)	Gradient (. eller Shift+.)
 	Gradient across stroke	Gradient tvärs över konturen
 	Gradient along stroke	Gradient längs konturen
 	Gradient and Mesh Resolution:	Upplösning för gradienter och nät:
@@ -3618,6 +3624,7 @@ imageTrace	Outline	Kontur
 @plural	{n} item|{n} items	{n} objekt|{n} objekt
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Färgtabell ({n} färg)|Färgtabell ({n} färger)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Radera {n} grafisk stil?|Radera de här {n} grafiska stilarna?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Radera {n} färgruta eller grupp?|Radera dessa {n} färgrutor och grupper?
 @plural	{n} Layer|{n} Layers	{n} lager|{n} lager
 @plural	{n} Object|{n} Objects	{n} objekt|{n} objekt
 @plural	{n} area highlighted|{n} areas highlighted	{n} område framhävt|{n} områden framhävda
@@ -3980,6 +3987,7 @@ axis	Both	Båda
 @msg	cannot split an open path at its end point	kan inte dela en öppen bana vid dess slutpunkt
 @msg	closing needs three anchors	att sluta banan kräver tre ankarpunkter
 @msg	check an asset to export	kryssa för en resurs att exportera
+@msg	check an artboard to export	kryssa för en rityta att exportera
 @msg	check a layer to export	markera ett lager att exportera
 @msg	select the art to export first	markera först teckningen som ska exporteras
 @msg	choice must be "merge" or "add", not `{choice}`	choice måste vara "merge" eller "add", inte `{choice}`
@@ -4122,6 +4130,7 @@ axis	Both	Båda
 @msg	no such perspective grid preset	förinställningen för perspektivrutnät finns inte
 @msg	no such recent file	den senaste filen finns inte
 @msg	no such recent font	det senaste typsnittet finns inte
+@msg	some text is hidden or locked, so its font wasn't replaced	en del text är dold eller låst, så dess typsnitt ersattes inte
 @msg	no such saved selection	den sparade markeringen finns inte
 @msg	no such segment	segmentet finns inte
 @msg	no such spine point	ryggradspunkten finns inte
@@ -5882,8 +5891,6 @@ anchor	Points:	Punkter:
 	Arrow Scale:	Pilskala:
 	Arrow Style:	Pilstil:
 	Check for Updates…	Sök efter uppdateringar…
-	Checking for updates…	Söker efter uppdateringar…
-	Could not check for updates:\n{error}	Det gick inte att söka efter uppdateringar:\n{error}
 	Dimension Lines	Måttlinjer
 	Dimension Text	Måttal
 	Extension Lines	Måttgränslinjer
@@ -5905,7 +5912,6 @@ anchor	Points:	Punkter:
 	Tracing the colors…	Vektoriserar färgerna…
 	Units & Scale	Enheter & skala
 	VectorCraft Updates	Uppdateringar för VectorCraft
-	VectorCraft {version} is currently the newest version available.	VectorCraft {version} är för närvarande den senaste tillgängliga versionen.
 	Yonroku-ban	Yonroku-ban
 @msg	image '{key}' has no pixels and was left out	bilden '{key}' har inga pixlar och utelämnades
 @msg	not an RTF file: it doesn't start with {\\rtf	inte en RTF-fil: den börjar inte med {\\rtf
@@ -5945,3 +5951,124 @@ shape	Open	Öppen
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	ange `inkLimit`, `removeWhiteOverprint` eller `overprintBlack`
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Tryckfärgskorrigeringar fungerar i CMYK-dokument: välj först Fil › Dokumentets färgläge › CMYK-färg
 @msg	`{key}` must be 0..{max}	`{key}` måste vara 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Hörnverktyget
+	Slide Anchor Along Path	Skjut ankarpunkt längs bana
+	Set Corners	Ange hörn
+	Remove Corners	Ta bort hörn
+	Corners selected: {count}	Valda hörn: {count}
+	Apply to Selected Anchors	Tillämpa på valda ankarpunkter
+@msg	`radius` must be from 0 to 1000000 pt	`radius` måste vara från 0 till 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` måste vara ett tal från -0.98 till 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	välj ankarpunkter där två sidor möts i en vinkel: bara de kan få ett hörn
+@msg	give `anchor`, the index of the anchor to slide	ange `anchor`, indexet för ankarpunkten som ska skjutas
+@msg	that anchor can't slide: an end of an open path has nowhere to go	den ankarpunkten kan inte skjutas: änden av en öppen bana har ingenstans att ta vägen
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Verktyg för sammanfogning av gemensam kant
+	Merge Shared Edge	Sammanfoga gemensam kant
+	Keep Shared Points Together	Håll ihop gemensamma punkter
+	Shared Edges	Gemensamma kanter
+	Coincidence:	Sammanfall:
+@msg	`a` and `b` must be two different paths	`a` och `b` måste vara två olika banor
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` måste vara från 0.25 till 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` måste vara från 0 till 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` måste vara "average", "a" eller "b"
+@msg	the paths have nothing to merge there	banorna har inget att sammanfoga här
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Dela upp text
+	Combine Point Text	Kombinera punkttext
+	Join Point Text	Sammanfoga punkttext
+	Remove Breaks	Ta bort brytningar
+	Split Text at Cursor	Dela text vid markören
+	Set Alignment, Keep Position	Ställ in justering, behåll position
+	Reset Text Transform	Återställ texttransformering
+	Replace Missing Fonts…	Ersätt saknade typsnitt…
+	Replace Missing Fonts	Ersätt saknade typsnitt
+	Remove Line Breaks	Ta bort radbrytningar
+	Remove Paragraph Breaks	Ta bort styckebrytningar
+	Break Text into Lines	Dela upp text i rader
+	Break Text into Paragraphs	Dela upp text i stycken
+	Break Text into Words	Dela upp text i ord
+	Break Text into Glyphs	Dela upp text i glyfer
+	Reset Text Transform and Scale	Återställ texttransformering och skala
+	Set Alignment, Keep Position:	Ställ in justering, behåll position:
+	Break Text into:	Dela upp text i:
+	Split at Cursor	Dela vid markören
+	Reset Transform	Återställ transformering
+	Shift-click: break into paragraphs	Shift-klicka: dela upp i stycken
+	Alt-click: reset the horizontal scale too	Alt-klick: återställ även den horisontella skalan
+breakText	Lines	Rader
+breakText	Words	Ord
+breakText	Glyphs	Glyfer
+@msg	Click in type with a Type tool to split it	Klicka i text med ett textverktyg för att dela den
+@msg	Too many type objects to change at once	För många textobjekt att ändra på en gång
+@msg	Too many pieces to make at once	För många delar att skapa på en gång
+@msg	Select horizontal point or area type whose text fits	Markera vågrät punkt- eller områdestext vars text får plats
+@msg	Nothing to split at the cursor	Inget att dela vid markören
+@msg	Select two or more one-line point type objects on one baseline to combine	Markera två eller fler enradiga punkttextobjekt på samma baslinje för att kombinera dem
+@msg	Select two or more one-line point type objects to join	Markera två eller fler enradiga punkttextobjekt för att sammanfoga dem
+@msg	No line breaks to remove	Inga radbrytningar att ta bort
+@msg	No paragraph breaks to remove	Inga styckebrytningar att ta bort
+@msg	Too many breaks to remove at once	För många brytningar att ta bort på en gång
+@msg	Select point type	Markera punkttext
+@msg	The point type is aligned that way already	Punkttexten är redan justerad så
+@msg	The point type has no transform to reset	Punkttexten har ingen transformering att återställa
+@msg	No fonts are missing	Inga typsnitt saknas
+@msg	the replacement font is not available	ersättningstypsnittet är inte tillgängligt
+@msg	missing `align`	`align` saknas
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` måste vara lines, paragraphs, words eller glyphs, inte {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` måste vara "line" eller "paragraph", inte {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` måste vara "left", "center" eller "right", inte {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Baneffekter
+	Reverse Direction	Vänd riktning
+	Align to Corners and Ends	Justera mot hörn och ändar
+	Count	Antal
+	Max Count	Högsta antal
+	Start Length	Startlängd
+	Start Percent	Startprocent
+	Start Shape	Startform
+	End Length	Slutlängd
+	End Percent	Slutprocent
+	End Shape	Slutform
+	By Count	Efter antal
+	By Distance	Efter avstånd
+	Both	Båda
+	Shorter Than Length	Kortare än längden
+	Dashes to Geometry	Streck till geometri
+	Dashes to Geometry…	Streck till geometri…
+	Add Anchors	Lägg till ankarpunkter
+	Add Anchors…	Lägg till ankarpunkter…
+	Smooth Anchors	Jämna ut ankarpunkter
+	Smooth Anchors…	Jämna ut ankarpunkter…
+	Simplify Anchors	Förenkla ankarpunkter
+	Simplify Anchors…	Förenkla ankarpunkter…
+	Split at Anchors	Dela vid ankarpunkter
+	Split at Anchors…	Dela vid ankarpunkter…
+	Extend Path…	Förläng bana…
+	Close Path…	Stäng bana…
+	Retract Handles…	Dra in handtag…
+	Dash 1	Streck 1
+	Gap 1	Mellanrum 1
+	Dash 2	Streck 2
+	Gap 2	Mellanrum 2
+	Dash 3	Streck 3
+	Gap 3	Mellanrum 3
+	Dash 4	Streck 4
+	Gap 4	Mellanrum 4
+	Dash 5	Streck 5
+	Gap 5	Mellanrum 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Ordningsverktyg
+	Arrange in Grid…	Ordna i rutnät…
+	Arrange in Grid	Ordna i rutnät
+	Swap Objects	Byt plats på objekt
+	Swap Objects and Sizes	Byt plats och storlek på objekt
+	Replace with Top Object…	Ersätt med översta objektet…
+	Replace with Top Object	Ersätt med översta objektet
+	Set Size of Each…	Ange storlek för vart och ett…
+	Set Size of Each	Ange storlek för vart och ett
+@msg	select exactly two objects	markera exakt två objekt
+@msg	give `width` or `height`	ange `width` eller `height`

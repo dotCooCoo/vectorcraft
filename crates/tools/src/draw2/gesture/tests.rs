@@ -872,7 +872,7 @@ fn pencil_alt_smooths_within_the_smooth_tools_radius() {
     }
 }
 
-/// An Alt smoothing drag uses the Smooth tool's Fidelity for both Pencil and Blob Brush.
+/// An Alt smoothing drag uses the Smooth tool's Fidelity for Pencil, Paintbrush and Blob Brush.
 #[test]
 fn alt_smoothing_uses_the_smooth_tools_fidelity() {
     let (d, id) = doc_with_rect();
@@ -888,19 +888,91 @@ fn alt_smoothing_uses_the_smooth_tools_fidelity() {
     };
     let alt = Mods { alt: true, ..Default::default() };
     let want = fidelity(&drag(&mut GestureTool::new("smooth"), &cx, &pts, Mods::default()));
-    for id in ["pencil", "blobBrush"] {
+    for (id, alt_smooth) in [("pencil", true), ("blobBrush", false), ("paintbrush", false), ("paintbrush", true)] {
         let mut t = GestureTool::new(id);
-        if id == "pencil" {
-            t.set_option("altSmooth", &json!(true));
-        }
+        t.set_option("altSmooth", &json!(alt_smooth));
         t.set_option("fidelity", &json!(10.0));
-        assert_eq!(fidelity(&drag_held(&mut t, &cx, &pts, alt)), want, "{id}");
+        assert_eq!(fidelity(&drag_held(&mut t, &cx, &pts, alt)), want, "{id} altSmooth={alt_smooth}");
         t.set_option("smoothFidelity", &json!(7.5));
-        assert_eq!(fidelity(&drag_held(&mut t, &cx, &pts, alt)), 7.5, "{id}");
+        assert_eq!(fidelity(&drag_held(&mut t, &cx, &pts, alt)), 7.5, "{id} altSmooth={alt_smooth}");
         // Drawing keeps the tool's own Fidelity; Smooth's setting stays out of its options.
         assert_eq!(t.options()["fidelity"], json!(10.0), "{id}");
         assert!(t.options().get("smoothFidelity").is_none(), "{id}");
     }
+}
+
+/// Alt pressed after a Paintbrush stroke begins closes it, and an empty selection still draws.
+#[test]
+fn paintbrush_alt_after_press_closes_without_smoothing_and_empty_selection_draws() {
+    let (d, id) = doc_with_rect();
+    let mut selected = Selection::default();
+    selected.set([id]);
+    let empty = Selection::default();
+    let p = paint();
+    let alt = Mods { alt: true, ..Default::default() };
+    let pts = [(50.0, 150.0), (150.0, 150.0), (250.0, 160.0)];
+    let mut t = GestureTool::new("paintbrush");
+    let selected_cx = cx(&d, &selected, &p);
+    t.pointer(&selected_cx, &PointerEvent::new(PointerKind::Down, pts[0].0, pts[0].1));
+    t.pointer(&selected_cx, &PointerEvent::new(PointerKind::Drag, pts[1].0, pts[1].1).with_mods(alt));
+    let last = t.pointer(&selected_cx, &PointerEvent::new(PointerKind::Up, pts[2].0, pts[2].1).with_mods(alt));
+    assert!(matches!(last.first(), Some(Action::Preview(c, v)) if c == "path.freehand" && v["closed"] == true), "{last:?}");
+    let cx = cx(&d, &empty, &p);
+    let last = drag_held(&mut t, &cx, &pts, alt);
+    assert!(matches!(last.last().and_then(|a| a.first()), Some(Action::Preview(c, v)) if c == "path.freehand" && v["closed"] == true), "{last:?}");
+}
+
+/// The Paintbrush shows Smooth before an Alt press only with a selected path.
+#[test]
+fn paintbrush_alt_cursor_matches_selection_at_press() {
+    let (d, id) = doc_with_rect();
+    let mut selected = Selection::default();
+    selected.set([id]);
+    let empty = Selection::default();
+    let p = paint();
+    let alt = Mods { alt: true, ..Default::default() };
+    let t = GestureTool::new("paintbrush");
+    assert_eq!(t.cursor(&cx(&d, &selected, &p), Point::new(50.0, 150.0), alt), Cursor::Smooth);
+    assert_eq!(t.cursor(&cx(&d, &empty, &p), Point::new(50.0, 150.0), alt), Cursor::PaintbrushClose);
+}
+
+/// A selected text object leaves Alt Paintbrush drawing a closed stroke with its close cursor.
+#[test]
+fn paintbrush_alt_with_only_text_selected_draws_a_closed_stroke() {
+    let (d, text_id) = doc_with_area_type();
+    let mut selected = Selection::default();
+    selected.set([text_id]);
+    let p = paint();
+    let cx = cx(&d, &selected, &p);
+    let alt = Mods { alt: true, ..Default::default() };
+    let mut t = GestureTool::new("paintbrush");
+    assert_eq!(t.cursor(&cx, Point::new(50.0, 150.0), alt), Cursor::PaintbrushClose);
+    let acts = drag_held(&mut t, &cx, &[(50.0, 150.0), (150.0, 150.0), (250.0, 160.0)], alt);
+    assert!(acts.iter().flatten().any(|a| matches!(a, Action::Preview(c, v) if c == "path.freehand" && v["closed"] == true)), "{acts:?}");
+    assert!(matches!(acts.last().and_then(|a| a.get(1)), Some(Action::Commit)), "{acts:?}");
+}
+
+/// A selected two-anchor line leaves Alt Paintbrush drawing a closed stroke with its close cursor.
+#[test]
+fn paintbrush_alt_with_only_two_anchor_line_selected_draws_a_closed_stroke() {
+    let (mut d, _) = doc_with_rect();
+    let layer = d.layers[0].id;
+    let id = d.alloc_id();
+    let line = vectorcraft_geom::PathData::from_bezpath(&vectorcraft_geom::BezPath::from_vec(vec![
+        vectorcraft_geom::PathEl::MoveTo(Point::new(300.0, 300.0)),
+        vectorcraft_geom::PathEl::LineTo(Point::new(400.0, 300.0)),
+    ]));
+    d.insert(Some(layer), 1, vectorcraft_doc::Node::path(id, line, vectorcraft_doc::Appearance::default_art())).unwrap();
+    let mut selected = Selection::default();
+    selected.set([id]);
+    let p = paint();
+    let cx = cx(&d, &selected, &p);
+    let alt = Mods { alt: true, ..Default::default() };
+    let mut t = GestureTool::new("paintbrush");
+    assert_eq!(t.cursor(&cx, Point::new(50.0, 150.0), alt), Cursor::PaintbrushClose);
+    let acts = drag_held(&mut t, &cx, &[(50.0, 150.0), (150.0, 150.0), (250.0, 160.0)], alt);
+    assert!(acts.iter().flatten().any(|a| matches!(a, Action::Preview(c, v) if c == "path.freehand" && v["closed"] == true)), "{acts:?}");
+    assert!(matches!(acts.last().and_then(|a| a.get(1)), Some(Action::Commit)), "{acts:?}");
 }
 
 /// #3799: Alt's line starts and ends on Smart Guides as a stroke does, and pressed on an end of
@@ -1317,6 +1389,53 @@ fn the_eraser_sends_its_tip_and_shows_the_area_it_covers() {
     let b = vectorcraft_geom::Shape::bounding_box(path);
     assert!((b.x0 - 47.5).abs() < 0.1 && (b.x1 - 152.5).abs() < 0.1, "{b:?}");
     assert!((b.y0 - 140.0).abs() < 0.1 && (b.y1 - 160.0).abs() < 0.1, "{b:?}");
+}
+
+/// The Blob Brush's Angle and Roundness (Blob Brush Tool Options, 0° and 100% by default) go with
+/// its stroke, kept within −180–180° and 0–100%; while it drags, a tip that is not round shows the
+/// outline of the area it covers with the length label, and an Alt drag that smooths shows the
+/// Smooth tool's thin line.
+#[test]
+fn the_blob_brush_sends_its_tip_and_shows_the_area_it_covers() {
+    let (d, id) = doc_with_rect();
+    let mut s = Selection::default();
+    s.set([id]);
+    let p = paint();
+    let cx = ToolContext { measurement_labels: true, ..cx(&d, &s, &p) };
+    let mut t = GestureTool::new("blobBrush");
+    assert_eq!((t.options()["angle"].as_f64(), t.options()["roundness"].as_f64()), (Some(0.0), Some(100.0)));
+    t.set_option("size", &json!(20));
+    for (angle, roundness, sent) in [(45.0, 25.0, (45.0, 25.0)), (400.0, -5.0, (180.0, 0.0)), (-400.0, 250.0, (-180.0, 100.0))] {
+        t.set_option("angle", &json!(angle));
+        t.set_option("roundness", &json!(roundness));
+        assert_eq!((t.options()["angle"].as_f64(), t.options()["roundness"].as_f64()), (Some(sent.0), Some(sent.1)));
+        let acts = drag(&mut t, &cx, &[(50.0, 150.0), (250.0, 150.0)], Mods::default());
+        assert!(
+            matches!(&acts[2][0], Action::Exec(c, v) if c == "path.blob" && v["size"] == 20.0 && v["angle"] == sent.0 && v["roundness"] == sent.1),
+            "{acts:?}"
+        );
+    }
+    // A tip 20 pt long and 5 pt wide, standing upright: along a horizontal drag from x 50 to
+    // x 150 the outline reaches 2.5 pt either side of the drag and 10 pt above and below its ends.
+    t.set_option("angle", &json!(90));
+    t.set_option("roundness", &json!(25));
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0));
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 150.0, 150.0));
+    let o = t.overlays(&cx);
+    let Some(Overlay::Path { path, width, .. }) = o.iter().find(|o| matches!(o, Overlay::Path { .. })) else { panic!("{o:?}") };
+    assert_eq!(*width, 1.0);
+    let b = vectorcraft_geom::Shape::bounding_box(path);
+    assert!((b.x0 - 47.5).abs() < 0.1 && (b.x1 - 152.5).abs() < 0.1, "{b:?}");
+    assert!((b.y0 - 140.0).abs() < 0.1 && (b.y1 - 160.0).abs() < 0.1, "{b:?}");
+    assert!(o.iter().any(|o| matches!(o, Overlay::Measure { .. })), "{o:?}");
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 150.0, 150.0));
+    let alt = Mods { alt: true, ..Default::default() };
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 50.0, 150.0).with_mods(alt));
+    t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 150.0, 150.0).with_mods(alt));
+    let o = t.overlays(&cx);
+    let [Overlay::Path { path, width, .. }] = &o[..] else { panic!("{o:?}") };
+    assert_eq!(*width, 1.0);
+    assert!(vectorcraft_geom::Shape::bounding_box(path).height() < 0.1, "{o:?}");
 }
 
 #[test]
