@@ -1036,6 +1036,42 @@ fn grid_drag_claimed_v_release_after_pointer_up_does_not_paste() {
     assert_eq!(app.paste_chord.textless_paste(&[release]), None);
 }
 
+/// A dedicated Paste key release clears a claimed clipboard event before a later image paste.
+#[test]
+fn grid_drag_paste_key_release_does_not_block_later_v_image_paste() {
+    use vectorcraft_engine::cmd::clipboard::PNG;
+    use vectorcraft_tools::{PointerEvent, PointerKind};
+    let (mut app, board) = crate::tests_sysclip::app();
+    crate::tests_sysclip::copy_elsewhere(&board, vec![(PNG, crate::tests_sysclip::blue_png())]);
+    app.select_tool("polarGrid");
+    let view = app.view_info();
+    app.session.pointer(&PointerEvent::new(PointerKind::Down, 100.0, 80.0), view).unwrap();
+    app.session.pointer(&PointerEvent::new(PointerKind::Drag, 300.0, 220.0), view).unwrap();
+    let count = |app: &VectorcraftApp| app.session.doc().unwrap().doc.layers[0].children().unwrap().len();
+    let initial = count(&app);
+    let command = command_key();
+    let release = |key| egui::Event::Key { key, physical_key: Some(key), pressed: false, repeat: false, modifiers: command };
+    frame(&mut app, vec![egui::Event::ModifiersChanged(command), egui::Event::Paste("<svg/>".into()), release(Key::Paste)]);
+    assert_eq!(count(&app), initial, "the grid claims the clipboard event");
+    app.session.pointer(&PointerEvent::new(PointerKind::Up, 300.0, 220.0), view).unwrap();
+    assert_eq!(app.paste_chord.clone().textless_paste(&[release(Key::V)]), Some((Key::V, command)));
+    frame(&mut app, vec![release(Key::V)]);
+    assert_eq!(count(&app), initial + 1, "the later image paste adds its object");
+}
+
+/// A reported V press and paste leave no guard after the V release.
+#[test]
+fn grid_drag_reported_v_release_clears_paste_guard() {
+    let command = command_key();
+    let release = egui::Event::Key { key: Key::V, physical_key: Some(Key::V), pressed: false, repeat: false, modifiers: command };
+    let mut chord = paste::PasteChord::default();
+    let mut events = press(Key::V, command);
+    events.push(egui::Event::Paste(String::new()));
+    events.push(release.clone());
+    assert_eq!(chord.textless_paste(&events), None);
+    assert_eq!(chord.textless_paste(&[release]), Some((Key::V, command)));
+}
+
 /// A grid takes command V while dedicated Paste and Alt+command V still paste images.
 #[test]
 fn grid_drag_only_suppresses_claimed_v_textless_paste() {

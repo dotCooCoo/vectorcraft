@@ -357,7 +357,7 @@ fn dispatch_command_shortcuts(app: &mut VectorcraftApp, ctx: &egui::Context) -> 
     ran
 }
 
-/// Represent a command paste claimed by a dragging grid as its V chord.
+/// Let the paste guard track clipboard events claimed by a dragging grid.
 fn grid_chord_events(app: &mut VectorcraftApp, ctx: &egui::Context, previous_modifiers: Modifiers) -> Vec<egui::Event> {
     let grid_claims_v = app.session.tool_busy()
         && matches!(app.session.tool_id(), "rectangularGrid" | "polarGrid")
@@ -374,8 +374,8 @@ fn grid_chord_events(app: &mut VectorcraftApp, ctx: &egui::Context, previous_mod
                     && !modifiers.alt
                     && matches!(event, egui::Event::Paste(_) | egui::Event::PasteImage(_))
                 {
-                    // The grid takes this V chord, including when egui reports only a clipboard event.
-                    egui::Event::Key { key: Key::V, physical_key: None, pressed: true, repeat: false, modifiers }
+                    // The matching paste key release clears this guard, even when the key is not V.
+                    egui::Event::Paste(String::new())
                 } else {
                     event.clone()
                 }

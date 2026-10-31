@@ -57,6 +57,7 @@ impl PasteChord {
                     match self.pressed.iter().position(|k| k == key) {
                         Some(i) => {
                             self.pressed.swap_remove(i);
+                            self.pasted = false;
                         }
                         // Unless a Paste event came (the guard takes it either way).
                         None if !std::mem::take(&mut self.pasted) => fire = Some((*key, *modifiers)),
