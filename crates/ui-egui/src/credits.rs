@@ -263,11 +263,19 @@ pub fn contributors_ui(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
     let counts = crate::i18n::fmt(tl!("{people} contributors · {commits} commits"), &[("people", &people), ("commits", &commits)]);
     ui.label(RichText::new(counts).small().weak());
     ui.separator();
+    list_ui(app, ui, &list, &mut v);
+    ui.data_mut(|d| d.insert_temp(id, v));
+}
+
+/// The contributors as a grab bag or a table, scrolling inside the About window.
+fn list_ui(app: &mut VectorcraftApp, ui: &mut egui::Ui, list: &[&Contributor], v: &mut View) {
+    if v.table && !list.is_empty() {
+        table(app, ui, list, v);
+        return;
+    }
     egui::ScrollArea::both().max_height(SCROLL_HEIGHT).auto_shrink([false, true]).show(ui, |ui| {
         if list.is_empty() {
             ui.label(tl!("No contributor data was built into this copy."));
-        } else if v.table {
-            table(app, ui, &list, &mut v);
         } else {
             ui.horizontal_wrapped(|ui| {
                 for (i, c) in list.iter().enumerate() {
@@ -279,7 +287,6 @@ pub fn contributors_ui(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
             });
         }
     });
-    ui.data_mut(|d| d.insert_temp(id, v));
 }
 
 fn link(app: &mut VectorcraftApp, ui: &mut egui::Ui, c: &Contributor, names: NameMode) -> egui::Response {
@@ -291,34 +298,75 @@ fn link(app: &mut VectorcraftApp, ui: &mut egui::Ui, c: &Contributor, names: Nam
     r
 }
 
-fn table(app: &mut VectorcraftApp, ui: &mut egui::Ui, list: &[&Contributor], v: &mut View) {
-    egui::Grid::new("credits_table").striped(true).num_columns(SortKey::ALL.len()).show(ui, |ui| {
-        for k in SortKey::ALL {
-            let arrow = if v.key == k { if v.ascending { " ▲" } else { " ▼" } } else { "" };
-            if ui.button(RichText::new(format!("{}{arrow}", k.label().1)).strong()).on_hover_text(k.label().0).clicked() {
-                if v.key == k {
-                    v.ascending = !v.ascending;
-                } else {
-                    v.key = k;
-                    v.ascending = k.default_ascending();
-                }
-            }
-        }
-        ui.end_row();
-        for c in list {
-            link(app, ui, c, v.names);
-            ui.label(group(c.prs));
-            ui.label(group(c.commits));
-            ui.label(group(c.lines_added));
-            ui.label(group(c.lines_deleted));
-            ui.label(signed(c.lines_delta()));
-            ui.label(group(c.binary_added));
-            ui.label(group(c.binary_deleted));
-            ui.label(day(c.first_commit));
-            ui.label(day(c.last_commit));
-            ui.end_row();
-        }
+/// A table whose header row stays at the top while the rows scroll under it. Wide tables scroll
+/// sideways as a whole, header included.
+fn credits_table(
+    ui: &mut egui::Ui,
+    id: &str,
+    columns: usize,
+    header: impl FnOnce(egui_extras::TableRow<'_, '_>),
+    body: impl FnOnce(egui_extras::TableBody<'_>),
+) {
+    let row = ui.spacing().interact_size.y;
+    egui::ScrollArea::horizontal().id_salt(id).auto_shrink([false, true]).show(ui, |ui| {
+        egui_extras::TableBuilder::new(ui)
+            .id_salt(id)
+            .striped(true)
+            .auto_shrink([false, true])
+            .max_scroll_height(SCROLL_HEIGHT - row)
+            .columns(egui_extras::Column::auto(), columns)
+            .header(row, header)
+            .body(body);
     });
+}
+
+fn table(app: &mut VectorcraftApp, ui: &mut egui::Ui, list: &[&Contributor], v: &mut View) {
+    let row = ui.spacing().interact_size.y;
+    let names = v.names;
+    credits_table(
+        ui,
+        "credits_table",
+        SortKey::ALL.len(),
+        |mut header| {
+            for k in SortKey::ALL {
+                header.col(|ui| {
+                    let arrow = if v.key == k { if v.ascending { " ▲" } else { " ▼" } } else { "" };
+                    if ui.button(RichText::new(format!("{}{arrow}", k.label().1)).strong()).on_hover_text(k.label().0).clicked() {
+                        if v.key == k {
+                            v.ascending = !v.ascending;
+                        } else {
+                            v.key = k;
+                            v.ascending = k.default_ascending();
+                        }
+                    }
+                });
+            }
+        },
+        |mut body| {
+            for c in list {
+                body.row(row, |mut r| {
+                    r.col(|ui| {
+                        link(app, ui, c, names);
+                    });
+                    for cell in [
+                        group(c.prs),
+                        group(c.commits),
+                        group(c.lines_added),
+                        group(c.lines_deleted),
+                        signed(c.lines_delta()),
+                        group(c.binary_added),
+                        group(c.binary_deleted),
+                        day(c.first_commit).to_string(),
+                        day(c.last_commit).to_string(),
+                    ] {
+                        r.col(|ui| {
+                            ui.label(cell);
+                        });
+                    }
+                });
+            }
+        },
+    );
 }
 
 /// About ▸ Models: AI models credited in Co-Authored-By trailers.
@@ -328,27 +376,43 @@ pub fn models_ui(ui: &mut egui::Ui) {
         return;
     }
     let assisted: u64 = MODELS.iter().map(|m| m.commits).max().unwrap_or(0).max(1);
-    egui::ScrollArea::both().max_height(SCROLL_HEIGHT).auto_shrink([false, true]).show(ui, |ui| {
-        egui::Grid::new("credits_models").striped(true).num_columns(6).show(ui, |ui| {
+    let row = ui.spacing().interact_size.y;
+    credits_table(
+        ui,
+        "credits_models",
+        6,
+        |mut header| {
             for h in [tl!("Company"), tl!("Model"), tl!("Version"), tl!("Commits"), tl!("% of all commits"), tl!("Lines +/−")] {
-                ui.label(RichText::new(h).strong());
+                header.col(|ui| {
+                    ui.label(RichText::new(h).strong());
+                });
             }
-            ui.end_row();
+        },
+        |mut body| {
             for m in MODELS {
-                ui.label(m.company);
-                ui.label(m.model);
-                ui.label(m.version);
-                ui.label(group(m.commits));
-                ui.label(format!("{:.0}%", 100.0 * m.commits as f64 / TOTAL_COMMITS.max(assisted) as f64));
-                ui.label(format!("+{} / −{}", group(m.lines_added), group(m.lines_deleted)));
-                ui.end_row();
+                body.row(row, |mut r| {
+                    for cell in [
+                        m.company.to_string(),
+                        m.model.to_string(),
+                        m.version.to_string(),
+                        group(m.commits),
+                        format!("{:.0}%", 100.0 * m.commits as f64 / TOTAL_COMMITS.max(assisted) as f64),
+                        format!("+{} / −{}", group(m.lines_added), group(m.lines_deleted)),
+                    ] {
+                        r.col(|ui| {
+                            ui.label(cell);
+                        });
+                    }
+                });
             }
-        });
-    });
+        },
+    );
 }
 
 #[cfg(test)]
 mod tests {
+    use egui_kittest::kittest::Queryable;
+
     use super::*;
 
     fn c(
@@ -413,6 +477,43 @@ mod tests {
         assert_eq!(logins(&v), ["Bob", "alice", "carol", "zed"]);
         let v = sorted(&all, NameMode::Username, SortKey::FirstCommit, true);
         assert_eq!(logins(&v), ["Bob", "zed", "carol", "alice"]); // undated last
+    }
+
+    /// Fix #4944: scrolling the table moves the rows under the header row, which stays in place.
+    #[test]
+    fn the_table_header_stays_put_while_the_rows_scroll() {
+        let logins: Vec<&'static str> = (0..60).map(|i| &*format!("p{i:02}").leak()).collect();
+        let all: Vec<Contributor> = logins.iter().map(|l| c(l, None, None, 1, 0, "2026-01-01T00:00:00Z")).collect();
+        let list = sorted(&all, NameMode::Username, SortKey::Name, true);
+        let app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+        let view = View { table: true, ..View::default() };
+        let mut fonts = false;
+        let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(900.0, 500.0)).build_ui_state(
+            move |ui, (app, v): &mut (crate::VectorcraftApp, View)| {
+                if !std::mem::replace(&mut fonts, true) {
+                    crate::theme::install_fonts(ui.ctx());
+                    return;
+                }
+                list_ui(app, ui, &list, v);
+            },
+            (app, view),
+        );
+        h.run_steps(3);
+        let header = h.get_by_label("Name").rect();
+        let first = h.get_by_label("@p00").rect();
+        h.hover_at(first.center());
+        h.event(egui::Event::MouseWheel {
+            unit: egui::MouseWheelUnit::Point,
+            delta: egui::vec2(0.0, -200.0),
+            phase: egui::TouchPhase::Move,
+            modifiers: Default::default(),
+            source: egui::MouseWheelSource::Unknown,
+        });
+        h.run_steps(10);
+        let moved = h.query_by_label("@p00").map_or(f32::NEG_INFINITY, |n| n.rect().top());
+        assert!(moved < first.top() - 100.0, "the wheel scrolls the rows: {} -> {moved}", first.top());
+        let after = h.query_by_label("Name").map(|n| n.rect());
+        assert_eq!(after, Some(header), "the header row stays at the top of the table");
     }
 
     #[test]
