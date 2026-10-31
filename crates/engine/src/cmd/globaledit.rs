@@ -267,11 +267,13 @@ fn supported(n: &Node) -> bool {
 
 const UNSUPPORTED: &str = "Global Edit works on paths, compound paths, symbol instances and groups of them";
 
-/// The objects in `n` that Appearance compares, in stacking order: `n` itself unless it is a group.
+/// The objects and groups in `n` that Appearance compares, in stacking order: `n` itself, and for a
+/// group each object and group inside it after the group, since a group has a fill and stroke of
+/// its own.
 fn leaves<'a>(n: &'a Node, out: &mut Vec<&'a Node>) {
-    match &n.kind {
-        NodeKind::Group { children, .. } => children.iter().for_each(|c| leaves(c, out)),
-        _ => out.push(n),
+    out.push(n);
+    if let NodeKind::Group { children, .. } = &n.kind {
+        children.iter().for_each(|c| leaves(c, out));
     }
 }
 
@@ -705,8 +707,9 @@ pub(crate) fn propagate(before: &Document, d: &mut Document, ge: &GlobalEdit, se
     edited
 }
 
-/// The outlines of the members of the active document's Global Edit that are not selected, in
-/// their layer's colour: the canvas highlights them while Global Edit is on.
+/// The outlines of the members of the active document's Global Edit that are not selected (and,
+/// for groups, hold no selected object), in their layer's color: the canvas highlights them while
+/// Global Edit is on.
 pub fn highlights(s: &Session) -> Outlines {
     let Some(st) = s.active() else { return vec![] };
     let Some(ge) = &st.global_edit else { return vec![] };
@@ -719,7 +722,11 @@ pub fn highlights(s: &Session) -> Outlines {
     let out: Vec<_> = ge
         .members
         .iter()
-        .filter(|(id, _)| !st.selection.contains(*id))
+        // In a Global Edit of groups, the member that holds a selected object is not highlighted
+        // either.
+        .filter(|(id, _)| {
+            !st.selection.contains(*id) && !(ge.groups && st.selection.objects.iter().any(|x| st.doc.ancestry(*x).is_some_and(|a| a.contains(id))))
+        })
         .filter_map(|(id, _)| {
             let n = st.doc.node(*id)?;
             let path = match n.stroke_path() {

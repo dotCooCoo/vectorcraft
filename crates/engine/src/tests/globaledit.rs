@@ -363,6 +363,34 @@ fn start_global_edit_on_a_group_takes_the_groups_of_the_same_hierarchy_and_shape
 }
 
 #[test]
+fn appearance_compares_a_groups_own_fill_and_stroke() {
+    let mut s = session();
+    let (one, two, three) = (pair(&mut s, 0.0, 0.0, 1.0), pair(&mut s, 300.0, 0.0, 1.0), pair(&mut s, 500.0, 0.0, 1.0));
+    // Only the second group's own stroke differs; its objects are painted as the others' are.
+    s.execute("appearance.addStroke", &json!({"ids": [two.0]})).unwrap();
+    s.execute("paint.setStroke", &json!({"ids": [two.0], "item": 0, "color": "#000000"})).unwrap();
+    s.execute("stroke.set", &json!({"ids": [two.0], "item": 0, "weight": 10})).unwrap();
+    assert_eq!(start(&mut s, one, json!({"appearance": true})), [one, three]);
+    s.execute("select.globalEdit", &json!({})).unwrap();
+    assert_eq!(start(&mut s, one, json!({})), [one, two, three], "Appearance off: group strokes may differ");
+}
+
+#[test]
+fn a_member_group_that_holds_a_selected_object_is_not_highlighted() {
+    let mut s = session();
+    let (one, two, three) = (pair(&mut s, 0.0, 0.0, 1.0), pair(&mut s, 300.0, 0.0, 1.0), pair(&mut s, 500.0, 0.0, 1.0));
+    start(&mut s, one, json!({}));
+    assert_eq!(crate::cmd::globaledit::highlights(&s).len(), 2);
+    // The circle of the second group selected: only the first and third groups are highlighted.
+    let (round, squares) = (kids(&s, two)[1], [kids(&s, one)[0], kids(&s, three)[0]]);
+    sel(&mut s, &[round]);
+    assert_eq!(crate::cmd::globaledit::highlights(&s).len(), 2, "{one} and {three}, not {two}");
+    // Objects of the first and third groups selected: only the second group is highlighted.
+    sel(&mut s, &squares);
+    assert_eq!(crate::cmd::globaledit::highlights(&s).len(), 1);
+}
+
+#[test]
 fn an_object_selected_inside_a_group_before_the_start_is_matched_as_an_object() {
     let mut s = session();
     let (one, two) = (pair(&mut s, 0.0, 0.0, 1.0), pair(&mut s, 300.0, 0.0, 1.0));
