@@ -167,6 +167,20 @@ fn spot_gradients_mixed_with_other_inks_export_as_device_n_shadings() {
 }
 
 #[test]
+fn radial_spot_gradients_mixed_with_other_inks_export_as_device_n_shadings() {
+    let (mut s, _) = setup();
+    run(
+        &mut s,
+        "paint.editGradient",
+        json!({"kind": "radial", "stops": [{"offset": 0, "swatch": "Ink"}, {"offset": 1, "color": {"c": 0, "m": 0, "y": 0.6, "k": 0}}]}),
+    );
+    let (pdf, warnings) = pdf_of(&s);
+    assert!(pdf.contains("/ShadingType 3") && pdf.contains("/DeviceN[/Yellow/Ink]/DeviceCMYK"), "a radial DeviceN shading of Yellow and Ink");
+    assert!(pdf.contains("/C0[0 1]/C1[0.6 0]"), "the shading's tints: Yellow and Ink");
+    assert!(!warnings.iter().any(|w| w.contains("spot")), "{warnings:?}");
+}
+
+#[test]
 fn linked_stops_round_trip() {
     let (mut s, id) = setup();
     run(&mut s, "paint.editGradient", ink_to_white(30.0));
