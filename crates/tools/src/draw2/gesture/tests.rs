@@ -1410,6 +1410,22 @@ fn knife_alt_cut_without_smart_guides_keeps_its_press() {
     }
 }
 
+/// With Smart Guides on, a straight Knife cut does not start on art in a hidden layer, whose own
+/// visibility is still on.
+#[test]
+fn knife_alt_cut_does_not_snap_to_hidden_art() {
+    let (mut d, _) = doc_with_rect();
+    let l = d.layers[0].id;
+    d.node_mut(l).unwrap().visible = false;
+    let s = Selection::default();
+    let p = paint();
+    let cx = cx(&d, &s, &p);
+    let alt = Mods { alt: true, ..Default::default() };
+    let mut t = GestureTool::new("knife");
+    let acts = drag_held(&mut t, &cx, &[(101.0, 99.0), (201.0, 198.0)], alt);
+    assert_eq!(knife_points(acts.last().unwrap()), vec![(101.0, 99.0), (201.0, 198.0)]);
+}
+
 /// With Smart Guides on, Shift and Alt keep the Knife's cut at 45° steps from the snapped press,
 /// and an anchor near the release does not pull the cut off that step.
 #[test]
