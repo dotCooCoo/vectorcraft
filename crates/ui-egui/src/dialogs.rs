@@ -21,6 +21,7 @@ pub mod confirm;
 pub mod corners;
 pub mod dimension;
 mod document_setup;
+mod duotone;
 pub mod dxf_import;
 pub mod dxf_options;
 pub mod edit_selection;

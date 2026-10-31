@@ -1127,12 +1127,12 @@ lighting	Light	Cahaya
 	 to set spacing and orientation	 untuk mengatur jarak dan orientasi
 	Apply	Terapkan
 	Change Screen Mode (F)	Ganti mode layar (F)
-	Color (,)	Warna (,)
+	Color (, or <)	Warna (, atau <)
 	Draw Behind	Gambar di belakang
 	Draw Inside	Gambar di dalam
 	Draw Normal	Gambar normal
 	Expand:	Perluas:
-	Gradient (.)	Gradien (.)
+	Gradient (. or >)	Gradien (. atau >)
 	H:	H:
 	Modify	Ubah
 	Navigate	Navigasi
@@ -4151,6 +4151,7 @@ imageTrace	Outline	Kontur
 @msg	no document	tidak ada dokumen
 @msg	no document open	tidak ada dokumen yang terbuka
 @msg	no effect applied yet	belum ada efek yang diterapkan
+@msg	no Pathfinder operation applied yet	belum ada operasi Pathfinder yang diterapkan
 @msg	no effect at index {k}	tidak ada efek pada indeks {k}
 @msg	no end record	tidak ada rekaman akhir
 @msg	no file manager here	tidak ada pengelola file di sini
@@ -5765,3 +5766,133 @@ anchor	Points:	Titik:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Warna titik dari karya seni
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	Duotone…
+	Duotone	Duotone
+	Print Ink Fixes…	Perbaikan Tinta Cetak…
+	Print Ink Fixes	Perbaikan Tinta Cetak
+	Inks	Tinta
+	Tone 1	Nada 1
+	Tone 2	Nada 2
+	Tone 3	Nada 3
+	Tone 4	Nada 4
+	Curve	Kurva
+	Reset to Linear	Atur ulang ke linear
+	Reset to Inverse	Atur ulang ke terbalik
+	Skip Objects with Spot Colors	Lewati objek dengan warna spot
+	Ink Limit	Batas tinta
+	Exclude Pure Black	Kecualikan hitam murni
+	Remove White Overprint	Hapus overprint putih
+	Overprint Black	Overprint hitam
+	Text Only	Hanya teks
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	berikan `inkLimit`, `removeWhiteOverprint`, atau `overprintBlack`
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Perbaikan Tinta Cetak bekerja pada dokumen CMYK: pilih dulu Berkas › Mode warna dokumen › Warna CMYK
+@msg	`{key}` must be 0..{max}	`{key}` harus 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Alat sudut
+	Slide Anchor Along Path	Geser titik jangkar sepanjang jalur
+	Set Corners	Atur sudut
+	Remove Corners	Hapus sudut
+	Corners selected: {count}	Sudut terpilih: {count}
+	Apply to Selected Anchors	Terapkan ke titik jangkar terpilih
+@msg	`radius` must be from 0 to 1000000 pt	`radius` harus dari 0 sampai 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` harus berupa angka dari -0.98 sampai 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	pilih titik jangkar tempat dua sisi bertemu membentuk sudut: hanya titik itu yang dapat diberi sudut
+@msg	give `anchor`, the index of the anchor to slide	berikan `anchor`, indeks titik jangkar yang akan digeser
+@msg	that anchor can't slide: an end of an open path has nowhere to go	titik jangkar itu tidak dapat digeser: ujung jalur terbuka tidak punya arah tujuan
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Alat gabung tepi bersama
+	Merge Shared Edge	Gabungkan tepi bersama
+	Keep Shared Points Together	Jaga titik bersama tetap menyatu
+	Shared Edges	Tepi bersama
+	Coincidence:	Kesamaan posisi:
+@msg	`a` and `b` must be two different paths	`a` dan `b` harus dua jalur yang berbeda
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` harus dari 0.25 hingga 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` harus dari 0 hingga 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` harus "average", "a" atau "b"
+@msg	the paths have nothing to merge there	tidak ada yang dapat digabungkan dari jalur di sini
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Pisahkan teks
+	Combine Point Text	Gabungkan teks titik
+	Remove Breaks	Hapus pemisah
+	Split Text at Cursor	Pisahkan teks di kursor
+	Set Alignment, Keep Position	Atur perataan, pertahankan posisi
+	Reset Text Transform	Atur ulang transformasi teks
+	Replace Missing Fonts…	Ganti font yang hilang…
+	Replace Missing Fonts	Ganti font yang hilang
+	Remove Line Breaks	Hapus putus baris
+	Remove Paragraph Breaks	Hapus putus paragraf
+	Break Text into Lines	Pisahkan teks menjadi baris
+	Break Text into Paragraphs	Pisahkan teks menjadi paragraf
+	Break Text into Words	Pisahkan teks menjadi kata
+	Break Text into Glyphs	Pisahkan teks menjadi glif
+	Reset Text Transform and Scale	Atur ulang transformasi dan skala teks
+	Set Alignment, Keep Position:	Atur perataan, pertahankan posisi:
+	Break Text into:	Pisahkan teks menjadi:
+	Split at Cursor	Pisahkan di kursor
+	Reset Transform	Atur ulang transformasi
+	Shift-click: break into paragraphs	Shift+klik: pisahkan menjadi paragraf
+	Alt-click: reset the horizontal scale too	Alt+klik: atur ulang juga skala horizontal
+breakText	Lines	Baris
+breakText	Words	Kata
+breakText	Glyphs	Glif
+@msg	Click in type with a Type tool to split it	Klik di dalam teks dengan alat teks untuk memisahkannya
+@msg	Too many type objects to change at once	Terlalu banyak objek teks untuk diubah sekaligus
+@msg	Too many pieces to make at once	Terlalu banyak bagian untuk dibuat sekaligus
+@msg	Select horizontal point or area type whose text fits	Pilih teks titik atau teks area horizontal yang teksnya muat
+@msg	Nothing to split at the cursor	Tidak ada yang dapat dipisahkan di kursor
+@msg	Select two or more one-line point type objects on one baseline to combine	Pilih dua atau lebih objek teks titik satu baris pada satu garis dasar untuk menggabungkannya
+@msg	No line breaks to remove	Tidak ada putus baris untuk dihapus
+@msg	No paragraph breaks to remove	Tidak ada putus paragraf untuk dihapus
+@msg	Too many breaks to remove at once	Terlalu banyak pemisah untuk dihapus sekaligus
+@msg	Select point type	Pilih teks titik
+@msg	The point type is aligned that way already	Teks titik sudah diratakan seperti itu
+@msg	The point type has no transform to reset	Teks titik tidak memiliki transformasi untuk diatur ulang
+@msg	No fonts are missing	Tidak ada font yang hilang
+@msg	the replacement font is not available	font pengganti tidak tersedia
+@msg	missing `align`	`align` tidak ada
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` harus lines, paragraphs, words, atau glyphs, bukan {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` harus "line" atau "paragraph", bukan {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` harus "left", "center", atau "right", bukan {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Efek jalur
+	Reverse Direction	Balikkan arah
+	Align to Corners and Ends	Sejajarkan ke sudut dan ujung
+	Count	Jumlah
+	Max Count	Jumlah maksimum
+	Start Length	Panjang awal
+	Start Percent	Persen awal
+	Start Shape	Bentuk awal
+	End Length	Panjang akhir
+	End Percent	Persen akhir
+	End Shape	Bentuk akhir
+	By Count	Menurut jumlah
+	By Distance	Menurut jarak
+	Both	Keduanya
+	Shorter Than Length	Lebih pendek dari panjang
+	Dashes to Geometry	Garis putus ke geometri
+	Dashes to Geometry…	Garis putus ke geometri…
+	Add Anchors	Tambahkan titik jangkar
+	Add Anchors…	Tambahkan titik jangkar…
+	Smooth Anchors	Haluskan titik jangkar
+	Smooth Anchors…	Haluskan titik jangkar…
+	Simplify Anchors	Sederhanakan titik jangkar
+	Simplify Anchors…	Sederhanakan titik jangkar…
+	Split at Anchors	Pisahkan di titik jangkar
+	Split at Anchors…	Pisahkan di titik jangkar…
+	Extend Path…	Perpanjang jalur…
+	Close Path…	Tutup jalur…
+	Retract Handles…	Tarik masuk pegangan…
+	Dash 1	Garis 1
+	Gap 1	Jarak 1
+	Dash 2	Garis 2
+	Gap 2	Jarak 2
+	Dash 3	Garis 3
+	Gap 3	Jarak 3
+	Dash 4	Garis 4
+	Gap 4	Jarak 4
+	Dash 5	Garis 5
+	Gap 5	Jarak 5

@@ -3368,7 +3368,7 @@ gradient-kind	Radial	円形
 	Client-side (.html)	クライアントサイド (.html)
 	Cmd	Cmd
 	Collect Links in a Separate Folder	リンクを別フォルダーに収集
-	Color (,)	カラー (,)
+	Color (, or <)	カラー (, または <)
 	Color Group	カラーグループ
 	Color Library	カラーライブラリ
 	Color Management	カラーマネジメント
@@ -3463,7 +3463,7 @@ file-filter	Templates	テンプレート
 	General › Placement › X	一般 › 位置 › X
 	General › Thumbnails	一般 › サムネール
 	Global Process Color, CMYK	グローバルプロセスカラー、CMYK
-	Gradient (.)	グラデーション (.)
+	Gradient (. or >)	グラデーション (. または >)
 	Graph Data	グラフデータ
 	Graph Type	グラフの種類
 	Graph Design	グラフのデザイン
@@ -4544,6 +4544,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	no PNG encoder	PNG エンコーダーがありません
 @msg	no document open	ドキュメントが開かれていません
 @msg	no effect applied yet	まだ効果を適用していません
+@msg	no Pathfinder operation applied yet	まだパスファインダーの操作を適用していません
 @msg	no such perspective grid preset	指定された遠近グリッドプリセットが見つかりません
 @msg	no such recent file	指定された最近使ったファイルが見つかりません
 @msg	no such recent font	指定された最近使ったフォントが見つかりません
@@ -5548,3 +5549,134 @@ anchor	Points:	ポイント:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	ドットの色をアートから取得
+
+# Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
+	Duotone…	ダブルトーン…
+	Duotone	ダブルトーン
+	Print Ink Fixes…	印刷インキの修正…
+	Print Ink Fixes	印刷インキの修正
+	Inks	インキ
+	Tone 1	トーン 1
+	Tone 2	トーン 2
+	Tone 3	トーン 3
+	Tone 4	トーン 4
+	Curve	カーブ
+	Reset to Linear	直線にリセット
+	Reset to Inverse	反転にリセット
+	Skip Objects with Spot Colors	特色を使用したオブジェクトをスキップ
+	Ink Limit	インキ総量の上限
+	Exclude Pure Black	純粋なブラックを除外
+	Remove White Overprint	白のオーバープリントを削除
+	Overprint Black	ブラックをオーバープリント
+	Text Only	テキストのみ
+@msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	`inkLimit`、`removeWhiteOverprint` または `overprintBlack` を指定してください
+@msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	印刷インキの修正は CMYK ドキュメントで使用できます。先にファイル › ドキュメントのカラーモード › CMYK カラーを選択してください
+@msg	`{key}` must be 0..{max}	`{key}` は 0..{max} にしてください
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	コーナーツール
+	Slide Anchor Along Path	パスに沿ってアンカーポイントをスライド
+	Set Corners	コーナーを設定
+	Remove Corners	コーナーを削除
+	Corners selected: {count}	選択中のコーナー：{count}
+	Apply to Selected Anchors	選択中のアンカーポイントに適用
+@msg	`radius` must be from 0 to 1000000 pt	`radius` は 0 から 1000000 pt にしてください
+@msg	`t` must be a number from -0.98 to 0.98	`t` は -0.98 から 0.98 の数値にしてください
+@msg	choose anchors where two sides meet at an angle: only those take a corner	2 つの辺が角度をなして交わるアンカーポイントを選択してください：コーナーを作れるのはそこだけです
+@msg	give `anchor`, the index of the anchor to slide	スライドするアンカーポイントの番号 `anchor` を指定してください
+@msg	that anchor can't slide: an end of an open path has nowhere to go	そのアンカーポイントはスライドできません：オープンパスの端点には移動先がありません
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	共有エッジ結合ツール
+	Merge Shared Edge	共有エッジを結合
+	Keep Shared Points Together	共有ポイントをまとめて移動
+	Shared Edges	共有エッジ
+	Coincidence:	一致の許容値:
+@msg	`a` and `b` must be two different paths	`a` と `b` は異なる 2 つのパスにしてください
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` は 0.25〜200 pt にしてください
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` は 0〜3 pt にしてください
+@msg	`follow` must be "average", "a" or "b"	`follow` は "average"、"a"、"b" のいずれかにしてください
+@msg	the paths have nothing to merge there	ここには結合できるものがありません
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	テキストを分割
+	Combine Point Text	ポイント文字を結合
+	Remove Breaks	改行を削除
+	Split Text at Cursor	カーソル位置でテキストを分割
+	Set Alignment, Keep Position	位置を保って行揃えを設定
+	Reset Text Transform	テキストの変形をリセット
+	Replace Missing Fonts…	見つからないフォントを置換…
+	Replace Missing Fonts	見つからないフォントを置換
+	Remove Line Breaks	強制改行を削除
+	Remove Paragraph Breaks	段落の区切りを削除
+	Break Text into Lines	テキストを行に分割
+	Break Text into Paragraphs	テキストを段落に分割
+	Break Text into Words	テキストを単語に分割
+	Break Text into Glyphs	テキストを字形に分割
+	Reset Text Transform and Scale	テキストの変形と比率をリセット
+	Set Alignment, Keep Position:	位置を保って行揃えを設定:
+	Break Text into:	テキストを分割:
+	Split at Cursor	カーソル位置で分割
+	Reset Transform	変形をリセット
+	Shift-click: break into paragraphs	Shift+クリック:段落に分割
+	Alt-click: reset the horizontal scale too	Alt+クリック:水平比率もリセット
+breakText	Lines	行
+breakText	Words	単語
+breakText	Glyphs	字形
+@msg	Click in type with a Type tool to split it	分割するには、文字ツールでテキスト内をクリックしてください
+@msg	Too many type objects to change at once	一度に変更するテキストオブジェクトが多すぎます
+@msg	Too many pieces to make at once	一度に作成する部分が多すぎます
+@msg	Select horizontal point or area type whose text fits	テキストが収まっている横組みのポイント文字またはエリア内文字を選択してください
+@msg	Nothing to split at the cursor	カーソル位置で分割するものがありません
+@msg	Select two or more one-line point type objects on one baseline to combine	結合するには、同じベースライン上にある 1 行のポイント文字オブジェクトを 2 つ以上選択してください
+@msg	No line breaks to remove	削除する強制改行がありません
+@msg	No paragraph breaks to remove	削除する段落の区切りがありません
+@msg	Too many breaks to remove at once	一度に削除する改行が多すぎます
+@msg	Select point type	ポイント文字を選択してください
+@msg	The point type is aligned that way already	ポイント文字はすでにその行揃えです
+@msg	The point type has no transform to reset	ポイント文字にリセットする変形がありません
+@msg	No fonts are missing	見つからないフォントはありません
+@msg	the replacement font is not available	置換用のフォントを使用できません
+@msg	missing `align`	`align` がありません
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` は lines、paragraphs、words、glyphs のいずれかにしてください({other} は使用できません)
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` は "line" または "paragraph" にしてください({other} は使用できません)
+@msg	`align` must be "left", "center" or "right", not {other}	`align` は "left"、"center"、"right" のいずれかにしてください({other} は使用できません)
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	パス効果
+	Reverse Direction	方向を反転
+	Align to Corners and Ends	コーナーと先端に整列
+	Count	個数
+	Max Count	最大個数
+	Start Length	始点の長さ
+	Start Percent	始点のパーセント
+	Start Shape	始点の形状
+	End Length	終点の長さ
+	End Percent	終点のパーセント
+	End Shape	終点の形状
+	By Count	個数で指定
+	By Distance	距離で指定
+	Both	両方
+	Shorter Than Length	長さより短いもの
+	Anchors	アンカーポイント
+	Dashes to Geometry	破線をジオメトリに
+	Dashes to Geometry…	破線をジオメトリに…
+	Add Anchors	アンカーポイントを追加
+	Add Anchors…	アンカーポイントを追加…
+	Smooth Anchors	アンカーポイントをスムーズに
+	Smooth Anchors…	アンカーポイントをスムーズに…
+	Simplify Anchors	アンカーポイントを単純化
+	Simplify Anchors…	アンカーポイントを単純化…
+	Split at Anchors	アンカーポイントで分割
+	Split at Anchors…	アンカーポイントで分割…
+	Extend Path…	パスを延長…
+	Close Path…	パスを閉じる…
+	Retract Handles…	ハンドルを収める…
+	Dash 1	線分 1
+	Gap 1	間隔 1
+	Dash 2	線分 2
+	Gap 2	間隔 2
+	Dash 3	線分 3
+	Gap 3	間隔 3
+	Dash 4	線分 4
+	Gap 4	間隔 4
+	Dash 5	線分 5
+	Gap 5	間隔 5
