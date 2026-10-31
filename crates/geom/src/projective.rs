@@ -25,13 +25,23 @@ impl Homography {
     }
 
     /// From nine row-major numbers (as stored in documents); `None` unless all are finite and the
-    /// map is invertible.
+    /// map is invertible. When the determinant is not finite, this is the same map divided by the
+    /// largest magnitude in its `w` row (so that row's largest entry is 1), and `None` when that
+    /// copy has an entry that is not finite or is not invertible.
     pub fn from_array(v: [f64; 9]) -> Option<Self> {
         if v.iter().any(|x| !x.is_finite()) {
             return None;
         }
         let h = Self([[v[0], v[1], v[2]], [v[3], v[4], v[5]], [v[6], v[7], v[8]]]);
-        h.is_invertible().then_some(h)
+        if h.det().is_finite() {
+            return h.is_invertible().then_some(h);
+        }
+        let k = h.0[2].iter().fold(0.0_f64, |k, v| k.max(v.abs()));
+        if k <= 0.0 || !h.is_invertible() {
+            return None;
+        }
+        let c = Self(h.0.map(|row| row.map(|v| v / k)));
+        (c.is_finite() && c.is_invertible()).then_some(c)
     }
 
     /// The nine row-major numbers.
@@ -70,14 +80,23 @@ impl Homography {
         self.inverse().is_some()
     }
 
-    /// The same map with every entry divided by one power of two, the smallest above every entry's
-    /// magnitude (so its largest entry is at least 0.5 and below 1). `None` when every entry is 0
-    /// or one is not finite.
+    /// The same map with every entry divided by one power of two, chosen so that the largest of the
+    /// six products its determinant sums is at least 1/8 and below 4. `None` when every one of
+    /// those products is 0 or an entry is not finite.
     fn scaled(&self) -> Option<Self> {
         if !self.is_finite() {
             return None;
         }
-        let e = self.0.iter().flatten().filter(|v| **v != 0.0).map(|v| frexp(*v).1).max()?;
+        let f = self.0.map(|row| row.map(frexp));
+        // The columns each of the six products takes from rows 0, 1 and 2.
+        let cols = [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)];
+        let e = cols
+            .iter()
+            .map(|&(a, b, c)| (f[0][a], f[1][b], f[2][c]))
+            .filter(|(a, b, c)| a.0 * b.0 * c.0 != 0.0)
+            .map(|(a, b, c)| a.1 + b.1 + c.1)
+            .max()?;
+        let e = e.div_euclid(3);
         Some(Self(self.0.map(|row| row.map(|v| ldexp(v, -e)))))
     }
 
@@ -324,13 +343,41 @@ mod tests {
         // inf − inf, though the map is invertible.
         let big = Homography([[1e200, 0.0, 1e200], [0.0, 1e200, 0.0], [1e200, 0.0, 2e200]]);
         assert!(big.det().is_nan());
-        assert_eq!(Homography::from_array(big.to_array()), Some(big));
+        // Read back as the same map with a w row whose largest entry is 1.
+        let read = Homography::from_array(big.to_array()).unwrap();
+        assert_eq!(read, Homography([[0.5, 0.0, 0.5], [0.0, 0.5, 0.0], [0.5, 0.0, 1.0]]));
+        assert_eq!(Homography::from_array(read.to_array()), Some(read));
         let inv = big.inverse().unwrap();
         for p in [Point::new(3.0, -2.0), Point::new(-1.5, 4.0)] {
+            assert!(read.apply(p).unwrap().distance(big.apply(p).unwrap()) < 1e-12);
             assert!(inv.apply(big.apply(p).unwrap()).unwrap().distance(p) < 1e-9);
         }
-        // A scale by 1e500: the determinant is inf, but scaled to a largest entry below 1 the
-        // w row is 0, and no point maps to a finite page point except the origin.
+        // The identity with every entry 1e308: stored as it is, (2, 2) overflows to 2e308, but the
+        // map read back draws it at (2, 2).
+        let wide = Homography([[1e308, 0.0, 0.0], [0.0, 1e308, 0.0], [0.0, 0.0, 1e308]]);
+        assert_eq!(wide.apply(Point::new(2.0, 2.0)), None);
+        let read = Homography::from_array(wide.to_array()).unwrap();
+        assert_eq!(read.apply(Point::new(2.0, 2.0)), Some(Point::new(2.0, 2.0)));
+        // A large map whose w row is 1e-205 times its largest entry: read back at a w row of 1,
+        // its points are in front of the horizon and draw.
+        let low = Homography([[1e300, 0.0, 1e305], [0.0, 1e300, 0.0], [1e90, 0.0, 1e100]]);
+        assert!(low.det().is_nan());
+        let read = Homography::from_array(low.to_array()).unwrap();
+        assert_eq!(Homography::from_array(read.to_array()), Some(read));
+        let p = Point::new(1.0, 1.0);
+        let want = Point::new((1e200 + 1e205) / (1.0 + 1e-10), 1e200 / (1.0 + 1e-10));
+        assert!(read.apply(p).unwrap().distance(want) <= 1e-9 * want.to_vec2().hypot());
+        // A scale by 1e305 and a move by -3.9e307 with a w row of 1: the determinant is inf, and
+        // the inverse is a scale by 1e-305 and a move by 390.
+        let moved = Homography([[1e305, 0.0, -3.9e307], [0.0, 1e305, -3.2e307], [0.0, 0.0, 1.0]]);
+        assert!(moved.det().is_infinite());
+        assert_eq!(Homography::from_array(moved.to_array()), Some(moved));
+        let inv = moved.inverse().unwrap();
+        for p in [Point::new(400.0, 330.0), Point::new(500.0, 400.0)] {
+            assert!(inv.apply(moved.apply(p).unwrap()).unwrap().distance(p) < 1e-9);
+        }
+        // A scale by 1e500: the determinant is inf, but scaled so that its products are near 1
+        // the w row is 0, and no point maps to a finite page point except the origin.
         let flat = Homography([[1e300, 0.0, 0.0], [0.0, 1e300, 0.0], [0.0, 0.0, 1e-200]]);
         assert!(flat.det().is_infinite());
         assert_eq!(Homography::from_array(flat.to_array()), None);
