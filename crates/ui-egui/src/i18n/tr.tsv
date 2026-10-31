@@ -5852,6 +5852,17 @@ anchor	Points:	Noktalar:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	iki kenarın açıyla birleştiği bağlantı noktalarını seçin: yalnızca onlara köşe uygulanır
 @msg	give `anchor`, the index of the anchor to slide	kaydırılacak bağlantı noktasının dizini `anchor` değerini verin
 @msg	that anchor can't slide: an end of an open path has nowhere to go	bu bağlantı noktası kaydırılamaz: açık yolun ucunun gidecek yeri yok
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Ortak Kenar Birleştirme Aracı
+	Merge Shared Edge	Ortak Kenarı Birleştir
+	Keep Shared Points Together	Ortak Noktaları Bir Arada Tut
+	Shared Edges	Ortak Kenarlar
+	Coincidence:	Çakışma:
+@msg	`a` and `b` must be two different paths	`a` ve `b` iki farklı yol olmalıdır
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` 0.25 ile 200 pt arasında olmalıdır
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` 0 ile 3 pt arasında olmalıdır
+@msg	`follow` must be "average", "a" or "b"	`follow` "average", "a" veya "b" olmalıdır
+@msg	the paths have nothing to merge there	yolların burada birleştirilecek bir kısmı yok
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Metni Böl

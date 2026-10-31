@@ -133,6 +133,26 @@ fn the_corner_tool_item_selects_the_tool_and_opens_its_panel_section() {
 }
 
 #[test]
+fn the_shared_edge_item_selects_the_tool_and_opens_its_panel_section() {
+    let mut app = app();
+    let entries = menus::menu_entries(&app);
+    let e = entries.iter().find(|e| e.path == ["Object", "Plug-ins", "Path Precision Tools"] && e.label == "Shared Edge Merge Tool").expect("listed");
+    assert!(!crate::panel_docking::showing(&app.ui, ID));
+    menus::invoke(&mut app, e.command.as_deref().unwrap(), e.params.clone());
+    assert_eq!(app.session.tool_id(), "sharedEdge");
+    assert!(crate::panel_docking::showing(&app.ui, ID), "the panel opens");
+    // Neither toolbar shows it and it has no shortcut; the All Tools list does.
+    let tool = vectorcraft_tools::catalog::all_tools().find(|t| t.id == "sharedEdge").expect("in All Tools");
+    assert!(tool.shortcut.is_none());
+    assert!(!vectorcraft_tools::TOOL_GROUPS.iter().flat_map(|g| g.iter()).any(|t| t.id == "sharedEdge"));
+    // The panel's section shows the tool's values and its option acts.
+    let text = painted_text(&mut app, show);
+    assert!(text.contains("Shared Edges") && text.contains("Coincidence:") && text.contains("Keep Shared Points Together"), "{text}");
+    app.run("addon.pathtools.movePointsTogether", json!({ "enabled": true })).unwrap();
+    assert_eq!(app.session.tool_options_of("sharedEdge")["together"], json!(true));
+}
+
+#[test]
 fn the_corner_section_shows_the_tools_values_and_applies_them_to_the_selection() {
     let mut app = app();
     let r = app

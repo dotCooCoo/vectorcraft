@@ -5513,6 +5513,17 @@ anchor	Points:	Punti:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	scegli punti di ancoraggio in cui due lati si incontrano ad angolo: solo quelli accettano un angolo
 @msg	give `anchor`, the index of the anchor to slide	indica `anchor`, l’indice del punto di ancoraggio da far scorrere
 @msg	that anchor can't slide: an end of an open path has nowhere to go	quel punto di ancoraggio non può scorrere: l’estremità di un tracciato aperto non ha dove andare
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Strumento Fondi bordo condiviso
+	Merge Shared Edge	Fondi bordo condiviso
+	Keep Shared Points Together	Mantieni uniti i punti condivisi
+	Shared Edges	Bordi condivisi
+	Coincidence:	Coincidenza:
+@msg	`a` and `b` must be two different paths	`a` e `b` devono essere due tracciati diversi
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` deve essere da 0.25 a 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` deve essere da 0 a 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` deve essere "average", "a" o "b"
+@msg	the paths have nothing to merge there	i tracciati non hanno nulla da fondere qui
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Dividi testo

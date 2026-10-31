@@ -5795,8 +5795,9 @@ type and evening out horizontal scales are not there yet.
 Path Precision Tools is a built-in add-on for exact anchor and path work: its commands are `addon.pathtools.*`, and in
 the desktop app it lives in Object › Plug-ins › Path Precision Tools, in its Anchor Inspector panel
 (`window.panel {panel: "anchorInspector"}`), in its Parametric Shape panel (`window.panel {panel: "parametricShape"}`)
-and in six tools that the toolbars don't show until they are added from the All Tools drawer (or chosen with
-`tool.select`): `anchorEraserBrush`, `extendPath`, `measureInspect`, `parametricShape`, `cornerTool` and `slideAnchor`.
+and in seven tools that the toolbars don't show until they are added from the All Tools drawer (or chosen with
+`tool.select`): `anchorEraserBrush`, `extendPath`, `measureInspect`, `parametricShape`, `cornerTool`, `slideAnchor` and
+`sharedEdge`.
 None has a shortcut. Each edit is one undo step, and an edit that changes nothing makes no step.
 
 Tools:
@@ -5833,6 +5834,16 @@ Tools:
   dragging: the anchor runs along the curve it sits on, as far as just short of its neighbours, and the two segments
   beside it are refitted. Shift snaps to where the path's tangent is at a multiple of 45° from the Constrain Angle. Ends
   of open paths don't slide.
+- **Shared Edge Merge Tool** (`sharedEdge`, or the UI command `addon.pathtools.sharedEdgeTool`, which also shows the
+  Anchor Inspector panel with its Shared Edges section): works on any two unlocked paths under its round brush, selected
+  or not. Where they touch at two coincident anchors, hovering shows the two stretches between those anchors dashed and
+  the edge replacing them solid (green when they are one edge already); a click runs `addon.pathtools.mergeEdge`, half
+  way between the two. Shift keeps the upper path's outline, Alt the lower's. Where the anchors aren't there yet a click
+  makes an end: two near anchors meet half way (or, with Shift or Alt, on the path kept), and an anchor only one path has
+  there gets a match on the other. Shift+Alt makes an end even inside a stretch that could merge. Stretches over 10%
+  different in length, or at over 120° at an end, are left alone. Options (`tool.setOption`, or the panel, kept with the
+  preferences): `diameter` (0.25 to 200 pt, 20), `tolerance` (how near two anchors count as coincident, 0 to 3 pt,
+  0.002) and `together` (Keep Shared Points Together).
 
 Commands:
 
@@ -5878,6 +5889,18 @@ Commands:
   so the outline stays (the anchor count and index stay). `t`, -0.98 to 0.98, says where: positive, a curve parameter on
   the segment after the anchor; negative, back from the end of the one before. An anchor at a sharp corner loses it, as
   the corner isn't on the way. → `{id, strayed}`, how far the outline moved in points.
+- `addon.pathtools.mergeEdge {a, b, at, diameter?, tolerance?, follow?, ends?}` looks within `diameter` (0.25 to 200 pt,
+  default 20) of `at` ([x, y]) on paths `a` and `b`, two editable paths: where they touch at two anchors coincident within
+  `tolerance` (0 to 3 pt, default 0.002), one each way along them, it replaces the stretches between with one edge;
+  otherwise it makes an end there, and `ends: true` asks for that first. `follow` says which outline stays: `average`
+  (default; half way between), `a` or `b`. Each path stays closed or open, and anchors either stretch has inside are on
+  the merged edge. One undo step. → `{a, b, made}`, with `made` `edge`, `end`, or `nothing` when they are merged already
+  (no undo step); it is an error if there is nothing to merge there.
+- `addon.pathtools.movePointsTogether {enabled?}` sets Keep Shared Points Together (without `enabled`, turns it the other
+  way). While it is on, anchors of any editable path coincident, within the Shared Edge Merge Tool's `tolerance`, with
+  one that `addon.pathtools.slideAnchor`, `extend` or `setAnchor` moves go with it, in the same undo step; an Extend Path
+  that adds an anchor leaves the old end, and what shares it, where they are. Nothing else in the app changes. It is the
+  `together` option of tool `sharedEdge`, off by default. → `{enabled}`.
 - `addon.pathtools.shape.create {center, kind?, width?, height?, rotation?, count?, a?, b?, radius?}` draws a parametric
   shape with the current paint, selected. `kind`: `rectangle`, `ellipse`, `polygon` (default), `star`, `ring`, `arrow`,
   `cross`, `heart`, `gear` or `bubble` (a speech bubble). `width` and `height` are 0.01 to 16,384 pt (100);

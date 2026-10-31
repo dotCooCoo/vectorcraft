@@ -5894,6 +5894,17 @@ anchor	Points:	Body:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	vyberte kotevní body, kde se dvě strany setkávají pod úhlem: jen ty mohou mít roh
 @msg	give `anchor`, the index of the anchor to slide	zadejte `anchor`, index kotevního bodu k posunutí
 @msg	that anchor can't slide: an end of an open path has nowhere to go	tento kotevní bod nelze posunout: konec otevřené cesty nemá kam jít
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Nástroj Sloučení sdílené hrany
+	Merge Shared Edge	Sloučit sdílenou hranu
+	Keep Shared Points Together	Držet sdílené body pohromadě
+	Shared Edges	Sdílené hrany
+	Coincidence:	Shoda:
+@msg	`a` and `b` must be two different paths	`a` a `b` musí být dvě různé cesty
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` musí být od 0.25 do 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` musí být od 0 do 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` musí být "average", "a" nebo "b"
+@msg	the paths have nothing to merge there	cesty zde nemají co sloučit
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Rozdělit text

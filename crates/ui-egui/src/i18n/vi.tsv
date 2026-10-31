@@ -5495,6 +5495,17 @@ anchor	Points:	Điểm:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	hãy chọn các điểm neo nơi hai cạnh gặp nhau thành góc: chỉ những điểm đó mới nhận góc
 @msg	give `anchor`, the index of the anchor to slide	hãy cho biết `anchor`, chỉ số của điểm neo cần trượt
 @msg	that anchor can't slide: an end of an open path has nowhere to go	không thể trượt điểm neo đó: đầu của đường dẫn mở không có chỗ để đi
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Công cụ Hợp nhất cạnh chung
+	Merge Shared Edge	Hợp nhất cạnh chung
+	Keep Shared Points Together	Giữ các điểm chung đi cùng nhau
+	Shared Edges	Cạnh chung
+	Coincidence:	Độ trùng khớp:
+@msg	`a` and `b` must be two different paths	`a` và `b` phải là hai đường dẫn khác nhau
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` phải từ 0.25 đến 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` phải từ 0 đến 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` phải là "average", "a" hoặc "b"
+@msg	the paths have nothing to merge there	các đường dẫn không có gì để hợp nhất ở đây
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Tách văn bản

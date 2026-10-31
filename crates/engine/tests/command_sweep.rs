@@ -568,6 +568,17 @@ fn structured_junk() {
         ("addon.pathtools.slideAnchor", json!({"id": 2, "subpath": u64::MAX, "anchor": 0, "t": -0.5})),
         ("addon.pathtools.slideAnchor", json!({"id": 2, "anchor": u64::MAX, "t": 1e308})),
         ("addon.pathtools.slideAnchor", json!({"id": u64::MAX, "anchor": "x", "t": "y"})),
+        // Path Precision Tools: the Shared Edge Merge Tool and Keep Shared Points Together.
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": 3, "at": [0, 0]})),
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": 3, "at": [10, 10], "diameter": 200, "tolerance": 3, "ends": true})),
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": 2, "at": [0, 0]})),
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": u64::MAX, "at": [1e308, -1e308]})),
+        ("addon.pathtools.mergeEdge", json!({"a": 2, "b": 3, "at": [1, 2, 3], "diameter": 1e308, "tolerance": -1, "follow": "up"})),
+        ("addon.pathtools.mergeEdge", json!({"a": "x", "b": null, "at": "y", "follow": 3, "ends": "z"})),
+        ("addon.pathtools.movePointsTogether", json!({"enabled": "maybe"})),
+        ("addon.pathtools.movePointsTogether", json!({"enabled": true})),
+        ("addon.pathtools.slideAnchor", json!({"id": 2, "anchor": 1, "t": 0.5})),
+        ("addon.pathtools.movePointsTogether", json!({"enabled": false})),
         // Smart Pen add-on.
         ("addon.pen.append", json!({"id": 2, "x": 1e308, "y": 0, "in": [1e308, -1e308]})),
         ("addon.pen.append", json!({"id": 2, "subpath": u64::MAX, "x": 0, "y": 0, "segment": "curved"})),

@@ -7,6 +7,7 @@ pub mod corner_tool;
 pub mod extend_path;
 pub mod measure_inspect;
 pub mod parametric_shape;
+pub mod shared_edge;
 pub mod slide_anchor;
 pub mod smart_pen;
 
@@ -20,6 +21,7 @@ pub const PATH_TOOLS: &[ToolInfo] = &[
     ToolInfo { id: parametric_shape::ID, label: "Parametric Shape Tool", shortcut: None, icon: "hexagon" },
     ToolInfo { id: corner_tool::ID, label: "Corner Tool", shortcut: None, icon: "dc-rounded-rect" },
     ToolInfo { id: slide_anchor::ID, label: "Slide Anchor Along Path", shortcut: None, icon: "dc-anchor" },
+    ToolInfo { id: shared_edge::ID, label: "Shared Edge Merge Tool", shortcut: None, icon: "dc-join" },
 ];
 
 /// Smart Pen's tool, a flyout group of its own.
@@ -45,6 +47,7 @@ pub fn create(id: &str) -> Option<Box<dyn Tool>> {
         extend_path::ID => Box::new(extend_path::ExtendPathTool::default()),
         measure_inspect::ID => Box::new(measure_inspect::MeasureInspectTool::default()),
         parametric_shape::ID => Box::new(parametric_shape::ParametricShapeTool::default()),
+        shared_edge::ID => Box::new(shared_edge::SharedEdgeTool::default()),
         slide_anchor::ID => Box::new(slide_anchor::SlideAnchorTool::default()),
         smart_pen::ID => Box::new(smart_pen::SmartPenTool::default()),
         _ => return None,

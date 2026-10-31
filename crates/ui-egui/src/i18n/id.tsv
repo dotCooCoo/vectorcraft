@@ -5799,6 +5799,17 @@ anchor	Points:	Titik:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	pilih titik jangkar tempat dua sisi bertemu membentuk sudut: hanya titik itu yang dapat diberi sudut
 @msg	give `anchor`, the index of the anchor to slide	berikan `anchor`, indeks titik jangkar yang akan digeser
 @msg	that anchor can't slide: an end of an open path has nowhere to go	titik jangkar itu tidak dapat digeser: ujung jalur terbuka tidak punya arah tujuan
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Alat gabung tepi bersama
+	Merge Shared Edge	Gabungkan tepi bersama
+	Keep Shared Points Together	Jaga titik bersama tetap menyatu
+	Shared Edges	Tepi bersama
+	Coincidence:	Kesamaan posisi:
+@msg	`a` and `b` must be two different paths	`a` dan `b` harus dua jalur yang berbeda
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` harus dari 0.25 hingga 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` harus dari 0 hingga 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` harus "average", "a" atau "b"
+@msg	the paths have nothing to merge there	tidak ada yang dapat digabungkan dari jalur di sini
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Pisahkan teks

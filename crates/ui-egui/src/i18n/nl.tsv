@@ -5843,6 +5843,17 @@ anchor	Points:	Punten:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	kies ankerpunten waar twee zijden elkaar in een hoek ontmoeten: alleen die kunnen een hoek krijgen
 @msg	give `anchor`, the index of the anchor to slide	geef `anchor` op, de index van het ankerpunt dat moet schuiven
 @msg	that anchor can't slide: an end of an open path has nowhere to go	dat ankerpunt kan niet schuiven: het einde van een open pad kan nergens heen
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Gereedschap Gedeelde rand samenvoegen
+	Merge Shared Edge	Gedeelde rand samenvoegen
+	Keep Shared Points Together	Gedeelde punten bij elkaar houden
+	Shared Edges	Gedeelde randen
+	Coincidence:	Samenvallen:
+@msg	`a` and `b` must be two different paths	`a` en `b` moeten twee verschillende paden zijn
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` moet van 0.25 tot 200 pt zijn
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` moet van 0 tot 3 pt zijn
+@msg	`follow` must be "average", "a" or "b"	`follow` moet "average", "a" of "b" zijn
+@msg	the paths have nothing to merge there	de paden hebben hier niets om samen te voegen
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Tekst splitsen

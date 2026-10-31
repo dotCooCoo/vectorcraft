@@ -5885,6 +5885,17 @@ anchor	Points:	Punts:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	trieu punts d’ancoratge on dos costats es troben formant un angle: només aquests admeten una cantonada
 @msg	give `anchor`, the index of the anchor to slide	indiqueu `anchor`, l’índex del punt d’ancoratge que voleu lliscar
 @msg	that anchor can't slide: an end of an open path has nowhere to go	aquest punt d’ancoratge no pot lliscar: l’extrem d’un traçat obert no té on anar
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Eina de fusió de vores compartides
+	Merge Shared Edge	Fusiona la vora compartida
+	Keep Shared Points Together	Mantén junts els punts compartits
+	Shared Edges	Vores compartides
+	Coincidence:	Coincidència:
+@msg	`a` and `b` must be two different paths	`a` i `b` han de ser dos traçats diferents
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` ha de ser de 0.25 a 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` ha de ser de 0 a 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` ha de ser "average", "a" o "b"
+@msg	the paths have nothing to merge there	els traçats no tenen res a fusionar aquí
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Divideix el text

@@ -5884,6 +5884,17 @@ anchor	Points:	წერტილები:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	აირჩიეთ საყრდენი წერტილები, სადაც ორი გვერდი კუთხით ხვდება ერთმანეთს: მხოლოდ მათ შეუძლიათ კუთხის მიღება
 @msg	give `anchor`, the index of the anchor to slide	მიუთითეთ `anchor`, სასრიალო საყრდენი წერტილის ინდექსი
 @msg	that anchor can't slide: an end of an open path has nowhere to go	ეს საყრდენი წერტილი ვერ ისრიალებს: ღია ტრაექტორიის ბოლოს წასასვლელი არ აქვს
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	საერთო წიბოს შერწყმის ხელსაწყო
+	Merge Shared Edge	საერთო წიბოს შერწყმა
+	Keep Shared Points Together	საერთო წერტილების ერთად შენარჩუნება
+	Shared Edges	საერთო წიბოები
+	Coincidence:	დამთხვევა:
+@msg	`a` and `b` must be two different paths	`a` და `b` ორი სხვადასხვა ტრაექტორია უნდა იყოს
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` უნდა იყოს 0.25-დან 200 pt-მდე
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` უნდა იყოს 0-დან 3 pt-მდე
+@msg	`follow` must be "average", "a" or "b"	`follow` უნდა იყოს "average", "a" ან "b"
+@msg	the paths have nothing to merge there	ტრაექტორიებს აქ შესარწყმელი არაფერი აქვთ
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	ტექსტის დაყოფა

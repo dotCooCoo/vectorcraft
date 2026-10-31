@@ -5749,6 +5749,17 @@ anchor	Points:	Punkty:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	wybierz punkty kontrolne, w których dwa boki spotykają się pod kątem: tylko one mogą mieć narożnik
 @msg	give `anchor`, the index of the anchor to slide	podaj `anchor`, indeks punktu kontrolnego do przesunięcia
 @msg	that anchor can't slide: an end of an open path has nowhere to go	tego punktu kontrolnego nie można przesunąć: koniec otwartej ścieżki nie ma dokąd pójść
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Narzędzie Scal wspólną krawędź
+	Merge Shared Edge	Scal wspólną krawędź
+	Keep Shared Points Together	Trzymaj wspólne punkty razem
+	Shared Edges	Wspólne krawędzie
+	Coincidence:	Zbieżność:
+@msg	`a` and `b` must be two different paths	`a` i `b` muszą być dwiema różnymi ścieżkami
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` musi mieć od 0.25 do 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` musi mieć od 0 do 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` musi mieć wartość "average", "a" lub "b"
+@msg	the paths have nothing to merge there	ścieżki nie mają tu nic do scalenia
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Podziel tekst

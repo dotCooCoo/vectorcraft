@@ -5532,6 +5532,17 @@ anchor	Points:	點：
 @msg	choose anchors where two sides meet at an angle: only those take a corner	請選取兩邊成角相交的錨點：只有這些錨點才能設定轉角
 @msg	give `anchor`, the index of the anchor to slide	請提供 `anchor`，即要滑動的錨點索引
 @msg	that anchor can't slide: an end of an open path has nowhere to go	該錨點無法滑動：開放路徑的端點無處可去
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	共用邊合併工具
+	Merge Shared Edge	合併共用邊
+	Keep Shared Points Together	保持共用點在一起
+	Shared Edges	共用邊
+	Coincidence:	重合容差：
+@msg	`a` and `b` must be two different paths	`a` 和 `b` 必須是兩條不同的路徑
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` 必須為 0.25 到 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` 必須為 0 到 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` 必須是 "average"、"a" 或 "b"
+@msg	the paths have nothing to merge there	這裡沒有可合併的路徑部分
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	分割文字

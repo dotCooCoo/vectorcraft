@@ -1,7 +1,8 @@
 //! Path Precision Tools (`addon.pathtools.*`), a built-in add-on: the Anchor Eraser Brush's stroke,
 //! the Extend Path tool's extension, the Measure & Inspect tool's readouts, the Anchor Inspector's
 //! anchor edits, Split / Add Points at Crossings, Slide Anchor Along Path, the Corner Tool's corners
-//! ([`corners`]) and the Parametric Shape Tool's shapes ([`shape`]).
+//! ([`corners`]), the Parametric Shape Tool's shapes ([`shape`]), and the Shared Edge Merge Tool's
+//! merges with Keep Shared Points Together ([`shared_edge`]).
 //! Its tools, panels and submenu (Object › Plug-ins › Path Precision Tools) are the tools crate's
 //! and the UI's.
 
@@ -9,6 +10,7 @@ mod corners;
 #[cfg(test)]
 mod effect_tests;
 mod shape;
+mod shared_edge;
 #[cfg(test)]
 mod tests;
 
@@ -57,7 +59,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Extend Path",
             [],
             None,
-            "{id, subpath?: index (0), end: \"start\"|\"end\", length?: pt (negative shortens; never all of it), to?: [x, y] (instead of length: the length that brings the end nearest this point), mode?: \"straight\"|\"bezier\" (stretch the last segment's curve, no anchor added)|\"arc\" (along the circle the end curves on, at most half way round) (\"straight\")} lengthen an open path at an end the way it runs there, or shorten it back along itself, as one undo step → {id, length (pt)}",
+            "{id, subpath?: index (0), end: \"start\"|\"end\", length?: pt (negative shortens; never all of it), to?: [x, y] (instead of length: the length that brings the end nearest this point), mode?: \"straight\"|\"bezier\" (stretch the last segment's curve, no anchor added)|\"arc\" (along the circle the end curves on, at most half way round) (\"straight\")} lengthen an open path at an end the way it runs there, or shorten it back along itself, as one undo step; with Keep Shared Points Together on, anchors coincident with an end that moves go with it → {id, length (pt)}",
             has_doc,
             extend
         ),
@@ -75,7 +77,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Set Anchor",
             [],
             None,
-            "{x?, y?: pt (on the page), inLength?, outLength?: pt (0 retracts), inAngle?, outAngle?: degrees counter-clockwise} move the selected anchors (with their handles) and set their handles, as one undo step: direct-selected anchors, or every anchor of a path selected whole; a smooth anchor's other handle turns with the one set → {anchors}",
+            "{x?, y?: pt (on the page), inLength?, outLength?: pt (0 retracts), inAngle?, outAngle?: degrees counter-clockwise} move the selected anchors (with their handles) and set their handles, as one undo step: direct-selected anchors, or every anchor of a path selected whole; a smooth anchor's other handle turns with the one set; with Keep Shared Points Together on, anchors coincident with one that moves go with it → {anchors}",
             has_selection,
             set_anchor
         ),
@@ -147,13 +149,14 @@ pub fn specs() -> Vec<CommandSpec> {
             "Slide Anchor Along Path",
             [],
             None,
-            "{id, subpath?: index (0), anchor: index, t: -0.98..0.98 (where to: positive, a curve parameter on the segment after the anchor; negative, back from the end of the one before)} move an anchor along its path, the segments beside it refitted so the outline stays, as one undo step; ends of open paths don't slide → {id, strayed (pt)}",
+            "{id, subpath?: index (0), anchor: index, t: -0.98..0.98 (where to: positive, a curve parameter on the segment after the anchor; negative, back from the end of the one before)} move an anchor along its path, the segments beside it refitted so the outline stays, as one undo step; ends of open paths don't slide; with Keep Shared Points Together on, anchors coincident with it go with it → {id, strayed (pt)}",
             has_doc,
             slide_anchor
         ),
     ];
     v.extend(shape::specs());
     v.extend(corners::specs());
+    v.extend(shared_edge::specs());
     v
 }
 
@@ -315,19 +318,22 @@ fn named_subpath(s: &Session, p: &Value, cmd: &str) -> Result<(NodeId, usize, Su
 }
 
 /// Put `new` in place of the subpath `old` (from [`named_subpath`]) as one step labelled `label`
-/// (none when it is the same); the path's direct selection goes.
+/// (none when it is the same), with what Keep Shared Points Together moves too; the path's direct
+/// selection goes.
 fn set_subpath(s: &mut Session, label: &str, (id, si, old): (NodeId, usize, SubPath), new: SubPath) -> Result<()> {
     if new == old {
         return Ok(());
     }
+    let mut np = s.doc()?.doc.node(id).and_then(|n| n.path_data()).cloned().ok_or(EngineError::NoNode(id))?;
+    if let Some(slot) = np.subpaths.get_mut(si) {
+        *slot = new;
+    }
+    let shared = shared_edge::shared_points(s, [(id, &np)])?;
     s.edit(label, |d, sel| {
-        let mut np = d.node(id).and_then(|n| n.path_data()).cloned().ok_or(EngineError::NoNode(id))?;
-        if let Some(slot) = np.subpaths.get_mut(si) {
-            *slot = new;
-        }
         sel.anchors.remove(&id);
         sel.segments.remove(&id);
         set_path(d, id, np);
+        shared_edge::move_shared(d, shared);
         Ok(())
     })
 }
@@ -458,10 +464,12 @@ fn edit_anchors(s: &mut Session, label: &str, cmd: &str, f: impl Fn(&mut SubPath
         }
     }
     if !changed.is_empty() {
+        let shared = shared_edge::shared_points(s, changed.iter().map(|(id, np)| (*id, np)))?;
         s.edit(label, |d, _| {
             for (id, np) in changed {
                 set_path(d, id, np);
             }
+            shared_edge::move_shared(d, shared);
             Ok(())
         })?;
     }

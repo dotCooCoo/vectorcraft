@@ -528,6 +528,7 @@ fn run_ui_part6(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
             None => Err("missing `tool`".into()),
         },
         crate::addons::pathtools::corner::COMMAND => crate::addons::pathtools::corner::open(app),
+        crate::addons::pathtools::shared_edge::COMMAND => crate::addons::pathtools::shared_edge::open(app),
         "tool.setOption" => app.session.set_tool_option_cmd(p),
         "effect.dialog" => crate::dialogs::open_effect_dialog(app, p),
         "ui.recolorDialog" => crate::dialogs::recolor::open(app, p),

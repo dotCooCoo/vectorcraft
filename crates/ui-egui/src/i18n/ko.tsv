@@ -5476,6 +5476,17 @@ anchor	Points:	포인트:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	두 변이 각을 이루며 만나는 앵커 포인트를 선택하세요. 그런 포인트만 모퉁이를 만들 수 있습니다
 @msg	give `anchor`, the index of the anchor to slide	밀 앵커 포인트의 인덱스 `anchor`를 지정하세요
 @msg	that anchor can't slide: an end of an open path has nowhere to go	이 앵커 포인트는 밀 수 없습니다. 열린 패스의 끝은 갈 곳이 없습니다
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	공유 가장자리 병합 도구
+	Merge Shared Edge	공유 가장자리 병합
+	Keep Shared Points Together	공유 포인트 함께 유지
+	Shared Edges	공유 가장자리
+	Coincidence:	일치 허용치:
+@msg	`a` and `b` must be two different paths	`a`와 `b`는 서로 다른 두 패스여야 합니다
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter`는 0.25~200 pt여야 합니다
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance`는 0~3 pt여야 합니다
+@msg	`follow` must be "average", "a" or "b"	`follow`는 "average", "a" 또는 "b"여야 합니다
+@msg	the paths have nothing to merge there	여기에는 병합할 패스 부분이 없습니다
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	텍스트 나누기
