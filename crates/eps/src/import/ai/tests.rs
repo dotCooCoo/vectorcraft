@@ -1206,7 +1206,15 @@ fn gradient_instance_after_unresolved_pattern_is_read() {
 fn unresolved_pattern_in_mask_art_stays_unread() {
     let mask_path = rect_path(0.0, 0.0, 4.0, 4.0).lines().map(|line| format!("%_{line}\n")).collect::<String>();
     let patterned = format!("%_(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n{mask_path}%_f\n");
-    for (art_, kind) in [(patterned.as_str(), "pattern fills"), ("%_/Mesh X!\n%_/End X!\n", "gradient meshes it can't read")] {
+    // A placed file with no preview, and a symbol whose definition the file doesn't have.
+    let placed = "%_%AI5_BeginPlace\n%_%%FileType: 1\n%_[5 0 0 -5 0 200] 10 20 14 22 4 4 0\n%_(missing.png)`\n%_%%IncludeFile:missing.png\n%_~\n%_%AI5_EndPlace\n";
+    let symbol = "%_/SymbolInstance :\n%_(Absent) /SymbolRef ,\n%_;\n";
+    for (art_, kind) in [
+        (patterned.as_str(), "pattern fills"),
+        ("%_/Mesh X!\n%_/End X!\n", "gradient meshes it can't read"),
+        (placed, "placed files"),
+        (symbol, "symbols"),
+    ] {
         let mask = format!(
             "%_/ArtDictionary :\n%_/Mask :\n%_X=\n{art_}%_X+\n%_(Art) ,\n%_1 /Bool (Clipping) ,\n%_1 /Bool (Linked) ,\n%_; (AI9_Mask) ,\n%_;\n"
         );
