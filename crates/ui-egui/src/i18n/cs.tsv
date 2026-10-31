@@ -1209,12 +1209,12 @@ lighting	Light	Světlo
 	 to set spacing and orientation	 nastaví rozestupy a orientaci
 	Apply	Použít
 	Change Screen Mode (F)	Změnit režim obrazovky (F)
-	Color (,)	Barva (,)
+	Color (, or <)	Barva (, nebo <)
 	Draw Behind	Kreslit za
 	Draw Inside	Kreslit dovnitř
 	Draw Normal	Kreslit normálně
 	Expand:	Rozložit:
-	Gradient (.)	Přechod (.)
+	Gradient (. or >)	Přechod (. nebo >)
 	H:	V:
 	Modify	Úpravy
 	Navigate	Pohled
@@ -5882,6 +5882,29 @@ anchor	Points:	Body:
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	zadejte `inkLimit`, `removeWhiteOverprint` nebo `overprintBlack`
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Opravy tiskových barev fungují v dokumentech CMYK: nejprve zvolte Soubor › Barevný režim dokumentu › Barvy CMYK
 @msg	`{key}` must be 0..{max}	`{key}` musí být 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Nástroj Rohy
+	Slide Anchor Along Path	Posunout kotevní bod po cestě
+	Set Corners	Nastavit rohy
+	Remove Corners	Odstranit rohy
+	Corners selected: {count}	Vybrané rohy: {count}
+	Apply to Selected Anchors	Použít na vybrané kotevní body
+@msg	`radius` must be from 0 to 1000000 pt	`radius` musí být od 0 do 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` musí být číslo od -0.98 do 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	vyberte kotevní body, kde se dvě strany setkávají pod úhlem: jen ty mohou mít roh
+@msg	give `anchor`, the index of the anchor to slide	zadejte `anchor`, index kotevního bodu k posunutí
+@msg	that anchor can't slide: an end of an open path has nowhere to go	tento kotevní bod nelze posunout: konec otevřené cesty nemá kam jít
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Nástroj Sloučení sdílené hrany
+	Merge Shared Edge	Sloučit sdílenou hranu
+	Keep Shared Points Together	Držet sdílené body pohromadě
+	Shared Edges	Sdílené hrany
+	Coincidence:	Shoda:
+@msg	`a` and `b` must be two different paths	`a` a `b` musí být dvě různé cesty
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` musí být od 0.25 do 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` musí být od 0 do 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` musí být "average", "a" nebo "b"
+@msg	the paths have nothing to merge there	cesty zde nemají co sloučit
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Rozdělit text
@@ -5926,3 +5949,43 @@ breakText	Glyphs	Glyfy
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` musí být lines, paragraphs, words nebo glyphs, ne {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` musí být "line" nebo "paragraph", ne {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` musí být "left", "center" nebo "right", ne {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Efekty cesty
+	Reverse Direction	Obrátit směr
+	Align to Corners and Ends	Zarovnat k rohům a koncům
+	Count	Počet
+	Max Count	Maximální počet
+	Start Length	Délka na začátku
+	Start Percent	Procenta na začátku
+	Start Shape	Tvar na začátku
+	End Length	Délka na konci
+	End Percent	Procenta na konci
+	End Shape	Tvar na konci
+	By Count	Podle počtu
+	By Distance	Podle vzdálenosti
+	Both	Obojí
+	Shorter Than Length	Kratší než délka
+	Dashes to Geometry	Čárky na geometrii
+	Dashes to Geometry…	Čárky na geometrii…
+	Add Anchors	Přidat kotevní body
+	Add Anchors…	Přidat kotevní body…
+	Smooth Anchors	Vyhladit kotevní body
+	Smooth Anchors…	Vyhladit kotevní body…
+	Simplify Anchors	Zjednodušit kotevní body
+	Simplify Anchors…	Zjednodušit kotevní body…
+	Split at Anchors	Rozdělit v kotevních bodech
+	Split at Anchors…	Rozdělit v kotevních bodech…
+	Extend Path…	Prodloužit cestu…
+	Close Path…	Uzavřít cestu…
+	Retract Handles…	Zasunout úchyty…
+	Dash 1	Čárka 1
+	Gap 1	Mezera 1
+	Dash 2	Čárka 2
+	Gap 2	Mezera 2
+	Dash 3	Čárka 3
+	Gap 3	Mezera 3
+	Dash 4	Čárka 4
+	Gap 4	Mezera 4
+	Dash 5	Čárka 5
+	Gap 5	Mezera 5

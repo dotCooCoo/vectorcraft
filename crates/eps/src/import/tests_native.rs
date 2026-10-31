@@ -192,6 +192,33 @@ fn text_and_its_strokes_come_from_the_page_into_the_layer_of_its_text_object() {
     assert!(r.warnings.is_empty(), "{:?}", r.warnings);
 }
 
+/// A point type object in the legacy format (`To` … `TO`), as an EPS saved for Illustrator 10
+/// keeps its type in the editing data: no `/AI11Text` for the page's type to go in.
+fn legacy_text(x: u32, y: u32, text: &str) -> String {
+    format!("0 To\n1 0 0 1 {x} {y} 0 Tp\nTP\n0 Tr\n0 0 0 1 k\n/_Helvetica 12 Tf\n({text}) Tx\nTO")
+}
+
+#[test]
+fn type_in_the_legacy_format_is_the_layers_own_and_the_page_has_text() {
+    let page = format!("{}\n0 0 0 1 setcmykcolor /Helvetica findfont 12 scalefont setfont 10 50 moveto (Hi) show", page_square(10, 10));
+    let art = native(&(layer("Art", true, &square(10, 10)) + &layer("Words", true, &legacy_text(10, 50, "Hi"))));
+    let r = import(&eps(&page, &art)).unwrap();
+    assert_eq!(names(&r.document), ["Art", "Words"], "{:?}", r.warnings);
+    let texts = text_of(&r.document.layers[1]);
+    assert_eq!(texts.len(), 1, "{:?}", r.warnings);
+    assert_eq!(texts[0].plain_text(), "Hi");
+    assert!(!r.warnings.iter().any(|w| w.contains("left out") || w.contains("weren't read")), "{:?}", r.warnings);
+    // Type the editing data keeps as outlines (here a stand-in, a small square where the page has
+    // more type) comes in as they are, and the import says so.
+    let page = format!("{page}\n/Helvetica findfont 4 scalefont setfont 60 20 moveto (o) show");
+    let outlines = format!("{}\n0 0 0 1 k\n60.5 20 m\n62.5 20 L\n62.5 22 L\n60.5 22 L\nf", legacy_text(10, 50, "Hi"));
+    let art = native(&(layer("Art", true, &square(10, 10)) + &layer("Words", true, &outlines)));
+    let r = import(&eps(&page, &art)).unwrap();
+    assert_eq!(names(&r.document), ["Art", "Words"], "{:?}", r.warnings);
+    assert_eq!(kinds(&r.document.layers[1]), ["text", "path"], "{:?}", r.warnings);
+    assert!(r.warnings.iter().any(|w| w.starts_with("1 text objects of the page are outlines on the layers")), "{:?}", r.warnings);
+}
+
 #[test]
 fn a_damaged_editing_copy_leaves_the_page() {
     // Not ASCII85, ASCII85 of something that isn't Zstandard, Zstandard of something that isn't art.
@@ -471,6 +498,36 @@ fn type_on_the_copies_of_a_page_cropped_to_the_art_is_read_once() {
     assert_eq!(texts.iter().map(|t| t.plain_text()).collect::<Vec<_>>(), ["Hi"], "{w:?}");
     let [.., e, f] = texts[0].xf.as_coeffs();
     assert!((e - 30.0).abs() < 1e-6 && (f + 10.0).abs() < 1e-6, "{:?}", texts[0].xf);
+}
+
+/// A PDF saved with only the second of its two artboards has a page for that one, while its
+/// editing data keeps both: the layers are compared with the page on that artboard, and the page's
+/// type goes there.
+#[test]
+fn a_pdf_of_its_second_artboard_is_compared_on_that_artboard() {
+    // Two 100-point artboards side by side, 50 apart (art space, y up), a square on each, and a
+    // text object with no story in the file.
+    let board = |x0: i32| {
+        format!(
+            "%_/Dictionary :\n%_{x0} 100 /RealPointRelToROrigin\n%_ (PositionPoint1) ,\n%_{} 0 /RealPointRelToROrigin\n%_ (PositionPoint2) ,\n%_; ,\n",
+            x0 + 100
+        )
+    };
+    let boards = format!("%_/Document :\n%_/Dictionary :\n%_/Array :\n{}{}%_; (ArtboardArray) ,\n%_; /NotRecorded ,\n%_;\n", board(0), board(150));
+    let art = native(&(boards + &layer("Art", true, &(square(10, 10) + "\n" + &square(180, 50) + "\n" + &text_object(0)))));
+    // The page: the second artboard, its square 30 from the left and 46 down, and the type.
+    let mut pdf = pdf_part(30.0, 46.0);
+    let style = vectorcraft_doc::CharStyle { size: 14.0, ..Default::default() };
+    let text = vectorcraft_doc::TextObject::point(vectorcraft_geom::Point::new(40.0, 20.0), "Hi", style);
+    let (layer_id, id) = (pdf.layers[0].id, pdf.alloc_id());
+    pdf.insert(Some(layer_id), 1, Node::new(id, NodeKind::Text(Box::new(text)))).unwrap();
+    let (d, w, read) = crate::layered_ai(&private(&art), pdf, vec![], false, false, 1.0);
+    assert!(read, "{w:?}");
+    assert_eq!(d.artboards.len(), 2, "both artboards are kept");
+    let texts = text_of(&d.layers[0]);
+    assert_eq!(texts.iter().map(|t| t.plain_text()).collect::<Vec<_>>(), ["Hi"], "{w:?}");
+    let [.., e, f] = texts[0].xf.as_coeffs();
+    assert!((e - 190.0).abs() < 1e-6 && (f - 20.0).abs() < 1e-6, "on the second artboard: {:?}", texts[0].xf);
 }
 
 #[test]

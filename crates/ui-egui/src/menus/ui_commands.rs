@@ -1,6 +1,18 @@
 /// UI-level commands: (id, label, shortcut, params doc).
 pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
     (
+        crate::addons::pathtools::corner::COMMAND,
+        "Corner Tool",
+        "",
+        "{} choose the Corner Tool and show the Anchor Inspector panel with its radius and kind",
+    ),
+    (
+        crate::addons::pathtools::shared_edge::COMMAND,
+        "Shared Edge Merge Tool",
+        "",
+        "{} choose the Shared Edge Merge Tool and show the Anchor Inspector panel with its brush, coincidence and Keep Shared Points Together",
+    ),
+    (
         "app.language",
         "Interface Language",
         "",

@@ -660,7 +660,7 @@ fn the_panel_menu_saves_deletes_and_hides_presets() {
     let mut p = Panel::new();
     let texts = p.frame_of(&mut app, vec![], Modifiers::NONE, menu);
     let save = text_at(&texts, "Save Gradient Preset…").unwrap_or_else(|| panic!("{texts:?}"));
-    assert!(!app.session.active_saved_gradient_preset().is_some());
+    assert!(app.session.active_saved_gradient_preset().is_none());
     p.menu_click(&mut app, save);
     let d = app.ui.dialog.take().expect("the name dialog");
     assert_eq!((d.fields["__command"].as_str(), d.fields["name"].as_str()), (Some("gradient.presets.save"), Some("Gradient Preset 1")));

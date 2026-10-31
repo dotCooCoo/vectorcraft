@@ -679,7 +679,7 @@ font-technology	Variable	Változó
 	Collect in New Layer	Összegyűjtés új rétegbe
 	Collect Links in a Separate Folder	Csatolások gyűjtése külön mappába
 	Color	Szín
-	Color (,)	Szín (,)
+	Color (, or <)	Szín (, vagy <)
 	Color Adjustments	Színkorrekciók
 	Color bars	Színsávok
 	Color blindness – Deuteranopia-type	Színvakság – deuteranópia
@@ -1591,7 +1591,7 @@ file-filter	Templates	Sablonok
 	GPU Performance	GPU-teljesítmény
 	Grab bag	Vegyes
 	Gradient	Színátmenet
-	Gradient (.)	Színátmenet (.)
+	Gradient (. or >)	Színátmenet (. vagy >)
 	Gradient across stroke	Színátmenet a körvonalon keresztben
 	Gradient along stroke	Színátmenet a körvonal mentén
 	Gradient and Mesh Resolution:	Színátmenet és háló felbontása:
@@ -5869,6 +5869,29 @@ anchor	Points:	Pontok:
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	adja meg: `inkLimit`, `removeWhiteOverprint` vagy `overprintBlack`
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	A nyomdai festékjavítások CMYK-dokumentumokon működnek: előbb válassza a Fájl › Dokumentum színmódja › CMYK-szín parancsot
 @msg	`{key}` must be 0..{max}	`{key}` értéke 0..{max} lehet
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Sarok eszköz
+	Slide Anchor Along Path	Horgonypont csúsztatása az útvonal mentén
+	Set Corners	Sarkok beállítása
+	Remove Corners	Sarkok eltávolítása
+	Corners selected: {count}	Kijelölt sarkok: {count}
+	Apply to Selected Anchors	Alkalmazás a kijelölt horgonypontokra
+@msg	`radius` must be from 0 to 1000000 pt	a `radius` értéke 0 és 1000000 pt között lehet
+@msg	`t` must be a number from -0.98 to 0.98	a `t` értéke -0.98 és 0.98 közötti szám lehet
+@msg	choose anchors where two sides meet at an angle: only those take a corner	válasszon olyan horgonypontokat, ahol két oldal szögben találkozik: csak ezek kaphatnak sarkot
+@msg	give `anchor`, the index of the anchor to slide	adja meg az `anchor` értékét, a csúsztatandó horgonypont indexét
+@msg	that anchor can't slide: an end of an open path has nowhere to go	ez a horgonypont nem csúsztatható: a nyitott útvonal végének nincs hová mennie
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Közös él egyesítése eszköz
+	Merge Shared Edge	Közös él egyesítése
+	Keep Shared Points Together	Közös pontok együtt tartása
+	Shared Edges	Közös élek
+	Coincidence:	Egybeesés:
+@msg	`a` and `b` must be two different paths	`a` és `b` két különböző útvonal kell legyen
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter`: 0.25 és 200 pt között kell
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance`: 0 és 3 pt között kell
+@msg	`follow` must be "average", "a" or "b"	`follow`: "average", "a" vagy "b" kell
+@msg	the paths have nothing to merge there	az útvonalaknak itt nincs mit egyesíteni
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Szöveg felosztása
@@ -5913,3 +5936,43 @@ breakText	Glyphs	Glifák
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	a `by` értéke lines, paragraphs, words vagy glyphs lehet, nem {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	a `kind` értéke "line" vagy "paragraph" lehet, nem {other}
 @msg	`align` must be "left", "center" or "right", not {other}	az `align` értéke "left", "center" vagy "right" lehet, nem {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Útvonaleffektusok
+	Reverse Direction	Irány megfordítása
+	Align to Corners and Ends	Igazítás a sarkokhoz és végekhez
+	Count	Darabszám
+	Max Count	Legnagyobb darabszám
+	Start Length	Kezdő hossz
+	Start Percent	Kezdő százalék
+	Start Shape	Kezdő alak
+	End Length	Záró hossz
+	End Percent	Záró százalék
+	End Shape	Záró alak
+	By Count	Darabszám szerint
+	By Distance	Távolság szerint
+	Both	Mindkettő
+	Shorter Than Length	A hossznál rövidebbek
+	Dashes to Geometry	Vonalak geometriává
+	Dashes to Geometry…	Vonalak geometriává…
+	Add Anchors	Horgonypontok hozzáadása
+	Add Anchors…	Horgonypontok hozzáadása…
+	Smooth Anchors	Horgonypontok simítása
+	Smooth Anchors…	Horgonypontok simítása…
+	Simplify Anchors	Horgonypontok egyszerűsítése
+	Simplify Anchors…	Horgonypontok egyszerűsítése…
+	Split at Anchors	Felosztás a horgonypontoknál
+	Split at Anchors…	Felosztás a horgonypontoknál…
+	Extend Path…	Útvonal meghosszabbítása…
+	Close Path…	Útvonal lezárása…
+	Retract Handles…	Fogantyúk behúzása…
+	Dash 1	Vonal 1
+	Gap 1	Hézag 1
+	Dash 2	Vonal 2
+	Gap 2	Hézag 2
+	Dash 3	Vonal 3
+	Gap 3	Hézag 3
+	Dash 4	Vonal 4
+	Gap 4	Hézag 4
+	Dash 5	Vonal 5
+	Gap 5	Hézag 5
