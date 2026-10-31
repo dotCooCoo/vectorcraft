@@ -44,9 +44,8 @@ pub(crate) struct PasteChord {
 }
 
 impl PasteChord {
-    /// Follow one frame's `events` → the modifiers of a paste egui sent no event for (the chord's,
-    /// as its key is released).
-    pub(crate) fn textless_paste(&mut self, events: &[egui::Event]) -> Option<Modifiers> {
+    /// Follow one frame's `events` → the released key and modifiers of a paste egui sent no event for.
+    pub(crate) fn textless_paste(&mut self, events: &[egui::Event]) -> Option<(Key, Modifiers)> {
         let mut fire = None;
         for e in events {
             match e {
@@ -60,7 +59,7 @@ impl PasteChord {
                             self.pressed.swap_remove(i);
                         }
                         // Unless a Paste event came (the guard takes it either way).
-                        None if !std::mem::take(&mut self.pasted) => fire = Some(*modifiers),
+                        None if !std::mem::take(&mut self.pasted) => fire = Some((*key, *modifiers)),
                         None => {}
                     }
                 }

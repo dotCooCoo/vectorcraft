@@ -824,6 +824,30 @@ fn grid_drag_claimed_v_release_after_pointer_up_does_not_paste() {
     assert_eq!(app.paste_chord.textless_paste(&[release]), None);
 }
 
+/// A grid takes command V while dedicated Paste and Alt+command V still paste images.
+#[test]
+fn grid_drag_only_suppresses_claimed_v_textless_paste() {
+    use vectorcraft_engine::cmd::clipboard::PNG;
+    use vectorcraft_tools::{PointerEvent, PointerKind};
+    let (mut app, board) = crate::tests_sysclip::app();
+    crate::tests_sysclip::copy_elsewhere(&board, vec![(PNG, crate::tests_sysclip::blue_png())]);
+    app.select_tool("polarGrid");
+    let view = app.view_info();
+    app.session.pointer(&PointerEvent::new(PointerKind::Down, 100.0, 80.0), view).unwrap();
+    app.session.pointer(&PointerEvent::new(PointerKind::Drag, 300.0, 220.0), view).unwrap();
+    let count = |app: &VectorcraftApp| app.session.doc().unwrap().doc.layers[0].children().unwrap().len();
+    let initial = count(&app);
+    let release = |key, modifiers| egui::Event::Key { key, physical_key: Some(key), pressed: false, repeat: false, modifiers };
+    let command = command_key();
+    frame(&mut app, vec![egui::Event::ModifiersChanged(command), release(Key::V, command)]);
+    assert_eq!(count(&app), initial, "the grid takes command V");
+    frame(&mut app, vec![egui::Event::ModifiersChanged(Modifiers::NONE), release(Key::Paste, Modifiers::NONE)]);
+    assert_eq!(count(&app), initial + 1, "the Paste key pastes while the grid is dragged");
+    let alt_command = command | Modifiers::ALT;
+    frame(&mut app, vec![egui::Event::ModifiersChanged(alt_command), release(Key::V, alt_command)]);
+    assert_eq!(count(&app), initial + 2, "Alt+command V pastes while the grid is dragged");
+}
+
 /// A press of `key` with `m` held.
 fn press(key: Key, m: Modifiers) -> Vec<egui::Event> {
     vec![egui::Event::ModifiersChanged(m), egui::Event::Key { key, physical_key: Some(key), pressed: true, repeat: false, modifiers: m }]

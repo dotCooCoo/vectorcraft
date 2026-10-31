@@ -337,12 +337,20 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
 }
 
 /// Suppress a clipboard paste triggered by a key release during a grid drag.
-fn grid_textless_paste(app: &mut VectorcraftApp, busy: bool, view: ViewInfo, textless_paste: Option<Modifiers>) -> Option<Modifiers> {
-    if busy && matches!(app.session.tool_id(), "rectangularGrid" | "polarGrid") && app.session.tool_claims_key(ToolKey::Letter('v'), view) {
-        None
-    } else {
-        textless_paste
-    }
+fn grid_textless_paste(app: &mut VectorcraftApp, busy: bool, view: ViewInfo, textless_paste: Option<(Key, Modifiers)>) -> Option<Modifiers> {
+    textless_paste.and_then(|(key, modifiers)| {
+        if key == Key::V
+            && (modifiers.command || modifiers.ctrl)
+            && !modifiers.alt
+            && busy
+            && matches!(app.session.tool_id(), "rectangularGrid" | "polarGrid")
+            && app.session.tool_claims_key(ToolKey::Letter('v'), view)
+        {
+            None
+        } else {
+            Some(modifiers)
+        }
+    })
 }
 
 /// Send command-modified grid letters to a dragging grid and consume any clipboard event from
