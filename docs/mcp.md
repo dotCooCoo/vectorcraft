@@ -1607,6 +1607,12 @@ already walks Image Trace. Short agent entry points:
   is one of the format's extensions (`.svg` and `SVG` give `.svg`, `.JPEG` gives `.jpeg`), and otherwise in the
   format's first extension (`png8` gives `.png`, `template` gives `.vctemplate`). A step without `format` keeps the
   source file's extension (`.vectorcraft` over data sets).
+- Action sets: `ui.actionSet.delete {sets?: [index]}` deletes the Actions panel's sets at these indexes (0 is the top
+  set) with their actions, by default the current set, and returns `{deleted}`. An index past the last set is an error,
+  and then no set is deleted. A recording into a deleted set stops and keeps no steps; a recording into another set
+  goes on in that set. The panel's Delete Selection (the trash button and the panel menu's Delete) asks before it runs
+  this for the selected sets, and Shift-click on a set's name selects the sets from the current one to it. Undo does
+  not restore a deleted set.
 - Image Trace: `imageTrace.presets`, `imageTrace.make {id?, preset?, params?, view?}` (or `imageTrace.makeAndExpand`),
   `imageTrace.setView`, `imageTrace.expand`, `imageTrace.release`. A key inside `params` that is not one of the trace
   settings, such as `colours`, is an error that names it and the nearest setting (`colors`), as for a command's own keys.

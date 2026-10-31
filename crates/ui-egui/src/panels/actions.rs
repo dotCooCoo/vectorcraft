@@ -51,12 +51,88 @@ pub fn play(app: &mut VectorcraftApp, set: usize, idx: usize) -> Result<Value, S
     app.run("command.batch", json!({"label": a.name, "commands": commands}))
 }
 
+/// The command that deletes action sets ([`delete_sets`]).
+pub const DELETE_SETS: &str = "ui.actionSet.delete";
+
+/// The sets Delete Selection deletes: the selected sets ([`crate::state::UiState::action_sets_selected`])
+/// when the current set is one of them, else the current set alone.
+fn selected_sets(app: &VectorcraftApp) -> Vec<usize> {
+    let len = app.ui.action_sets.len();
+    let current = app.ui.action_set.filter(|&s| s < len);
+    let sets: Vec<usize> = app.ui.action_sets_selected.iter().copied().filter(|&s| s < len).collect();
+    if current.is_some_and(|c| sets.contains(&c)) { sets } else { current.into_iter().collect() }
+}
+
+/// Delete Selection, from the bottom bar and the panel menu: deletes the selected action, else asks
+/// whether to delete the selected sets ([`DELETE_SETS`]).
+fn delete_selection(app: &mut VectorcraftApp, ctx: &egui::Context) {
+    const SELECTED: &str = "actions-selected";
+    // A selected action counts only while its set is the current one, as the panel shows it.
+    if let Some((si, ai)) = pstate::<Option<(usize, usize)>>(ctx, SELECTED).filter(|&(s, _)| app.ui.action_set == Some(s)) {
+        if let Some(s) = app.ui.action_sets.get_mut(si)
+            && ai < s.actions.len()
+        {
+            s.actions.remove(ai);
+            set_pstate::<Option<(usize, usize)>>(ctx, SELECTED, None);
+        }
+        return;
+    }
+    let sets = selected_sets(app);
+    let message = match sets[..] {
+        [] => return,
+        [s] => crate::i18n::fmt(
+            tl!("Delete the action set “{name}” and its actions?"),
+            &[("name", app.ui.action_sets.get(s).map_or("", |s| s.name.as_str()))],
+        ),
+        _ => tl!("Delete the selected action sets and their actions?").to_string(),
+    };
+    crate::dialogs::confirm::ask(app, &message, "", DELETE_SETS, json!({ "sets": sets }));
+}
+
+/// `ui.actionSet.delete {sets?: [index]}`: deletes the action sets at these indexes, with their
+/// actions (default: the current set). A recording into a deleted set stops, and its steps are
+/// dropped; a recording into another set goes on. When the current set is deleted, no set is
+/// current afterwards.
+pub fn delete_sets(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+    let len = app.ui.action_sets.len();
+    let mut sets: Vec<usize> = match p.get("sets") {
+        None | Some(Value::Null) => app.ui.action_set.filter(|&s| s < len).into_iter().collect(),
+        Some(v) => v
+            .as_array()
+            .ok_or("no such action set")?
+            .iter()
+            .map(|i| i.as_u64().map(|i| i as usize).filter(|&i| i < len).ok_or("no such action set"))
+            .collect::<Result<_, _>>()?,
+    };
+    sets.sort_unstable();
+    sets.dedup();
+    if let Some((rec, ..)) = app.ui.recording.as_mut() {
+        if sets.contains(rec) {
+            app.ui.recording = None;
+            app.session.journal.hold(None);
+        } else {
+            *rec -= sets.iter().filter(|&&s| s < *rec).count();
+        }
+    }
+    for &s in sets.iter().rev() {
+        app.ui.action_sets.remove(s);
+    }
+    if !sets.is_empty() {
+        app.ui.action_set = app.ui.action_set.filter(|c| !sets.contains(c)).map(|c| c - sets.iter().filter(|&&s| s < c).count());
+        app.ui.action_sets_selected.clear();
+    }
+    Ok(json!({ "deleted": sets.len() }))
+}
+
 /// The panel's (≡) menu.
 pub fn menu(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
     let selected: Option<(usize, usize)> = pstate(ui.ctx(), "actions-selected");
     let has = selected.and_then(|(s, a)| app.ui.action_sets.get(s).and_then(|set| set.actions.get(a))).is_some();
     if widgets::menu_item(ui, tl!("New Set…"), true, false) {
         crate::dialogs::action_set_options::open_new(app);
+    }
+    if widgets::menu_item(ui, tl!("Delete"), has || !selected_sets(app).is_empty(), false) {
+        delete_selection(app, ui.ctx());
     }
     let current = app.ui.action_set.filter(|&s| s < app.ui.action_sets.len());
     if widgets::menu_item(ui, tl!("Set Options…"), current.is_some(), false)
@@ -90,18 +166,28 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
         selected = None;
     }
     let mut current = app.ui.action_set;
+    let mut sets_selected = selected_sets(app);
+    let shift = ui.input(|i| i.modifiers.shift);
     let mut play_req = None;
     egui::ScrollArea::vertical().max_height(260.0).show(ui, |ui| {
         for (si, set) in app.ui.action_sets.iter().enumerate() {
             let (r, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 20.0), egui::Sense::click());
-            if current == Some(si) && selected.is_none() {
+            if sets_selected.contains(&si) && selected.is_none() {
                 ui.painter().rect_filled(r, 0.0, t.row_selected);
             } else if resp.hovered() {
                 ui.painter().rect_filled(r, 0.0, t.hover);
             }
             ui.painter().text(r.left_center(), egui::Align2::LEFT_CENTER, format!("▾ {}", set.name), egui::FontId::proportional(12.5), t.text);
             if resp.clicked() {
-                current = Some(si);
+                // Shift-click selects the sets from the current one to the one clicked; the current
+                // set stays as it was.
+                match current {
+                    Some(c) if shift && selected.is_none() && sets_selected.contains(&c) => sets_selected = (c.min(si)..=c.max(si)).collect(),
+                    _ => {
+                        current = Some(si);
+                        sets_selected = vec![si];
+                    }
+                }
                 selected = None;
             }
             for (ai, a) in set.actions.iter().enumerate() {
@@ -129,6 +215,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
                 if resp.clicked() {
                     selected = Some((si, ai));
                     current = Some(si);
+                    sets_selected = vec![si];
                 }
                 if resp.double_clicked() {
                     play_req = Some((si, ai));
@@ -138,6 +225,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
     });
     set_pstate(ui.ctx(), SELECTED, selected);
     app.ui.action_set = current;
+    app.ui.action_sets_selected = sets_selected;
     widgets::divider(ui);
     // Bottom bar: stop, record, play, new set, delete.
     ui.horizontal(|ui| {
@@ -174,13 +262,8 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
         if widgets::icon_button(ui, "dc-folder", tl!("Create New Set"), false, 24.0).clicked() {
             crate::dialogs::action_set_options::open_new(app);
         }
-        if widgets::icon_button(ui, "trash-2", tl!("Delete Selection"), false, 24.0).clicked()
-            && let Some((si, ai)) = selected
-            && let Some(s) = app.ui.action_sets.get_mut(si)
-            && ai < s.actions.len()
-        {
-            s.actions.remove(ai);
-            set_pstate::<Option<(usize, usize)>>(ui.ctx(), SELECTED, None);
+        if widgets::icon_button(ui, "trash-2", tl!("Delete Selection"), false, 24.0).clicked() {
+            delete_selection(app, ui.ctx());
         }
         if recording {
             ui.label(egui::RichText::new(tl!("● Recording")).color(egui::Color32::from_rgb(0xe0, 0x30, 0x30)));
@@ -307,6 +390,173 @@ mod tests {
         crate::dialogs::confirm(&mut app).unwrap();
         let names = app.ui.action_sets.iter().map(|s| (s.name.as_str(), s.actions.len())).collect::<Vec<_>>();
         assert_eq!(names, [("Default Actions", 6), ("Web", 0)], "the clicked set is renamed, the other kept");
+    }
+
+    /// An app with the default set and the sets Mine (two actions) and Other.
+    fn app_with_sets() -> VectorcraftApp {
+        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let action = |name: &str| Action { name: name.into(), steps: vec![("object.move".into(), json!({"dx": 1, "dy": 0}))] };
+        app.ui.action_sets.push(ActionSet { name: "Mine".into(), actions: vec![action("Nudge"), action("Nudge Again")] });
+        app.ui.action_sets.push(ActionSet { name: "Other".into(), actions: vec![] });
+        app
+    }
+
+    fn set_names(app: &VectorcraftApp) -> Vec<String> {
+        app.ui.action_sets.iter().map(|s| s.name.clone()).collect()
+    }
+
+    /// The bottom bar's Delete Selection button (stop, record, play, new set, delete).
+    fn trash(ctx: &egui::Context, app: &mut VectorcraftApp) -> egui::Pos2 {
+        super::super::tests_appearance::frame_events(ctx, app, vec![], show);
+        let mut bar = crate::toolbar::tests::widget_rects(ctx, egui::vec2(24.0, 24.0));
+        bar.sort_by(|a, b| a.left().total_cmp(&b.left()));
+        let [_, _, _, _, delete] = bar[..] else { panic!("the bottom bar: {bar:?}") };
+        delete.center()
+    }
+
+    /// A click on the name of set `name` with `modifiers` held.
+    fn click_set(ctx: &egui::Context, app: &mut VectorcraftApp, name: &str, modifiers: egui::Modifiers) {
+        use super::super::tests_appearance::{frame_events, text_rect};
+        let pos = text_rect(&frame_events(ctx, app, vec![], show), &format!("▾ {name}")).center();
+        let button = |pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers };
+        for e in [egui::Event::PointerMoved(pos), button(true), button(false)] {
+            frame_events(ctx, app, vec![egui::Event::ModifiersChanged(modifiers), e], show);
+        }
+    }
+
+    /// The question Delete Selection asks about sets, with the sets OK deletes.
+    fn asked(app: &VectorcraftApp) -> Option<(String, Value)> {
+        let d = app.ui.dialog.as_ref()?;
+        (d.kind == crate::dialogs::confirm::KIND && d.str("__command") == DELETE_SETS)
+            .then(|| (d.str("message"), d.fields["__params"]["sets"].clone()))
+    }
+
+    /// Delete Selection with a set selected asks first: Cancel keeps every set, OK deletes the
+    /// selected set with its actions and keeps the others.
+    #[test]
+    fn delete_selection_asks_and_then_deletes_the_selected_set() {
+        use super::super::tests_appearance::click;
+        let mut app = app_with_sets();
+        let ctx = egui::Context::default();
+        click_set(&ctx, &mut app, "Mine", egui::Modifiers::NONE);
+        let delete = trash(&ctx, &mut app);
+        click(&ctx, &mut app, delete, show);
+        let (message, sets) = asked(&app).expect("Delete Selection asks before deleting a set");
+        assert_eq!((message.as_str(), sets), ("Delete the action set “Mine” and its actions?", json!([1])));
+        crate::dialogs::cancel(&mut app);
+        assert_eq!(set_names(&app), ["Default Actions", "Mine", "Other"], "Cancel deletes nothing");
+        click(&ctx, &mut app, delete, show);
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert_eq!(set_names(&app), ["Default Actions", "Other"], "OK deletes the selected set and its actions");
+        assert_eq!(app.ui.action_set, None, "no set is current after the current one is deleted");
+        let delete = trash(&ctx, &mut app);
+        click(&ctx, &mut app, delete, show);
+        assert!(app.ui.dialog.is_none(), "nothing selected: nothing to ask about");
+    }
+
+    /// The panel menu's Delete asks the same question about the selected set, and deletes a
+    /// selected action at once, as the bottom bar's button does.
+    #[test]
+    fn the_panel_menus_delete_deletes_the_selected_set_or_action() {
+        use super::super::tests_appearance::{click, frame_events, text_rect};
+        let mut app = app_with_sets();
+        let ctx = egui::Context::default();
+        let delete = |ctx: &egui::Context, app: &mut VectorcraftApp| {
+            let texts = frame_events(ctx, app, vec![], menu);
+            let item = texts.iter().find(|(s, _)| s.trim() == "Delete").map(|(_, r)| *r).expect("Delete in the menu");
+            click(ctx, app, item.center(), menu);
+        };
+        click_set(&ctx, &mut app, "Other", egui::Modifiers::NONE);
+        delete(&ctx, &mut app);
+        assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([2])));
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert_eq!(set_names(&app), ["Default Actions", "Mine"]);
+        let texts = frame_events(&ctx, &mut app, vec![], show);
+        click(&ctx, &mut app, text_rect(&texts, "Nudge").center(), show);
+        frame_events(&ctx, &mut app, vec![], show);
+        delete(&ctx, &mut app);
+        assert!(app.ui.dialog.is_none(), "an action is deleted without a question");
+        let actions = app.ui.action_sets[1].actions.iter().map(|a| a.name.as_str()).collect::<Vec<_>>();
+        assert_eq!((set_names(&app).len(), actions), (2, vec!["Nudge Again"]), "the action goes, its set stays");
+    }
+
+    /// After New Set makes another set current, the panel menu's Delete asks about that set and
+    /// leaves the action selected before it.
+    #[test]
+    fn delete_after_new_set_targets_the_new_set() {
+        use super::super::tests_appearance::{click, frame_events, text_rect};
+        let mut app = app_with_sets();
+        let ctx = egui::Context::default();
+        let texts = frame_events(&ctx, &mut app, vec![], show);
+        click(&ctx, &mut app, text_rect(&texts, "Nudge").center(), show);
+        crate::dialogs::action_set_options::open_new(&mut app);
+        crate::dialogs::confirm(&mut app).unwrap();
+        let texts = frame_events(&ctx, &mut app, vec![], menu);
+        let item = texts.iter().find(|(s, _)| s.trim() == "Delete").map(|(_, r)| *r).expect("Delete in the menu");
+        click(&ctx, &mut app, item.center(), menu);
+        assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([3])), "the new set, not the action");
+        assert_eq!(app.ui.action_sets[1].actions.len(), 2);
+    }
+
+    /// Shift-click on a set's name selects the sets from the current one to it, and one question
+    /// deletes them all; the set left out stays.
+    #[test]
+    fn shift_click_selects_sets_that_one_question_deletes() {
+        use super::super::tests_appearance::click;
+        let mut app = app_with_sets();
+        let ctx = egui::Context::default();
+        click_set(&ctx, &mut app, "Mine", egui::Modifiers::NONE);
+        click_set(&ctx, &mut app, "Other", egui::Modifiers::SHIFT);
+        assert_eq!((app.ui.action_set, app.ui.action_sets_selected.clone()), (Some(1), vec![1, 2]), "the current set stays");
+        let delete = trash(&ctx, &mut app);
+        click(&ctx, &mut app, delete, show);
+        assert_eq!(asked(&app), Some(("Delete the selected action sets and their actions?".to_string(), json!([1, 2]))));
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert_eq!(set_names(&app), ["Default Actions"]);
+        // A plain click selects one set again.
+        app.ui.action_sets.extend([ActionSet { name: "A".into(), actions: vec![] }, ActionSet { name: "B".into(), actions: vec![] }]);
+        click_set(&ctx, &mut app, "A", egui::Modifiers::NONE);
+        click_set(&ctx, &mut app, "Default Actions", egui::Modifiers::SHIFT);
+        click_set(&ctx, &mut app, "B", egui::Modifiers::NONE);
+        assert_eq!((app.ui.action_set, app.ui.action_sets_selected.clone()), (Some(2), vec![2]));
+    }
+
+    /// The default set can be deleted, and so can the last set: the panel is then empty, no set is
+    /// current, and New Set makes a set again.
+    #[test]
+    fn deleting_the_default_and_the_last_set_leaves_an_empty_panel() {
+        use super::super::tests_appearance::click;
+        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let ctx = egui::Context::default();
+        click_set(&ctx, &mut app, "Default Actions", egui::Modifiers::NONE);
+        let delete = trash(&ctx, &mut app);
+        click(&ctx, &mut app, delete, show);
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert!(app.ui.action_sets.is_empty());
+        assert_eq!(app.ui.action_set, None);
+        crate::dialogs::action_set_options::open_new(&mut app);
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert_eq!((set_names(&app), app.ui.action_set), (vec!["Set 1".to_string()], Some(0)), "New Set works on an empty panel");
+    }
+
+    /// `ui.actionSet.delete` keeps a recording into a later set going in the same set, stops one
+    /// into a deleted set, and refuses an index past the last set.
+    #[test]
+    fn deleting_sets_keeps_a_recording_in_its_set() {
+        let mut app = app_with_sets();
+        app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
+        app.ui.action_set = Some(2);
+        let start = app.session.journal.len();
+        app.session.journal.hold(Some(start));
+        app.ui.recording = Some((2, "Action 1".into(), start));
+        assert_eq!(app.run(DELETE_SETS, json!({"sets": [1]})).unwrap(), json!({"deleted": 1}));
+        assert_eq!(set_names(&app), ["Default Actions", "Other"]);
+        assert_eq!((app.ui.recording.as_ref().map(|r| r.0), app.ui.action_set), (Some(1), Some(1)), "still recording into Other");
+        assert_eq!(app.run(DELETE_SETS, json!({"sets": [5]})).unwrap_err(), "no such action set");
+        assert_eq!(app.run(DELETE_SETS, json!({})).unwrap(), json!({"deleted": 1}), "the current set by default");
+        assert_eq!(set_names(&app), ["Default Actions"]);
+        assert!(app.ui.recording.is_none(), "the recording into the deleted set stops");
+        assert_eq!(app.session.journal.held(), None);
     }
 
     /// A recording keeps its steps when a canceled undo group drops journal entries made before the
