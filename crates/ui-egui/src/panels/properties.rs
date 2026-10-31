@@ -142,8 +142,16 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         actions.push((tl!("Crop Image"), "ui.cropImage"));
         actions.push((tl!("Mask"), "object.maskImage"));
     }
-    actions.push((tl!("Offset Path"), "object.path.offsetPath"));
-    actions.push((tl!("Simplify"), "object.path.simplify"));
+    // Object › Path's Offset Path and Simplify take paths: type alone could only fail, and offsets
+    // live through the Appearance panel's Effect › Path › Offset Path (#2238).
+    let type_only = app.session.active().is_some_and(|st| {
+        let mut nodes = st.selection.objects.iter().filter_map(|id| st.doc.node(*id));
+        nodes.all(|n| matches!(n.kind, NodeKind::Text(_)))
+    });
+    if !type_only {
+        actions.push((tl!("Offset Path"), "object.path.offsetPath"));
+        actions.push((tl!("Simplify"), "object.path.simplify"));
+    }
     actions.push((tl!("Arrange: Bring to Front"), "object.arrange.bringToFront"));
     actions.push((tl!("Lock"), "object.lock"));
     // Lock and Isolate Group are left out while their commands are off (in isolation mode, while

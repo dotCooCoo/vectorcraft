@@ -1647,3 +1647,19 @@ fn selected_guides_show_their_position_in_a_transform_section() {
     let texts: Vec<String> = frame(&mut app, &ctx, vec![]).into_iter().map(|(t, _)| t).collect();
     assert!(!texts.iter().any(|t| t == "Guides") && texts.iter().any(|t| t == "W:"), "{texts:?}");
 }
+
+/// #2238: Object › Path's Offset Path and Simplify take paths, so they aren't Quick Actions for
+/// type alone, where they could only fail ("select paths"); live type offsets through the
+/// Appearance panel's Effect › Path › Offset Path. A path, also with type, still has them.
+#[test]
+fn offset_path_and_simplify_are_not_quick_actions_for_type_alone() {
+    let mut app = new_app();
+    let t = app.run("text.create", json!({"x": 50, "y": 200, "text": "Hi"})).unwrap()["id"].clone();
+    let ctx = egui::Context::default();
+    let texts = tall(&mut app, &ctx, vec![]);
+    assert!(!shows(&texts, "Offset Path") && !shows(&texts, "Simplify") && shows(&texts, "Lock"), "type: {texts:?}");
+    let r = rect(&mut app, 20.0, 20.0, 40.0, 40.0);
+    app.run("select.set", json!({"ids": [t, r]})).unwrap();
+    let texts = tall(&mut app, &ctx, vec![]);
+    assert!(shows(&texts, "Offset Path") && shows(&texts, "Simplify"), "type and a path: {texts:?}");
+}
