@@ -202,10 +202,8 @@ fn make(s: &mut Session, p: &Value) -> Result<Value> {
         _ => vec![id],
     };
     // A layer on top: the topmost object of its art is the mask, and the rest of it is masked.
-    if ids.len() > 1
-        && let Some(&top) = ids.last()
-        && d.node(top).is_some_and(Node::is_layer)
-    {
+    let layer_on_top = ids.len() > 1 && ids.last().is_some_and(|top| d.node(*top).is_some_and(Node::is_layer));
+    if layer_on_top && let Some(&top) = ids.last() {
         let top_art = super::edit::outermost(d, d.paint_order(art_of(top)));
         if top_art.is_empty() {
             return Err(bad(C, "select the art and, on top of it, the mask object"));
@@ -225,9 +223,10 @@ fn make(s: &mut Session, p: &Value) -> Result<Value> {
     let invert = bool_or(p, "invert", s.menu.new_masks_inverted);
     // Several objects: the top one is the mask. One: an empty mask, drawn in mask editing.
     let (art, mask_id) = if below.is_empty() { (&ids[..], None) } else { (below, Some(top)) };
-    // Several objects go into a new group, and a layer can't: the group takes a layer's art.
+    // Several objects go into a new group, and a layer can't: the group takes a layer's art. A
+    // layer under a layer on top stands for its art too, also when it is the only one left.
     let contents;
-    let art = if art.len() > 1 && art.iter().any(|id| d.node(*id).is_some_and(Node::is_layer)) {
+    let art = if (art.len() > 1 || layer_on_top) && art.iter().any(|id| d.node(*id).is_some_and(Node::is_layer)) {
         contents = super::edit::outermost(d, d.paint_order(art.iter().flat_map(|id| art_of(*id))));
         if contents.is_empty() {
             return Err(bad(C, "the layers hold no art to mask"));
@@ -669,7 +668,13 @@ mod tests {
         let layer_ids: Vec<u64> = before.iter().map(|l| l.id.0).collect();
         // The topmost object of the top layer is the mask, and the rest of that layer's art is
         // masked with the art below it.
-        for (ids, mask, grouped) in [(vec![a, l3], top, None), (vec![l1, l2], b2, Some(vec![a, a2, b])), (vec![a, l2], b2, Some(vec![a, b]))] {
+        // A layer under a top layer of one object stands for its art.
+        for (ids, mask, grouped) in [
+            (vec![a, l3], top, None),
+            (vec![l1, l2], b2, Some(vec![a, a2, b])),
+            (vec![a, l2], b2, Some(vec![a, b])),
+            (vec![l1, l3], top, Some(vec![a, a2])),
+        ] {
             let r = s.execute("transparency.makeOpacityMask", &json!({ "ids": ids })).unwrap();
             let id = NodeId(r["id"].as_u64().unwrap());
             assert_eq!(r["editing"], false, "{ids:?}");
@@ -679,7 +684,10 @@ mod tests {
             let n = d.node(id).unwrap();
             assert_eq!(n.extras().mask.as_ref().unwrap().art.id, NodeId(mask), "{ids:?}");
             match grouped {
-                Some(g) => assert_eq!(n.children().unwrap().iter().map(|c| c.id.0).collect::<Vec<_>>(), g, "{ids:?}"),
+                Some(g) => {
+                    assert!(matches!(n.kind, NodeKind::Group { .. }), "{ids:?}: a new group is masked");
+                    assert_eq!(n.children().unwrap().iter().map(|c| c.id.0).collect::<Vec<_>>(), g, "{ids:?}");
+                }
                 None => assert_eq!(id, NodeId(a), "{ids:?}"),
             }
             s.execute("edit.undo", &json!({})).unwrap();
