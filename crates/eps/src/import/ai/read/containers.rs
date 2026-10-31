@@ -252,7 +252,7 @@ impl<'a> Reader<'a> {
             if self.hidden_unread.len() < 16 {
                 self.hidden_unread.insert(format!("`{op}`"));
             }
-        } else if !self.mark_unread(format!("`{op}`")) && self.unknown.len() < 16 {
+        } else if !self.defer_to_mask(&format!("`{op}`")) && !self.mark_unread(format!("`{op}`")) && self.unknown.len() < 16 {
             self.unknown.insert(op);
         }
     }
@@ -292,6 +292,7 @@ impl<'a> Reader<'a> {
         if o.art.replace(Arc::new(art)).is_some() {
             return Err("a mask has more than one art block".into());
         }
+        o.unread = f.unread;
         Ok(())
     }
 
@@ -371,12 +372,24 @@ impl<'a> Reader<'a> {
     /// layer that doesn't.
     pub(super) fn unreadable(&mut self, what: &str, hidden: bool) {
         if (!hidden || self.in_mask()) && !self.gs.hidden && self.shown() {
-            if !self.mark_unread(what.to_string()) {
+            if !self.defer_to_mask(what) && !self.mark_unread(what.to_string()) {
                 self.unsupported.insert(what.into());
             }
         } else {
             self.hidden_unread.insert(what.into());
         }
+    }
+
+    /// Keep what an opacity mask's art doesn't read with the mask, until its dictionary says
+    /// whether the mask is enabled. Whether art of a mask is being read. Operators it doesn't know
+    /// are kept up to 16, as [`Reader::note_unknown`] keeps them.
+    fn defer_to_mask(&mut self, what: &str) -> bool {
+        let Some(f) = self.frames.iter_mut().rev().find(|f| matches!(f.kind, Kind::Mask)) else { return false };
+        let full = what.starts_with('`') && f.unread.iter().filter(|w| w.starts_with('`')).count() >= 16;
+        if !full && !f.unread.iter().any(|w| w == what) {
+            f.unread.push(what.into());
+        }
+        true
     }
 
     /// Mark the first object container below the innermost layer.

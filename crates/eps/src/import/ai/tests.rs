@@ -1214,6 +1214,7 @@ fn unresolved_pattern_in_mask_art_stays_unread() {
         ("%_/Mesh X!\n%_/End X!\n", "gradient meshes it can't read"),
         (placed, "placed files"),
         (symbol, "symbols"),
+        ("%_1 2 frobnicate\n", "`frobnicate`"),
     ] {
         let mask = format!(
             "%_/ArtDictionary :\n%_/Mask :\n%_X=\n{art_}%_X+\n%_(Art) ,\n%_1 /Bool (Clipping) ,\n%_1 /Bool (Linked) ,\n%_; (AI9_Mask) ,\n%_;\n"
@@ -1225,7 +1226,20 @@ fn unresolved_pattern_in_mask_art_stays_unread() {
         let result = read_ok(&layer(&format!("u\n{masked}U\n")));
         assert_unread(&result, kind);
         assert!(result.hidden_unread.is_empty(), "{kind}: {:?}", result.hidden_unread);
+        // A disabled mask doesn't change how its object looks: what it holds is left out.
+        let disabled = masked.replace("%_1 /Bool (Linked) ,\n", "%_1 /Bool (Linked) ,\n%_1 /Bool (Disabled) ,\n");
+        for body in [disabled.clone(), format!("u\n{disabled}U\n")] {
+            let result = read_ok(&layer(&body));
+            assert!(result.unread.is_empty(), "{kind}: {:?}", result.unread);
+            assert!(result.hidden_unread.contains(kind), "{kind}: {:?}", result.hidden_unread);
+        }
     }
+    // Operators a mask's art doesn't know are kept up to 16.
+    let ops = (0..40).map(|i| format!("%_op{i}\n")).collect::<String>();
+    let mask = format!("%_/ArtDictionary :\n%_/Mask :\n%_X=\n{ops}%_X+\n%_(Art) ,\n%_1 /Bool (Linked) ,\n%_; (AI9_Mask) ,\n%_;\n");
+    let result = read_ok(&layer(&format!("u\n{RED}{}f\n{mask}U\n", rect_path(0.0, 0.0, 4.0, 4.0))));
+    assert_eq!(result.unread.len(), 1);
+    assert_eq!(result.unread[0].1.len(), 16);
 }
 
 #[test]

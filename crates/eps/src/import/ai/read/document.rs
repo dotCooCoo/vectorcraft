@@ -244,6 +244,16 @@ impl<'a> Reader<'a> {
                 } else if !on("Disabled") {
                     self.unreadable("opacity masks without an owning object", false);
                 }
+                // What the art doesn't read matters only when the mask shapes what shows.
+                for what in &mask.unread {
+                    if on("Disabled") {
+                        self.hidden_unread.insert(what.clone());
+                    } else if let Some(op) = what.strip_prefix('`').and_then(|w| w.strip_suffix('`')) {
+                        self.note_unknown(op, false);
+                    } else {
+                        self.unreadable(what, false);
+                    }
+                }
             } else if mask.nums("Disabled").first().copied() != Some(1.0) {
                 self.unreadable("opacity masks without readable art", false);
             }
