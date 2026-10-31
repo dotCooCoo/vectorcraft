@@ -586,6 +586,14 @@ fn replace_unread(
                 continue;
             }
             let candidate_page = page_for(candidate, &destination_pages);
+            // An artboard that has no page (a PDF part saved with some of the artboards) has no art
+            // on the page for the object's part on it.
+            if let Some(page) = destination_pages.get(candidate_page)
+                && doc.artboards.iter().map(|a| a.rect.intersect(candidate)).any(|part| part.area() > page.intersect(part).area().max(0.0))
+            {
+                first_rejection.get_or_insert("an unread object lies on an artboard that has no page");
+                continue;
+            }
             let start = by_x.partition_point(|i| art[*i].bounds.x0 < candidate.x0 - ART_MARGIN);
             let end = by_x.partition_point(|i| art[*i].bounds.x0 <= candidate.x1 + ART_MARGIN);
             let mut candidates: Vec<usize> =
@@ -1032,6 +1040,37 @@ mod candidate_tests {
             Frame { page: &page, page_rect: first, rect: first, whole: false, pages: vec![(first, Affine::IDENTITY), (second, Affine::IDENTITY)] };
         let result = replace_unread(&mut doc, &frame, &[(id, vec!["placed files".into()])], &[], &BTreeSet::new());
         assert_eq!(result.unwrap_err(), "an unread object lies on more than one artboard");
+    }
+
+    /// An unread object reaching an artboard that has no page isn't replaced by the page's part of it.
+    #[test]
+    fn unread_object_on_an_artboard_without_a_page_is_not_replaced() {
+        let mut doc = Document::new(100.0, 100.0);
+        doc.artboards.push(vectorcraft_doc::Artboard { id: 2, rect: Rect::new(100.0, 0.0, 200.0, 100.0), ..doc.artboards[0].clone() });
+        let id = doc.alloc_id();
+        doc.insert(
+            Some(doc.layers[0].id),
+            0,
+            Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(90.0, 10.0, 110.0, 20.0)), Default::default()),
+        )
+        .unwrap();
+        let mut page = Document::new(100.0, 100.0);
+        let art = Node::path(
+            page.alloc_id(),
+            vectorcraft_geom::shapes::rectangle(Rect::new(91.0, 11.0, 99.0, 19.0)),
+            vectorcraft_doc::Appearance::basic(vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK), vectorcraft_color::Paint::None, 0.0),
+        );
+        page.insert(Some(page.layers[0].id), 0, art).unwrap();
+        let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let frame = Frame { page: &page, page_rect: rect, rect, whole: false, pages: vec![(rect, Affine::IDENTITY)] };
+        let result = replace_unread(&mut doc, &frame, &[(id, vec!["placed files".into()])], &[], &BTreeSet::new());
+        assert_eq!(result.unwrap_err(), "an unread object lies on an artboard that has no page");
+
+        // Half a point onto it is still on it.
+        let narrow = Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(90.0, 10.0, 100.5, 20.0)), Default::default());
+        *doc.node_mut(id).unwrap() = narrow;
+        let result = replace_unread(&mut doc, &frame, &[(id, vec!["placed files".into()])], &[], &BTreeSet::new());
+        assert_eq!(result.unwrap_err(), "an unread object lies on an artboard that has no page");
     }
 
     /// A nested placeholder's corner cannot replace its readable sibling.
