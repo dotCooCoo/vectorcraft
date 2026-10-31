@@ -42,9 +42,11 @@ pub fn is_jxl(bytes: &[u8]) -> bool {
 /// The first frame of a JPEG XL image as straight RGBA, with the embedded ICC profile its colors
 /// are in when they are not converted to sRGB ([`kept_profile`]). Fails, without decoding the
 /// pixels, when the image would take more than `max_alloc` bytes as RGBA. The image is also too
-/// large to draw when the decoder's buffers for its pixels need more than they are allowed.
+/// large to draw when the decoder's buffers for its pixels need more than they are allowed. A
+/// container whose selected boxes exceed `max_alloc` or [`HEADER_BUFFERS`], whichever is greater,
+/// is refused with "the JPEG XL container is too large to read".
 pub fn decode(bytes: &[u8], max_alloc: u64) -> Result<(image::RgbaImage, Option<Vec<u8>>), String> {
-    let pixel_boxes = pixel_boxes(bytes);
+    let pixel_boxes = pixel_boxes(bytes, max_alloc.max(HEADER_BUFFERS as u64))?;
     let bytes = pixel_boxes.as_deref().unwrap_or(bytes);
     // The decoder reads the header first, with buffers for the header alone.
     let (head, _) = header(bytes, HEADER_BUFFERS, None)?;
@@ -169,9 +171,10 @@ pub(crate) fn to_rgba(
 /// A container's signature and the boxes the decoder reads pixels from (`ftyp`, `jxll`, `jxlc` and
 /// `jxlp`). Every other box is left out: Exif, XMP, JPEG reconstruction data and Brotli-compressed
 /// `brob` boxes, which the decoder would otherwise store and unpack without a size limit. A box
-/// cut short ends the file. `None` for a bare codestream.
-fn pixel_boxes(bytes: &[u8]) -> Option<Vec<u8>> {
-    let mut rest = bytes.strip_prefix(&CONTAINER)?;
+/// cut short ends the file. Selected boxes exceeding `max_copy` are refused with "the JPEG XL
+/// container is too large to read". `None` for a bare codestream.
+pub(super) fn pixel_boxes(bytes: &[u8], max_copy: u64) -> Result<Option<Vec<u8>>, String> {
+    let Some(mut rest) = bytes.strip_prefix(&CONTAINER) else { return Ok(None) };
     let mut out = CONTAINER.to_vec();
     while let (Some(size), Some(ty)) = (rest.get(..4).and_then(|s| <[u8; 4]>::try_from(s).ok()), rest.get(4..8)) {
         let (head, len) = match u32::from_be_bytes(size) {
@@ -188,11 +191,15 @@ fn pixel_boxes(bytes: &[u8]) -> Option<Vec<u8>> {
         let len = usize::try_from(len).unwrap_or(usize::MAX).min(rest.len());
         let (b, after) = rest.split_at(len);
         if matches!(ty, b"ftyp" | b"jxll" | b"jxlc" | b"jxlp") {
+            if (out.len() as u64).saturating_add(b.len() as u64) > max_copy {
+                return Err("the JPEG XL container is too large to read".into());
+            }
+            out.try_reserve_exact(b.len()).map_err(|_| "the JPEG XL container is too large to read")?;
             out.extend_from_slice(b);
         }
         rest = after;
     }
-    Some(out)
+    Ok(Some(out))
 }
 
 /// A decoder whose buffers may take `buffers` bytes, given as few of `bytes` as it needs to read

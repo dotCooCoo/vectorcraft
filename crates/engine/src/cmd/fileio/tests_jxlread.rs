@@ -6,7 +6,7 @@ use zune_core::bit_depth::BitDepth;
 use zune_core::colorspace::ColorSpace;
 use zune_core::options::EncoderOptions;
 
-use super::jxlread::{ToSrgb, decode, is_jxl, kept_profile, to_rgba};
+use super::jxlread::{ToSrgb, decode, is_jxl, kept_profile, pixel_boxes, to_rgba};
 use super::*;
 
 /// A lossless JPEG XL codestream of `w` × `h` pixels: `samples` in `space`, 8-bit, or 16-bit in
@@ -67,6 +67,52 @@ fn jxl_images_open_and_place_with_their_pixels_and_alpha() {
     }
     assert!(OPEN_EXTS.contains(&"jxl") && PLACE_EXTS.contains(&"jxl"));
     assert!(open_filters().any(|f| f == ("JPEG XL", &["jxl"][..])) && place_filters().any(|f| f == ("JPEG XL", &["jxl"][..])));
+}
+
+#[test]
+fn container_copy_stays_within_the_input_allowance() {
+    let f = container(&[0; 128]);
+    assert!(pixel_boxes(&f, 64).unwrap_err().contains("too large"));
+    assert_eq!(pixel_boxes(&f, f.len() as u64).unwrap().unwrap(), f);
+}
+
+#[test]
+fn container_exif_resolution_sizes_open_and_place() {
+    let bare = rgba8();
+    let mut f = container(&[]);
+    f.truncate(32);
+    let mut exif = Vec::new();
+    exif.extend(4u32.to_be_bytes());
+    exif.extend(b"Exif");
+    exif.extend(b"II*\0");
+    exif.extend(8u32.to_le_bytes());
+    exif.extend(3u16.to_le_bytes());
+    for (tag, value) in [(282u16, 50u32), (283, 58), (296, 2)] {
+        exif.extend(tag.to_le_bytes());
+        exif.extend((if tag == 296 { 3u16 } else { 5 }).to_le_bytes());
+        exif.extend(1u32.to_le_bytes());
+        exif.extend(value.to_le_bytes());
+    }
+    exif.extend(0u32.to_le_bytes());
+    for value in [144u32, 1, 72, 1] {
+        exif.extend(value.to_le_bytes());
+    }
+    f.extend((8 + exif.len() as u32).to_be_bytes());
+    f.extend(b"Exif");
+    f.extend(&exif);
+    f.extend((8 + bare.len() as u32).to_be_bytes());
+    f.extend(b"jxlc");
+    f.extend(&bare);
+    assert_eq!(super::ppi::resolution(&f), Some((144.0, 72.0)));
+    assert_eq!(super::ppi::resolution(&bare), None);
+    let mut s = Session::new();
+    s.execute("document.open", &json!({"name": "resolved.jxl", "dataBase64": b64(&f)})).unwrap();
+    let rect = s.doc().unwrap().doc.artboards[0].rect;
+    assert_eq!((rect.width(), rect.height()), (1.5, 2.0));
+    s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
+    let r = s.execute("file.place", &json!({"name": "resolved.jxl", "dataBase64": b64(&f)})).unwrap();
+    assert_eq!((r["width"].as_f64(), r["height"].as_f64()), (Some(1.5), Some(2.0)));
+    assert_eq!(super::ppi::resolution(&s.doc().unwrap().doc.images.values().next().unwrap().bytes), Some((144.0, 72.0)));
 }
 
 /// A `.jxl` file copied in a file manager pastes as its image.
