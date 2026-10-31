@@ -611,8 +611,16 @@ fn hit_leaf(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes) -> Optio
                 AppearanceItem::Fill(_) => (!opt.path_only && fill_contains(bp, *rule, p)).then_some(HitKind::Fill),
             })
         }
-        NodeKind::Text(_) | NodeKind::PlacedDocument(_) | NodeKind::SymbolInstance { .. } | NodeKind::Blend { .. } | NodeKind::Envelope { .. } => {
+        NodeKind::Text(_) | NodeKind::PlacedDocument(_) | NodeKind::SymbolInstance { .. } | NodeKind::Envelope { .. } => {
             n.geometric_bounds_with(symbols).filter(|b| b.inflate(opt.tol, opt.tol).contains(p)).map(|_| HitKind::Bounds)
+        }
+        // A blend is hit within its bounds, and outside them where its evaluated keys and steps
+        // paint: on a spine they can reach past the keys and the spine.
+        NodeKind::Blend { .. } => {
+            if n.geometric_bounds_with(symbols).is_some_and(|b| b.inflate(opt.tol, opt.tol).contains(p)) {
+                return Some(HitKind::Bounds);
+            }
+            crate::live::expand_live(n).iter().find_map(|g| hit_any(g, p, opt, symbols))
         }
         NodeKind::Repeat(r) => r.expand(Some(symbols.document())).iter().find_map(|g| hit_any(g, p, opt, symbols)),
         NodeKind::Mesh(m) => {

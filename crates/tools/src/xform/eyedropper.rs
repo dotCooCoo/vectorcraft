@@ -521,6 +521,33 @@ mod tests {
         assert_eq!(sampled_hex(&below), "#00ff00");
     }
 
+    /// Align to Path turns a blend's keys and steps to its spine, past the keys' bounds: a click
+    /// there hits the blend and samples what it draws.
+    #[test]
+    fn shift_click_samples_blend_art_turned_past_its_bounds() {
+        use vectorcraft_doc::live::{BlendOrientation, BlendSpacing, BlendSpec};
+        use vectorcraft_geom::Rect;
+        let (mut d, _) = doc_with_rect();
+        let l = d.layers[0].id;
+        let green = solid_rect(&mut d, Rect::new(20.0, 20.0, 280.0, 280.0), Color::rgb(0.0, 1.0, 0.0));
+        d.insert(Some(l), usize::MAX, green).unwrap();
+        // 100 × 10 keys centred on (100, 100) and (200, 200): Align to Path turns them 45°, and the
+        // red one reaches (70, 66), above the keys' bounds (y 95 to 205).
+        let red = solid_rect(&mut d, Rect::new(50.0, 95.0, 150.0, 105.0), Color::rgb(1.0, 0.0, 0.0));
+        let blue = solid_rect(&mut d, Rect::new(150.0, 195.0, 250.0, 205.0), Color::rgb(0.0, 0.0, 1.0));
+        let spec = BlendSpec { spacing: BlendSpacing::Steps(1), orientation: BlendOrientation::AlignToPath, ..Default::default() };
+        let id = d.alloc_id();
+        let blend = Node::new(id, NodeKind::Blend { children: vec![std::sync::Arc::new(red), std::sync::Arc::new(blue)], spec: Box::new(spec) });
+        d.insert(Some(l), usize::MAX, blend).unwrap();
+        let (s, p) = (Selection::default(), paint());
+        let at = Point::new(70.0, 66.0);
+        assert!(d.node(id).unwrap().geometric_bounds().is_some_and(|b| !b.contains(at)));
+        assert_eq!(hit_test(&d, at, cx(&d, &s, &p).hit_options()).map(|h| h.leaf), Some(id));
+        assert_eq!(crate::xform::eyedropper::sample_color_at(&cx(&d, &s, &p), at).map(|c| c.to_hex()), Some("#ff0000".into()));
+        // Where the turned key leaves the point empty, the click passes the blend by.
+        assert_eq!(crate::xform::eyedropper::sample_color_at(&cx(&d, &s, &p), Point::new(60.0, 90.0)).map(|c| c.to_hex()), Some("#00ff00".into()));
+    }
+
     /// Shift-click on an envelope samples its distorted contents where they are drawn, and a point
     /// in its bounds that they leave empty samples what lies below.
     #[test]
