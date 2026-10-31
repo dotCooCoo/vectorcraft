@@ -457,6 +457,38 @@ fn a_click_in_a_blends_stroke_band_tests_only_the_steps_that_reach_it() {
     assert!(tested < 20, "{tested} objects tested");
 }
 
+/// The pointer moving in a blend's stroke band evaluates the blend once, and again after the blend
+/// or a symbol of the document changes.
+#[test]
+fn clicks_in_a_blends_stroke_band_evaluate_it_once_until_it_changes() {
+    let mut d = Document::new(1000.0, 1000.0);
+    let l = d.layers[0].id;
+    let stroked = Appearance::basic(Paint::solid(Color::rgb(1.0, 0.0, 0.0)), Paint::solid(Color::rgb(0.0, 0.0, 1.0)), 4.0);
+    let circle = |id, x: f64| Arc::new(Node::path(id, shapes::ellipse(Rect::new(x, 295.0, x + 10.0, 305.0)), stroked.clone()));
+    let blend = d.alloc_id();
+    let keys = vec![circle(d.alloc_id(), 10.0), circle(d.alloc_id(), 880.0)];
+    let spec = crate::live::BlendSpec { spacing: crate::live::BlendSpacing::Steps(200), ..Default::default() };
+    d.insert(Some(l), 0, Node::new(blend, NodeKind::Blend { children: keys, spec: Box::new(spec) })).unwrap();
+    let evaluated = || LIVE_EVALUATED.with(std::cell::Cell::get);
+    let before = evaluated();
+    for x in [448.0, 450.0, 452.0] {
+        assert_eq!(hit_test(&d, Point::new(x, 291.0), HitOptions::default()).map(|h| h.leaf), Some(blend));
+    }
+    assert_eq!(evaluated(), before + 1);
+    // 100 steps 8.7 pt apart: a step still reaches (450, 291).
+    if let Some(NodeKind::Blend { spec, .. }) = d.node_mut(blend).map(|n| &mut n.kind) {
+        spec.spacing = crate::live::BlendSpacing::Steps(100);
+    }
+    assert_eq!(hit_test(&d, Point::new(450.0, 291.0), HitOptions::default()).map(|h| h.leaf), Some(blend));
+    assert_eq!(evaluated(), before + 2);
+    let art = circle(d.alloc_id(), 0.0);
+    d.symbols.push(crate::Symbol { name: "dot".into(), art });
+    hit_test(&d, Point::new(450.0, 291.0), HitOptions::default());
+    assert_eq!(evaluated(), before + 3);
+    hit_test(&d, Point::new(450.0, 291.0), HitOptions::default());
+    assert_eq!(evaluated(), before + 3);
+}
+
 /// A rectangle (40, 40)–(140, 140) clipping a filled 200 × 200 square drawn over its edges, in a
 /// clip group (or, `layer`, as the first layer's clipping mask): the group (or the layer), the
 /// clipping path and the art.

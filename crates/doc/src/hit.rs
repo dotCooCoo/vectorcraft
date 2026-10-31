@@ -1,7 +1,9 @@
 //! Hit testing over the document tree.
 
+use std::cell::RefCell;
 use std::collections::HashSet;
-use std::sync::OnceLock;
+use std::rc::Rc;
+use std::sync::{Arc, OnceLock};
 
 use vectorcraft_geom::hit::{fill_contains, stroke_contains};
 use vectorcraft_geom::{BezPath, FillRule, Point, Rect};
@@ -101,7 +103,8 @@ pub(crate) fn image_paint(n: &Node) -> Vec<(BezPath, FillRule, AppearanceItem)> 
 
 /// One level of evaluation of a live object in a document, as the canvas draws it: type in an
 /// envelope as its distorted glyph outlines, symbol instances as their art. Effects are evaluated
-/// above this crate, so the engine registers one with [`set_live_art`].
+/// above this crate, so the engine registers one with [`set_live_art`]. It reads the object and
+/// the document's symbols and patterns, and nothing else of the document.
 pub type LiveArt = fn(Option<&Document>, &Node) -> Vec<Node>;
 
 static LIVE_ART: OnceLock<LiveArt> = OnceLock::new();
@@ -112,10 +115,64 @@ pub fn set_live_art(f: LiveArt) {
     let _ = LIVE_ART.set(f);
 }
 
+/// A live object evaluated by [`live_art`] on this thread: the object, its document's symbols (by
+/// name and art) and patterns as they were, and the art.
+struct EvaluatedLive {
+    node: Node,
+    symbols: Vec<(String, Arc<Node>)>,
+    patterns: Vec<crate::PatternDef>,
+    art: Rc<Vec<Node>>,
+}
+
+impl EvaluatedLive {
+    /// Is this the evaluation of `n` in `doc` as they are now?
+    fn is_of(&self, doc: &Document, n: &Node) -> bool {
+        self.symbols.len() == doc.symbols.len()
+            && self.symbols.iter().zip(&doc.symbols).all(|((name, art), s)| *name == s.name && Arc::ptr_eq(art, &s.art))
+            && self.node == *n
+            && self.patterns == doc.patterns
+    }
+}
+
+/// How many evaluations [`live_art`] keeps on each thread: the pointer moving in a blend's or an
+/// envelope's stroke band hits it again and again, and an envelope can hold a blend.
+const LIVE_KEPT: usize = 4;
+
+thread_local! {
+    /// The evaluations [`live_art`] keeps, the latest first.
+    static EVALUATED: RefCell<Vec<EvaluatedLive>> = const { RefCell::new(Vec::new()) };
+}
+
 /// The art live object `n` of `doc` draws ([`set_live_art`]); [`crate::live::expand_live`] while
-/// nothing is registered.
-fn live_art(doc: &Document, n: &Node) -> Vec<Node> {
-    LIVE_ART.get().map_or_else(|| crate::live::expand_live(n), |f| f(Some(doc), n))
+/// nothing is registered. The art is evaluated again when `n`, a symbol of `doc` or a pattern of
+/// `doc` has changed since; type keeps the outlines of the fonts it was evaluated with.
+fn live_art(doc: &Document, n: &Node) -> Rc<Vec<Node>> {
+    let kept = EVALUATED.with_borrow_mut(|kept| {
+        let i = kept.iter().position(|e| e.is_of(doc, n))?;
+        let e = kept.remove(i);
+        let art = e.art.clone();
+        kept.insert(0, e);
+        Some(art)
+    });
+    if let Some(art) = kept {
+        return art;
+    }
+    #[cfg(test)]
+    LIVE_EVALUATED.with(|c| c.set(c.get() + 1));
+    let art = Rc::new(LIVE_ART.get().map_or_else(|| crate::live::expand_live(n), |f| f(Some(doc), n)));
+    let symbols = doc.symbols.iter().map(|s| (s.name.clone(), s.art.clone())).collect();
+    let e = EvaluatedLive { node: n.clone(), symbols, patterns: doc.patterns.clone(), art: art.clone() };
+    EVALUATED.with_borrow_mut(|kept| {
+        kept.insert(0, e);
+        kept.truncate(LIVE_KEPT);
+    });
+    art
+}
+
+#[cfg(test)]
+thread_local! {
+    /// How many live objects [`live_art`] evaluated on this thread.
+    static LIVE_EVALUATED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 /// Topmost editable object under `p`.
