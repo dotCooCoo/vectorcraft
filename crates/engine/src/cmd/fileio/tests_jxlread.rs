@@ -6,7 +6,7 @@ use zune_core::bit_depth::BitDepth;
 use zune_core::colorspace::ColorSpace;
 use zune_core::options::EncoderOptions;
 
-use super::jxlread::{ToSrgb, decode, is_jxl, kept_profile, pixel_boxes, to_rgba};
+use super::jxlread::{ToSrgb, decode, is_jxl, oriented_resolution, output_profile, pixel_boxes, to_rgba};
 use super::*;
 
 /// A lossless JPEG XL codestream of `w` × `h` pixels: `samples` in `space`, 8-bit, or 16-bit in
@@ -113,6 +113,16 @@ fn container_exif_resolution_sizes_open_and_place() {
     let r = s.execute("file.place", &json!({"name": "resolved.jxl", "dataBase64": b64(&f)})).unwrap();
     assert_eq!((r["width"].as_f64(), r["height"].as_f64()), (Some(1.5), Some(2.0)));
     assert_eq!(super::ppi::resolution(&s.doc().unwrap().doc.images.values().next().unwrap().bytes), Some((144.0, 72.0)));
+}
+
+#[test]
+fn jxl_axis_exchanging_orientations_swap_resolution() {
+    let ppi = Some((144.0, 72.0));
+    for orientation in 1..=8 {
+        let expected = if orientation >= 5 { Some((72.0, 144.0)) } else { ppi };
+        assert_eq!(oriented_resolution(ppi, orientation), expected, "orientation {orientation}");
+    }
+    assert_eq!(oriented_resolution(None, 6), None);
 }
 
 /// A `.jxl` file copied in a file manager pastes as its image.
@@ -273,12 +283,18 @@ fn colors_left_in_their_icc_profile_keep_it() {
     let srgb = EnumColourEncoding::srgb(RenderingIntent::Relative);
     let rgb = unnamed(&srgb, b"rTRC");
     assert_ne!(rgb, jxl_color::icc::colour_encoding_to_icc(&srgb), "a tag renamed");
-    assert_eq!(kept_profile(false, Some(&rgb)), Some(rgb.clone()));
-    assert_eq!(kept_profile(true, Some(&rgb)), None, "XYB-encoded colors become sRGB");
-    assert_eq!(kept_profile(false, Some(&jxl_color::icc::colour_encoding_to_icc(&srgb))), None, "converted to sRGB");
+    assert_eq!(output_profile(false, false, Some(&rgb)).unwrap(), Some(rgb.clone()));
+    assert_eq!(output_profile(true, false, Some(&rgb)).unwrap(), None, "XYB-encoded colors become sRGB");
+    assert_eq!(output_profile(false, false, Some(&jxl_color::icc::colour_encoding_to_icc(&srgb))).unwrap(), None, "converted to sRGB");
     let gray = unnamed(&EnumColourEncoding::gray_srgb(RenderingIntent::Relative), b"kTRC");
-    assert_eq!(kept_profile(false, Some(&gray)), None, "gray");
-    assert_eq!(kept_profile(false, None), None);
+    assert!(!jxl_oxide::ColorEncodingWithProfile::with_icc(&gray).unwrap().icc_profile().is_empty());
+    assert_eq!(output_profile(false, true, Some(&gray)).unwrap_err(), "the JPEG XL file can't be read: unsupported grayscale ICC profile");
+    assert_eq!(
+        output_profile(false, true, Some(&jxl_color::icc::colour_encoding_to_icc(&EnumColourEncoding::gray_srgb(RenderingIntent::Relative))))
+            .unwrap(),
+        None
+    );
+    assert_eq!(output_profile(false, false, None).unwrap(), None);
     // The PNG carries the profile, the pixels and the resolution.
     let img = image::RgbaImage::from_raw(2, 1, vec![200, 100, 50, 255, 9, 9, 9, 0]).unwrap();
     for icc in [Some(rgb), None] {

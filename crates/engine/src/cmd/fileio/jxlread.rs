@@ -6,7 +6,8 @@
 //! system: XYB-encoded images, every color space a JPEG XL header names, and embedded ICC
 //! profiles that describe one of them. Any other image with an embedded ICC profile comes back
 //! with its samples as stored, as PNG and JPEG files with an embedded profile are drawn, and with
-//! the profile when it is an RGB one. 16-bit and floating-point samples become 8 bits, alpha comes back straight,
+//! the profile when it is an RGB one. Gray images with an ICC profile the decoder cannot convert
+//! are refused. 16-bit and floating-point samples become 8 bits, alpha comes back straight,
 //! and CMYK images are refused. The file is untrusted: the decoder is given only a container's
 //! image boxes, the image's size is checked from its header before any pixels are decoded, and the
 //! decoder's image buffers are capped.
@@ -39,13 +40,19 @@ pub fn is_jxl(bytes: &[u8]) -> bool {
     bytes.starts_with(&CODESTREAM) || bytes.starts_with(&CONTAINER)
 }
 
+/// Resolution after the decoder applies the image header's orientation.
+pub(crate) fn oriented_resolution(ppi: Option<(f64, f64)>, orientation: u32) -> Option<(f64, f64)> {
+    ppi.map(|(x, y)| if (5..=8).contains(&orientation) { (y, x) } else { (x, y) })
+}
+
 /// The first frame of a JPEG XL image as straight RGBA, with the embedded ICC profile its colors
-/// are in when they are not converted to sRGB ([`kept_profile`]). Fails, without decoding the
+/// are in when they are not converted to sRGB ([`output_profile`]), and the header orientation.
+/// Fails, without decoding the
 /// pixels, when the image would take more than `max_alloc` bytes as RGBA. The image is also too
 /// large to draw when the decoder's buffers for its pixels need more than they are allowed. A
 /// container whose selected boxes exceed `max_alloc` or [`HEADER_BUFFERS`], whichever is greater,
 /// is refused with "the JPEG XL container is too large to read".
-pub fn decode(bytes: &[u8], max_alloc: u64) -> Result<(image::RgbaImage, Option<Vec<u8>>), String> {
+pub fn decode(bytes: &[u8], max_alloc: u64) -> Result<(image::RgbaImage, Option<Vec<u8>>, u32), String> {
     let pixel_boxes = pixel_boxes(bytes, max_alloc.max(HEADER_BUFFERS as u64))?;
     let bytes = pixel_boxes.as_deref().unwrap_or(bytes);
     // The decoder reads the header first, with buffers for the header alone.
@@ -75,7 +82,8 @@ pub fn decode(bytes: &[u8], max_alloc: u64) -> Result<(image::RgbaImage, Option<
     let associated = metadata.alpha().and_then(|i| metadata.ec_info.get(i)).and_then(|ec| ec.alpha_associated()) == Some(true);
     let intent = RenderingIntent::Relative;
     let srgb = if metadata.grayscale() { EnumColourEncoding::gray_srgb(intent) } else { EnumColourEncoding::srgb(intent) };
-    let profile = kept_profile(metadata.xyb_encoded, image.original_icc());
+    let profile = output_profile(metadata.xyb_encoded, metadata.grayscale(), image.original_icc())?;
+    let orientation = metadata.orientation;
     // Premultiplied colors are divided by alpha in the encoding they are stored in, and converted
     // to sRGB after that. XYB-encoded images come from the decoder in linear sRGB (tone mapped when
     // they are HDR), which the sRGB transfer curve alone turns into sRGB.
@@ -115,7 +123,7 @@ pub fn decode(bytes: &[u8], max_alloc: u64) -> Result<(image::RgbaImage, Option<
         }
         to_rgba(&row, channels, associated, convert.as_ref(), &mut colors, line)?;
     }
-    Ok((out, profile))
+    Ok((out, profile, orientation))
 }
 
 /// How colors whose alpha was divided out become sRGB.
@@ -226,11 +234,14 @@ fn to_srgb_without_cms(xyb: bool, icc: Option<&[u8]>) -> bool {
     xyb || icc.is_none_or(|icc| ColorEncodingWithProfile::with_icc(icc).is_ok_and(|p| p.icc_profile().is_empty()))
 }
 
-/// The embedded ICC profile `icc` when the colors come back as stored in it
-/// ([`to_srgb_without_cms`] is false), for the PNG they are kept in. Only an RGB profile is kept:
-/// the colors of a gray image come back as RGB.
-pub(crate) fn kept_profile(xyb: bool, icc: Option<&[u8]>) -> Option<Vec<u8>> {
-    icc.filter(|icc| icc.get(16..20) == Some(b"RGB ") && !to_srgb_without_cms(xyb, Some(icc))).map(<[u8]>::to_vec)
+/// The embedded RGB profile when the decoder leaves colors in it. Gray colors without a
+/// conversion to sRGB cannot be stored as RGB without changing their profile.
+pub(crate) fn output_profile(xyb: bool, grayscale: bool, icc: Option<&[u8]>) -> Result<Option<Vec<u8>>, String> {
+    let converts = to_srgb_without_cms(xyb, icc);
+    if grayscale && !converts {
+        return Err(unreadable("unsupported grayscale ICC profile"));
+    }
+    Ok(icc.filter(|icc| icc.get(16..20) == Some(b"RGB ") && !converts).map(<[u8]>::to_vec))
 }
 
 /// The decoder's error `e` as a message. When the decoder's buffers needed more than they were

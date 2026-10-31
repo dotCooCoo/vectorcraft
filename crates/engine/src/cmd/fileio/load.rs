@@ -636,8 +636,8 @@ pub fn raster_image(bytes: &[u8]) -> Result<RasterImage> {
         return as_png(psdread::decode(bytes, MAX_RASTER_ALLOC, |c| cms.cmyk_to_srgb(c, false)).map_err(err)?, None, ppi);
     }
     if jxlread::is_jxl(bytes) {
-        let (img, icc) = jxlread::decode(bytes, MAX_RASTER_ALLOC).map_err(err)?;
-        return as_png(img, icc, ppi);
+        let (img, icc, orientation) = jxlread::decode(bytes, MAX_RASTER_ALLOC).map_err(err)?;
+        return as_png(img, icc, jxlread::oriented_resolution(ppi, orientation));
     }
     let mut reader = image::ImageReader::new(Cursor::new(bytes)).with_guessed_format().map_err(err)?;
     if reader.format().is_none() && super::tgaread::is_targa(bytes) {
