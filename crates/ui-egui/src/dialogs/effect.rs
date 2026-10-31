@@ -329,7 +329,7 @@ fn choices(effect: &str, key: &str) -> Option<form::Choices> {
         ("stylize.dropShadow", "shade") => Some(SHADES),
         ("path.offsetPath", "joins") => Some(&[("Miter", "miter"), ("Round", "round"), ("Bevel", "bevel")]),
         ("distort.roughen" | "distort.zigZag", "points") => Some(&[("Smooth", "smooth"), ("Corner", "corner")]),
-        _ => None,
+        _ => crate::addons::pathtools::effect_choices(effect, key),
     }
 }
 

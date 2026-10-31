@@ -382,6 +382,9 @@ pub struct UiState {
     pub docking: Option<craft_ui::docking::Layout<String>>,
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub docking_hidden: std::collections::BTreeMap<String, craft_ui::docking::Location<String>>,
+    /// Tabs closed together by panel shortcuts, kept with their workspace return locations.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub docking_hidden_groups: Vec<Vec<String>>,
     /// Panels dropped on the icon column, in older files (read only, like [`Self::floating_panels`]).
     #[serde(default, skip_serializing)]
     pub docking_icons: std::collections::BTreeSet<String>,
@@ -838,6 +841,7 @@ impl Default for UiState {
             floating_panels: vec![],
             docking: None,
             docking_hidden: Default::default(),
+            docking_hidden_groups: Vec::new(),
             docking_icons: Default::default(),
             docking_collapsed: Default::default(),
             docking_generation: 0,

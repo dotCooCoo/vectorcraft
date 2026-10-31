@@ -1141,12 +1141,12 @@ lighting	Light	Licht
 	 to set spacing and orientation	 om de tussenruimte en de oriëntatie in te stellen
 	Apply	Toepassen
 	Change Screen Mode (F)	Schermmodus wisselen (F)
-	Color (,)	Kleur (,)
+	Color (, or <)	Kleur (, of <)
 	Draw Behind	Achter tekenen
 	Draw Inside	Binnen tekenen
 	Draw Normal	Normaal tekenen
 	Expand:	Uitvouwen:
-	Gradient (.)	Verloop (.)
+	Gradient (. or >)	Verloop (. of >)
 	H:	H:
 	Modify	Wijzigen
 	Navigate	Navigeren
@@ -5831,6 +5831,29 @@ anchor	Points:	Punten:
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	geef `inkLimit`, `removeWhiteOverprint` of `overprintBlack` op
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Drukinktcorrecties werken in CMYK-documenten: kies eerst Bestand › Documentkleurmodus › CMYK-kleur
 @msg	`{key}` must be 0..{max}	`{key}` moet 0..{max} zijn
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Hoekengereedschap
+	Slide Anchor Along Path	Ankerpunt langs pad schuiven
+	Set Corners	Hoeken instellen
+	Remove Corners	Hoeken verwijderen
+	Corners selected: {count}	Geselecteerde hoeken: {count}
+	Apply to Selected Anchors	Toepassen op geselecteerde ankerpunten
+@msg	`radius` must be from 0 to 1000000 pt	`radius` moet van 0 tot 1000000 pt zijn
+@msg	`t` must be a number from -0.98 to 0.98	`t` moet een getal van -0.98 tot 0.98 zijn
+@msg	choose anchors where two sides meet at an angle: only those take a corner	kies ankerpunten waar twee zijden elkaar in een hoek ontmoeten: alleen die kunnen een hoek krijgen
+@msg	give `anchor`, the index of the anchor to slide	geef `anchor` op, de index van het ankerpunt dat moet schuiven
+@msg	that anchor can't slide: an end of an open path has nowhere to go	dat ankerpunt kan niet schuiven: het einde van een open pad kan nergens heen
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Gereedschap Gedeelde rand samenvoegen
+	Merge Shared Edge	Gedeelde rand samenvoegen
+	Keep Shared Points Together	Gedeelde punten bij elkaar houden
+	Shared Edges	Gedeelde randen
+	Coincidence:	Samenvallen:
+@msg	`a` and `b` must be two different paths	`a` en `b` moeten twee verschillende paden zijn
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` moet van 0.25 tot 200 pt zijn
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` moet van 0 tot 3 pt zijn
+@msg	`follow` must be "average", "a" or "b"	`follow` moet "average", "a" of "b" zijn
+@msg	the paths have nothing to merge there	de paden hebben hier niets om samen te voegen
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Tekst splitsen
@@ -5875,3 +5898,43 @@ breakText	Glyphs	Glyphs
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` moet lines, paragraphs, words of glyphs zijn, niet {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` moet "line" of "paragraph" zijn, niet {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` moet "left", "center" of "right" zijn, niet {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Padeffecten
+	Reverse Direction	Richting omkeren
+	Align to Corners and Ends	Uitlijnen op hoeken en uiteinden
+	Count	Aantal
+	Max Count	Maximumaantal
+	Start Length	Beginlengte
+	Start Percent	Beginpercentage
+	Start Shape	Beginvorm
+	End Length	Eindlengte
+	End Percent	Eindpercentage
+	End Shape	Eindvorm
+	By Count	Op aantal
+	By Distance	Op afstand
+	Both	Beide
+	Shorter Than Length	Korter dan lengte
+	Dashes to Geometry	Streepjes naar geometrie
+	Dashes to Geometry…	Streepjes naar geometrie…
+	Add Anchors	Ankerpunten toevoegen
+	Add Anchors…	Ankerpunten toevoegen…
+	Smooth Anchors	Ankerpunten gladmaken
+	Smooth Anchors…	Ankerpunten gladmaken…
+	Simplify Anchors	Ankerpunten vereenvoudigen
+	Simplify Anchors…	Ankerpunten vereenvoudigen…
+	Split at Anchors	Splitsen bij ankerpunten
+	Split at Anchors…	Splitsen bij ankerpunten…
+	Extend Path…	Pad verlengen…
+	Close Path…	Pad sluiten…
+	Retract Handles…	Grepen intrekken…
+	Dash 1	Streepje 1
+	Gap 1	Tussenruimte 1
+	Dash 2	Streepje 2
+	Gap 2	Tussenruimte 2
+	Dash 3	Streepje 3
+	Gap 3	Tussenruimte 3
+	Dash 4	Streepje 4
+	Gap 4	Tussenruimte 4
+	Dash 5	Streepje 5
+	Gap 5	Tussenruimte 5

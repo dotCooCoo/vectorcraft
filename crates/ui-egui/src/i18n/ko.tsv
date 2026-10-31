@@ -3354,7 +3354,7 @@ gradient-kind	Radial	방사형
 	Client-side (.html)	클라이언트 측 (.html)
 	Cmd	Cmd
 	Collect Links in a Separate Folder	링크를 별도 폴더에 모으기
-	Color (,)	색상 (,)
+	Color (, or <)	색상 (, 또는 <)
 	Color Group	색상 그룹
 	Color Library	색상 라이브러리
 	Color Management	색상 관리
@@ -3449,7 +3449,7 @@ file-filter	Templates	템플릿
 	General › Placement › X	일반 › 배치 › X
 	General › Thumbnails	일반 › 축소판
 	Global Process Color, CMYK	글로벌 프로세스 색상, CMYK
-	Gradient (.)	그레이디언트 (.)
+	Gradient (. or >)	그레이디언트 (. 또는 >)
 	Graph Data	그래프 데이터
 	Graph Type	그래프 유형
 	Graph Design	그래프 디자인
@@ -5464,6 +5464,29 @@ anchor	Points:	포인트:
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	`inkLimit`, `removeWhiteOverprint` 또는 `overprintBlack`을 지정하십시오
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	인쇄 잉크 수정은 CMYK 문서에서 작동합니다. 먼저 파일 › 문서 색상 모드 › CMYK 색상을 선택하십시오
 @msg	`{key}` must be 0..{max}	`{key}`은(는) 0..{max}이어야 합니다
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	모퉁이 도구
+	Slide Anchor Along Path	패스를 따라 앵커 포인트 밀기
+	Set Corners	모퉁이 설정
+	Remove Corners	모퉁이 제거
+	Corners selected: {count}	선택한 모퉁이: {count}
+	Apply to Selected Anchors	선택한 앵커 포인트에 적용
+@msg	`radius` must be from 0 to 1000000 pt	`radius`은(는) 0에서 1000000 pt 사이여야 합니다
+@msg	`t` must be a number from -0.98 to 0.98	`t`은(는) -0.98에서 0.98 사이의 숫자여야 합니다
+@msg	choose anchors where two sides meet at an angle: only those take a corner	두 변이 각을 이루며 만나는 앵커 포인트를 선택하세요. 그런 포인트만 모퉁이를 만들 수 있습니다
+@msg	give `anchor`, the index of the anchor to slide	밀 앵커 포인트의 인덱스 `anchor`를 지정하세요
+@msg	that anchor can't slide: an end of an open path has nowhere to go	이 앵커 포인트는 밀 수 없습니다. 열린 패스의 끝은 갈 곳이 없습니다
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	공유 가장자리 병합 도구
+	Merge Shared Edge	공유 가장자리 병합
+	Keep Shared Points Together	공유 포인트 함께 유지
+	Shared Edges	공유 가장자리
+	Coincidence:	일치 허용치:
+@msg	`a` and `b` must be two different paths	`a`와 `b`는 서로 다른 두 패스여야 합니다
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter`는 0.25~200 pt여야 합니다
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance`는 0~3 pt여야 합니다
+@msg	`follow` must be "average", "a" or "b"	`follow`는 "average", "a" 또는 "b"여야 합니다
+@msg	the paths have nothing to merge there	여기에는 병합할 패스 부분이 없습니다
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	텍스트 나누기
@@ -5508,3 +5531,44 @@ breakText	Glyphs	글리프
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by`는 lines, paragraphs, words 또는 glyphs여야 합니다({other}는 사용할 수 없음)
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind`는 "line" 또는 "paragraph"여야 합니다({other}는 사용할 수 없음)
 @msg	`align` must be "left", "center" or "right", not {other}	`align`은 "left", "center" 또는 "right"여야 합니다({other}는 사용할 수 없음)
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	패스 효과
+	Reverse Direction	방향 반전
+	Align to Corners and Ends	모퉁이와 끝에 정렬
+	Count	개수
+	Max Count	최대 개수
+	Start Length	시작 길이
+	Start Percent	시작 퍼센트
+	Start Shape	시작 모양
+	End Length	끝 길이
+	End Percent	끝 퍼센트
+	End Shape	끝 모양
+	By Count	개수 기준
+	By Distance	거리 기준
+	Both	둘 다
+	Shorter Than Length	길이보다 짧은 핸들
+	Anchors	앵커 포인트
+	Dashes to Geometry	대시를 도형으로
+	Dashes to Geometry…	대시를 도형으로…
+	Add Anchors	앵커 포인트 추가
+	Add Anchors…	앵커 포인트 추가…
+	Smooth Anchors	앵커 포인트 매끄럽게
+	Smooth Anchors…	앵커 포인트 매끄럽게…
+	Simplify Anchors	앵커 포인트 단순화
+	Simplify Anchors…	앵커 포인트 단순화…
+	Split at Anchors	앵커 포인트에서 분할
+	Split at Anchors…	앵커 포인트에서 분할…
+	Extend Path…	패스 연장…
+	Close Path…	패스 닫기…
+	Retract Handles…	핸들 접기…
+	Dash 1	대시 1
+	Gap 1	간격 1
+	Dash 2	대시 2
+	Gap 2	간격 2
+	Dash 3	대시 3
+	Gap 3	간격 3
+	Dash 4	대시 4
+	Gap 4	간격 4
+	Dash 5	대시 5
+	Gap 5	간격 5

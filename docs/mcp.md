@@ -416,7 +416,7 @@ objects' fills or strokes differ (`fillMixed` / `strokeMixed`, drawn as a "?" pr
 | `inspect_document` | `{depth?, childLimit?, ids?, kind?, limit?, offset?}` | Artboards (with `color`, `#rrggbb`, for one with a background color), layer tree (ids, kinds, bounds, paint), selection, history, tool. A type node's `fill`, `stroke` and `strokeWidth` are the paint its characters show (its first run's); fills and strokes of the type object itself come as `objectFill`, `objectStroke` and `objectStrokeWidth`. Paint comes as a label (`"#ff0000"`, `"None"`, `"G1 40% (#ff9999)"` for a swatch at a tint); `paint.proxies` gives it as an object. |
 | `inspect_ui` | `{}` | UI state. Remote mode only. |
 | `select_tool` | `{tool}` | `selection`, `directSelection`, `pen`, `rectangle`, `ellipse`, `polygon`, `star`, `lineSegment`, … |
-| `pointer_gesture` | `{events:[{kind,x,y,mods?}], tool?, mods?}` | `kind` is one of `down`, `drag`, `up`, `move`, `doubleclick`. Events go through the same path as the mouse. Headless, a `move` replies after the tool's highlight under the pointer is ready, including the Shape Builder's and the Live Paint Bucket's regions of a large selection, which the desktop app finds off the UI thread and highlights after the reply. |
+| `pointer_gesture` | `{events:[{kind,x,y,mods?,backquote?}], tool?, mods?, backquote?}` | `kind` is one of `down`, `drag`, `up`, `move`, `doubleclick`. `backquote` is the held state for each event; the top-level value supplies its default. Events go through the same path as the mouse. Headless, a `move` replies after the tool's highlight under the pointer is ready, including the Shape Builder's and the Live Paint Bucket's regions of a large selection, which the desktop app finds off the UI thread and highlights after the reply. |
 | `draw_path` | `{points \| d, closed?, fill?, stroke?, strokeWidth?, dash?, cap?, join?, opacity?, name?, effects?}` | `points` is `[[x,y],…]` or `[{x,y,in?,out?,smooth?},…]`. `d` is SVG path data. The options are below. |
 | `draw_shape` | `{shape, …geometry, fill?, stroke?, strokeWidth?, dash?, cap?, join?, opacity?, name?, effects?}` | `rectangle`/`ellipse`: `x,y,width,height` (plus `radius` for corners). `polygon`: `cx,cy,radius,sides`. `star`: `cx,cy,radius1,radius2,points`. `line`: `x1,y1,x2,y2`. |
 | `set_paint` | `{fill?, stroke?, strokeWidth?, ids?}` | Applies to the selection (or `ids`) and becomes the default for new art. Returns `{applied, objects}`: `objects` is the number of objects painted, as the `objects` of the `paint.setFill`, `paint.setStroke` and `stroke.set` replies (the largest of them): a selected group counts the objects inside it. When it is 0, a `note` says that only the paint for new art changed. |
@@ -1398,6 +1398,14 @@ selected. While Lock Guides is on, the guide paths count as selected and stay as
 hide it records no undo step. In isolation mode the menu item is disabled, and the command returns the error "exit
 isolation mode first" and changes nothing.
 
+`object.lock.unselected` (Cmd+Alt+Shift+2; shortcut and command, with no Object › Lock menu item) locks unselected
+artwork in one undo step and returns `{count}`. In a partly selected group, clipping group, or compound path, it locks
+the unselected members and leaves the container and selected members unlocked. It includes unselected guides even
+while Lock Guides is on. Hidden art and art on locked layers stay individually unlocked; a selected layer's artwork
+counts as selected. In ordinary isolation mode it locks only unselected art inside the isolated object. The selection
+stays as it is. `object.unlockAll` unlocks and selects all locked artwork in the document, including art locked before
+this command. With nothing to lock it records no undo step.
+
 These Select menu commands select only the objects that `select.all` selects and the objects inside them: every
 `select.same.*` and `select.object.*` command except `select.object.slices`, `select.nextAbove`, `select.nextBelow`
 and `select.recall`. They leave out hidden and locked objects with the objects inside them, the objects on hidden,
@@ -2237,7 +2245,13 @@ reads as Add.
 The Eyedropper: `appearance.copyFrom {source}` copies what the Eyedropper Options pick up and apply from `source` to the
 selection (`ids`); `reverse: true` copies the selection's attributes onto `source` (Alt-click), or with nothing selected
 what the last copy without `reverse` picked up (a copy made then, kept for the session), and `append: true` adds
-the source's fills and strokes on top of each target's stack (Shift+Alt-click). The options live in the preferences:
+the source's fills and strokes on top of each target's stack (Shift+Alt-click). `defaultsOnly: true` copies the enabled
+fill, stroke and weight into paint defaults without changing selected art; it cannot be combined with `ids`, `reverse`
+or `append`. The Live Paint Bucket uses this for Alt-click sampling on vector art. On an image, it uses
+`paint.sampleColor {color, stroke: false, ids: [], clearStroke: true}` to set a solid fill default from the sampled
+pixel and clear the stroke default. `clearStroke: true` requires `stroke: false`, `ids: []` and no `stop`.
+Alt+Shift-click samples only the color at the pointer into the active paint default through
+`paint.sampleColor {color, ids: []}`. The options live in the preferences:
 `eyedropper.setOptions {sampleSize?, pickUp?, apply?}` (or `prefs.get`/`prefs.set` with key `eyedropper`) reads and
 sets them; a tree names flags under `appearance` (`transparency`, `fill` `{color, transparency, overprint}`, `stroke`
 `{color, transparency, overprint, weight, cap, join, miter, dash}`), `character` and `paragraph`, and a bool for a
@@ -3173,8 +3187,10 @@ Pen's second anchor at (150, 431), in line with the square's centre.
   Cmd+Shift+,) step the size. `type.size.increaseByFive` (Cmd+Alt+Shift+., `press_key {key: ".", mods: {cmd: true,
   alt: true, shift: true}}`) and `type.size.decreaseByFive` (Cmd+Alt+Shift+,) step it by five times `typeSizeIncrement`.
   The Type tool's Alt+arrows (`press_key {key: "Right", mods: {alt: true}}`) step kerning at
-  a caret or tracking of the selection (←/→), leading (↑/↓) and baseline shift (Shift+↑/↓), five steps with Cmd/Ctrl
-  too. `type.resetTracking` (Cmd+Alt+Q, `press_key {key: "Q", mods: {cmd: true, alt: true}}`) sets tracking to 0 and
+  a caret or tracking of the selection (←/→ in horizontal type, ↓/↑ with or without Shift in vertical type),
+  leading (↑/↓ in horizontal type, ←/→ in vertical type), and baseline shift (Shift+↑/↓ in horizontal type,
+  Shift+→/← in vertical type). Mixed selected text objects use the horizontal mapping; Cmd/Ctrl makes five steps.
+  `type.resetTracking` (Cmd+Alt+Q, `press_key {key: "Q", mods: {cmd: true, alt: true}}`) sets tracking to 0 and
   kerning to Auto in the type objects in `ids`, the Type tool's selected text or the selected type objects; at a caret
   it resets only the kerning of the character before it. `type.resetHorizontalScale` (Cmd+Shift+X,
   `press_key {key: "X", mods: {cmd: true, shift: true}}`) sets the horizontal scale to 100%, as the Character panel
@@ -5779,9 +5795,10 @@ type and evening out horizontal scales are not there yet.
 Path Precision Tools is a built-in add-on for exact anchor and path work: its commands are `addon.pathtools.*`, and in
 the desktop app it lives in Object › Plug-ins › Path Precision Tools, in its Anchor Inspector panel
 (`window.panel {panel: "anchorInspector"}`), in its Parametric Shape panel (`window.panel {panel: "parametricShape"}`)
-and in four tools that the toolbars don't show until they are added from the All Tools drawer (or chosen with
-`tool.select`): `anchorEraserBrush`, `extendPath`, `measureInspect` and `parametricShape`. None has a shortcut. Each edit
-is one undo step, and an edit that changes nothing makes no step.
+and in seven tools that the toolbars don't show until they are added from the All Tools drawer (or chosen with
+`tool.select`): `anchorEraserBrush`, `extendPath`, `measureInspect`, `parametricShape`, `cornerTool`, `slideAnchor` and
+`sharedEdge`.
+None has a shortcut. Each edit is one undo step, and an edit that changes nothing makes no step.
 
 Tools:
 
@@ -5804,6 +5821,29 @@ Tools:
   gear's tooth height, an arrow's head, a cross's bar, a heart's notch, a bubble's tail tip); each drag runs
   `addon.pathtools.shape.set`. A double-click on the canvas places a shape with the last settings. Options
   (`tool.setOption`, or the panel with no shape selected) are the next shape's numbers, as the commands take them.
+- **Corner Tool** (`cornerTool`, or the UI command `addon.pathtools.cornerTool`, which also shows the Anchor Inspector
+  panel with its Corners section): edits the app's Live Corners on any path, selected or not. Over an anchor where two
+  sides meet at an angle the anchor shows; a click runs `addon.pathtools.cornerSet` with the tool's `radius` (pt, 10)
+  and `kind` (`round`, `invertedRound` or `chamfer`), and a drag from it sizes the corner (Shift: whole values of the
+  ruler's unit; no larger than fits). A cut corner shows a marker at the centre of its cut: a click selects the corner
+  and loads its radius and kind into the tool, a drag resizes it (to 0 it goes), a double-click removes it. An Alt-drag
+  cuts corners on every anchor in the marquee, replacing those there; a plain marquee selects the corners inside (Shift
+  toggles), and a click away deselects. The panel section sets `radius` and `kind`, counts the selected corners and has
+  Apply to Selected Anchors.
+- **Slide Anchor Along Path** (`slideAnchor`): a drag on an anchor runs `addon.pathtools.slideAnchor`, previewed while
+  dragging: the anchor runs along the curve it sits on, as far as just short of its neighbours, and the two segments
+  beside it are refitted. Shift snaps to where the path's tangent is at a multiple of 45° from the Constrain Angle. Ends
+  of open paths don't slide.
+- **Shared Edge Merge Tool** (`sharedEdge`, or the UI command `addon.pathtools.sharedEdgeTool`, which also shows the
+  Anchor Inspector panel with its Shared Edges section): works on any two unlocked paths under its round brush, selected
+  or not. Where they touch at two coincident anchors, hovering shows the two stretches between those anchors dashed and
+  the edge replacing them solid (green when they are one edge already); a click runs `addon.pathtools.mergeEdge`, half
+  way between the two. Shift keeps the upper path's outline, Alt the lower's. Where the anchors aren't there yet a click
+  makes an end: two near anchors meet half way (or, with Shift or Alt, on the path kept), and an anchor only one path has
+  there gets a match on the other. Shift+Alt makes an end even inside a stretch that could merge. Stretches over 10%
+  different in length, or at over 120° at an end, are left alone. Options (`tool.setOption`, or the panel, kept with the
+  preferences): `diameter` (0.25 to 200 pt, 20), `tolerance` (how near two anchors count as coincident, 0 to 3 pt,
+  0.002) and `together` (Keep Shared Points Together).
 
 Commands:
 
@@ -5836,6 +5876,31 @@ Commands:
 - `addon.pathtools.crossings {cut?, selfCrossings?, ids?}` adds anchors where the selected paths cross one another (and
   where each crosses itself, with `selfCrossings`), or with `cut` also cuts them there: a path of one subpath becomes a
   path per piece. Paths that meet at a shared anchor don't cross there; at most 10,000 segments at once.
+- `addon.pathtools.cornerSet {ids?, anchors?, items?, radius, kind?}` cuts live corners, the ones Direct Selection's
+  corner widgets and the Corners dialog edit, as one undo step. `ids` (default: the selection) are the paths and
+  `anchors` the anchor indices of each path's outline with no corners cut; without `anchors`, a path's direct-selected
+  anchors, or all of them. `items: [{id, anchors?}…]` gives each path its own instead. Only anchors where two sides meet
+  at an angle take a corner: smooth anchors and open ends are skipped, and it is an error if none is left. `radius` is
+  0 to 1,000,000 pt, drawn no larger than fits; `kind` is `round`, `invertedRound` or `chamfer` (default: each corner's
+  own). → `{ids, corners}`.
+- `addon.pathtools.cornerRemove {ids?, anchors?, items?}` makes those corners sharp again, as one undo step; a plain path
+  with none left is plain again. → `{ids, corners}`.
+- `addon.pathtools.slideAnchor {id, subpath?, anchor, t}` moves an anchor along its path, the segments beside it refitted
+  so the outline stays (the anchor count and index stay). `t`, -0.98 to 0.98, says where: positive, a curve parameter on
+  the segment after the anchor; negative, back from the end of the one before. An anchor at a sharp corner loses it, as
+  the corner isn't on the way. → `{id, strayed}`, how far the outline moved in points.
+- `addon.pathtools.mergeEdge {a, b, at, diameter?, tolerance?, follow?, ends?}` looks within `diameter` (0.25 to 200 pt,
+  default 20) of `at` ([x, y]) on paths `a` and `b`, two editable paths: where they touch at two anchors coincident within
+  `tolerance` (0 to 3 pt, default 0.002), one each way along them, it replaces the stretches between with one edge;
+  otherwise it makes an end there, and `ends: true` asks for that first. `follow` says which outline stays: `average`
+  (default; half way between), `a` or `b`. Each path stays closed or open, and anchors either stretch has inside are on
+  the merged edge. One undo step. → `{a, b, made}`, with `made` `edge`, `end`, or `nothing` when they are merged already
+  (no undo step); it is an error if there is nothing to merge there.
+- `addon.pathtools.movePointsTogether {enabled?}` sets Keep Shared Points Together (without `enabled`, turns it the other
+  way). While it is on, anchors of any editable path coincident, within the Shared Edge Merge Tool's `tolerance`, with
+  one that `addon.pathtools.slideAnchor`, `extend` or `setAnchor` moves go with it, in the same undo step; an Extend Path
+  that adds an anchor leaves the old end, and what shares it, where they are. Nothing else in the app changes. It is the
+  `together` option of tool `sharedEdge`, off by default. → `{enabled}`.
 - `addon.pathtools.shape.create {center, kind?, width?, height?, rotation?, count?, a?, b?, radius?}` draws a parametric
   shape with the current paint, selected. `kind`: `rectangle`, `ellipse`, `polygon` (default), `star`, `ring`, `arrow`,
   `cross`, `heart`, `gear` or `bubble` (a speech bubble). `width` and `height` are 0.01 to 16,384 pt (100);
@@ -5865,6 +5930,37 @@ plain path from then on.
 {"name":"run_command","arguments":{"command":"addon.pathtools.crossings","params":{"cut":true}}}
 {"name":"run_command","arguments":{"command":"addon.pathtools.shape.create","params":{"kind":"star","center":[200,150],"width":120,"height":120,"count":7,"a":0.4}}}
 {"name":"run_command","arguments":{"command":"addon.pathtools.shape.set","params":{"id":14,"kind":"gear","count":16,"radius":2}}}
+```
+
+### Path Effects (live)
+
+Effect › Path Effects holds the add-on's live geometry effects, applied with `effect.apply {effect, params}` like any
+other effect, with no shortcuts. Each draws, measures, exports and stacks as the other geometry effects do; the object's
+own path stays as it is until Expand Appearance (`effect.expandAppearance`) writes the result. `effect.list` documents
+every parameter. Out-of-range values are clamped, and an effect whose result would pass the geometry effects' budget
+(2 million anchors) leaves the path as it is.
+
+| Id | Menu item | Parameters |
+| --- | --- | --- |
+| `addon.path.dashes` | Dashes to Geometry… | `dash1`…`dash5`, `gap1`…`gap5` (pt 0 to 10000; 12 and 6, then 0), `offset` (pt), `alignCorners` (bool, false) |
+| `addon.path.addAnchors` | Add Anchors… | `target` (`all`, `curved`, `straight`), `spacing` (`count`, `distance`), `count` (1 to 1000, 1), `distance` (pt, 20), `maxCount` (1 to 1000, 100) |
+| `addon.path.extend` | Extend Path… | `startLength`, `endLength` (pt, 10; negative shortens), `startPercent`, `endPercent` (% of the path's length, 0), `startShape`, `endShape` (`straight`, `arc`) |
+| `addon.path.close` | Close Path… | `mode` (`straight`, `smooth`) |
+| `addon.path.smooth` | Smooth Anchors… | `ratio` (0.01 to 0.5, 0.3905) |
+| `addon.path.retract` | Retract Handles… | `handles` (`all`, `shorter`), `length` (pt, 5) |
+| `addon.path.reverse` | Reverse Direction | none |
+| `addon.path.simplify` | Simplify Anchors… | `tolerance` (0 to 200, 10; each step lets the outline drift 0.02 pt), `protectCorners` (bool, true) |
+| `addon.path.split` | Split at Anchors… | `anchors` (`corner`, `smooth`, `both`) |
+
+Dashes to Geometry turns the path into open subpaths, one per dash; with `alignCorners`, every run between corners and
+ends holds whole periods with a dash centred on each corner and end, and the offset doesn't apply. A dash of 0 becomes a
+point that a round or projecting cap paints. Extend Path adds an end's length and percent together; closed subpaths stay
+as they are, and so does an end that would be shortened to nothing. An arc follows the end's curvature for at most half
+a circle. Split at Anchors tells smooth anchors by their handles standing in line. Simplify Anchors leaves a path of more
+than 50000 anchors as it is.
+
+```json
+{"id": 1, "method": "engine.execute", "params": {"command": "effect.apply", "params": {"effect": "addon.path.dashes", "params": {"dash1": 8, "gap1": 4, "dash2": 2, "gap2": 4, "alignCorners": true}}}}
 ```
 
 ## Smart Pen add-on

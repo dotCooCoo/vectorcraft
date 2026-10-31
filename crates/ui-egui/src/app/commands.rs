@@ -20,6 +20,7 @@ fn skips_hidden_templates(id: &str) -> bool {
         || id.starts_with("select.globalEdit")
         || id == "addon.color.select"
         || id == "object.hide.unselected"
+        || id == "object.lock.unselected"
         || id == "layer.selectAll"
         || id == "layer.target"
         || id == "shaper.scribble"

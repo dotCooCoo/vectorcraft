@@ -142,6 +142,8 @@ pub(super) struct Frame {
     pub(super) hidden: bool,
     /// [`Reader::after_object`] when it opened.
     pub(super) after: bool,
+    /// [`Reader::mesh_ended`] when it opened.
+    pub(super) mesh_ended: bool,
     /// The state when it opened (a container's lock and visibility; a dictionary's state to go
     /// back to).
     pub(super) gs: GState,

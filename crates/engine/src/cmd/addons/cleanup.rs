@@ -18,9 +18,8 @@ use super::super::edit::selected_roots;
 use super::super::{CommandSpec, bad, checked_ids_or_selection, cmd, has_doc, has_selection, number_or, switch_or, text_param};
 use crate::{EngineError, Result, Session};
 
-/// Simplify Anchors' tolerance by default, and the drift (pt) each step of it allows.
+/// Simplify Anchors' tolerance by default.
 const TOLERANCE: f64 = 20.0;
-pub(super) const PT_PER_TOLERANCE: f64 = 0.02;
 /// Rejoin Path Pieces' gap by default, and the widest (pt).
 const GAP: f64 = 0.1;
 const MAX_GAP: f64 = 6.0;
@@ -123,7 +122,7 @@ fn simplify(s: &mut Session, p: &Value) -> Result<Value> {
     let changed: Vec<(NodeId, PathData)> = paths
         .iter()
         .filter_map(|(id, path)| {
-            let np = po::simplify_keep_shape(path, tolerance * PT_PER_TOLERANCE, protect);
+            let np = po::simplify_keep_shape(path, tolerance * po::PT_PER_TOLERANCE, protect);
             (np != **path).then_some((*id, np))
         })
         .collect();
