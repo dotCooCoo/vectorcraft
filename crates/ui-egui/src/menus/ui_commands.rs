@@ -169,7 +169,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
     ),
     (
         "view.preciseCursors",
-        "Precise Cursors",
+        "Use Precise Cursors",
         "",
         "{} toggle General › Use Precise Cursors: the drawing tools' pointers become a crosshair → true when on",
     ),

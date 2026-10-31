@@ -9,7 +9,7 @@ use super::{CommandSpec, Result, Session, always, bad, bool_or, cmd, f64_req, fi
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
-        cmd!(query "view.capsLock", "Use Precise Cursors", [], None, "{on?: bool} set or read the transient Caps Lock cursor state → {on}", always, caps_lock),
+        cmd!(query "view.capsLock", "Caps Lock Cursor State", [], None, "{on?: bool} set or read the transient Caps Lock cursor state → {on}", always, caps_lock),
         cmd!(
             "view.saved.new",
             "New View…",
