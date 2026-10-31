@@ -311,3 +311,39 @@ fn contents_slot_follows_item_edits_and_round_trips() {
     assert_eq!(old.contents_index, None);
     assert!(!serde_json::to_string(&Appearance::default_art()).unwrap().contains("contents_index"));
 }
+
+/// The issue's case (#4174): two circles with different fills, the same stroke and the same
+/// effect share the stroke and the effect, not the fills; a shared stroke at another place in one
+/// stack maps to its own index there; nothing shared shares nothing; equal stacks share all.
+#[test]
+fn mixed_appearances_share_their_equal_rows() {
+    let stroke = AppearanceItem::Stroke(StrokeLayer::new(Paint::solid(Color::rgb(0.0, 0.0, 1.0)), 11.0));
+    let fill = |c: Color| AppearanceItem::Fill(FillLayer::new(Paint::solid(c)));
+    let feather = Effect { id: "stylize.feather".into(), params: serde_json::json!({"radius": 5}), visible: true };
+    let a = Appearance { items: vec![fill(Color::rgb(1.0, 1.0, 0.0)), stroke.clone()], effects: vec![feather.clone()], ..Appearance::default() };
+    let b = Appearance { items: vec![fill(Color::rgb(1.0, 0.0, 0.0)), stroke.clone()], effects: vec![feather.clone()], ..Appearance::default() };
+    let shared = SharedStack::of(&[&a, &b]);
+    assert_eq!(shared.items, vec![vec![1, 1]], "the stroke, not the fills");
+    assert_eq!(shared.effects, vec![vec![0, 0]]);
+    // The stroke under an extra fill in the second object.
+    let c =
+        Appearance { items: vec![fill(Color::BLACK), fill(Color::WHITE), stroke.clone()], effects: vec![feather.clone()], ..Appearance::default() };
+    let shared = SharedStack::of(&[&a, &c]);
+    assert_eq!(shared.items, vec![vec![1, 2]]);
+    assert_eq!(shared.item_in(1, 1), Some(2));
+    assert_eq!(shared.item_in(0, 1), None);
+    // Nothing alike.
+    let d = Appearance { items: vec![fill(Color::WHITE)], ..Appearance::default() };
+    let none = SharedStack::of(&[&a, &d]);
+    assert!(none.items.is_empty() && none.effects.is_empty());
+    // Equal stacks share everything, each row where it is.
+    assert_eq!(SharedStack::of(&[&a, &a.clone(), &a.clone()]).items, vec![vec![0, 0, 0], vec![1, 1, 1]]);
+}
+
+/// Matches keep their stacking order: two equal rows in the opposite order match once.
+#[test]
+fn aligned_rows_never_cross() {
+    assert_eq!(align(&[1, 2], &[2, 1], |a, b| a == b).iter().filter(|m| m.is_some()).count(), 1);
+    assert_eq!(align(&[1, 2, 3], &[9, 1, 3], |a, b| a == b), vec![Some(1), None, Some(2)]);
+    assert_eq!(align::<i32>(&[], &[1], |a, b| a == b), Vec::<Option<usize>>::new());
+}

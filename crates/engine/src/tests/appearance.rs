@@ -523,3 +523,78 @@ fn clear_and_reduce_keep_a_groups_stack_empty() {
     // The members keep their own appearance.
     assert_eq!(node(&s, a).appearance, members);
 }
+
+/// #4174: two circles with different fills, the same 11 pt blue stroke and the same Feather,
+/// both selected. Their default stacks are `[Fill, Stroke]`; the second gets a second fill under
+/// its stroke when `extra_fill`, so the shared stroke sits at another index there.
+fn mixed_circles(s: &mut Session, extra_fill: bool) -> (NodeId, NodeId) {
+    let mut circle = |x: f64, color: &str| {
+        let id = NodeId(run(s, "shape.ellipse", json!({"x": x, "y": 100, "width": 100, "height": 100}))["id"].as_u64().unwrap());
+        run(s, "paint.setFill", json!({"ids": [id.0], "color": color}));
+        run(s, "appearance.setItem", json!({"ids": [id.0], "index": 1, "color": "#0000ff", "weight": 11}));
+        run(s, "effect.apply", json!({"ids": [id.0], "effect": "stylize.feather", "item": null}));
+        id
+    };
+    let (a, b) = (circle(0.0, "#ffff00"), circle(150.0, "#ff0000"));
+    if extra_fill {
+        // Another fill on top of b's fill and moved under its stroke: [Fill, Fill, Stroke].
+        run(s, "appearance.addFill", json!({"ids": [b.0]}));
+        run(s, "appearance.moveItem", json!({"ids": [b.0], "from": 2, "to": 1}));
+        run(s, "appearance.setItem", json!({"ids": [b.0], "index": 1, "color": "#00ff00"}));
+    }
+    run(s, "select.set", json!({"ids": [a.0, b.0]}));
+    (a, b)
+}
+
+/// The shared stroke row edits the stroke of both circles, whatever its index in each, as one undo
+/// step, leaving their fills alone; undo restores both.
+#[test]
+fn a_shared_row_edits_every_selected_object() {
+    for extra in [false, true] {
+        let mut s = session();
+        let (a, b) = mixed_circles(&mut s, extra);
+        let b_stroke = if extra { 2 } else { 1 };
+        let fills = (node(&s, a).appearance.items.clone(), node(&s, b).appearance.items.clone());
+        let steps = s.doc().unwrap().history.undo.len();
+        // The panel lists the first object's rows: the stroke is a's item 1.
+        run(&mut s, "appearance.setItem", json!({"index": 1, "weight": 4, "aligned": true}));
+        assert_eq!(stroke(&node(&s, a), 1).width, 4.0);
+        assert_eq!(stroke(&node(&s, b), b_stroke).width, 4.0, "extra fill: {extra}");
+        assert_eq!(node(&s, a).appearance.items[0], fills.0[0], "a's fill untouched");
+        assert_eq!(node(&s, b).appearance.items.len(), fills.1.len());
+        assert_eq!(s.doc().unwrap().history.undo.len(), steps + 1, "one undo step");
+        run(&mut s, "edit.undo", json!({}));
+        assert_eq!((node(&s, a).appearance.items.clone(), node(&s, b).appearance.items.clone()), fills, "undo restores both");
+        // The active row (a's item 1) carries paint edits from other panels to both strokes too.
+        run(&mut s, "appearance.setActiveItem", json!({"index": 1}));
+        run(&mut s, "stroke.set", json!({"weight": 7}));
+        assert_eq!(stroke(&node(&s, b), b_stroke).width, 7.0, "extra fill: {extra}");
+    }
+}
+
+/// Removing the shared effect removes it from both; adding a fill adds one to both.
+#[test]
+fn shared_effects_and_new_fills_reach_every_selected_object() {
+    let mut s = session();
+    let (a, b) = mixed_circles(&mut s, true);
+    run(&mut s, "effect.remove", json!({"index": 0, "item": null, "aligned": true}));
+    assert!(node(&s, a).appearance.effects.is_empty() && node(&s, b).appearance.effects.is_empty());
+    let (na, nb) = (node(&s, a).appearance.items.len(), node(&s, b).appearance.items.len());
+    run(&mut s, "appearance.addFill", json!({}));
+    assert_eq!((node(&s, a).appearance.items.len(), node(&s, b).appearance.items.len()), (na + 1, nb + 1));
+    // Rows of different stacks aren't reordered together.
+    assert!(s.execute("appearance.moveItem", &json!({"from": 1, "to": 0, "aligned": true})).is_err());
+}
+
+/// Rows deleted together, one shared (the stroke) and one not (a's fill): each object loses its
+/// own copy of the shared row, and the other object keeps the items at those indices of a's stack.
+#[test]
+fn removing_shared_and_unshared_rows_removes_only_the_shared_ones_elsewhere() {
+    let mut s = session();
+    let (a, b) = mixed_circles(&mut s, true);
+    // b is [Fill, Fill, Stroke]; a's rows 0 (its fill) and 1 (the shared stroke).
+    let fills_b: Vec<_> = node(&s, b).appearance.items.iter().take(2).cloned().collect();
+    run(&mut s, "appearance.removeItem", json!({"indices": [0, 1], "aligned": true}));
+    assert!(node(&s, a).appearance.items.is_empty(), "a loses both");
+    assert_eq!(node(&s, b).appearance.items, fills_b, "b loses only its stroke, keeping both fills");
+}

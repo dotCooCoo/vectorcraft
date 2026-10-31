@@ -12,10 +12,10 @@ use vectorcraft_doc::{Document, Effect, Node, NodeKind, StrokeLayer};
 use vectorcraft_geom::{FillRule, PathData};
 use vectorcraft_render::effects;
 
-use super::appearance::{ItemTarget, appearance_targets, index_param, item_target, item_target_at};
+use super::appearance::{ItemTarget, aligned, appearance_targets, index_param, item_target, item_target_at, shared_stack};
 use super::expand::has_seeded;
 use super::rasterfx;
-use super::*;
+use super::{CommandSpec, EngineError, NodeId, Result, Session, always, bad, cmd, fileio, has_doc, str_param};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -42,7 +42,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Remove Effect",
             [],
             None,
-            "{index: int (position in the effect list), item?: appearance item index|null (that fill/stroke's effects; omitted: the active item, else the object's), ids?|id?: [..], target?: \"object\"|\"contents\"} → {ids}",
+            "{index: int (position in the effect list), item?: appearance item index|null (that fill/stroke's effects; omitted: the active item, else the object's), ids?|id?: [..], target?: \"object\"|\"contents\", aligned?: bool (index and item are rows of the first target's stack: each other target edits its equal one, as the Appearance panel does for a mixed selection)} → {ids}",
             has_doc,
             remove
         ),
@@ -51,7 +51,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Effect Options",
             [],
             None,
-            "{index: int, params?: {…} (merged into the current parameters), warpStyle?: string (an existing Warp style suffix, e.g. arc or flag; changes only an applied Warp in place), visible?: bool, item?: appearance item index|null (as effect.remove), ids?|id?: [..], target?: \"object\"|\"contents\"} → {ids}",
+            "{index: int, params?: {…} (merged into the current parameters), warpStyle?: string (an existing Warp style suffix, e.g. arc or flag; changes only an applied Warp in place), visible?: bool, item?: appearance item index|null (as effect.remove), ids?|id?: [..], target?: \"object\"|\"contents\", aligned?: bool (index and item are rows of the first target's stack: each other target edits its equal one, as the Appearance panel does for a mixed selection)} → {ids}",
             has_doc,
             set_params
         ),
@@ -60,7 +60,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "3D Lighting Preset",
             [],
             None,
-            "{index: int, preset: standard|diffuse|topLeft|right, item?: appearance item index|null (omitted: the active item, else the object's), ids?|id?: [..], target?: object|contents} replace an applied 3D effect's light rig and ambient with an original lighting preset; preserve shading, geometry and view; all targets must have a 3D effect at index; one undo step → {ids}",
+            "{index: int, preset: standard|diffuse|topLeft|right, item?: appearance item index|null (omitted: the active item, else the object's), ids?|id?: [..], target?: object|contents, aligned?: bool (index and item are rows of the first target's stack: each other target edits its equal one, as the Appearance panel does for a mixed selection)} replace an applied 3D effect's light rig and ambient with an original lighting preset; preserve shading, geometry and view; all targets must have a 3D effect at index; one undo step → {ids}",
             has_doc,
             lighting_preset
         ),
@@ -69,7 +69,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Expand Appearance",
             ["Object"],
             None,
-            "{ids?|id?: [..], target?} turn each object's appearance into objects: every fill and stroke becomes an object of its own (strokes outlined, brushed strokes their brush art) grouped in paint order under the object's id and transparency, geometry effects are baked, raster effects become an embedded image (shadows and outer glows below the art; blur, feather and inner glow replace it; an object whose only raster effect is its own Rasterize becomes the image object.rasterize makes with the effect's options), type with effects or fills of its own is outlined; Crop Marks become a group of the object and its marks; a group's or layer's own fills and strokes become objects among its members, which are expanded too. An outlined frame of threaded text leaves its thread with the text it shows, and a frame kept as type in a group stays in its thread. Hidden fills, strokes and effects are dropped. Enabled when a selected or targeted object's appearance isn't basic (`ids` then pick which objects) → {ids, warning? (an image in the art couldn't be decoded, as object.rasterize says)}",
+            "{ids?|id?: [..], target?} turn each object's appearance into objects: every fill and stroke becomes an object of its own (a stroke stays a stroke, with its weight, dashes, arrowheads and width profile, on its own copy of the path, which object.expand or object.path.outlineStroke outline; brushed strokes become their brush art) grouped in paint order under the object's id and transparency, geometry effects are baked, raster effects become an embedded image (shadows and outer glows below the art; blur, feather and inner glow replace it; an object whose only raster effect is its own Rasterize becomes the image object.rasterize makes with the effect's options), type with effects or fills of its own is outlined; Crop Marks become a group of the object and its marks; Vector Halftone (addon.color.halftone) becomes a group of its dot paths, one per ink; a group's or layer's own fills and strokes become objects among its members, which are expanded too. An outlined frame of threaded text leaves its thread with the text it shows, and a frame kept as type in a group stays in its thread. Hidden fills, strokes and effects are dropped. Enabled when a selected or targeted object's appearance isn't basic (`ids` then pick which objects) → {ids, warning? (an image in the art couldn't be decoded, as object.rasterize says)}",
             can_expand,
             expand_appearance
         ),
@@ -78,7 +78,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Duplicate Effect",
             [],
             None,
-            "{index: int, item?: appearance item index|null (as effect.remove), ids?|id?: [..], target?: \"object\"|\"contents\"} insert a copy of the effect right after it → {ids}",
+            "{index: int, item?: appearance item index|null (as effect.remove), ids?|id?: [..], target?: \"object\"|\"contents\", aligned?: bool (index and item are rows of the first target's stack: each other target edits its equal one, as the Appearance panel does for a mixed selection)} insert a copy of the effect right after it → {ids}",
             has_doc,
             duplicate
         ),
@@ -87,7 +87,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Move Effect",
             [],
             None,
-            "{from: int (position in the source list), to: int (its position in the destination list afterwards), fromItem?: appearance item index|null (the source list: that fill/stroke's effects, null the object's; omitted: the active item, else the object's), toItem?: item index|null (the destination list; default: the source list), copy?: bool (copy instead of move, as Alt-dragging the row), ids?|id?: [..], target?: \"object\"|\"contents\"} reorder an effect or move it between the object and its fills/strokes, as one undo step → {ids, index, item}",
+            "{from: int (position in the source list), to: int (its position in the destination list afterwards), fromItem?: appearance item index|null (the source list: that fill/stroke's effects, null the object's; omitted: the active item, else the object's), toItem?: item index|null (the destination list; default: the source list), copy?: bool (copy instead of move, as Alt-dragging the row), ids?|id?: [..], target?: \"object\"|\"contents\", aligned?: bool (refused when the targets' appearances differ)} reorder an effect or move it between the object and its fills/strokes, as one undo step → {ids, index, item}",
             has_doc,
             move_effect
         ),
@@ -101,6 +101,35 @@ fn ids_json(ids: &[NodeId]) -> Value {
 /// One undo step (`label`) running `f` on the effect list `item` addresses on each target (an
 /// appearance item's own effects, or the object's). Errors with `none` when `f` changed no object;
 /// returns the changed ids.
+/// Each target of an effect edit aimed at `item` and effect `index`: the object, the item whose
+/// effects it edits (`None`: the object's own) and the effect's index there. With `aligned` (see
+/// [`ItemTarget::per_target`]) `item` and `index` are the first target's, and each other target
+/// edits its equal item, or its equal object-level effect; a target without them is left out.
+pub(crate) fn effect_targets(s: &Session, p: &Value, item: ItemTarget, index: usize, cmd: &str) -> Result<Vec<(NodeId, Option<usize>, usize)>> {
+    let roots = appearance_targets(s, p)?;
+    let d = &s.doc()?.doc;
+    let per = item.per_target(d, &roots);
+    let shared = if aligned(p) { shared_stack(d, &roots) } else { None };
+    let mut out = Vec::with_capacity(roots.len());
+    for (k, (id, item)) in roots.iter().zip(per).enumerate() {
+        let (Some(item), Some(n)) = (item, d.node(*id)) else { continue };
+        let at = item.effects_item(&n.appearance, cmd)?;
+        // An object-level effect the targets share is, in each, where it is there.
+        let first = roots.first().and_then(|f| d.node(*f));
+        let first_level = first.map(|f| item.effects_item(&f.appearance, cmd)).transpose()?.flatten();
+        let index = match (&shared, at, first_level) {
+            (Some(sh), None, None) if sh.has_effect(index) => match sh.effect_in(index, k) {
+                Some(i) => i,
+                None => continue,
+            },
+            _ => index,
+        };
+        out.push((*id, at, index));
+    }
+    Ok(out)
+}
+
+#[allow(clippy::too_many_arguments)]
 fn edit_effects(
     s: &mut Session,
     p: &Value,
@@ -108,17 +137,17 @@ fn edit_effects(
     cmd: &str,
     label: &str,
     none: &str,
-    mut f: impl FnMut(&mut Vec<Effect>) -> bool,
+    index: usize,
+    mut f: impl FnMut(&mut Vec<Effect>, usize) -> bool,
 ) -> Result<Vec<NodeId>> {
-    let roots = appearance_targets(s, p)?;
+    let targets = effect_targets(s, p, item, index, cmd)?;
     s.edit(label, |d, _| {
         let mut done = vec![];
-        for id in &roots {
-            let Some(n) = d.node_mut(*id) else { continue };
-            let index = item.effects_item(&n.appearance, cmd)?;
-            if n.appearance.effects_mut(index).is_some_and(&mut f) {
+        for &(id, at, index) in &targets {
+            let Some(n) = d.node_mut(id) else { continue };
+            if n.appearance.effects_mut(at).is_some_and(|fx| f(fx, index)) {
                 check_revolve_count(n, cmd)?;
-                done.push(*id);
+                done.push(id);
             }
         }
         if done.is_empty() {
@@ -185,7 +214,7 @@ pub(crate) fn apply(s: &mut Session, p: &Value) -> Result<Value> {
         }
     }
     let mut index = 0;
-    let ids = edit_effects(s, p, item, C, &label, "Apply Effect: select objects", |fx| {
+    let ids = edit_effects(s, p, item, C, &label, "Apply Effect: select objects", 0, |fx, _| {
         fx.push(effect.clone());
         index = fx.len() - 1;
         true
@@ -241,7 +270,7 @@ fn remove(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "effect.remove";
     let index = index_param(p, "index", C)?;
     let item = item_target(s, p, C)?;
-    let ids = edit_effects(s, p, item, C, "Remove Effect", &format!("{C}: no effect at index {index}"), |fx| {
+    let ids = edit_effects(s, p, item, C, "Remove Effect", &format!("{C}: no effect at index {index}"), index, |fx, index| {
         (index < fx.len()).then(|| fx.remove(index)).is_some()
     })?;
     Ok(json!({ "ids": ids_json(&ids) }))
@@ -251,12 +280,14 @@ fn duplicate(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "effect.duplicate";
     let index = index_param(p, "index", C)?;
     let item = item_target(s, p, C)?;
-    let ids = edit_effects(s, p, item, C, "Duplicate Effect", &format!("{C}: no effect at index {index}"), |fx| match fx.get(index).cloned() {
-        Some(e) => {
-            fx.insert(index + 1, e);
-            true
+    let ids = edit_effects(s, p, item, C, "Duplicate Effect", &format!("{C}: no effect at index {index}"), index, |fx, index| {
+        match fx.get(index).cloned() {
+            Some(e) => {
+                fx.insert(index + 1, e);
+                true
+            }
+            None => false,
         }
-        None => false,
     })?;
     Ok(json!({ "ids": ids_json(&ids) }))
 }
@@ -269,6 +300,10 @@ fn move_effect(s: &mut Session, p: &Value) -> Result<Value> {
     let dst = if p.get("toItem").is_some() { item_target_at(s, p, "toItem", C)? } else { src };
     let copy = p.get("copy").and_then(Value::as_bool).unwrap_or(false);
     let roots = appearance_targets(s, p)?;
+    // Where an aligned effect would go in each of several different stacks isn't one place.
+    if aligned(p) && super::appearance::appearances_differ(&s.doc()?.doc, &roots) {
+        return Err(bad(C, "effects of objects whose appearances differ can't be moved together"));
+    }
     // Where the effect landed in the first object.
     let mut landed = None;
     let ids = s.edit(if copy { "Duplicate Effect" } else { "Move Effect" }, |d, _| {
@@ -298,14 +333,12 @@ fn move_effect(s: &mut Session, p: &Value) -> Result<Value> {
 /// (none when `p` doesn't say which: running it reports why).
 pub(crate) fn set_params_effects(s: &Session, p: &Value) -> Vec<String> {
     const C: &str = "effect.setParams";
-    let (Ok(index), Ok(item), Ok(ids), Ok(st)) = (index_param(p, "index", C), item_target(s, p, C), appearance_targets(s, p), s.doc()) else {
+    let (Ok(index), Ok(item), Ok(st)) = (index_param(p, "index", C), item_target(s, p, C), s.doc()) else {
         return vec![];
     };
-    let effect = |id: &NodeId| {
-        let ap = &st.doc.node(*id)?.appearance;
-        Some(ap.effects_at(item.effects_item(ap, C).ok()?)?.get(index)?.id.clone())
-    };
-    ids.iter().filter_map(effect).collect()
+    let Ok(targets) = effect_targets(s, p, item, index, C) else { return vec![] };
+    let effect = |&(id, at, index): &(NodeId, Option<usize>, usize)| Some(st.doc.node(id)?.appearance.effects_at(at)?.get(index)?.id.clone());
+    targets.iter().filter_map(effect).collect()
 }
 
 fn lighting_preset(s: &mut Session, p: &Value) -> Result<Value> {
@@ -317,9 +350,8 @@ fn lighting_preset(s: &mut Session, p: &Value) -> Result<Value> {
     let item = item_target(s, p, C)?;
     // Validate the whole selection before changing any object. An unrelated effect or
     // a missing index must not leave just some objects with a new lighting rig.
-    for id in appearance_targets(s, p)? {
+    for (id, slot, index) in effect_targets(s, p, item, index, C)? {
         let n = s.doc()?.doc.node(id).ok_or(EngineError::NoNode(id))?;
-        let slot = item.effects_item(&n.appearance, C)?;
         let effect = n.appearance.effects_at(slot).and_then(|fx| fx.get(index));
         if !effect.is_some_and(|e| effects::is_three_d(&e.id)) {
             return Err(bad(C, format!("object {} needs a 3D effect at index {index}", id.0)));
@@ -359,9 +391,8 @@ fn set_params(s: &mut Session, p: &Value) -> Result<Value> {
     if edited.iter().any(|e| texture_load_effect(e)) {
         load_texture(&mut params, C)?;
     }
-    for id in appearance_targets(s, p)? {
+    for (id, target, index) in effect_targets(s, p, item, index, C)? {
         let n = s.doc()?.doc.node(id).ok_or(EngineError::NoNode(id))?;
-        let target = item.effects_item(&n.appearance, C)?;
         let effect = n.appearance.effects_at(target).and_then(|fx| fx.get(index));
         if warp_id.is_some() && effect.is_some_and(|e| e.id.strip_prefix("warp.").and_then(effects::WarpStyle::from_id).is_none()) {
             return Err(bad(C, "warpStyle can only edit an applied Warp effect"));
@@ -377,7 +408,7 @@ fn set_params(s: &mut Session, p: &Value) -> Result<Value> {
             effects::validate_three_d(n, &e.id, &prospective).map_err(|e| bad(C, e))?;
         }
     }
-    let ids = edit_effects(s, p, item, C, "Effect Options", &format!("{C}: no effect at index {index}"), |fx| {
+    let ids = edit_effects(s, p, item, C, "Effect Options", &format!("{C}: no effect at index {index}"), index, |fx, index| {
         let Some(e) = fx.get_mut(index) else { return false };
         if let Some(id) = &warp_id {
             e.id.clone_from(id);
@@ -440,7 +471,7 @@ fn load_texture(params: &mut Value, cmd: &str) -> Result<()> {
 /// fills or strokes, effects, transparency of a fill or stroke, a brush), a group or layer with
 /// fills, strokes or effects of its own or such members, other objects with effects, or type with
 /// fills or strokes of its own?
-fn expandable(n: &Node) -> bool {
+pub(crate) fn expandable(n: &Node) -> bool {
     match &n.kind {
         NodeKind::Path { clipping: true, .. } | NodeKind::Path { guide: true, .. } => false,
         NodeKind::Path { .. } | NodeKind::Compound { .. } => !n.appearance.is_basic() || vectorcraft_brush::has_brush(n),
@@ -551,8 +582,9 @@ fn fresh_ids_listed(d: &mut Document, c: &mut Node, seen: &mut std::collections:
 }
 
 /// Expand Appearance of `id` (and, recursively, of a group's or layer's members): every fill and
-/// stroke becomes an object of its own (strokes outlined, brushes as their art), geometry effects
-/// are baked, raster effects become an embedded image, and the object keeps its transparency.
+/// stroke becomes an object of its own (a stroke a path stroked by it alone, brushes as their art),
+/// geometry effects are baked, raster effects become an embedded image, and the object keeps its
+/// transparency.
 pub(crate) fn expand_node(d: &mut Document, id: NodeId, brushes: &[vectorcraft_brush::Brush], out: &mut Vec<NodeId>) {
     let Some(n) = d.node(id).cloned() else { return };
     let mut listed = vec![];
@@ -612,6 +644,17 @@ fn expanded_node(d: &mut Document, mut n: Node, brushes: &[vectorcraft_brush::Br
             out.push((id, 0));
         }
         out.extend(expanded.into_iter().map(|(id, at)| (id, at + 1)));
+        return Some(m);
+    }
+    // Vector Halftone: the object becomes its dots, a group (with `id`) of paths with ids of their own.
+    if let Some(mut m) = vectorcraft_render::addons::halftone::art(d, &n) {
+        let mut seen = std::collections::HashSet::from([id]);
+        for c in m.children_mut().into_iter().flatten() {
+            effects::fresh_ids(d, Arc::make_mut(c), &mut seen);
+        }
+        if !listed_n {
+            out.push((id, 0));
+        }
         return Some(m);
     }
     let image = raster_image(d, &n);
@@ -689,6 +732,7 @@ fn expanded_node(d: &mut Document, mut n: Node, brushes: &[vectorcraft_brush::Br
 fn expand_appearance(s: &mut Session, p: &Value) -> Result<Value> {
     let roots = appearance_targets(s, p)?;
     let failed = vectorcraft_render::decode_failures();
+    let colorized_ok = super::paint::check_colorized(&s.doc()?.doc).is_ok();
     let ids = s.edit("Expand Appearance", |d, _| {
         let brushes = vectorcraft_brush::library(d);
         let mut out = vec![];
@@ -702,6 +746,7 @@ fn expand_appearance(s: &mut Session, p: &Value) -> Result<Value> {
         if out.is_empty() {
             return Err(EngineError::Other("Expand Appearance: the selection has a basic appearance".into()));
         }
+        super::paint::check_colorized_kept(colorized_ok, d).map_err(|e| bad("Expand Appearance", e))?;
         Ok(out)
     })?;
     let mut out = json!({ "ids": ids_json(&ids) });

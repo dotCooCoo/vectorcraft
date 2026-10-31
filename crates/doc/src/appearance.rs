@@ -506,5 +506,105 @@ impl Appearance {
     }
 }
 
+/// The most fills, strokes or effects a stack may have to be matched against another's
+/// ([`align`]); a larger stack shares nothing with the others.
+const MAX_ALIGNED: usize = 1024;
+
+/// Where each entry of `first` is in `other`: the entries equal in both (`same`), matched in their
+/// stacking order (a longest common subsequence, so the matches never cross), by index into
+/// `other`; `None` where `other` has no equal entry left for it.
+pub fn align<T>(first: &[T], other: &[T], same: impl Fn(&T, &T) -> bool) -> Vec<Option<usize>> {
+    let (n, m) = (first.len(), other.len());
+    let mut out = vec![None; n];
+    if n == 0 || m == 0 || n > MAX_ALIGNED || m > MAX_ALIGNED {
+        return out;
+    }
+    // `len[i][j]`: the longest match of `first[i..]` and `other[j..]`.
+    let w = m + 1;
+    let mut len = vec![0u16; (n + 1) * w];
+    for i in (0..n).rev() {
+        for j in (0..m).rev() {
+            let here = match (first.get(i), other.get(j)) {
+                (Some(a), Some(b)) if same(a, b) => len.get((i + 1) * w + j + 1).copied().unwrap_or(0).saturating_add(1),
+                _ => len.get((i + 1) * w + j).copied().unwrap_or(0).max(len.get(i * w + j + 1).copied().unwrap_or(0)),
+            };
+            if let Some(c) = len.get_mut(i * w + j) {
+                *c = here;
+            }
+        }
+    }
+    let (mut i, mut j) = (0, 0);
+    while i < n && j < m {
+        let at = |a: usize, b: usize| len.get(a * w + b).copied().unwrap_or(0);
+        match (first.get(i), other.get(j)) {
+            (Some(a), Some(b)) if same(a, b) && at(i, j) == at(i + 1, j + 1).saturating_add(1) => {
+                if let Some(o) = out.get_mut(i) {
+                    *o = Some(j);
+                }
+                i += 1;
+                j += 1;
+            }
+            _ if at(i + 1, j) >= at(i, j + 1) => i += 1,
+            _ => j += 1,
+        }
+    }
+    out
+}
+
+/// What several objects' appearances share, as the Appearance panel lists a mixed selection: the
+/// fills and strokes, and the object-level effects, that every one of them has an equal copy of, in
+/// stacking order ([`align`]), each with where it is in every object's own stack.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SharedStack {
+    /// Each shared fill or stroke, in the first object's paint order: its index in each object's
+    /// `items` (the first object's first).
+    pub items: Vec<Vec<usize>>,
+    /// Each shared object-level effect: its index in each object's `effects`.
+    pub effects: Vec<Vec<usize>>,
+}
+
+impl SharedStack {
+    /// The rows `appearances` share (see [`SharedStack`]). One appearance shares all of itself.
+    pub fn of(appearances: &[&Appearance]) -> Self {
+        let Some((first, rest)) = appearances.split_first() else { return Self::default() };
+        fn shared<T>(first: &[T], rest: Vec<&[T]>, same: impl Fn(&T, &T) -> bool + Copy) -> Vec<Vec<usize>> {
+            let maps: Vec<Vec<Option<usize>>> = rest.iter().map(|o| align(first, o, same)).collect();
+            (0..first.len())
+                .filter_map(|i| {
+                    let mut at = vec![i];
+                    for m in &maps {
+                        at.push((*m.get(i)?)?);
+                    }
+                    Some(at)
+                })
+                .collect()
+        }
+        Self {
+            items: shared(&first.items, rest.iter().map(|a| a.items.as_slice()).collect(), |a, b| a == b),
+            effects: shared(&first.effects, rest.iter().map(|a| a.effects.as_slice()).collect(), |a, b| a == b),
+        }
+    }
+
+    /// Where the first object's fill or stroke `first` is in object `k`'s stack, when it is shared.
+    pub fn item_in(&self, first: usize, k: usize) -> Option<usize> {
+        self.items.iter().find(|at| at.first() == Some(&first))?.get(k).copied()
+    }
+
+    /// Where the first object's object-level effect `first` is in object `k`'s effects, when shared.
+    pub fn effect_in(&self, first: usize, k: usize) -> Option<usize> {
+        self.effects.iter().find(|at| at.first() == Some(&first))?.get(k).copied()
+    }
+
+    /// Is the first object's fill or stroke `i` shared?
+    pub fn has_item(&self, i: usize) -> bool {
+        self.items.iter().any(|at| at.first() == Some(&i))
+    }
+
+    /// Is the first object's object-level effect `k` shared?
+    pub fn has_effect(&self, k: usize) -> bool {
+        self.effects.iter().any(|at| at.first() == Some(&k))
+    }
+}
+
 #[cfg(test)]
 mod tests;

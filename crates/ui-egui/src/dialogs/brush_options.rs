@@ -177,10 +177,20 @@ pub(super) fn open_new(app: &mut VectorcraftApp, ty: &str, ids: Option<Value>) -
     Ok(Value::Null)
 }
 
-/// OK of a new brush's Brush Options: `brush.new` with the type, the name, the values set and the
-/// dropped art's ids. The dialog closes once the brush is made.
+/// OK of a new brush's Brush Options: `brush.new` with the type, the name, the values set, the art
+/// the dialog opened with (`art` or `side` of `__def`, which the preview draws) and the dropped
+/// art's ids. A selection changed or cleared while the dialog is open does not change the art. The
+/// dialog closes once the brush is made.
 fn create(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
-    let mut p = json!({ "type": d.str("__type"), "name": d.str("name").trim(), "params": params(d) });
+    let mut brush_params = params(d);
+    if let Some(def) = d.fields.get("__def") {
+        for key in ["art", "side"] {
+            if let Some(art) = def.get(key).filter(|v| !v.is_null()) {
+                brush_params[key] = art.clone();
+            }
+        }
+    }
+    let mut p = json!({ "type": d.str("__type"), "name": d.str("name").trim(), "params": brush_params });
     if let Some(ids) = d.fields.get(IDS) {
         p["ids"] = ids.clone();
     }

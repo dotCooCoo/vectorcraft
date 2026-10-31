@@ -219,12 +219,10 @@ fn text(ui: &Ui, pos: egui::Pos2, s: &str, strong: bool) {
     ui.painter().text(pos, egui::Align2::LEFT_CENTER, s, egui::FontId::proportional(12.5), if strong { t.text_strong } else { t.text });
 }
 
-fn chip(ui: &Ui, r: Rect, p: &Paint) {
-    let t = Tokens::get(ui.ctx());
+fn chip(ui: &Ui, r: Rect, p: &Paint, mixed: bool) {
     ui.painter().rect_filled(r.expand(1.0), 0.0, egui::Color32::BLACK);
-    widgets::paint_chip(ui, r, p);
+    widgets::proxy_chip(ui, r, p, mixed, None);
     ui.painter().rect_stroke(r, 0.0, Stroke::new(1.0, egui::Color32::WHITE), StrokeKind::Inside);
-    let _ = t;
 }
 
 /// A dotted-underline link drawn at `pos`; returns clicked.
@@ -255,8 +253,9 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
             select_row(app, ui.ctx(), Sel::None);
         }
         ui.painter().line_segment([r.left_bottom(), r.right_bottom()], Stroke::new(1.0, t.input_border));
-        let mixed = mixed_appearances(app);
-        let label = if mixed { tl!("Mixed Appearances") } else { tl!(object_label(app)) };
+        let mix = mixed(app);
+        let mixed = mix.is_some();
+        let label = tl!(object_label(app));
         // A linked object names its graphic style ("Rectangle: Sunshine"), and so does new art
         // with nothing selected.
         let style = match app.session.selection_graphic_style() {
@@ -270,17 +269,31 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         };
         if !hide_thumb {
             let th = Rect::from_min_size(r.left_center() + vec2(6.0, -12.0), vec2(24.0, 24.0));
-            let fill = node.as_ref().map(|n| n.appearance.fill_paint()).unwrap_or_else(|| app.session.paint.fill.clone());
-            chip(ui, th, &fill);
+            // Objects whose fills differ show "?", like the Properties panel's Fill chip.
+            let fill = match &node {
+                Some(n) => n.appearance.fill_paint(),
+                None => app.session.paint.fill.clone(),
+            };
+            chip(ui, th, &fill, mix.as_ref().is_some_and(|m| m.fills_differ));
             if let Some(n) = node.as_ref().filter(|_| !mixed) {
                 thumbnail_drag(ui, th, n.id);
             }
         }
         text(ui, r.left_center() + vec2(if hide_thumb { 8.0 } else { 46.0 }, 0.0), &label, true);
         match &node {
-            // Objects that differ have no common stack to list.
-            Some(_) if mixed => {}
-            Some(n) => stack(app, ui, n, sel, r),
+            // Objects that differ list what they share, under a note that they differ.
+            Some(n) if let Some(m) = &mix => {
+                let (mr, _) = ui.allocate_exact_size(vec2(ui.available_width(), ROW), Sense::hover());
+                let mut job = egui::text::LayoutJob::default();
+                let format = egui::TextFormat { font_id: egui::FontId::proportional(12.0), color: t.text_dim, italics: true, ..Default::default() };
+                job.append(tl!("Mixed Appearances"), 0.0, format);
+                let g = ui.painter().layout_job(job);
+                ui.painter().galley(mr.left_center() + vec2(EYE_W + 24.0, -g.size().y / 2.0), g, t.text_dim);
+                if !(m.shared.items.is_empty() && m.shared.effects.is_empty()) {
+                    stack(app, ui, n, sel, r, Some(m));
+                }
+            }
+            Some(n) => stack(app, ui, n, sel, r, None),
             None => default_stack(app, ui),
         }
         // Spacer row like Illustrator's empty tail.
@@ -306,23 +319,54 @@ fn first_subject(app: &VectorcraftApp) -> Option<Node> {
     st.selection.subjects().first().and_then(|id| st.doc.node(*id)).cloned()
 }
 
-/// The selection as the Control bar and the object row name it: "No Selection", "Mixed Objects"
-/// or the kind ("Path", "Type", "Layer"…) of the object, or targeted layer, the panel lists.
+/// The selection as the Control bar and the object row name it: "No Selection", the kind ("Path",
+/// "Type", "Layer"…) of the object, or targeted layer, the panel lists, or of every selected
+/// object when they are all of one kind, else "Mixed Objects".
 pub(crate) fn object_label(app: &VectorcraftApp) -> &'static str {
     let Some(st) = app.session.active() else { return "No Selection" };
-    match st.selection.subjects() {
-        [] => "No Selection",
-        [id] => st.doc.node(*id).map_or("No Selection", Node::kind_label),
-        _ => "Mixed Objects",
-    }
+    let mut kinds = st.selection.subjects().iter().map(|id| st.doc.node(*id).map_or("No Selection", Node::kind_label));
+    let Some(first) = kinds.next() else { return "No Selection" };
+    if kinds.all(|k| k == first) { first } else { "Mixed Objects" }
 }
 
-/// Do the selected objects differ in appearance (fills, strokes, effects, opacity or blend mode)?
-fn mixed_appearances(app: &VectorcraftApp) -> bool {
-    let Some(st) = app.session.active() else { return false };
-    let mut nodes = st.selection.subjects().iter().filter_map(|id| st.doc.node(*id));
-    let Some(first) = nodes.next() else { return false };
-    nodes.any(|n| n.appearance != first.appearance || n.opacity != first.opacity || n.blend != first.blend)
+/// The selected objects the panel lists (several, at least one differing from the first in
+/// appearance, opacity or blend mode): what their stacks share, and whether their opacity and blend
+/// mode differ. `None` for one object, or several alike.
+fn mixed(app: &VectorcraftApp) -> Option<Mixed> {
+    let st = app.session.active()?;
+    let nodes: Vec<&Node> = st.selection.subjects().iter().filter_map(|id| st.doc.node(*id)).collect();
+    let (first, rest) = nodes.split_first()?;
+    let transparency = rest.iter().any(|n| n.opacity != first.opacity || n.blend != first.blend);
+    if rest.is_empty() || (!transparency && rest.iter().all(|n| n.appearance == first.appearance)) {
+        return None;
+    }
+    let aps: Vec<&vectorcraft_doc::Appearance> = nodes.iter().map(|n| &*n.appearance).collect();
+    let fills_differ = rest.iter().any(|n| n.appearance.fill_paint() != first.appearance.fill_paint());
+    Some(Mixed { shared: vectorcraft_doc::appearance::SharedStack::of(&aps), transparency, fills_differ })
+}
+
+/// A mixed selection as the panel lists it ([`mixed`]).
+struct Mixed {
+    /// The fills, strokes and effects the objects share: the rows listed.
+    shared: vectorcraft_doc::appearance::SharedStack,
+    /// The objects' opacity or blend mode differ: the Opacity row reads "Mixed".
+    transparency: bool,
+    /// Their topmost fills differ: the object row shows no fill chip.
+    fills_differ: bool,
+}
+
+/// `params` of an item or effect command the panel runs, with `aligned` when the selected objects'
+/// stacks differ: its indices are then rows of the first object's stack, which each other object
+/// edits where it has them (the panel lists only the rows they share).
+fn aligned(app: &VectorcraftApp, mut params: Value) -> Value {
+    let differ = app.session.active().is_some_and(|st| {
+        let mut aps = st.selection.subjects().iter().filter_map(|id| st.doc.node(*id)).map(|n| &n.appearance);
+        aps.next().is_some_and(|first| aps.any(|a| a != first))
+    });
+    if differ && let Some(m) = params.as_object_mut() {
+        m.insert("aligned".into(), json!(true));
+    }
+    params
 }
 
 /// What the next object drawn gets when nothing is selected (`Session::new_art`): its fills and
@@ -347,7 +391,7 @@ fn default_stack(app: &mut VectorcraftApp, ui: &mut Ui) {
         } else if link(ui, pos2(lx, r.center().y), ("ap-def-link", i), tl!("Stroke:")) {
             app.ui.open_panel = Some("stroke".into());
         }
-        chip(ui, Rect::from_min_size(pos2(r.left() + EYE_W + 76.0, r.center().y - 9.0), vec2(18.0, 18.0)), it.paint());
+        chip(ui, Rect::from_min_size(pos2(r.left() + EYE_W + 76.0, r.center().y - 9.0), vec2(18.0, 18.0)), it.paint(), false);
         if let AppearanceItem::Stroke(st) = it {
             let w = app.session.stroke_unit().format(st.width);
             text(ui, pos2(r.left() + EYE_W + 106.0, r.center().y), &w, false);
@@ -393,23 +437,33 @@ enum Slot {
     Contents,
 }
 
-fn stack(app: &mut VectorcraftApp, ui: &mut Ui, n: &Node, sel: Sel, object_row: Rect) {
+/// `only`: a mixed selection (`n` its first object): only the rows its objects share are listed,
+/// and rows aren't dragged (where one would go in each of the different stacks isn't one place).
+fn stack(app: &mut VectorcraftApp, ui: &mut Ui, n: &Node, sel: Sel, object_row: Rect, only: Option<&Mixed>) {
     let t = Tokens::get(ui.ctx());
     let ctx = ui.ctx().clone();
-    let dragging: Option<Dragged> = pstate(&ctx, "ap-drag");
+    let dragging: Option<Dragged> = pstate::<Option<Dragged>>(&ctx, "ap-drag").filter(|_| only.is_none());
     let items = selected_items(&ctx, Some(n), sel);
     let mut rows = vec![(Slot::Object { top: true }, object_row)];
     let mut stopped = false;
     // Starts or ends a row drag.
+    let frozen = only.is_some();
     let mut track = |resp: &egui::Response, what: Dragged| {
+        if frozen {
+            return;
+        }
         if resp.drag_started() {
             set_pstate(&ctx, "ap-drag", Some(what));
         }
         stopped |= resp.drag_stopped();
     };
-    let contents = n.contents_label();
+    // A mixed selection's Contents rows differ object by object: none is listed.
+    let contents = n.contents_label().filter(|_| only.is_none());
     let below = n.appearance.contents_at();
     for (i, it) in n.appearance.items.iter().enumerate().rev() {
+        if only.is_some_and(|m| !m.shared.has_item(i)) {
+            continue;
+        }
         // The Contents row sits right above the items painted below the members.
         if let Some(label) = contents.filter(|_| i + 1 == below) {
             let (r, resp) = contents_row(app, ui, n, label, sel);
@@ -422,7 +476,7 @@ fn stack(app: &mut VectorcraftApp, ui: &mut Ui, n: &Node, sel: Sel, object_row: 
         let (visible, paint) = (it.visible(), it.paint());
         let is_stroke = !it.is_fill();
         if eye(ui, r, ("ap-eye", i), visible, true) {
-            app.run("appearance.setItem", json!({"index": i, "visible": !visible})).ok();
+            app.run("appearance.setItem", aligned(app, json!({"index": i, "visible": !visible}))).ok();
         }
         if chevron(ui, r, ("ap-chev", i), open) {
             set_pstate(ui.ctx(), &format!("ap-open-{i}"), !open);
@@ -439,7 +493,7 @@ fn stack(app: &mut VectorcraftApp, ui: &mut Ui, n: &Node, sel: Sel, object_row: 
         // Swatch with a swatches popup that sets this item's paint; Shift-click opens the Color
         // panel's mixer on this row instead.
         let cr = Rect::from_min_size(pos2(r.left() + EYE_W + 76.0, r.center().y - 9.0), vec2(18.0, 18.0));
-        chip(ui, cr, paint);
+        chip(ui, cr, paint, false);
         let cresp = ui
             .interact(cr.expand(2.0), ui.scope_id().with(("ap-chip", i)), Sense::click())
             .on_hover_text(tl!("Click to choose a swatch, Shift-click to mix a colour"));
@@ -456,7 +510,7 @@ fn stack(app: &mut VectorcraftApp, ui: &mut Ui, n: &Node, sel: Sel, object_row: 
             let mut child = ui.new_child(egui::UiBuilder::new().max_rect(fr).layout(egui::Layout::left_to_right(egui::Align::Center)));
             if let Some(w) = widgets::num_field_named(&mut child, ("ap-w", i), Some(tl!("Weight:")), Some(st.width), app.session.stroke_unit(), 56.0)
             {
-                app.run("appearance.setItem", json!({"index": i, "weight": w})).ok();
+                app.run("appearance.setItem", aligned(app, json!({"index": i, "weight": w}))).ok();
             }
             stroke_notes(ui, Rect::from_min_max(pos2(fr.right() + 6.0, r.top()), pos2(r.right() - 4.0, r.bottom())), st);
         }
@@ -469,7 +523,7 @@ fn stack(app: &mut VectorcraftApp, ui: &mut Ui, n: &Node, sel: Sel, object_row: 
         }
         track(&resp, Dragged::Item(i));
         if open {
-            let r = opacity_row(app, ui, Some(i), it.opacity(), it.blend());
+            let r = opacity_row(app, ui, Some(i), it.opacity(), it.blend(), false);
             rows.push((Slot::Item { index: i, sub: true }, r));
             for (k, e) in it.effects().iter().enumerate() {
                 let (r, resp) = effect_row(app, ui, Some(i), k, e, sel == Sel::ItemEffect(i, k));
@@ -485,11 +539,14 @@ fn stack(app: &mut VectorcraftApp, ui: &mut Ui, n: &Node, sel: Sel, object_row: 
     }
     // Object-level effects.
     for (k, e) in n.appearance.effects.iter().enumerate() {
+        if only.is_some_and(|m| !m.shared.has_effect(k)) {
+            continue;
+        }
         let (r, resp) = effect_row(app, ui, None, k, e, sel == Sel::Effect(k));
         rows.push((Slot::Effect(None, k), r));
         track(&resp, Dragged::Effect(None, k));
     }
-    let r = opacity_row(app, ui, None, n.opacity, n.blend);
+    let r = opacity_row(app, ui, None, n.opacity, n.blend, only.is_some_and(|m| m.transparency));
     rows.push((Slot::Object { top: false }, r));
     let Some(what) = dragging else { return };
     let pointer = ui.ctx().pointer_interact_pos();
@@ -623,7 +680,7 @@ fn contents_row(app: &mut VectorcraftApp, ui: &mut Ui, n: &Node, label: &str, se
     if characters {
         for (k, stroke) in [false, true].into_iter().enumerate() {
             let cr = Rect::from_min_size(pos2(r.left() + EYE_W + 100.0 + 24.0 * k as f32, r.center().y - 9.0), vec2(18.0, 18.0));
-            chip(ui, cr, n.proxy_paint(stroke, None).map_or(&Paint::None, |(p, ..)| p));
+            chip(ui, cr, n.proxy_paint(stroke, None).map_or(&Paint::None, |(p, ..)| p), false);
         }
     }
     // An image's row has no members to target.
@@ -669,17 +726,24 @@ fn stroke_notes(ui: &Ui, r: Rect, st: &vectorcraft_doc::StrokeLayer) {
 /// The Opacity row of the object (`item: None`) or, indented, of fill/stroke `item`. Clicking it
 /// opens a popup with the shared opacity and blend controls (`transparency.set` on that item).
 /// Returns the row's rect.
-fn opacity_row(app: &mut VectorcraftApp, ui: &mut Ui, item: Option<usize>, opacity: f32, blend: BlendMode) -> Rect {
+///
+/// `mixed`: the selected objects' opacity or blend mode differ: it reads "Mixed", and an edit
+/// sets them all.
+fn opacity_row(app: &mut VectorcraftApp, ui: &mut Ui, item: Option<usize>, opacity: f32, blend: BlendMode, mixed: bool) -> Rect {
     let (r, resp) = row(ui, false);
     eye(ui, r, ("ap-op-eye", item), true, false);
     let lx = r.left() + EYE_W + 24.0 + if item.is_some() { 12.0 } else { 0.0 };
     let clicked = link(ui, pos2(lx, r.center().y), ("ap-op-link", item), tl!("Opacity:")) || resp.clicked();
-    text(ui, pos2(lx + 56.0, r.center().y), &opacity_text(opacity, blend), false);
+    let shown = if mixed { tl!("Mixed").to_string() } else { opacity_text(opacity, blend) };
+    text(ui, pos2(lx + 56.0, r.center().y), &shown, false);
     widgets::popover(&resp, clicked, |ui| match widgets::opacity_blend(ui, ("ap-op", item), Some(opacity), Some(blend), true) {
         Some(TransparencyEdit::Blend(b)) => {
-            app.run("transparency.set", json!({"item": item, "blend": b.label()})).ok();
+            app.run("transparency.set", aligned(app, json!({"item": item, "blend": b.label()}))).ok();
         }
-        Some(TransparencyEdit::Opacity(o, phase)) => live_run(app, "Opacity", "transparency.set", json!({"item": item, "opacity": o}), phase),
+        Some(TransparencyEdit::Opacity(o, phase)) => {
+            let params = aligned(app, json!({"item": item, "opacity": o}));
+            live_run(app, "Opacity", "transparency.set", params, phase)
+        }
         None => {}
     });
     r
@@ -696,7 +760,7 @@ fn effect_row(app: &mut VectorcraftApp, ui: &mut Ui, item: Option<usize>, k: usi
     let (row_rect, resp) = row(ui, selected);
     let r = row_rect;
     if eye(ui, r, ("ap-fx-eye", item, k), e.visible, true) {
-        app.run("effect.setParams", json!({"item": item, "index": k, "visible": !e.visible})).ok();
+        app.run("effect.setParams", aligned(app, json!({"item": item, "index": k, "visible": !e.visible}))).ok();
     }
     let indent = if item.is_some() { 12.0 } else { 0.0 };
     let r = Rect::from_min_max(pos2(r.left() + indent, r.top()), r.max);
@@ -707,7 +771,7 @@ fn effect_row(app: &mut VectorcraftApp, ui: &mut Ui, item: Option<usize>, k: usi
     if link(ui, pos2(lx, r.center().y), ("ap-fx-link", item, k), &shown_effect_label(&e.id)) {
         select_row(app, ui.ctx(), this);
         if has_options(&e.id) {
-            app.run("effect.dialog", json!({"effect": e.id, "index": k, "item": item})).ok();
+            app.run("effect.dialog", aligned(app, json!({"effect": e.id, "index": k, "item": item}))).ok();
         } else {
             set_pstate(ui.ctx(), &open_key, !open);
         }
@@ -846,10 +910,10 @@ fn effect_editor(app: &mut VectorcraftApp, ui: &mut Ui, item: Option<usize>, k: 
         }
     });
     if let Some((key, v)) = change {
-        app.run("effect.setParams", json!({"item": item, "index": k, "params": {key: v}})).ok();
+        app.run("effect.setParams", aligned(app, json!({"item": item, "index": k, "params": {key: v}}))).ok();
     }
     if edit {
-        app.run("effect.dialog", json!({"effect": e.id, "index": k, "item": item})).ok();
+        app.run("effect.dialog", aligned(app, json!({"effect": e.id, "index": k, "item": item}))).ok();
     }
 }
 
@@ -892,7 +956,7 @@ fn swatch_picker(app: &mut VectorcraftApp, ui: &mut Ui, index: usize) {
     });
     if let Some((name, none)) = chosen {
         let params = if none { json!({"index": index, "none": true}) } else { json!({"index": index, "swatch": name}) };
-        app.run("appearance.setItem", params).ok();
+        app.run("appearance.setItem", aligned(app, params)).ok();
         ui.close();
     }
 }
@@ -929,16 +993,20 @@ fn bottom(app: &mut VectorcraftApp, ui: &mut Ui, node: Option<&Node>, sel: Sel) 
 /// Duplicate the selected fills/strokes (each copy right above its row) or the selected effect.
 fn duplicate_selected(app: &mut VectorcraftApp, ui: &Ui, node: Option<&Node>, sel: Sel) {
     match sel.effect() {
-        Some(fx) => app.run("effect.duplicate", fx).ok(),
-        None if sel.item().is_some() => app.run("appearance.duplicateItem", json!({"indices": selected_items(ui.ctx(), node, sel)})).ok(),
+        Some(fx) => app.run("effect.duplicate", aligned(app, fx)).ok(),
+        None if sel.item().is_some() => {
+            app.run("appearance.duplicateItem", aligned(app, json!({"indices": selected_items(ui.ctx(), node, sel)}))).ok()
+        }
         None => None,
     };
 }
 
 fn delete_selected(app: &mut VectorcraftApp, ui: &Ui, node: Option<&Node>, sel: Sel) {
     let ok = match sel.effect() {
-        Some(fx) => app.run("effect.remove", fx).is_ok(),
-        None if sel.item().is_some() => app.run("appearance.removeItem", json!({"indices": selected_items(ui.ctx(), node, sel)})).is_ok(),
+        Some(fx) => app.run("effect.remove", aligned(app, fx)).is_ok(),
+        None if sel.item().is_some() => {
+            app.run("appearance.removeItem", aligned(app, json!({"indices": selected_items(ui.ctx(), node, sel)}))).is_ok()
+        }
         None => false,
     };
     // Removing the active item clears it in the engine; a removed item effect leaves its item
