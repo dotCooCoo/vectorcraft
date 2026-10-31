@@ -500,6 +500,19 @@ impl Targets {
         self
     }
 
+    /// Only these targets' anchors and path segments pull, and where segments cross: no centers,
+    /// bounds, lines up, extensions or glyph guides.
+    pub(super) fn anchors_and_paths(mut self) -> Self {
+        self.points.retain(|(_, k)| *k == Kind::Anchor);
+        self.xs.clear();
+        self.ys.clear();
+        self.rulers.clear();
+        self.boxes.clear();
+        self.extensions.clear();
+        self.angled.clear();
+        self
+    }
+
     /// View → Snap to Point: only these targets' anchors pull, and the ruler guides (shown and
     /// unlocked, as the selection tools pick them) pull the pointer into line where they run.
     pub(super) fn for_snap_to_point(self, cx: &ToolContext) -> Self {
