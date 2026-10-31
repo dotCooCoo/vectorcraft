@@ -222,7 +222,7 @@ fn char_cmd(app: &mut VectorcraftApp, cmd: &str, p: Value) {
     range_style(app, p);
 }
 
-/// Set the Kerning field's `value` (a number or "auto"). At a caret in text the Type tool edits
+/// Set the Kerning field's `value` (a number, "auto", or "optical"). At a caret in text the Type tool edits
 /// it is the pair kerning after the character before the caret, as Alt+←/→ steps it
 /// (`type.step`); nowhere to set at the start of the text. Else it is a character attribute like
 /// the others: the selected range, or all the text.
@@ -242,6 +242,37 @@ fn set_kerning(app: &mut VectorcraftApp, value: Value) {
     }
     end_typing(app);
     app.run("text.setRangeStyle", json!({"id": id.0, "start": start, "end": a, "kerning": value})).ok();
+}
+
+/// The pair before the caret, in 1/1000 em, using the layout the canvas draws.
+fn caret_kerning(app: &VectorcraftApp, ui: &Ui) -> Option<(f64, bool)> {
+    let (id, a, b) = text_editing(app)?;
+    if a != b {
+        return None;
+    }
+    let NodeKind::Text(t) = &app.session.active()?.doc.node(id)?.kind else { return None };
+    let text = t.plain_text();
+    let start = vectorcraft_text::edit::prev_char(&text, a);
+    if start >= a {
+        return None;
+    }
+    let style = vectorcraft_text::edit::style_at(&t.runs, start + 1);
+    if let Some(v) = style.kerning {
+        return Some((v, false));
+    }
+    let state = app.session.active()?;
+    let key = (state.uid, state.revision, id, a);
+    let slot = ui.scope_id().with("caret-kerning");
+    if let Some((cached_key, value)) = ui.ctx().data(|d| d.get_temp::<((u64, u64, NodeId, usize), f64)>(slot))
+        && cached_key == key
+    {
+        return Some((value, true));
+    }
+    let original = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let value = vectorcraft_engine::cmd::effective_kerning(vectorcraft_text::FontDb::global(), t, &original, start, a);
+    let value = value.round();
+    ui.ctx().data_mut(|d| d.insert_temp(slot, (key, value)));
+    Some((value, true))
 }
 
 /// The faces Type › Bold and Type › Italic switch to.
@@ -637,14 +668,33 @@ pub(crate) fn metrics_grid(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, s: &
             match widgets::spin_field_auto(ui, "ch-lead", leading, Some(auto), unit, fw, 1.0, 0.1, &SIZE_PRESETS) {
                 Some(SpinPick::Value(v)) => style(app, json!({"leading": v})),
                 Some(SpinPick::Auto) => style(app, json!({"leading": "auto"})),
+                Some(SpinPick::Optical) => {}
                 None => {}
             }
         });
         ui.end_row();
-        cell(ui, "VA", tl!("Kerning (0 = Auto)"), |ui| {
-            let kerning = shared(app, |s| s.kerning.unwrap_or(0.0));
-            if let Some(v) = widgets::spin_plain(ui, "ch-kern", kerning, "", 0, fw, 10.0, -1000.0, &TRACKING_PRESETS) {
-                set_kerning(app, if v == 0.0 { json!("auto") } else { json!(v) });
+        cell(ui, "VA", tl!("Kerning"), |ui| {
+            let mode = shared(app, |s| (s.optical_kerning, s.kerning));
+            let caret = text_editing(app).is_some_and(|(_, a, b)| a == b);
+            let at_caret = if caret { caret_kerning(app, ui) } else { None };
+            let kerning = at_caret.map(|(v, _)| v).or_else(|| mode.map(|(_, manual)| manual.unwrap_or(0.0)));
+            let automatic = mode.map(|(optical, manual)| !optical && manual.is_none());
+            let optical = mode.map(|(optical, _)| optical);
+            match widgets::spin_kerning(
+                ui,
+                "ch-kern",
+                kerning,
+                automatic,
+                optical,
+                tl!("Optical"),
+                at_caret.is_some_and(|(_, auto)| auto),
+                fw,
+                &TRACKING_PRESETS,
+            ) {
+                Some(SpinPick::Value(v)) => set_kerning(app, json!(v)),
+                Some(SpinPick::Auto) => set_kerning(app, json!("auto")),
+                Some(SpinPick::Optical) => set_kerning(app, json!("optical")),
+                None => {}
             }
         });
         cell(ui, "VA↔", tl!("Tracking"), |ui| {

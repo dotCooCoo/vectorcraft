@@ -427,7 +427,7 @@ objects' fills or strokes differ (`fillMixed` / `strokeMixed`, drawn as a "?" pr
 | `invoke_menu` | `{command, params?}` | Invokes a menu item by command id. Includes UI commands such as `view.*` and `window.*` in remote mode. |
 | `open_panel` | `{panel}` | Remote only. `panel` is a panel id (`layers`, `swatches`, `colorGuide`, …, as `window.panel` takes) or its display label (`"Color Guide"`), in any case. |
 | `screenshot` | `{path?, scale?, artboard?, window?, max_side?, traceViews?}` | Returns MCP image content (`image/png`, base64) plus a text block. Renders the artboard with the pixels of a PNG `export` with `background: "white"` at the same scale; `traceViews:true` draws Image Trace objects in the view set with `imageTrace.setView`, as in the app's window; `window:true` captures the app window (remote only), as `ui_screenshot` does, and `max_side` (1–4096, window captures only) scales the returned image down as described for `ui_screenshot`. With `path` the backend (the headless session or the app) writes the PNG there too; a window capture written there keeps its full size with `max_side`. |
-| `open_file` | `{path}` | Opens any readable file as a new active document: `.vectorcraft`/`.drawcraft`, `.vctemplate`, `.svg`/`.svgz`, `.pdf`/`.ai`, `.ait`, `.eps`/`.epsf`, `.ps`, `.dxf`, `.emf`, `.wmf`, PNG, JPEG, GIF, WebP, TIFF, BMP, Targa (`.tga`/`.vda`/`.icb`/`.vst`), PCX, PSD/PSB (an image opens as a document of its pixel size; a Photoshop file as its merged image). Templates (`.vctemplate`, `.ait`) open as a new untitled document. PDF, `.ai` and SVG files saved with Preserve Editing reopen as the document they carry. The reply is `document.open`'s: its `warnings` say what didn't come in as it was (an EPS whose PostScript can't be read opens as its preview, and the warning names the PostScript error, the operator and the procedure). `run_command document.formats` lists the formats. |
+| `open_file` | `{path}` | Opens any readable file as a new active document: `.vectorcraft`/`.drawcraft`, `.vctemplate`, `.svg`/`.svgz`, `.pdf`/`.ai`, `.ait`, `.eps`/`.epsf`, `.ps`, `.dxf`, `.emf`, `.wmf`, PNG, JPEG, GIF, WebP, TIFF, BMP, Targa (`.tga`/`.vda`/`.icb`/`.vst`), PCX, JPEG 2000 (`.jpf`/`.jpx`/`.jp2`/`.j2k`/`.j2c`/`.jpc`), PSD/PSB (an image opens as a document of its pixel size; a Photoshop file as its merged image). Templates (`.vctemplate`, `.ait`) open as a new untitled document. PDF, `.ai` and SVG files saved with Preserve Editing reopen as the document they carry. The reply is `document.open`'s: its `warnings` say what didn't come in as it was (an EPS whose PostScript can't be read opens as its preview, and the warning names the PostScript error, the operator and the procedure). `run_command document.formats` lists the formats. |
 | `save_file` | `{path?, compress?, version?, preview?, options?}` | Runs `document.save`: the document's own file in its own format (native `.vectorcraft` unless it was opened from or saved as SVG, PDF or a restorable `.ai`; then `warnings` say what that format loses). A path's extension picks the format (`.vectorcraft`, `.vctemplate`, `.pdf`, `.svg`, `.svgz`, `.ai`: a PDF carrying the native document, which reopens editable). For a native file, `compress: true` gzips it (default: the `useCompression` preference, Preferences › File Handling › Use Compression), `version` (1 to 4) writes it for an older VectorCraft (1 and 2 are never compressed, and `version: 2` with `compress: true` is an error), and `preview: true` embeds a PNG of the first artboard. `options` passes the format's save options as `run_command document.formats` lists them. When `compress`, `version` or `preview` is given both at the top level and in `options` with different values, the call is an error (`` `compress: true` and `options.compress: false` disagree: give the option once ``) and nothing is written. The save drops each option the written format doesn't read. The reply's `warnings` then name each such option given (for example `` `compress` was not used: SVG files don't read it `` for an `.svg` path, and `` `options.preview` was not used: … `` for a key in `options`; a `.ai` file reads `compress` but not `version` or `preview`). `run_command document.save` and the other save commands refuse any option given beside the path and in `options` with different values, and give the same warning for a top-level `compress`, `version` or `preview`. The headless session and the app receive the same `app.save` params, and the app is also sent `wait: true`: the call returns once the file is written, or with the error (such as a path outside the write root), even with Background Save on. When the save asks first (the question before replacing a file that opened with losses, or on macOS and Linux the file dialog for an untitled document without `path`), the reply is `{pending}` or `"cancelled"` as before, and the save that runs after the answer uses the Background Save preference. |
 | `export` | `{path?, format?, scale?, artboard?, range?, selection?, outlineText?, options?}` | `svg`, `svgz`, `pdf`, `ai` (the PDF-compatible `.ai` that Save writes, which carries the document when every artboard is written in order), `eps`, `dxf`, `emf`, `wmf`, `png`, `jpg`, `webp`, `gif`, `png8` (an indexed `.png`), `tiff`, `bmp`, `tga`, `psd` (layered), `txt` (the document's text), `vectorcraft` or `template` (a native template). The tool's `format` enum and `document.formats` list them, generated from the engine's format table. When `format` is omitted, it comes from the path's extension. PDF and `.ai` write one page per artboard: all of them, or `artboard` (0-based) / `range` (`"1-3, 5"`, 1-based). SVG and SVGZ write one file per chosen artboard. EPS writes one file of the visible art; with `artboard`, `range`, `options.artboards` or `options: {"useArtboards": true}` it writes one file per chosen artboard, after a central file of the visible art when there are two or more, and `useArtboards: false` keeps the one file. Rasters, DXF, EMF and WMF write one artboard, or one file per chosen artboard with `options: {"useArtboards": true}`. Rasters also take `options: {"rect": [x, y, width, height]}` (page points, y down): that area of the page at the given `ppi`/`scale`, without an artboard and without changing the document; it is refused with `artboard`, `artboards`, `range` or `useArtboards`, with a non-positive or non-finite size, and for non-raster formats. `options` carries more format options (e.g. `{"quality": 80}` for JPEG). `selection: true` exports the selected objects cropped to their bounds (the reply adds their `bounds`, and reports `format` and the encoder's `warnings` as a whole-document export does); `outlineText: true` writes SVG text as paths. Template layers are left out, live effects are kept, and exporting `vectorcraft` never changes the document's path. Without `path` the bytes come back as `dataBase64`. Both backends run the same `document.export` call. |
 | `add_text` | `{text, x?, y?, width?, height?, fit?, fitMinPercent?, path?, mode?, pathEffect?, size?, font?, color?, justify?, vertical?}` | Point type at (x, y) (`justify`: `left`, `center` or `right` starts, centres or ends each line on x); area type with `width`/`height` (`fit`: `none`, `autoHeight`, `shrinkText`, as `text.areaOptions`); or `path` + `mode` (`area`/`onPath`) to flow text in or along a path, with `pathEffect` (`rainbow`, `skew`, `3dRibbon`, `stairStep`, `gravity`); `justify` (also `auto`, `justifyAll`) aligns the paragraphs of every kind, as `text.setStyle` does later. `vertical: true` uses the existing vertical writing mode for every kind (default `false`, horizontal). Returns `{id}`, with `overflow: true` when the text doesn't fit its frame or path. |
@@ -585,6 +585,7 @@ font whose licence (OS/2 `fsType`) forbids subsetting is embedded whole, one tha
 with a warning. Type names its faces by numeric `font-weight` (600 for Semibold and for a Japanese face's W6, 300 for Light, `bold` for 700),
 embedded or not. `svgz` takes the same options and writes the SVG gzipped (`.svgz` files also open,
 place and paste). `run_command document.save {path: "x.svg", svg: {…}}` saves as SVG (or `.svgz`).
+Colorized grayscale and 1-bit images export in their fill color; linked mode writes a coverage PNG, and Tiny 1.2 writes a colorized PNG.
 
 Symbols export as one `<symbol>` with a `<use>` per instance. An instance the def can't stand for is written as its
 own art: one stained by its fill; one scaled while the symbol has strokes (their weight doesn't scale), or rotated or
@@ -1379,7 +1380,8 @@ them again with the key object. When the call changes nothing, it records no und
 Other `object.setProps` calls leave the selection unchanged.
 
 `object.unlockAll` and `object.showAll` unlock or show every locked or hidden object in the document and select
-them → `{count}`. With `scope: "group"` they take only the objects inside the groups that hold the selected objects:
+them → `{count}`. In isolation mode they take only the objects inside the isolated object. With `scope: "group"` they
+take only the objects inside the groups that hold the selected objects:
 for each selected object, the group nearest above it, or the object itself when it is a group. The objects of a
 group inside another such group are counted once. With no selected object in a group, the call returns the error
 "nothing selected is in a group" and changes nothing. `scope: "document"` is the default, and any other value is
@@ -1396,16 +1398,15 @@ object that `select.all` takes and that is neither selected nor holds a selected
 group that holds a selected object it hides the group's other members one by one; a clip group, a compound path or
 another object that holds a selected object stays as it is with its members. The objects of a selected layer count as
 selected. While Lock Guides is on, the guide paths count as selected and stay as they are. The selection stays as it is, and `object.showAll` shows the objects again. With nothing to
-hide it records no undo step. In isolation mode the menu item is disabled, and the command returns the error "exit
-isolation mode first" and changes nothing.
+hide it records no undo step. In isolation mode it hides only unselected objects inside the isolated object.
 
 `object.lock.unselected` (Cmd+Alt+Shift+2; shortcut and command, with no Object › Lock menu item) locks unselected
 artwork in one undo step and returns `{count}`. In a partly selected group, clipping group, or compound path, it locks
 the unselected members and leaves the container and selected members unlocked. It includes unselected guides even
 while Lock Guides is on. Hidden art and art on locked layers stay individually unlocked; a selected layer's artwork
 counts as selected. In ordinary isolation mode it locks only unselected art inside the isolated object. The selection
-stays as it is. `object.unlockAll` unlocks and selects all locked artwork in the document, including art locked before
-this command. With nothing to lock it records no undo step.
+stays as it is. `object.unlockAll` unlocks and selects all locked artwork in the document, or inside the isolated
+object in isolation mode, including art locked before this command. With nothing to lock it records no undo step.
 
 These Select menu commands select only the objects that `select.all` selects and the objects inside them: every
 `select.same.*` and `select.object.*` command except `select.object.slices`, `select.nextAbove`, `select.nextBelow`
@@ -1431,6 +1432,19 @@ Group. Construction mode ends when the group was in it.
 `object.transform` with `releaseOutside: true` does the same for each moved original shape whose bounds end wholly
 outside the bounds the group's original shapes had before the move, in the move's undo step. A shape whose bounds still
 overlap them only moves. The Selection tool sends it at the end of a move in Construction mode.
+
+## Intertwine
+
+`object.intertwine.arrange {id?, at?|area?, order?, member?}` changes the order the objects of an Intertwine group are
+drawn in, in the overlap areas under `at` or enclosed by the polygon `area`. `order` is `toggle` (the default: the
+object right below the top comes to the front), `front`, `forward`, `backward` or `back`. `forward` and `backward` move
+`member` one place up or down among the objects that overlap in that area, and `front` and `back` move it to the top or
+the bottom there; the other objects keep their order. Without `member`, `front` and `forward` move the object right
+below the top, and `back` and `backward` move the top one. The command returns `{count, top}`: the number of areas
+whose order changed and the id of the object now on top in each. A move that changes no area returns
+`{count: 0, top: []}` and records no undo step. With the Intertwine tool, a right-click where three or more objects
+overlap offers Bring to Front, Bring Forward, Send Backward and Send to Back, which run this command for the object
+nearest to the pointer.
 
 ## Global Edit
 
@@ -1543,8 +1557,10 @@ already walks Image Trace. Short agent entry points:
   name they are given, as `symbol.options` trims `newName`; a blank one gives "New Symbol" or "<name> copy".
 - The Brushes panel menu's Select All Unused: `brush.unused` (a query) lists the brushes no stroke paints with, in
   library order, and the panel selects them. Strokes in the art (opacity masks included), symbols, graph designs,
-  pattern tiles and graphic styles count, and so do the strokes in the art of a brush that is used. The art of a brush
-  that is not used does not count, so a brush whose own art is the only art that paints with it is listed.
+  pattern tiles (with the tiles that pattern editing's Cancel puts back) and graphic styles count, and so do the
+  strokes in the art of a brush that is used. The art of a brush that is not used does not count, so a brush whose own
+  art is the only art that paints with it is listed. The panel's Delete Brush asks Yes/No when every brush it deletes
+  is unused, and offers Remove Strokes or Cancel when one of them is in use.
 - Brushes: `brush.list`, `brush.get {name}`, `brush.apply {name, ids?}`, `brush.new {type, name?, params?, ids?}`,
   `brush.setCurrent {name}`, `brush.options {name, params?, newName?}`, `brush.delete {name} | {names}`,
   `brush.duplicate {name, newName?} | {names}`, `brush.freehand`, `object.expandBrush {ids?}`. `brush.new`,
@@ -1562,7 +1578,12 @@ already walks Image Trace. Short agent entry points:
   what that kind of corner draws when the brush has no `outer_corner` or `inner_corner` art for it: `none` draws no
   corner tile, and `autoCentered`, `autoBetween`, `autoSliced` and `autoOverlap` make one from the side tile. Without
   a source, the corner draws the other kind of corner's art. `brush.options {params: {outer_corner: null}}` removes
-  the art.
+  the art. Pattern Brush Options also accepts `side_tile`, `outer_corner_tile`, `inner_corner_tile`,
+  `start_tile` and `end_tile` in `params`. Each takes `none`, `original` or the name of a pattern
+  swatch in the active document, and `{"pattern": "<name>"}` names a swatch even when its name is one of those
+  words. Corner tiles also take `autoCentered`, `autoBetween`, `autoSliced` and `autoOverlap`. A swatch choice copies its whole art and tile frame into the brush. `original`
+  keeps the current art and clears its swatch label. `side_tile: "none"` fails with "You must choose a
+  side pattern." An unknown swatch name also fails; neither error edits the brush or adds an Undo step.
 - Variables: `variable.list`, `variable.define {name, kind: text|visibility|image|graph}`, `variable.bind {variable, ids?}`,
   `variable.makeTextDynamic`, `variable.makeVisibilityDynamic`, `variable.makeImageDynamic`, `variable.makeGraphDynamic`,
   `variable.unbind`, `variable.rename`, `variable.delete`, `variable.highlight` (image values are file paths, graph
@@ -2320,11 +2341,14 @@ and `layerRows`, the rows highlighted in the panel.
   opens no rows for it and scrolls as with the option off. A change made with the panel's own rows, buttons or menu is
   not located, and a change made during a drag is located when the drag ends.
   A document opens with only its top-level layers open; the open rows are saved in the native file and reopen that way.
-- **Lock and Hide in isolation mode**: in isolation mode, Object › Lock's and Object › Hide's items (`object.lock`,
-  `object.lock.above`, `object.lock.otherLayers`, `object.hide`, `object.hide.above`, `object.hide.otherLayers`),
-  `object.unlockAll` and `object.showAll` are off, and a call returns the error "command `object.hide` is not
-  available right now: exit isolation mode first", with the command's own id. Pattern editing mode and opacity mask
-  editing do not count as isolation mode for these commands.
+- **Lock and Hide in isolation mode**: Object › Lock's and Object › Hide's items (`object.lock`, `object.lock.above`,
+  `object.lock.otherLayers`, `object.lock.unselected`, `object.hide`, `object.hide.above`, `object.hide.otherLayers`,
+  `object.hide.unselected`) are on while an object inside the isolated object is selected, and they change only objects
+  inside it. All Artwork Above locks or hides the selected objects as well as the objects above them that overlap them.
+  Other Layers changes nothing in an isolated group, layer or sublayer, returns a count of 0 and records no undo step.
+  `object.unlockAll` and `object.showAll` are on with nothing selected, and they unlock or show and select only the
+  objects inside the isolated object. Pattern editing mode and opacity mask editing do not count as isolation mode for
+  these commands.
 - **Search and filter** (control channel and the app's MCP): the Search All field keeps the rows whose names hold the
   text typed, and `ui.layersFilter {objects?, layers?}` sets the choices of the Filter button beside it. `objects` (By
   Object) takes `paths` (paths and compound paths), `shapes` (live rectangles, ellipses, polygons and lines), `text`,
@@ -2939,11 +2963,20 @@ earlier step deleted the active artboard when it was the last one), the step get
 remote mode, MCP's `run_command` calls and each step of the `command_batch` tool get the active artboard too. The
 Actions panel plays an action as a `command.batch`. The Actions panel menu's Batch… runs
 `action.batch`: the same steps on every readable file in a folder (or every data set of the open document), with
-destination `none` | `saveAndClose` | `folder` and Override Open / Save / Export. Over data sets, the folder
-destination and the overrides name each file after the document and the data set (`<document>_<data set>.<ext>`).
-Batch writes `/`, `\`, `:`, `<`, `>`, `"`, `|`, `?`, `*` and control characters in the data set's name as `-`, and
-adds `-2`, `-3`… to a name an earlier data set used (compared without case). Caps: 500 files or data sets, 8
-folder levels, 256 steps. An action recorded in the Actions panel leaves the artboard out,
+destination `none` | `saveAndClose` | `folder` and Override Open / Save / Export. For a Data Sets source,
+`datasetFileNaming?: fileNumber | fileDataSetName | dataSetName` chooses File + Number (`source001`),
+File + Data Set Name (`source_Alpha`), or Data Set Name (`Alpha`). An omitted parameter keeps File + Data Set Name
+for existing callers; the dialog starts with File + Number. A folder source ignores this parameter. The folder
+destination and overridden Save/Export paths use the chosen stem with the output format's extension. An empty data
+set name under Data Set Name falls back to the document stem plus its three-digit ordinal. Batch writes `/`, `\`,
+`:`, `<`, `>`, `"`, `|`, `?`, `*` and control characters in the data set's name as `-`, and adds the next free `-2`,
+`-3` suffix to a stem already used in the batch (compared without case). An output already in a destination folder
+gets the next free suffix only when the batch may read and write that folder before it starts. A save in VectorCraft,
+template, AI or AIT format counts artboard file names when the document has any artboard; a per-artboard export
+counts them when the document has several artboards.
+Under Data Set Name, VectorCraft makes Windows device names safe (`CON` becomes `CON-`). This is
+VectorCraft's naming behavior. Caps: 500
+files or data sets, 8 folder levels, 256 steps. An action recorded in the Actions panel leaves the artboard out,
 and its steps of these commands get the artboard that is active when the action plays. A press with the Selection,
 Direct Selection or Group Selection tool inside an artboard makes that artboard the active one; with the Selection
 tool, a Shift-click on an empty spot inside an artboard makes it active and keeps the selection. Choosing the Artboard
@@ -3193,7 +3226,8 @@ Pen's second anchor at (150, 431), in line with the square's centre.
   leading (↑/↓ in horizontal type, ←/→ in vertical type), and baseline shift (Shift+↑/↓ in horizontal type,
   Shift+→/← in vertical type). Mixed selected text objects use the horizontal mapping; Cmd/Ctrl makes five steps.
   `type.resetTracking` (Cmd+Alt+Q, `press_key {key: "Q", mods: {cmd: true, alt: true}}`) sets tracking to 0 and
-  kerning to Auto in the type objects in `ids`, the Type tool's selected text or the selected type objects; at a caret
+  clears manual kerning in the type objects in `ids`, the Type tool's selected text or the selected type objects,
+  keeping Optical; at a caret
   it resets only the kerning of the character before it. `type.resetHorizontalScale` (Cmd+Shift+X,
   `press_key {key: "X", mods: {cmd: true, shift: true}}`) sets the horizontal scale to 100%, as the Character panel
   shows it, in the same text; at a caret it leaves the text as it is. In the app, `type.highlightKerning` (Cmd+Alt+K),
@@ -3660,7 +3694,7 @@ image `object.rasterize` makes with the same options.
 ## Glass textures
 
 Glass (`distort.glass`) takes an image file as its surface in `params.textureImage`, as `{path}` or
-`{name?, dataBase64}`: a PNG, JPEG, GIF, WebP, TIFF, BMP, Targa, PSD, PSB or PCX file, decoded within the pixel allowance the
+`{name?, dataBase64}`: a PNG, JPEG, GIF, WebP, TIFF, BMP, Targa, PSD, PSB, PCX or JPEG 2000 file, decoded within the pixel allowance the
 renderer draws images in, counted as RGBA. `effect.apply` and `effect.setParams` store the image's gray levels in the effect as a grayscale PNG
 in base64 and set `texture: "loaded"` unless the params give a `texture`. `effect.list` reports the stored string,
 and a command given that string stores it unchanged. Any other string, a file that is not an image, or an image past
@@ -4038,6 +4072,7 @@ is accepted); spot colours are Separation colour spaces, and overprinting fills 
 `overprints: "discard"`. RGB documents are written in CMYK unless `cmykPostScript: false`. When the file would hold an
 image that can't be decoded, the image is left out, and `warnings` carries "an image couldn't be decoded and is missing
 from the picture" once for all such images.
+Colorized grayscale and 1-bit images use their process or spot ink; the flattener leaves them alone unless they have opacity, a blending mode, an opacity mask or effects, or overlap other transparent art. Binary coverage leaves underlying art untouched. For a grayscale image, Level 3 leaves white (zero-coverage) pixels out, Level 2 writes them white, and gray midtones are written over white at both levels.
 
 PostScript has no transparency: it is flattened first with `flattenerPreset` (`high`, `medium` (default), `low` or a
 saved preset, see `flattener.presets.list`) and `flattener: {…}` options over it (those of
@@ -4893,6 +4928,16 @@ the paragraph's text now starts; when the text before `at` starts no list, nothi
 {"name":"run_command","arguments":{"command":"text.convertListToText","params":{}}}
 ```
 
+## Kerning
+
+`text.setRangeStyle {id, start, end, kerning}` (a range) and `text.setFormat {ids?, kerning}`
+(the selected type) accept `kerning: "auto" | "optical" | number` (1/1000 em). Auto uses the font's
+pair metrics; Optical spaces horizontal pairs from their glyph shapes. Vertical text uses font
+metrics in either mode. A number sets a manual pair value,
+replacing that pair's automatic correction while tracking remains additive. Choosing Optical keeps
+existing manual pair values; choosing `"auto"` clears them. New text and files without an Optical setting use Auto. The Character
+panel offers both automatic modes.
+
 ## Small Caps, Superscript and Subscript
 `text.setFormat {smallCaps, position}` (the selected type, or `ids`) and `text.setRangeStyle {id, start, end, smallCaps,
 position}` (a range) set what the Character panel's Small Caps, Superscript and Subscript buttons and menu items set.
@@ -5072,6 +5117,22 @@ New Character Style or New Paragraph Style (dialog `newTextStyle`, field `name`)
 name and the Type tool's selection as it was when the dialog opened (else the selected type); a name another style
 has, or an empty one, keeps the dialog open, and Cancel adds no style. A plain click on New still makes the style at
 once.
+
+`ui.charStyleOptions {name}` opens Character Style Options for an existing named style.
+Character Style Options uses `charStyle.edit {name, to, attrs}` to replace the name and complete sparse
+attribute map in one undo step. `to` is trimmed and must be unique. The command updates text using the style
+while preserving local overrides; Undo/Redo restores the definition and its users. The `charStyleOptions`
+dialog exposes `name`, `font_family`, `font_style`, `size`, `leading`, `kerning`, `tracking`, `case`,
+`position`, `underline`, `strikethrough`, `charAlign`, `section`, and `preview`. An empty field leaves its
+attribute unset. `leading` and `kerning` also accept `Auto` to store an explicit automatic value.
+The New Character Style dialog accepts the same character fields and starts with the selected text's
+captured attributes. Without selected text, it starts with the character defaults for the interface language
+(including `charAlign: "emBoxCenter"` in Japanese); changing a Basic field keeps other seeded attributes.
+Without selected text, the New Paragraph Style dialog sends no `attrs`, and the engine gives the new style the
+paragraph defaults for the interface language. Reset Panel in Basic Character
+Formats removes those fields from the definition.
+`ui.charStyleOptions.resetPanel {}` performs that reset when Basic Character Formats is selected in
+either character-style dialog; it is disabled on General.
 
 In the native file a text object's `para` holds the first paragraph's attributes and `paras` (left out when every
 paragraph is alike) one entry per paragraph, so older readers keep the first paragraph's. SVG export anchors each

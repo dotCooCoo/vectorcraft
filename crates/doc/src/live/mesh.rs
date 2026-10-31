@@ -592,12 +592,21 @@ impl GradientMesh {
 
     /// Which patch and local (u, v) contains `p` (sampled search; `None` outside the mesh).
     pub fn locate(&self, p: Point) -> Option<(usize, usize, f64, f64)> {
+        self.locate_within(p, 0.0)
+    }
+
+    /// As [`Self::locate`], and for a point outside the mesh within `tol` of its outline, the
+    /// patch and local (u, v) of the nearest point of the mesh's edge.
+    pub fn locate_within(&self, p: Point, tol: f64) -> Option<(usize, usize, f64, f64)> {
         if !self.is_valid() {
             return None;
         }
         let bp = self.outline().to_bezpath();
         if bp.winding(p) == 0 {
-            return None;
+            if tol.is_nan() || tol <= 0.0 {
+                return None;
+            }
+            return self.nearest_edge(p).filter(|e| e.0 <= tol * tol).map(|(_, r, c, u, v)| (r, c, u, v));
         }
         const N: usize = 16;
         let mut best = (f64::INFINITY, 0, 0, 0.0, 0.0);
@@ -632,6 +641,30 @@ impl GradientMesh {
             }
         }
         Some((r, c, u, v))
+    }
+
+    /// The point of the mesh's outer edge nearest `p`: its squared distance from `p`, and its
+    /// boundary patch and local (u, v).
+    fn nearest_edge(&self, p: Point) -> Option<(f64, usize, usize, f64, f64)> {
+        use vectorcraft_geom::kurbo::ParamCurveNearest;
+        let (rows, cols) = (self.rows as usize, self.cols as usize);
+        let mut best: Option<(f64, usize, usize, f64, f64)> = None;
+        let mut take = |e: CubicBez, at: (usize, usize, Option<f64>, Option<f64>)| {
+            let n = e.nearest(p, 1e-9);
+            if best.is_none_or(|b| n.distance_sq < b.0) {
+                let (r, c, u, v) = at;
+                best = Some((n.distance_sq, r, c, u.unwrap_or(n.t), v.unwrap_or(n.t)));
+            }
+        };
+        for c in 0..cols {
+            take(self.edge_u(0, c), (0, c, None, Some(0.0)));
+            take(self.edge_u(rows, c), (rows - 1, c, None, Some(1.0)));
+        }
+        for r in 0..rows {
+            take(self.edge_v(r, 0), (r, 0, Some(0.0), None));
+            take(self.edge_v(r, cols), (r, cols - 1, Some(1.0), None));
+        }
+        best
     }
 
     /// Index of the mesh point within `tol` of `p`.
@@ -721,9 +754,10 @@ impl GradientMesh {
         self.cols += 1;
     }
 
-    /// Mesh tool click: add a row and a column through `p` (inside the mesh). Returns the new point index.
-    pub fn add_lines_at(&mut self, p: Point) -> Option<usize> {
-        let (r, c, u, v) = self.locate(p)?;
+    /// Mesh tool click: add a row and a column through `p` (inside the mesh, or outside within
+    /// `tol` of its edge, through the nearest point of the edge). Returns the new point index.
+    pub fn add_lines_at(&mut self, p: Point, tol: f64) -> Option<usize> {
+        let (r, c, u, v) = self.locate_within(p, tol)?;
         let mut rr = r;
         let mut cc = c;
         let row_new = v > 0.02 && v < 0.98;

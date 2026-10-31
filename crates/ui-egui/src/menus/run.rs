@@ -594,6 +594,11 @@ fn run_ui_part7(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<
         "ui.colorPicker" => crate::dialogs::open_color_picker(app, p),
         "ui.sampleScreenColor" => crate::screen_color::start(app, p),
         "ui.graphicStyleOptions" => crate::dialogs::graphic_style_options::open(app, s("name").as_deref()),
+        "ui.charStyleOptions" => match s("name") {
+            Some(name) => crate::dialogs::char_style_options::open(app, &name),
+            None => Err("missing `name`".into()),
+        },
+        "ui.charStyleOptions.resetPanel" => crate::dialogs::char_style_options::reset_panel(app),
         "ui.newCharStyle" => crate::panels::text_styles::open_new(app, crate::panels::text_styles::Kind::Char),
         "ui.newParaStyle" => crate::panels::text_styles::open_new(app, crate::panels::text_styles::Kind::Para),
         "ui.symbolOptions" => {

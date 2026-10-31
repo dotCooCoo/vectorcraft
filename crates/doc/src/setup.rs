@@ -308,8 +308,18 @@ impl DocSetup {
     pub fn keep_in_range(&mut self) {
         self.bleed = bleed_in_range(self.bleed);
         for m in [&mut self.superscript, &mut self.subscript] {
+            // `clamp` passes NaN through, so a non-finite value falls back to the default first.
+            if !m.size.is_finite() {
+                m.size = ScriptMetrics::DEFAULT.size;
+            }
+            if !m.position.is_finite() {
+                m.position = ScriptMetrics::DEFAULT.position;
+            }
             m.size = m.size.clamp(1.0, MAX_SCRIPT);
             m.position = m.position.clamp(-MAX_SCRIPT, MAX_SCRIPT);
+        }
+        if !self.small_caps_size.is_finite() {
+            self.small_caps_size = DocSetup::default().small_caps_size;
         }
         self.small_caps_size = self.small_caps_size.clamp(1.0, MAX_SMALL_CAPS);
     }
@@ -351,6 +361,20 @@ mod tests {
         let s = DocSetup { bleed: [9.0, 9.0, 4.0, 2.0], ..Default::default() };
         assert_eq!(s.bleed_rect(Rect::new(0.0, 0.0, 100.0, 50.0)), Rect::new(-4.0, -9.0, 102.0, 59.0));
         assert!(s.has_bleed() && !DocSetup::default().has_bleed());
+    }
+
+    #[test]
+    fn keep_in_range_replaces_non_finite_type_values() {
+        let mut s = DocSetup::default();
+        s.superscript.size = f64::NAN;
+        s.superscript.position = f64::INFINITY;
+        s.subscript.size = f64::NEG_INFINITY;
+        s.subscript.position = f64::NAN;
+        s.small_caps_size = f64::NAN;
+        s.keep_in_range();
+        for v in [s.superscript.size, s.superscript.position, s.subscript.size, s.subscript.position, s.small_caps_size] {
+            assert!(v.is_finite(), "{v}");
+        }
     }
 
     #[test]

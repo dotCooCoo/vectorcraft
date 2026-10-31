@@ -215,7 +215,7 @@ font-technology	Variable	Вариативные
 	Apply Paragraph Style	Применить стиль абзаца
 	Apply SVG Filter…	Применить фильтр SVG…
 	Apply to All	Применить ко всем
-	Apply to All ({count} more missing)	Применить ко всем (ещё {count} отсутствуют)
+@plural	Apply to All ({n} more missing)|Apply to All ({n} more missing)	Применить ко всем (ещё {n} отсутствует)|Применить ко всем (ещё {n} отсутствуют)|Применить ко всем (ещё {n} отсутствуют)
 	Arc	Дуга
 	Arc Lower…	Дуга снизу…
 	Arc Tool	Инструмент «Дуга»
@@ -748,6 +748,12 @@ font-technology	Variable	Вариативные
 	Delete Stop	Удалить точку перехода
 	Delete Swatch	Удалить образец
 	Delete Symbol	Удалить символ
+	Delete the selected symbol?	Удалить выбранный символ?
+	One or more of the symbols are in use and cannot be deleted until their instances are expanded or deleted.	Один или несколько символов используются, и их нельзя удалить, пока их экземпляры не будут разобраны или удалены.
+	Expand Instances	Разобрать экземпляры
+	Delete Instances	Удалить экземпляры
+	Yes	Да
+	No	Нет
 	Delete Tab	Удалить табуляцию
 	Delete the graphic style “{name}”?	Удалить графический стиль «{name}»?
 	Delete Theme	Удалить тему
@@ -1642,7 +1648,7 @@ file-filter	Templates	Шаблоны
 	Keep the pasted color as a new swatch with a numbered name.	Сохранять вставленный цвет как новый образец с номерным именем.
 	Keep this row's colors (exclude)	Сохранить цвета этой строки (исключить)
 	Keep:	Сохранять:
-	Kerning (0 = Auto)	Кернинг (0 = авто)
+	Kerning	Кернинг
 	Keyboard Increment	Приращение с клавиатуры
 	Keyboard Shortcut Conflicts	Конфликты сочетаний клавиш
 	Keyboard Shortcut Set	Набор сочетаний клавиш
@@ -2231,6 +2237,7 @@ file-filter	Templates	Шаблоны
 	Open the URL in the web browser	Открыть URL в веб-браузере
 	Opened with {} note(s): {}	Открыто с примечаниями ({}) : {}
 	Open…	Открыть…
+	Optical	Оптический
 	Optical Margin Alignment	Оптическое выравнивание полей
 	Optimize for fast web view	Оптимизировать для быстрого просмотра в web
 	Optimized	Оптимизировано
@@ -2288,7 +2295,7 @@ file-filter	Templates	Шаблоны
 	Package	Упаковать
 	Package collects a saved document with its linked files and fonts.	Упаковка собирает сохранённый документ с его связанными файлами и шрифтами.
 	Package created	Пакет создан
-	Packaged {n} file(s) in {folder} {note}	Упаковано файлов: {n} в {folder}{note}
+@plural	Packaged {n} file {note} in {folder}|Packaged {n} files {note} in {folder}	Упаковано файлов: {n} в {folder} {note}|Упаковано файлов: {n} в {folder} {note}|Упаковано файлов: {n} в {folder} {note}
 	Packaged {n} file(s){note}	Упаковано файлов: {n}{note}
 	Package…	Упаковать…
 	Page	Страница
@@ -2612,9 +2619,11 @@ mark-style	Japanese	Японский
 	Stop	Остановить
 	Searching…	Поиск…
 	Not found	Не найдено
-	{folders} folder(s) and {files} file(s) searched	Просмотрено папок: {folders}, файлов: {files}
-	{count} folder(s) skipped, such as other apps' and the system's folders and hidden ones	Пропущено папок: {count}, например папки других приложений и системы и скрытые папки
-	{count} folder(s) or file(s) couldn't be read	Не удалось прочитать папок или файлов: {count}
+	{folders} and {files} searched	Просмотрено: {folders}, {files}
+@plural	{n} folder|{n} folders	{n} папка|{n} папки|{n} папок
+@plural	{n} file|{n} files	{n} файл|{n} файла|{n} файлов
+@plural	{n} folder skipped, such as another app's or the system's folder or a hidden one|{n} folders skipped, such as other apps' and the system's folders and hidden ones	Пропущено папок: {n}, например папки других приложений и системы и скрытые папки|Пропущено папок: {n}, например папки других приложений и системы и скрытые папки|Пропущено папок: {n}, например папки других приложений и системы и скрытые папки
+@plural	{n} folder or file couldn't be read|{n} folders or files couldn't be read	Не удалось прочитать папок или файлов: {n}|Не удалось прочитать папок или файлов: {n}|Не удалось прочитать папок или файлов: {n}
 	The search stopped at its limit: search a smaller folder.	Поиск остановился на пределе: выберите папку поменьше.
 	Copy only fonts you own or are licensed to install.	Копируйте только шрифты, которые принадлежат вам или которые вы вправе устанавливать по лицензии.
 	VectorCraft copies the fonts to {folder}.	VectorCraft копирует шрифты в {folder}.
@@ -3016,6 +3025,7 @@ mark-style	Japanese	Японский
 	Shape Mode	Режим фигуры
 	Shape Modes:	Режимы фигур:
 	Shape Properties:	Свойства фигуры:
+	Shape Properties	Свойства фигуры
 	Shaper Tool	Инструмент «Формообразование»
 	Shapes	Фигуры
 	Shear	Наклонить
@@ -3700,13 +3710,13 @@ mark-style	Japanese	Японский
 	Zoom Tool	Инструмент «Масштаб»
 	Zoom with Mouse Wheel	Масштабировать колесом мыши
 	Scrub Numeric Fields by Dragging	Изменять числовые поля перетаскиванием
-	{count} file(s) in {folder} {note}. Show the package folder?	Файлов: {count} в {folder}{note}. Показать папку пакета?
-	{count} linked file(s) not found	Не найдено связанных файлов: {count}
+@plural	{n} file in {folder} {note}. Show the package folder?|{n} files in {folder} {note}. Show the package folder?	Файлов: {n} в {folder} {note}. Показать папку пакета?|Файлов: {n} в {folder} {note}. Показать папку пакета?|Файлов: {n} в {folder} {note}. Показать папку пакета?
+@plural	{n} linked file not found|{n} linked files not found	Не найдено связанных файлов: {n}|Не найдено связанных файлов: {n}|Не найдено связанных файлов: {n}
 	fonts not copied: {fonts}	шрифты не скопированы: {fonts}
-	{count} linked image(s) changed since this document was saved. Show the new versions?	Связанных изображений ({count}) изменились с момента сохранения этого документа. Показать новые версии?
-	{count} linked image(s) changed on disk. Show the new versions?	Связанных изображений ({count}) изменились на диске. Показать новые версии?
-	{count} more rules: Export writes every one.	Ещё правил: {count}: экспорт записывает все.
-	{count} unnamed objects left out: name them, or turn on Unnamed Objects in the panel menu.	Пропущено объектов без имени: {count}: назовите их или включите «Объекты без имени» в меню панели.
+@plural	{n} linked image changed since this document was saved. Show the new version?|{n} linked images changed since this document was saved. Show the new versions?	{n} связанное изображение изменилось с момента сохранения этого документа. Показать новую версию?|{n} связанных изображения изменились с момента сохранения этого документа. Показать новые версии?|{n} связанных изображений изменились с момента сохранения этого документа. Показать новые версии?
+@plural	{n} linked image changed on disk. Show the new version?|{n} linked images changed on disk. Show the new versions?	{n} связанное изображение изменилось на диске. Показать новую версию?|{n} связанных изображения изменились на диске. Показать новые версии?|{n} связанных изображений изменились на диске. Показать новые версии?
+@plural	{n} more rule: Export writes it.|{n} more rules: Export writes every one.	Ещё правил: {n}: экспорт записывает все.|Ещё правил: {n}: экспорт записывает все.|Ещё правил: {n}: экспорт записывает все.
+@plural	{n} unnamed object left out: name it, or turn on Unnamed Objects in the panel menu.|{n} unnamed objects left out: name them, or turn on Unnamed Objects in the panel menu.	Пропущено объектов без имени: {n}: назовите их или включите «Объекты без имени» в меню панели.|Пропущено объектов без имени: {n}: назовите их или включите «Объекты без имени» в меню панели.|Пропущено объектов без имени: {n}: назовите их или включите «Объекты без имени» в меню панели.
 	{effect} is already applied	{effect} уже применён
 	{format} Options	Параметры {format}
 	{kind} Gradient	Градиент {kind}
@@ -3729,6 +3739,7 @@ imageTrace	Outline	Контур
 @plural	{n} item|{n} items	{n} элемент|{n} элемента|{n} элементов
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Цветовая таблица ({n} цвет)|Цветовая таблица ({n} цвета)|Цветовая таблица ({n} цветов)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Удалить этот графический стиль ({n})?|Удалить эти графические стили ({n})?|Удалить эти графические стили ({n})?
+@plural	Delete this {n} brush?|Delete these {n} brushes?	Удалить эту кисть ({n})?|Удалить эти кисти ({n})?|Удалить {n} кистей?
 @plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Удалить образцы и группы ({n})?|Удалить {n} образца и группы?|Удалить {n} образцов и групп?
 @plural	{n} Layer|{n} Layers	{n} слой|{n} слоя|{n} слоёв
 @plural	{n} Object|{n} Objects	{n} объект|{n} объекта|{n} объектов
@@ -3872,6 +3883,7 @@ axis	Both	Оба
 # names and values in backticks or code (`colorModel rgb`, `document.export`) stay as they are.
 @msg	no library `{id}`	нет библиотеки `{id}`
 @msg	select some type first	сначала выделите текст
+@msg	kerning must be a number, "auto", or "optical"	Кернинг должен быть числом, «auto» или «optical»
 @msg	the selection has no gradient fill	у выделения нет градиентной заливки
 @msg	the selection has no gradient stroke	у выделения нет градиентной обводки
 @msg	the selection has no pattern fill	у выделения нет узорной заливки
@@ -3953,7 +3965,7 @@ axis	Both	Оба
 @msg	PDF settings are not an object	параметры PDF не являются объектом
 @msg	PDF security settings are not an object	параметры безопасности PDF не являются объектом
 @msg	PDF writer error: {0}	ошибка записи PDF: {0}
-@msg	Packaged {n} file(s) in {folder} {note}	Упаковано файлов: {n} в {folder}{note}
+@msgplural	Packaged {n} file ({note}) in {folder}|Packaged {n} files ({note}) in {folder}	Упаковано файлов: {n} в {folder} ({note})
 @msg	Packaged {n} file(s){note}	Упаковано файлов: {n}{note}
 @msg	Preview in Browser needs the desktop app (the web downloads files instead)	Просмотр в браузере требует настольного приложения (web-версия скачивает файлы)
 @msg	Release Guides: no guides	Освобождение направляющих: нет направляющих
@@ -4650,6 +4662,8 @@ axis	Both	Оба
 @msg	the PCX file is cut short	файл PCX обрезан
 @msg	the PCX file's header is damaged	заголовок файла PCX повреждён
 @msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	файлы PCX с {bits}-битными пикселями в {planes} плоскостях не читаются
+@msg	the JPEG 2000 file can't be read	не удается прочитать файл JPEG 2000
+@msg	the JPEG 2000 file has an unsupported color space or JPX content	файл JPEG 2000 содержит неподдерживаемое цветовое пространство или содержимое JPX
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	изображение PSD слишком велико для чтения ({_1} × {_2} пикс.)
 @msg	zipped 32-bit PSD image data with prediction can't be read	32-битные данные изображения PSD со сжатием ZIP с предсказанием не читаются
 @msg	{depth}-bit PSD files in this colour mode can't be read	{depth}-битные файлы PSD в этом цветовом режиме не читаются
@@ -5191,13 +5205,13 @@ lighting	Light	Свет
 	Slope:	Уклон:
 axis	X Axis	Ось X
 axis	Y Axis	Ось Y
-@msg	Packaged {n} file(s) in {folder}	Упаковано файлов: {n} в {folder}
-@msg	Packaged {n} file(s) {note}	Упаковано файлов: {n} {note}
-@msg	Packaged {n} file(s)	Упаковано файлов: {n}
-	Packaged {n} file(s)	Упаковано файлов: {n}
-	Packaged {n} file(s) in {folder}	Упаковано файлов: {n} в {folder}
-	Packaged {n} file(s) {note}	Упаковано файлов: {n} {note}
-	{count} file(s) in {folder}. Show the package folder?	Файлов: {count} в {folder}. Показать папку пакета?
+@msgplural	Packaged {n} file in {folder}|Packaged {n} files in {folder}	Упаковано файлов: {n} в {folder}
+@msgplural	Packaged {n} file {note}|Packaged {n} files {note}	Упаковано файлов: {n} {note}
+@msgplural	Packaged {n} file|Packaged {n} files	Упаковано файлов: {n}
+@plural	Packaged {n} file|Packaged {n} files	Упаковано файлов: {n}|Упаковано файлов: {n}|Упаковано файлов: {n}
+@plural	Packaged {n} file in {folder}|Packaged {n} files in {folder}	Упаковано файлов: {n} в {folder}|Упаковано файлов: {n} в {folder}|Упаковано файлов: {n} в {folder}
+@plural	Packaged {n} file {note}|Packaged {n} files {note}	Упаковано файлов: {n} {note}|Упаковано файлов: {n} {note}|Упаковано файлов: {n} {note}
+@plural	{n} file in {folder}. Show the package folder?|{n} files in {folder}. Show the package folder?	Файлов: {n} в {folder}. Показать папку пакета?|Файлов: {n} в {folder}. Показать папку пакета?|Файлов: {n} в {folder}. Показать папку пакета?
 	Clockwise	По часовой стрелке
 	Dither	Дизеринг
 	Fine noise hides banding in the gradient fill	Мелкий шум скрывает полосы в градиентной заливке
@@ -5847,6 +5861,11 @@ anchor	Points:	Точки:
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	Цвет точек из рисунка
+	Basic Character Formats	Основные форматы символов
+	Case	Регистр
+@msg	{label} must be a number	{label} должно быть числом
+@msg	{label} must be a number of at least 0.1	{label} должно быть числом не меньше 0,1
+@msg	no character style `{name}`	Стиль символов `{name}` не найден
 
 # Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
 	Duotone…	Дуплекс…
@@ -5939,6 +5958,11 @@ breakText	Glyphs	Глифы
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` должен быть lines, paragraphs, words или glyphs, а не {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` должен быть "line" или "paragraph", а не {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` должен быть "left", "center" или "right", а не {other}
+	File + Number	Файл + номер
+	File + Data Set Name	Файл + имя набора данных
+	Data Set Name	Имя набора данных
+@msg	`datasetFileNaming` must be `fileNumber`, `fileDataSetName` or `dataSetName`	`datasetFileNaming` должно быть `fileNumber`, `fileDataSetName` или `dataSetName`
+@msg	no free data set file name in destination folder	В папке назначения нет свободного имени файла для набора данных
 
 # Path Precision Tools add-on: Path Effects (Effect › Path Effects).
 	Path Effects	Эффекты контура
@@ -5979,6 +6003,12 @@ breakText	Glyphs	Глифы
 	Gap 4	Зазор 4
 	Dash 5	Штрих 5
 	Gap 5	Зазор 5
+@msg	You must choose a side pattern.	Выберите боковой узор.
+@msg	invalid pattern tile choice	недопустимый выбор плитки узора
+@msg	no pattern named `{choice}`	узор с именем `{choice}` не найден
+	Delete the selected brushes?	Удалить выбранные кисти?
+	Strokes use one or more of these brushes. Take the brushes off those strokes and delete the brushes?	Обводки используют одну или несколько из этих кистей. Убрать кисти с этих обводок и удалить кисти?
+	Remove Strokes	Убрать обводки
 # Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
 	Arrange Tools	Инструменты размещения
 	Arrange in Grid…	Разместить по сетке…

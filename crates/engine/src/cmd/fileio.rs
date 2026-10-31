@@ -33,6 +33,7 @@ pub(crate) mod imagemap;
 mod legacy_ai;
 mod load;
 pub(crate) use load::{MAX_RASTER_ALLOC, size_note};
+mod jp2read;
 mod metafile;
 mod naming;
 mod native;
@@ -193,6 +194,8 @@ mod tests_psd;
 #[cfg(test)]
 mod tests_psdread;
 
+#[cfg(test)]
+mod tests_jp2read;
 #[cfg(test)]
 mod tests_pcxread;
 

@@ -162,7 +162,7 @@
 	Apply Paragraph Style	应用段落样式
 	Apply SVG Filter…	应用 SVG 滤镜…
 	Apply to All	应用到全部
-	Apply to All ({count} more missing)	全部应用 (另有 {count} 个缺失)
+@plural	Apply to All ({n} more missing)|Apply to All ({n} more missing)	全部应用 (另有 {n} 个缺失)
 	Arc	弧形
 	Arc Lower…	下弧形…
 	Arc Tool	弧形工具
@@ -693,6 +693,12 @@
 	Delete Stop	删除色标
 	Delete Swatch	删除色板
 	Delete Symbol	删除符号
+	Delete the selected symbol?	要删除所选符号吗？
+	One or more of the symbols are in use and cannot be deleted until their instances are expanded or deleted.	一个或多个符号正在使用中，在扩展或删除其实例之前无法删除。
+	Expand Instances	扩展实例
+	Delete Instances	删除实例
+	Yes	是
+	No	否
 	Delete Tab	删除制表位
 	Delete the graphic style “{name}”?	要删除图形样式“{name}”吗？
 	Delete Theme	删除主题
@@ -1569,7 +1575,7 @@ file-filter	Templates	模板
 	Keep the pasted color as a new swatch with a numbered name.	将粘贴的颜色保留为新色板，并以编号命名。
 	Keep this row's colors (exclude)	保留此行的颜色 (排除)
 	Keep:	保留：
-	Kerning (0 = Auto)	字偶距 (0 = 自动)
+	Kerning	字偶距
 	Keyboard Increment	键盘增量
 	Keyboard Shortcut Conflicts	键盘快捷键冲突
 	Keyboard Shortcut Set	键盘快捷键组
@@ -2107,6 +2113,7 @@ file-filter	Templates	模板
 	Opened with {} note(s): {}	已打开，附 {} 条附注：{}
 	OpenType	OpenType
 	Open…	打开…
+	Optical	视觉
 	Optical Margin Alignment	视觉边界对齐
 	Optimize for fast web view	优化快速 Web 查看
 	Optimized	优化
@@ -2162,7 +2169,7 @@ file-filter	Templates	模板
 	Package	打包
 	Package collects a saved document with its linked files and fonts.	打包会将已存储的文件连同其链接文件与字体一并收集。
 	Package created	已创建打包
-	Packaged {n} file(s) in {folder} {note}	已将 {n} 个文件打包于 {folder}{note}
+@plural	Packaged {n} file {note} in {folder}|Packaged {n} files {note} in {folder}	已将 {n} 个文件打包于 {folder}{note}
 	Packaged {n} file(s){note}	已打包 {n} 个文件{note}
 	Package…	打包…
 	Page	页面
@@ -2487,9 +2494,11 @@ font-script	Japanese	汉字
 	Stop	停止
 	Searching…	正在搜索…
 	Not found	未找到
-	{folders} folder(s) and {files} file(s) searched	已搜索 {folders} 个文件夹、{files} 个文件
-	{count} folder(s) skipped, such as other apps' and the system's folders and hidden ones	已跳过 {count} 个文件夹，例如其他应用程序和系统的文件夹，以及隐藏的文件夹
-	{count} folder(s) or file(s) couldn't be read	有 {count} 个文件夹或文件无法读取
+	{folders} and {files} searched	已搜索 {folders}、{files}
+@plural	{n} folder|{n} folders	{n} 个文件夹
+@plural	{n} file|{n} files	{n} 个文件
+@plural	{n} folder skipped, such as another app's or the system's folder or a hidden one|{n} folders skipped, such as other apps' and the system's folders and hidden ones	已跳过 {n} 个文件夹，例如其他应用程序和系统的文件夹，以及隐藏的文件夹
+@plural	{n} folder or file couldn't be read|{n} folders or files couldn't be read	有 {n} 个文件夹或文件无法读取
 	The search stopped at its limit: search a smaller folder.	搜索已达上限而停止：请搜索较小的文件夹。
 	Copy only fonts you own or are licensed to install.	只复制您拥有或已获得安装许可的字体。
 	VectorCraft copies the fonts to {folder}.	VectorCraft 会将字体复制到 {folder}。
@@ -2853,6 +2862,7 @@ font-script	Japanese	汉字
 	Shape Mode	形状模式
 	Shape Modes:	形状模式：
 	Shape Properties:	形状属性：
+	Shape Properties	形状属性
 	Shaper Tool	Shaper 工具
 	Shapes	形状
 	Shear	倾斜
@@ -3369,7 +3379,7 @@ font-script	Japanese	汉字
 	Update Link	更新链接
 	Update Links	更新链接
 	Update Changed Links	更新已更改的链接
-	{count} linked image(s) changed on disk. Show the new versions?	有 {count} 个链接图像已在磁盘上更改。要显示新版本吗？
+@plural	{n} linked image changed on disk. Show the new version?|{n} linked images changed on disk. Show the new versions?	有 {n} 个链接图像已在磁盘上更改。要显示新版本吗？
 @msg	Updated {_1} linked file(s) changed on disk	已更新 {_1} 个在磁盘上更改的链接文件
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	链接的图片在找到其文件之前显示文件中存储的低分辨率预览：请在“链接”面板中重新链接
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	框架高度不足以容纳所显示字体一行的区域文字已加高框架 ({_1})：否则文字不会显示
@@ -3544,12 +3554,12 @@ font-script	Japanese	汉字
 	Zoom Tool	缩放工具
 	Zoom with Mouse Wheel	使用鼠标滚轮缩放
 	Scrub Numeric Fields by Dragging	拖动以调整数值字段
-	{count} file(s) in {folder} {note}. Show the package folder?	{folder} 中有 {count} 个文件{note}。要显示打包文件夹吗？
-	{count} linked file(s) not found	找不到 {count} 个链接文件
+@plural	{n} file in {folder} {note}. Show the package folder?|{n} files in {folder} {note}. Show the package folder?	{folder} 中有 {n} 个文件{note}。要显示打包文件夹吗？
+@plural	{n} linked file not found|{n} linked files not found	找不到 {n} 个链接文件
 	fonts not copied: {fonts}	未复制的字体：{fonts}
-	{count} linked image(s) changed since this document was saved. Show the new versions?	自存储此文档后，有 {count} 个链接图像已更改。要显示新版本吗？
-	{count} more rules: Export writes every one.	另有 {count} 条规则：导出时会全部写出。
-	{count} unnamed objects left out: name them, or turn on Unnamed Objects in the panel menu.	已略过 {count} 个未命名对象：请为它们命名，或在面板菜单中开启“未命名对象”。
+@plural	{n} linked image changed since this document was saved. Show the new version?|{n} linked images changed since this document was saved. Show the new versions?	自存储此文档后，有 {n} 个链接图像已更改。要显示新版本吗？
+@plural	{n} more rule: Export writes it.|{n} more rules: Export writes every one.	另有 {n} 条规则：导出时会全部写出。
+@plural	{n} unnamed object left out: name it, or turn on Unnamed Objects in the panel menu.|{n} unnamed objects left out: name them, or turn on Unnamed Objects in the panel menu.	已略过 {n} 个未命名对象：请为它们命名，或在面板菜单中开启“未命名对象”。
 	{effect} is already applied	已应用 {effect}
 	{format} Options	{format} 选项
 	{kind} Gradient	{kind}渐变
@@ -3572,6 +3582,7 @@ imageTrace	Outline	轮廓
 @plural	{n} item|{n} items	{n} 个项目
 @plural	Color Table ({n} color)|Color Table ({n} colors)	颜色表 ({n} 色)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	要删除这 {n} 个图形样式吗？
+@plural	Delete this {n} brush?|Delete these {n} brushes?	要删除这 {n} 个画笔吗？
 @plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	要删除这 {n} 个色板和编组吗？
 @plural	{n} Layer|{n} Layers	{n} 个图层
 @plural	{n} Object|{n} Objects	{n} 个对象
@@ -4169,7 +4180,7 @@ imageTrace	Outline	轮廓
 @msg	{undecoded} image(s) couldn't be decoded and show as crossed boxes	无法解码 {undecoded} 张图像：它们显示为打叉的方框
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	有 {_1} 个链接图像已在磁盘上更改：“更新链接”可显示新版本
 @msg	pick a colour, gradient or pattern to save as a swatch	请选取要保存为色板的颜色、渐变或图案
-@msg	Packaged {n} file(s) in {folder} {note}	已将 {n} 个文件打包到 {folder}{note}
+@msgplural	Packaged {n} file ({note}) in {folder}|Packaged {n} files ({note}) in {folder}	已将 {n} 个文件打包到 {folder}({note})
 @msg	Packaged {n} file(s){note}	已打包 {n} 个文件{note}
 @msg	choose a location for the package	请为打包选择位置
 @msg	missing `folder`	缺少 `folder`
@@ -4283,6 +4294,7 @@ imageTrace	Outline	轮廓
 @msg	choose a folder to export to	请选择要导出到的文件夹
 @msg	the selection has no URL (or they differ)	所选对象没有 URL (或其 URL 各不相同)
 @msg	select some type first	请先选择一些文字
+@msg	kerning must be a number, "auto", or "optical"	字偶距必须是数字、“auto”或“optical”
 @msg	the selection has no gradient fill	所选对象没有渐变填色
 @msg	the selection has no gradient stroke	所选对象没有渐变描边
 @msg	the selection has no pattern fill	所选对象没有图案填色
@@ -4408,6 +4420,8 @@ imageTrace	Outline	轮廓
 @msg	the PCX file is cut short	PCX 文件不完整
 @msg	the PCX file's header is damaged	PCX 文件头已损坏
 @msg	PCX files with {bits}-bit pixels in {planes} planes can't be read	无法读取 {planes} 个平面中含 {bits} 位像素的 PCX 文件
+@msg	the JPEG 2000 file can't be read	无法读取 JPEG 2000 文件
+@msg	the JPEG 2000 file has an unsupported color space or JPX content	JPEG 2000 文件包含不受支持的色彩空间或 JPX 内容
 @msg	the PSD image is too large to read ({_1} × {_2} pixels)	PSD 图像过大，无法读取 ({_1} × {_2} 像素)
 @msg	zipped 32-bit PSD image data with prediction can't be read	无法读取带预测的 ZIP 压缩 32 位 PSD 图像数据
 @msg	{depth}-bit PSD files in this colour mode can't be read	无法读取此颜色模式下的 {depth} 位 PSD 文件
@@ -5419,13 +5433,13 @@ lighting	Light	光源
 	Slope:	斜率:
 axis	X Axis	X 轴
 axis	Y Axis	Y 轴
-@msg	Packaged {n} file(s) in {folder}	已将 {n} 个文件打包到 {folder}
-@msg	Packaged {n} file(s) {note}	已打包 {n} 个文件 {note}
-@msg	Packaged {n} file(s)	已打包 {n} 个文件
-	Packaged {n} file(s)	已打包 {n} 个文件
-	Packaged {n} file(s) in {folder}	已将 {n} 个文件打包到 {folder}
-	Packaged {n} file(s) {note}	已打包 {n} 个文件 {note}
-	{count} file(s) in {folder}. Show the package folder?	{folder} 中有 {count} 个文件。要显示打包文件夹吗？
+@msgplural	Packaged {n} file in {folder}|Packaged {n} files in {folder}	已将 {n} 个文件打包到 {folder}
+@msgplural	Packaged {n} file {note}|Packaged {n} files {note}	已打包 {n} 个文件 {note}
+@msgplural	Packaged {n} file|Packaged {n} files	已打包 {n} 个文件
+@plural	Packaged {n} file|Packaged {n} files	已打包 {n} 个文件
+@plural	Packaged {n} file in {folder}|Packaged {n} files in {folder}	已将 {n} 个文件打包到 {folder}
+@plural	Packaged {n} file {note}|Packaged {n} files {note}	已打包 {n} 个文件 {note}
+@plural	{n} file in {folder}. Show the package folder?|{n} files in {folder}. Show the package folder?	{folder} 中有 {n} 个文件。要显示打包文件夹吗？
 	Clockwise	顺时针
 	Dither	仿色
 	Fine noise hides banding in the gradient fill	细微杂色可隐藏渐变填色中的色带
@@ -5711,6 +5725,11 @@ anchor	Points:	点：
 
 # Color Effects add-on: Vector Halftone (Effect › Color Effects).
 	Dot Color from Art	网点颜色取自图稿
+	Basic Character Formats	基本字符格式
+	Case	大小写
+@msg	{label} must be a number	{label} 必须是数字
+@msg	{label} must be a number of at least 0.1	{label} 必须是至少 0.1 的数字
+@msg	no character style `{name}`	找不到字符样式 `{name}`
 
 # Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).
 	Duotone…	双色调…
@@ -5803,6 +5822,11 @@ breakText	Glyphs	字形
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` 必须是 lines、paragraphs、words 或 glyphs，而不是 {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` 必须是 "line" 或 "paragraph"，而不是 {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` 必须是 "left"、"center" 或 "right"，而不是 {other}
+	File + Number	文件 + 编号
+	File + Data Set Name	文件 + 数据集名称
+	Data Set Name	数据集名称
+@msg	`datasetFileNaming` must be `fileNumber`, `fileDataSetName` or `dataSetName`	`datasetFileNaming` 必须是 `fileNumber`、`fileDataSetName` 或 `dataSetName`
+@msg	no free data set file name in destination folder	目标文件夹中没有可用的数据集文件名
 
 # Path Precision Tools add-on: Path Effects (Effect › Path Effects).
 	Path Effects	路径效果
@@ -5843,6 +5867,12 @@ breakText	Glyphs	字形
 	Gap 4	间隔 4
 	Dash 5	虚线 5
 	Gap 5	间隔 5
+@msg	You must choose a side pattern.	必须选择侧边图案。
+@msg	invalid pattern tile choice	图案拼块选项无效
+@msg	no pattern named `{choice}`	没有名为 `{choice}` 的图案
+	Delete the selected brushes?	删除选中的画笔吗？
+	Strokes use one or more of these brushes. Take the brushes off those strokes and delete the brushes?	有描边使用了其中一个或多个画笔。要从这些描边移除画笔并删除画笔吗？
+	Remove Strokes	移除描边
 # Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
 	Arrange Tools	排列工具
 	Arrange in Grid…	按网格排列…

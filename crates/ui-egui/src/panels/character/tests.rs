@@ -130,6 +130,38 @@ fn kerning_at_a_caret_sets_the_pair_not_the_whole_text() {
     assert_eq!((kerning(&app, 1), kerning(&app, 2), kerning(&app, 3)), (Some(-50.0), Some(30.0), Some(30.0)));
 }
 
+#[test]
+fn character_kerning_setter_and_automatic_pair_value() {
+    let german = crate::i18n::Lang::from_code("de").unwrap();
+    assert!(crate::i18n::has(german, "Optical"));
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
+    app.session.select_tool("type", Default::default()).unwrap();
+    app.run("text.create", json!({"x": 20, "y": 50, "text": "III", "size": 100, "font": "JetBrains Mono"})).unwrap();
+    app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+    app.session.set_tool_option("select", &json!({"start": 1, "end": 1}));
+    set_kerning(&mut app, json!("optical"));
+    assert!(text_style(&app).unwrap().0.optical_kerning);
+    let ctx = egui::Context::default();
+    let mut shown = None;
+    ctx.run_ui(Default::default(), |ui| {
+        shown = caret_kerning(&app, ui);
+    })
+    .textures_delta
+    .clear();
+    let (value, automatic) = shown.unwrap();
+    assert!(automatic && value != 0.0);
+    set_kerning(&mut app, json!(50));
+    ctx.run_ui(Default::default(), |ui| {
+        shown = caret_kerning(&app, ui);
+    })
+    .textures_delta
+    .clear();
+    assert_eq!(shown, Some((50.0, false)));
+    app.session.set_tool_option("select", &json!({"start": 0, "end": 2}));
+    assert_eq!(shared(&app, |s| (s.optical_kerning, s.kerning)), None, "a mixed range shows a blank Kerning field");
+}
+
 /// Highlight Kerning and Highlight Tracking show the Character panel and give its field the
 /// keyboard focus with the value selected: what is typed replaces it, and Enter applies it.
 /// Highlight Font Name opens the font family menu with its search field focused. Without

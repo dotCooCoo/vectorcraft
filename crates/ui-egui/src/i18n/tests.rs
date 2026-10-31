@@ -271,7 +271,7 @@ fn bundled_catalogs_are_consistent() {
         let mut seen = std::collections::HashSet::new();
         for (ctx, src, tr) in &entries {
             assert!(seen.insert((ctx.clone(), src.clone())), "{}: duplicate {ctx:?} {src:?}", l.code);
-            if ctx == "@plural" {
+            if ctx == "@plural" || ctx == "@msgplural" {
                 let one_other: Vec<&str> = src.split('|').collect();
                 assert_eq!(one_other.len(), 2, "{}: plural source must be `one|other`: {src:?}", l.code);
                 for form in tr.split('|') {
@@ -576,7 +576,7 @@ fn character_panel_terms_agree_within_each_catalog() {
     for l in LANGUAGES.iter().filter(|l| !l.source.is_empty()) {
         let (entries, _) = parse_entries(l.source);
         let row = |src: &str| entries.iter().find(|(ctx, s, _)| ctx.is_empty() && s == src).map(|(_, _, tr)| tr.to_lowercase());
-        let kerning = row("Kerning (0 = Auto)").map(|tr| tr.split(" (").next().unwrap_or_default().trim().to_string());
+        let kerning = row("Kerning");
         let leading = row("Leading");
         let tracking = row("Tracking");
         for (a, b) in [(&kerning, &leading), (&kerning, &tracking), (&leading, &tracking)] {
@@ -1498,6 +1498,23 @@ fn package_status_message_templates_parse() {
     assert!(c.message("2 file(s) in /tmp/foo. Show the package folder?").is_some());
     assert!(c.message("2 file(s) in /tmp/foo (1 linked file(s) not found). Show the package folder?").is_some());
     assert!(Catalog::parse("@msg\tPackaged {n} file(s) in {folder}{note}\tbad\n").message("Packaged 1 file(s) in /a b").is_none());
+}
+
+/// A `@msgplural` row translates both English forms of a message with a count, and the count
+/// picks the language's form.
+#[test]
+fn messages_with_a_count_take_the_plural_form() {
+    let c = Catalog::parse("@msgplural\tSaved {n} file|Saved {n} files\tone {n}|few {n}|many {n}\n");
+    for s in ["Saved 1 file", "Saved 4 files"] {
+        let (forms, caps) = c.message_forms(s).unwrap();
+        assert_eq!(forms, ["one {n}", "few {n}", "many {n}"], "{s}");
+        assert_eq!(caps.len(), 1, "{s}");
+    }
+    assert!(c.message_forms("Saved 1 files!").is_none());
+    let cs = cs();
+    assert_eq!(message(cs, "Packaged 1 file"), "Zabalen 1 soubor");
+    assert_eq!(message(cs, "Packaged 4 files"), "Zabaleny 4 soubory");
+    assert_eq!(message(cs, "Packaged 21 files"), "Zabaleno 21 souborů");
 }
 
 /// The scan reads the message of an error made with one of the engine's [`ERROR_HELPERS`] or with

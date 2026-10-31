@@ -669,10 +669,9 @@ fn expand_appearance_is_an_object_menu_item_only() {
     assert_eq!(paths, [vec!["Object".to_string()]]);
 }
 
-/// In isolation mode, every item of Object › Lock and Object › Hide, Unlock All and Show All are
-/// greyed out, while Group stays on. After Exit Isolation Mode they are on again.
+/// Isolation keeps the Lock and Hide actions available for selected members.
 #[test]
-fn lock_and_hide_menus_are_greyed_out_in_isolation_mode() {
+fn lock_and_hide_menus_are_enabled_in_isolation_mode() {
     let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({})).unwrap();
     let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap()["id"].clone();
@@ -715,8 +714,11 @@ fn lock_and_hide_menus_are_greyed_out_in_isolation_mode() {
     };
     app.run("object.isolate", json!({"id": g.clone()})).unwrap();
     app.run("select.set", json!({"ids": [b]})).unwrap();
-    assert_eq!(shown(&app), [false, false, false, false, false, false, false, false, false, true], "in isolation mode");
+    assert_eq!(shown(&app), [true; 10], "in isolation mode");
     assert!(lock_unselected(&app), "shortcut command remains enabled in isolation");
+    assert!(crate::menus::enabled(&app, "object.hide.unselected"), "Hide Unselected remains enabled in isolation");
+    let chord = crate::shortcut_editor::default_of("object.hide.unselected").expect("default Hide Unselected shortcut");
+    assert_eq!(crate::shortcut_editor::normalize(chord), crate::shortcut_editor::normalize("Cmd+Alt+Shift+3"));
     app.run("object.exitIsolation", json!({})).unwrap();
     app.run("select.set", json!({"ids": [g]})).unwrap();
     assert_eq!(shown(&app), [true; 10], "after Exit Isolation Mode");

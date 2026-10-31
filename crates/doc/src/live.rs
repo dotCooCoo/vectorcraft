@@ -237,11 +237,26 @@ mod tests {
     fn mesh_insert_and_remove_lines() {
         let mut m =
             GradientMesh::for_path(&shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)), 1, 1, Color::BLACK, MeshAppearance::Flat, 0.0).unwrap();
-        let i = m.add_lines_at(Point::new(30.0, 60.0)).unwrap();
+        let i = m.add_lines_at(Point::new(30.0, 60.0), 0.0).unwrap();
         assert_eq!((m.rows, m.cols), (2, 2));
         assert!(m.points[i].p.distance(Point::new(30.0, 60.0)) < 0.5, "{:?}", m.points[i].p);
         assert!(m.remove_point_lines(i));
         assert_eq!((m.rows, m.cols), (1, 1));
+    }
+
+    /// A point outside the mesh within the tolerance locates the nearest point of its edge.
+    #[test]
+    fn mesh_locate_within_reaches_the_edge() {
+        let m = GradientMesh::for_path(&shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)), 2, 2, Color::BLACK, MeshAppearance::Flat, 0.0).unwrap();
+        let p = Point::new(102.0, 30.0);
+        assert_eq!(m.locate(p), None);
+        assert_eq!(m.locate_within(p, 1.0), None);
+        let (r, c, u, v) = m.locate_within(p, 3.0).unwrap();
+        assert_eq!((r, c), (0, 1));
+        assert_eq!(u, 1.0, "on the right edge");
+        let q = m.eval(r, c, u, v);
+        assert!(q.distance(Point::new(100.0, 30.0)) < 1e-6, "{q:?}");
+        assert_eq!(m.locate_within(Point::new(30.0, 60.0), 3.0), m.locate(Point::new(30.0, 60.0)));
     }
 
     /// Corners all in CMYK mix in CMYK (the inks halfway), not in RGB.
