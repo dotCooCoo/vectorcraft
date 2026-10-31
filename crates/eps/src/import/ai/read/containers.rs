@@ -384,10 +384,10 @@ impl<'a> Reader<'a> {
     }
 
     /// Stand in for one unread object with a box that the page can match.
-    pub(super) fn unread_box(&mut self, what: &str, bounds: super::Rect, hidden: bool) -> Result<(), String> {
+    pub(super) fn unread_box(&mut self, what: &str, bounds: super::Rect, hidden: bool) -> Result<Option<NodeId>, String> {
         if hidden || !self.shown() {
             self.hidden_unread.insert(what.into());
-            return Ok(());
+            return Ok(None);
         }
         let in_container = self
             .frames
@@ -396,7 +396,7 @@ impl<'a> Reader<'a> {
             .is_some_and(|layer| self.frames.get(layer + 1).is_some_and(|f| matches!(f.kind, Kind::Group | Kind::Compound | Kind::Clip)));
         if !super::art::sane(bounds) || bounds.area() <= 0.0 {
             self.unsupported.insert(what.into());
-            return Ok(());
+            return Ok(None);
         }
         let path = vectorcraft_geom::shapes::rectangle(bounds);
         let node = Node::path(self.doc.alloc_id(), path, super::Appearance::default());
@@ -408,7 +408,7 @@ impl<'a> Reader<'a> {
         if !in_container {
             self.unread.push((id, vec![what.into()]));
         }
-        Ok(())
+        Ok(Some(id))
     }
 
     fn symbol_instance(&mut self, o: &Obj) -> Result<(), String> {
@@ -424,7 +424,7 @@ impl<'a> Reader<'a> {
             _ => None,
         };
         match box_at_canvas {
-            Some(b) => self.unread_box("symbols", b, self.obj_hidden),
+            Some(b) => self.unread_box("symbols", b, self.obj_hidden).map(|_| ()),
             None => {
                 self.unreadable("symbols", self.obj_hidden);
                 Ok(())

@@ -435,6 +435,102 @@ fn top_level_placed_file_without_preview_uses_page_art() {
 }
 
 #[test]
+fn nested_previewless_placed_file_at_box_corner_falls_back() {
+    let place = "%AI5_BeginPlace\n[1 0 0 -1 -7970 8070] 8000 8000 8040 8040 4 4 0\n(missing.png)`\n~\n%AI5_EndPlace";
+    let art = native(&layer("Placed", true, &os1_group(place))).replace("%AI5_NumLayers", "%AI3_TemplateBox: 100 50 100 50\n%AI5_NumLayers");
+    let mut page = Document::new(100.0, 100.0);
+    let id = page.alloc_id();
+    let path = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(30.0, 30.0, 70.0, 70.0));
+    let fill = vectorcraft_doc::FillLayer::new(vectorcraft_color::Paint::solid(vectorcraft_color::Color::gray(0.5)));
+    page.insert(
+        Some(page.layers[0].id),
+        0,
+        Node::path(id, path, vectorcraft_doc::Appearance { items: vec![vectorcraft_doc::AppearanceItem::Fill(fill)], ..Default::default() }),
+    )
+    .unwrap();
+    let (doc, notes, read) = crate::layered_ai(&private(&art), page, vec![], false, false, 1.0);
+    assert!(!read, "a nested placeholder has no group-wide corner alternative: {notes:?}");
+    assert_eq!(names(&doc), ["Layer 1"]);
+}
+
+#[test]
+fn group_with_previewless_placed_file_and_readable_sibling_keeps_sibling() {
+    let place = "%AI5_BeginPlace\n[1 0 0 -1 -7970 8070] 8000 8000 8040 8040 4 4 0\n(missing.png)`\n~\n%AI5_EndPlace";
+    let group = os1_group(&format!("{place}\n{}", square(70, 10)));
+    let art = native(&layer("Mixed", true, &group)).replace("%AI5_NumLayers", "%AI3_TemplateBox: 100 50 100 50\n%AI5_NumLayers");
+    let mut page = pdf_part(70.0, 86.0);
+    let id = page.alloc_id();
+    let path = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(30.0, 30.0, 70.0, 70.0));
+    let fill = vectorcraft_doc::FillLayer::new(vectorcraft_color::Paint::solid(vectorcraft_color::Color::gray(0.5)));
+    page.insert(
+        Some(page.layers[0].id),
+        1,
+        Node::path(id, path, vectorcraft_doc::Appearance { items: vec![vectorcraft_doc::AppearanceItem::Fill(fill)], ..Default::default() }),
+    )
+    .unwrap();
+    let (doc, notes, read) = crate::layered_ai(&private(&art), page, vec![], false, false, 1.0);
+    if read {
+        let mixed = doc.layers.iter().find(|layer| layer.name.as_deref() == Some("Mixed")).unwrap();
+        assert!(
+            mixed.children().unwrap().iter().any(|child| {
+                child.children().is_some_and(|children| children.iter().any(|n| n.geometric_bounds().is_some_and(|b| b.x0 == 70.0)))
+            }),
+            "readable sibling was dropped: {notes:?}"
+        );
+    } else {
+        assert_eq!(names(&doc), ["Layer 1"], "{notes:?}");
+    }
+}
+
+#[test]
+fn previewless_placed_file_tries_corner_when_first_box_contains_live_art() {
+    let place = "%AI5_BeginPlace\n[1 0 0 -1 -7970 8070] 8000 8000 8040 8040 4 4 0\n(missing.png)`\n~\n%AI5_EndPlace";
+    let live = "0 0 1 0 k\n130 -180 m\n134 -180 L\n134 -184 L\n130 -184 L\nf";
+    let art = native(&(layer("Live", true, live) + &layer("Placed", true, place)))
+        .replace("%AI5_NumLayers", "%AI3_TemplateBox: 100 50 100 50\n%AI5_NumLayers");
+    let mut page = Document::new(100.0, 100.0);
+    let id = page.alloc_id();
+    let path = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(30.0, 30.0, 70.0, 70.0));
+    let fill = vectorcraft_doc::FillLayer::new(vectorcraft_color::Paint::solid(vectorcraft_color::Color::gray(0.5)));
+    page.insert(
+        Some(page.layers[0].id),
+        0,
+        Node::path(id, path, vectorcraft_doc::Appearance { items: vec![vectorcraft_doc::AppearanceItem::Fill(fill)], ..Default::default() }),
+    )
+    .unwrap();
+    let (doc, notes, read) = crate::layered_ai(&private(&art), page, vec![], false, false, 1.0);
+    assert!(read, "{notes:?}");
+    assert_eq!(names(&doc), ["Live", "Placed"]);
+    assert_eq!(kinds(&doc.layers[0]), ["path"]);
+    assert_eq!(kinds(&doc.layers[1]), ["group[1]"]);
+    assert!(notes.iter().any(|note| note.contains("placed files (1)")), "{notes:?}");
+}
+
+#[test]
+fn replaced_page_art_reids_opacity_mask_art() {
+    let place = "%AI5_BeginPlace\n[1 0 0 1 0 0] 50 10 54 14 (missing) `\n~\n%AI5_EndPlace";
+    let art = native(&layer("Placed", true, place));
+    let mut page = pdf_part(50.0, 86.0);
+    let page_node_id = page.layers[0].children().unwrap()[0].id;
+    let mask_id = page.alloc_id();
+    let mask_path = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(50.0, 86.0, 54.0, 90.0));
+    let mask_fill = vectorcraft_doc::FillLayer::new(vectorcraft_color::Paint::solid(vectorcraft_color::Color::WHITE));
+    let mask_art = Node::path(
+        mask_id,
+        mask_path,
+        vectorcraft_doc::Appearance { items: vec![vectorcraft_doc::AppearanceItem::Fill(mask_fill)], ..Default::default() },
+    );
+    page.node_mut(page_node_id).unwrap().extras_mut().mask = Some(Box::new(vectorcraft_doc::OpacityMask::new(mask_art, true)));
+    let (doc, notes, read) = crate::layered_ai(&private(&art), page, vec![], false, false, 1.0);
+    assert!(read, "{notes:?}");
+    let replacement = &doc.layers[0].children().unwrap()[0].children().unwrap()[0];
+    let mask = replacement.extras().mask.as_ref().unwrap();
+    assert_ne!(mask.art.id, mask_id);
+    assert_ne!(mask.art.id, replacement.id);
+    assert!(mask.art.id.0 < doc.peek_next_id());
+}
+
+#[test]
 fn top_level_placed_file_replacement_keeps_page_image_data() {
     use vectorcraft_doc::{ImageBlob, ImageObject};
 
@@ -545,6 +641,28 @@ fn same_named_pattern_in_page_art_keeps_editing_layers() {
     assert_eq!(doc.patterns.iter().filter(|p| p.name == "Dots").count(), 1);
     let replacement = &doc.layers[1].children().unwrap()[0].children().unwrap()[0];
     assert!(matches!(replacement.appearance.fill().map(|f| &f.paint), Some(vectorcraft_color::Paint::Pattern { pattern, .. }) if pattern == "Dots"));
+}
+
+#[test]
+fn copied_page_pattern_reids_its_mask_art() {
+    let source_art = named_pattern_replacement_art();
+    let mut page = page_with_named_pattern(&source_art, false);
+    let mask_id = page.alloc_id();
+    let path = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(0.0, 0.0, 4.0, 4.0));
+    let fill = vectorcraft_doc::FillLayer::new(vectorcraft_color::Paint::solid(vectorcraft_color::Color::WHITE));
+    let mask_art =
+        Node::path(mask_id, path, vectorcraft_doc::Appearance { items: vec![vectorcraft_doc::AppearanceItem::Fill(fill)], ..Default::default() });
+    std::sync::Arc::make_mut(&mut page.patterns[0].art[0]).extras_mut().mask = Some(Box::new(vectorcraft_doc::OpacityMask::new(mask_art, true)));
+    let art = native(&format!(
+        "{}{}",
+        layer("Live", true, &square(10, 10)),
+        layer("Mixed", true, &format!("(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n{}", square_path(50, 10)))
+    ));
+    let (doc, notes, read) = crate::layered_ai(&private(&art), page, vec![], false, false, 1.0);
+    assert!(read, "{notes:?}");
+    let mask = doc.pattern("Dots").unwrap().art[0].extras().mask.as_ref().unwrap();
+    assert_ne!(mask.art.id, mask_id);
+    assert!(mask.art.id.0 < doc.peek_next_id());
 }
 
 #[test]

@@ -103,6 +103,8 @@ pub struct Structure {
     pub hidden_unread: BTreeSet<String>,
     /// Top-level object ids and the unread kinds within them.
     pub unread: Vec<(NodeId, Vec<String>)>,
+    /// Other bounds for previewless placed files whose page art uses the file box's corner.
+    pub unread_elsewhere: Vec<(NodeId, Rect)>,
     /// The names of text objects, by their slot's id.
     pub slot_names: HashMap<NodeId, String>,
     /// Where the drawn looks lay that objects read with their art style took the place of (the
@@ -217,6 +219,7 @@ struct Reader<'a> {
     restyled: Vec<Rect>,
     /// See [`Structure::placed_elsewhere`].
     placed_elsewhere: Vec<(NodeId, Affine)>,
+    unread_elsewhere: Vec<(NodeId, Rect)>,
     /// CMYK samples converted, by value.
     cmyk_cache: HashMap<[u8; 4], [u8; 3]>,
     /// A `/ForeignObject`'s `/Data`: its PDF as ASCII85 in comment lines, until the object closes.
@@ -314,6 +317,7 @@ impl<'a> Reader<'a> {
             palette: super::palette::Palette::default(),
             restyled: vec![],
             placed_elsewhere: vec![],
+            unread_elsewhere: vec![],
             mesh: None,
             cmyk_cache: HashMap::new(),
             done: false,

@@ -59,7 +59,20 @@ pub(super) fn build_from(
     trust: bool,
     unit: f64,
 ) -> Result<(Document, Vec<String>), String> {
-    let Structure { mut doc, to_doc, bbox, artboard, template, hidden_unread, unread, slot_names, restyled, placed_elsewhere, warnings } = structure;
+    let Structure {
+        mut doc,
+        to_doc,
+        bbox,
+        artboard,
+        template,
+        hidden_unread,
+        unread,
+        unread_elsewhere,
+        slot_names,
+        restyled,
+        placed_elsewhere,
+        warnings,
+    } = structure;
     // Editing data in the units of the page's user space ([`in_units`]) is compared with the page
     // scaled down to those units, and the document read from it is scaled up by `unit`.
     let board = artboard.map(|a| to_doc.transform_rect_bbox(a));
@@ -230,7 +243,7 @@ pub(super) fn build_from(
     doc.layers = layers;
     if !unread.is_empty() {
         let Some(frame) = frame.as_ref() else { return Err("its unread objects have no page art to use".into()) };
-        let kinds = replace_unread(&mut doc, frame, &unread)?;
+        let kinds = replace_unread(&mut doc, frame, &unread, &unread_elsewhere)?;
         notes.push(format!("{}: they came in as the page's art", kinds.join(", ")));
     }
     // A story in several frames is threaded type: its frames in order (the first holds the story).
@@ -458,7 +471,7 @@ fn copy_page_resources(doc: &mut Document, page: &Document, nodes: &[&Node]) -> 
                 collect(node, &mut images, &mut patterns, &mut swatches);
             }
             let mut pattern = source.clone();
-            pattern.art = pattern.art.iter().map(|node| Arc::new(doc.reid(node))).collect();
+            pattern.art = pattern.art.iter().map(|node| Arc::new(reid_page_art(doc, node))).collect();
             doc.patterns.push(pattern);
         }
     }
@@ -499,7 +512,12 @@ fn page_carries_state(editing: &Node, page: &[&Node]) -> bool {
 }
 
 /// Replace each unread top-level object with painted page objects inside its readable bounds.
-fn replace_unread(doc: &mut Document, frame: &Frame<'_>, unread: &[(NodeId, Vec<String>)]) -> Result<Vec<String>, String> {
+fn replace_unread(
+    doc: &mut Document,
+    frame: &Frame<'_>,
+    unread: &[(NodeId, Vec<String>)],
+    elsewhere: &[(NodeId, Rect)],
+) -> Result<Vec<String>, String> {
     let unread_ids: BTreeSet<NodeId> = unread.iter().map(|(id, _)| *id).collect();
     let mut live = Vec::new();
     for layer in &doc.layers {
@@ -533,48 +551,62 @@ fn replace_unread(doc: &mut Document, frame: &Frame<'_>, unread: &[(NodeId, Vec<
         if !bounds.area().is_finite() || bounds.area() <= 0.0 {
             return Err("an unread object has no readable bounds".into());
         }
-        let live_start = live.partition_point(|b| b.x0 < bounds.x0 - ART_MARGIN);
-        let live_end = live.partition_point(|b| b.x0 <= bounds.x1 + ART_MARGIN);
-        if live[live_start..live_end].iter().any(|art| inside(*art, bounds)) {
-            return Err("an unread object's bounds also contain live art".into());
-        }
-        let page = page_for(bounds, &destination_pages);
-        let candidates_start = by_x.partition_point(|i| art[*i].bounds.x0 < bounds.x0 - ART_MARGIN);
-        let candidates_end = by_x.partition_point(|i| art[*i].bounds.x0 <= bounds.x1 + ART_MARGIN);
-        let mut candidates: Vec<usize> =
-            by_x[candidates_start..candidates_end].iter().copied().filter(|i| art[*i].page == page && inside(art[*i].bounds, bounds)).collect();
-        candidates.sort_unstable();
         let mut selected = Vec::new();
-        let mut covered_until = 0;
-        for i in candidates {
-            if i < covered_until || matches!(art[i].node.kind, NodeKind::Path { clipping: true, .. }) {
+        let mut page = 0;
+        let mut first_rejection = None;
+        'candidate: for candidate in std::iter::once(bounds).chain(elsewhere.iter().filter(|(other, _)| *other == *id).map(|(_, b)| *b)) {
+            let live_start = live.partition_point(|b| b.x0 < candidate.x0 - ART_MARGIN);
+            let live_end = live.partition_point(|b| b.x0 <= candidate.x1 + ART_MARGIN);
+            if live[live_start..live_end].iter().any(|art| inside(*art, candidate)) {
+                first_rejection.get_or_insert("an unread object's bounds also contain live art");
                 continue;
             }
-            if art[i].stateful_ancestor {
-                return Err("an unread object's page art depends on a clipping or appearance ancestor".into());
+            let candidate_page = page_for(candidate, &destination_pages);
+            let start = by_x.partition_point(|i| art[*i].bounds.x0 < candidate.x0 - ART_MARGIN);
+            let end = by_x.partition_point(|i| art[*i].bounds.x0 <= candidate.x1 + ART_MARGIN);
+            let mut candidates: Vec<usize> =
+                by_x[start..end].iter().copied().filter(|i| art[*i].page == candidate_page && inside(art[*i].bounds, candidate)).collect();
+            candidates.sort_unstable();
+            let mut covered_until = 0;
+            let mut candidate_selected = Vec::new();
+            for i in candidates {
+                if i < covered_until || matches!(art[i].node.kind, NodeKind::Path { clipping: true, .. }) {
+                    continue;
+                }
+                if art[i].stateful_ancestor {
+                    first_rejection.get_or_insert("an unread object's page art depends on a clipping or appearance ancestor");
+                    continue 'candidate;
+                }
+                covered_until = art[i].end;
+                candidate_selected.push(i);
             }
-            covered_until = art[i].end;
-            selected.push(i);
+            if !candidate_selected.is_empty()
+                && !page_carries_state(&editing, &candidate_selected.iter().map(|&i| art[i].node.as_ref()).collect::<Vec<_>>())
+            {
+                first_rejection.get_or_insert("an unread object's appearance is not identifiable in the page art");
+                continue;
+            }
+            if candidate_selected.iter().any(|&i| claimed.range(..art[i].end).next_back().is_some_and(|(_, end)| *end > i)) {
+                first_rejection.get_or_insert("one page object matches more than one unread object");
+                continue;
+            }
+            if !candidate_selected.is_empty() {
+                selected = candidate_selected;
+                page = candidate_page;
+                break;
+            }
         }
         if selected.is_empty() {
-            return Err("an unread object's page art wasn't found in its bounds".into());
-        }
-        if !page_carries_state(&editing, &selected.iter().map(|&i| art[i].node.as_ref()).collect::<Vec<_>>()) {
-            return Err("an unread object's appearance is not identifiable in the page art".into());
+            return Err(first_rejection.unwrap_or("an unread object's page art wasn't found in its bounds").into());
         }
         copy_page_resources(doc, frame.page, &selected.iter().map(|&i| art[i].node.as_ref()).collect::<Vec<_>>())?;
-        for &i in &selected {
-            if claimed.range(..art[i].end).next_back().is_some_and(|(_, end)| *end > i) {
-                return Err("one page object matches more than one unread object".into());
-            }
-        }
         let mut found = Vec::new();
         for &i in &selected {
             let mut copy = Node::clone(&art[i].node);
             if let Some(shift) = moves.get(page) {
                 copy.transform(*shift, false);
             }
-            found.push(Arc::new(doc.reid(&copy)));
+            found.push(Arc::new(reid_page_art(doc, &copy)));
             claimed.insert(i, art[i].end);
         }
         let mut replacement = Node::group(*id, found);
@@ -588,6 +620,34 @@ fn replace_unread(doc: &mut Document, frame: &Frame<'_>, unread: &[(NodeId, Vec<
         }
     }
     Ok(counts.into_iter().map(|(kind, count)| format!("{kind} ({count})")).collect())
+}
+
+/// Copy page drawing IDs, including mask art outside the ordinary child tree.
+fn reid_page_art(doc: &mut Document, source: &Node) -> Node {
+    let mut copy = doc.reid(source);
+    if let Some(mask) = &mut copy.extras_mut().mask {
+        mask.art = Arc::new(reid_page_art(doc, &mask.art));
+    }
+    if let Some(children) = copy.children_mut() {
+        for child in children {
+            let node = reid_page_art_masks(doc, child);
+            *child = Arc::new(node);
+        }
+    }
+    copy
+}
+
+fn reid_page_art_masks(doc: &mut Document, source: &Node) -> Node {
+    let mut copy = source.clone();
+    if let Some(mask) = &mut copy.extras_mut().mask {
+        mask.art = Arc::new(reid_page_art(doc, &mask.art));
+    }
+    if let Some(children) = copy.children_mut() {
+        for child in children {
+            *child = Arc::new(reid_page_art_masks(doc, child));
+        }
+    }
+    copy
 }
 
 /// `doc` with the placed files `placed` lists at their other placement (see
@@ -859,4 +919,107 @@ pub(super) fn prune_unseen(frame: &Frame<'_>, view: &mut PageView, doc: &mut Doc
         }
     }
     removed
+}
+
+#[cfg(test)]
+mod candidate_tests {
+    use super::*;
+
+    /// A nested placeholder's corner cannot replace its readable sibling.
+    #[test]
+    fn nested_placeholder_corner_cannot_replace_readable_sibling() {
+        let mut doc = Document::new(100.0, 100.0);
+        let group_id = doc.alloc_id();
+        let placeholder = Node::path(doc.alloc_id(), vectorcraft_geom::shapes::rectangle(Rect::new(10.0, 10.0, 20.0, 20.0)), Default::default());
+        let placeholder_id = placeholder.id;
+        let sibling = Node::path(doc.alloc_id(), vectorcraft_geom::shapes::rectangle(Rect::new(70.0, 70.0, 74.0, 74.0)), Default::default());
+        let sibling_id = sibling.id;
+        let group = Node::group(group_id, vec![Arc::new(placeholder), Arc::new(sibling)]);
+        doc.insert(Some(doc.layers[0].id), 0, group).unwrap();
+
+        let mut page = Document::new(100.0, 100.0);
+        let art = Node::path(
+            page.alloc_id(),
+            vectorcraft_geom::shapes::rectangle(Rect::new(81.0, 81.0, 89.0, 89.0)),
+            vectorcraft_doc::Appearance::basic(vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK), vectorcraft_color::Paint::None, 0.0),
+        );
+        page.insert(Some(page.layers[0].id), 0, art).unwrap();
+        let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let frame = Frame { page: &page, page_rect: rect, rect, whole: false, pages: vec![(rect, Affine::IDENTITY)] };
+        let result =
+            replace_unread(&mut doc, &frame, &[(group_id, vec!["placed files".into()])], &[(placeholder_id, Rect::new(80.0, 80.0, 90.0, 90.0))]);
+        assert_eq!(result.unwrap_err(), "an unread object's page art wasn't found in its bounds");
+        let group = doc.node(group_id).unwrap();
+        assert!(group.children().unwrap().iter().any(|child| child.id == sibling_id));
+    }
+
+    /// An alternative box may carry opacity missing from the first box.
+    #[test]
+    fn alternative_box_can_carry_opacity_when_first_box_cannot() {
+        let mut doc = Document::new(100.0, 100.0);
+        let id = doc.alloc_id();
+        let mut editing = Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(10.0, 10.0, 20.0, 20.0)), Default::default());
+        editing.opacity = 0.5;
+        doc.insert(Some(doc.layers[0].id), 0, editing).unwrap();
+
+        let mut page = Document::new(100.0, 100.0);
+        for (bounds, opacity) in [(Rect::new(11.0, 11.0, 19.0, 19.0), 1.0), (Rect::new(51.0, 51.0, 59.0, 59.0), 0.5)] {
+            let mut art = Node::path(
+                page.alloc_id(),
+                vectorcraft_geom::shapes::rectangle(bounds),
+                vectorcraft_doc::Appearance::basic(
+                    vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK),
+                    vectorcraft_color::Paint::None,
+                    0.0,
+                ),
+            );
+            art.opacity = opacity;
+            page.insert(Some(page.layers[0].id), page.layers[0].children().unwrap().len(), art).unwrap();
+        }
+        let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let frame = Frame { page: &page, page_rect: rect, rect, whole: false, pages: vec![(rect, Affine::IDENTITY)] };
+        let kinds = replace_unread(&mut doc, &frame, &[(id, vec!["placed files".into()])], &[(id, Rect::new(50.0, 50.0, 60.0, 60.0))]).unwrap();
+        assert_eq!(kinds, ["placed files (1)"]);
+        let replacement = doc.node(id).unwrap();
+        let [art] = replacement.children().unwrap().as_slice() else { panic!("{replacement:?}") };
+        assert_eq!(art.opacity, 0.5);
+        assert_eq!(art.geometric_bounds(), Some(Rect::new(51.0, 51.0, 59.0, 59.0)));
+    }
+
+    /// A claimed first box lets a second unread object use its own corner box.
+    #[test]
+    fn second_unread_object_tries_corner_after_first_box_is_claimed() {
+        let mut doc = Document::new(100.0, 100.0);
+        let first = doc.alloc_id();
+        let second = doc.alloc_id();
+        for (id, bounds) in [(first, Rect::new(10.0, 10.0, 20.0, 20.0)), (second, Rect::new(12.0, 12.0, 22.0, 22.0))] {
+            let node = Node::path(id, vectorcraft_geom::shapes::rectangle(bounds), Default::default());
+            doc.insert(Some(doc.layers[0].id), doc.layers[0].children().unwrap().len(), node).unwrap();
+        }
+
+        let mut page = Document::new(100.0, 100.0);
+        for bounds in [Rect::new(14.0, 14.0, 16.0, 16.0), Rect::new(51.0, 51.0, 59.0, 59.0)] {
+            let art = Node::path(
+                page.alloc_id(),
+                vectorcraft_geom::shapes::rectangle(bounds),
+                vectorcraft_doc::Appearance::basic(
+                    vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK),
+                    vectorcraft_color::Paint::None,
+                    0.0,
+                ),
+            );
+            page.insert(Some(page.layers[0].id), page.layers[0].children().unwrap().len(), art).unwrap();
+        }
+        let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let frame = Frame { page: &page, page_rect: rect, rect, whole: false, pages: vec![(rect, Affine::IDENTITY)] };
+        let unread = [(first, vec!["placed files".into()]), (second, vec!["placed files".into()])];
+        let mut one_box_doc = doc.clone();
+        let kinds = replace_unread(&mut doc, &frame, &unread, &[(second, Rect::new(50.0, 50.0, 60.0, 60.0))]).unwrap();
+        assert_eq!(kinds, ["placed files (2)"]);
+        let first_art = doc.node(first).unwrap().children().unwrap()[0].geometric_bounds();
+        let second_art = doc.node(second).unwrap().children().unwrap()[0].geometric_bounds();
+        assert_eq!(first_art, Some(Rect::new(14.0, 14.0, 16.0, 16.0)));
+        assert_eq!(second_art, Some(Rect::new(51.0, 51.0, 59.0, 59.0)));
+        assert_eq!(replace_unread(&mut one_box_doc, &frame, &unread, &[]).unwrap_err(), "one page object matches more than one unread object");
+    }
 }

@@ -492,7 +492,13 @@ impl<'a> Reader<'a> {
                     let bounds = (self.space() * m).transform_rect_bbox(box_at_canvas);
                     have_bounds = sane(bounds) && bounds.area() > 0.0;
                     if have_bounds {
-                        self.unread_box("placed files", bounds, hidden)?;
+                        let placeholder_id = self.unread_box("placed files", bounds, hidden)?;
+                        if let Some(placeholder_id) = placeholder_id.filter(|_| self.unread_elsewhere.len() < MAX_PLACED_ELSEWHERE) {
+                            let corner = (self.space() * m).transform_rect_bbox(b);
+                            if sane(corner) && corner.area() > 0.0 && corner != bounds {
+                                self.unread_elsewhere.push((placeholder_id, corner));
+                            }
+                        }
                         return Ok(());
                     }
                 }

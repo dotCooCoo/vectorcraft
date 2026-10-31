@@ -986,6 +986,18 @@ fn hidden_placed_file_ended_by_comment_stays_hidden() {
 }
 
 #[test]
+fn previewless_placement_records_box_corner_as_alternative() {
+    let mut data = placed(true, "[1 0 0 -1 -7970 8070]", "missing.png", None, "");
+    let at = data.windows(15).position(|w| w == b"%AI5_BeginLayer").unwrap();
+    data.splice(at..at, *b"%AI3_TemplateBox: 100 50 100 50\n");
+    let r = read(&data).unwrap();
+    assert_unread(&r, "placed files");
+    assert_eq!(r.unread_elsewhere.len(), 1);
+    assert_eq!(r.unread_elsewhere[0].0, r.unread[0].0);
+    assert_ne!(r.unread_elsewhere[0].1, r.doc.node(r.unread[0].0).unwrap().visual_bounds().unwrap());
+}
+
+#[test]
 fn placed_files_are_linked_images_showing_their_preview() {
     // A 2×1 preview (premultiplied ARGB, a padded row) of a file of 4×2 pixels.
     let preview = [&b"2 1 12 32 17 "[..], &[255, 255, 0, 0, 128, 0, 64, 0, 9, 9, 9, 9]].concat();
