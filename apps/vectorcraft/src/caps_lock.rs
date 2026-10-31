@@ -144,9 +144,11 @@ fn windows_state_has_caps_lock(state: i16) -> bool {
 }
 
 #[cfg(windows)]
+#[allow(unsafe_code)]
 pub fn read() -> bool {
     // GetKeyState reports the toggle bit for the calling UI thread's keyboard state.
     use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, VK_CAPITAL};
+    // SAFETY: `GetKeyState` takes a virtual-key code by value and reads the thread's keyboard state.
     windows_state_has_caps_lock(unsafe { GetKeyState(i32::from(VK_CAPITAL.0)) })
 }
 
