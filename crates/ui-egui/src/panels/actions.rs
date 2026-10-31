@@ -94,8 +94,9 @@ fn delete_selection(app: &mut VectorcraftApp, ctx: &egui::Context) {
 /// `ui.actionSet.delete {sets?: [index], all?: [name]}`: deletes the action sets at these
 /// indexes, with their actions (default: the current set). With `all`, the names of every set in
 /// the panel, in order, must equal it exactly, or nothing is deleted. A recording into a
-/// deleted set stops, and its steps are dropped; a recording into another set goes on. When the
-/// current set is deleted, no set is current afterwards.
+/// deleted set stops, and its steps are dropped; a recording into another set goes on. An open
+/// Set Options or Batch dialog for a deleted set closes. When the current set is deleted, no set
+/// is current afterwards.
 pub fn delete_sets(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     let len = app.ui.action_sets.len();
     let mut sets: Vec<usize> = match p.get("sets") {
@@ -124,6 +125,20 @@ pub fn delete_sets(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String>
             app.session.journal.hold(None);
         } else {
             *rec -= sets.iter().filter(|&&s| s < *rec).count();
+        }
+    }
+    // An open Set Options or Batch dialog holds a set index: it closes when its set is deleted,
+    // and otherwise follows its set down.
+    let holds_set = |d: &crate::state::Dialog| {
+        d.kind == crate::dialogs::action_batch::KIND || (d.kind == crate::dialogs::action_set_options::KIND && d.fields.contains_key("set"))
+    };
+    if let Some(d) = app.ui.dialog.as_mut().filter(|d| holds_set(d))
+        && let Some(set) = d.fields.get("set").and_then(Value::as_u64).and_then(|s| usize::try_from(s).ok())
+    {
+        if sets.contains(&set) {
+            app.ui.dialog = None;
+        } else {
+            d.fields.insert("set".into(), json!(set - sets.iter().filter(|&&s| s < set).count()));
         }
     }
     for &s in sets.iter().rev() {
@@ -631,6 +646,33 @@ mod tests {
         assert_eq!(set_names(&app), ["Default Actions"]);
         assert!(app.ui.recording.is_none(), "the recording into the deleted set stops");
         assert_eq!(app.session.journal.held(), None);
+    }
+
+    /// `ui.actionSet.delete` while Set Options is open on a later set: OK renames that set, not
+    /// the one that moves into its old index.
+    #[test]
+    fn set_options_renames_its_own_set_after_an_earlier_set_is_deleted() {
+        let mut app = app_with_sets();
+        crate::dialogs::action_set_options::open(&mut app, 2);
+        app.run(DELETE_SETS, json!({"sets": [1]})).unwrap();
+        app.ui.dialog.as_mut().expect("Set Options stays open").fields.insert("name".into(), json!("Web"));
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert_eq!(set_names(&app), ["Default Actions", "Web"], "the set that was Other is renamed");
+    }
+
+    /// `ui.actionSet.delete` closes a Batch dialog open on an action of a deleted set, and keeps
+    /// one open on a later set pointing at that set.
+    #[test]
+    fn deleting_a_set_closes_its_batch_dialog() {
+        let mut app = app_with_sets();
+        crate::dialogs::action_batch::open(&mut app, 1, 0).unwrap();
+        app.run(DELETE_SETS, json!({"sets": [1]})).unwrap();
+        assert!(app.ui.dialog.is_none(), "the Batch dialog of the deleted set closes");
+        let mut app = app_with_sets();
+        crate::dialogs::action_batch::open(&mut app, 1, 1).unwrap();
+        app.run(DELETE_SETS, json!({"sets": [0]})).unwrap();
+        let d = app.ui.dialog.as_ref().expect("the Batch dialog of a kept set stays open");
+        assert_eq!((d.fields["set"].clone(), d.fields["action"].clone()), (json!(0), json!(1)), "it follows Mine to index 0");
     }
 
     /// A recording keeps its steps when a canceled undo group drops journal entries made before the
