@@ -241,11 +241,13 @@ fn make(s: &mut Session, p: &Value) -> Result<Value> {
             Some(m) => (*d.remove(m)?).clone(),
             None => mask_group(vec![]),
         };
-        // Several objects are grouped so they share one mask. The group goes in the lowest of
-        // their layers, above the topmost of them there.
+        // Several objects are grouped so they share one mask. The group goes in the layer or
+        // sublayer that directly holds the lowest of them, above the topmost of them there.
+        let inner_layer =
+            |d: &Document, id: NodeId| d.ancestry(id).and_then(|a| a.into_iter().take_while(|id| d.node(*id).is_some_and(Node::is_layer)).last());
         let last = art[art.len() - 1];
-        let lowest = d.layer_of(art[0]);
-        let mut anchor = art.iter().rev().copied().find(|id| d.layer_of(*id) == lowest).unwrap_or(last);
+        let lowest = inner_layer(d, art[0]);
+        let mut anchor = art.iter().rev().copied().find(|id| inner_layer(d, *id) == lowest).unwrap_or(last);
         // Art from another layer goes beside the outermost object that holds the anchor, not into
         // a group (which may clip it or change its opacity).
         if anchor != last
@@ -618,6 +620,46 @@ mod tests {
         let l1_kids: Vec<u64> = d.node(NodeId(l1)).unwrap().children().unwrap().iter().map(|c| c.id.0).collect();
         assert_eq!(l1_kids, vec![held, g]);
         assert_eq!(d.node(NodeId(g)).unwrap().children().unwrap().iter().map(|c| c.id.0).collect::<Vec<_>>(), vec![a, b]);
+    }
+
+    #[test]
+    fn make_puts_the_group_in_the_sublayer_or_layer_that_holds_the_lowest_art() {
+        let kids = |s: &Session, id: u64| -> Vec<u64> {
+            s.doc().unwrap().doc.node(NodeId(id)).unwrap().children().unwrap().iter().map(|c| c.id.0).collect()
+        };
+        // (sublayer above the layer's own art, mask in the sublayer rather than a top layer)
+        for (sub_on_top, mask_in_sub) in [(true, true), (false, false), (true, false)] {
+            let mut s = Session::new();
+            s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+            let rect = |s: &mut Session, x: u64| {
+                s.execute("shape.rectangle", &json!({"x": x, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap()
+            };
+            let parent = s.doc().unwrap().doc.layers[0].id.0;
+            let (direct_extra, direct) = (rect(&mut s, 0), rect(&mut s, 30));
+            let sub = s.execute("layer.newSublayer", &json!({"parent": parent, "bottom": !sub_on_top})).unwrap()["id"].as_u64().unwrap();
+            s.execute("layer.setCurrent", &json!({"id": sub})).unwrap();
+            let (nested_extra, nested) = (rect(&mut s, 60), rect(&mut s, 90));
+            if !mask_in_sub {
+                s.execute("layer.new", &json!({"top": true})).unwrap();
+            }
+            let mask = rect(&mut s, 120);
+            let (lower, upper) = if sub_on_top { (direct, nested) } else { (nested, direct) };
+            let before = s.doc().unwrap().doc.layers.clone();
+            let case = format!("sublayer on top {sub_on_top}, mask in sublayer {mask_in_sub}");
+            let g = s.execute("transparency.makeOpacityMask", &json!({ "ids": [direct, nested, mask] })).unwrap()["id"].as_u64().unwrap();
+            assert_eq!(kids(&s, g), vec![lower, upper], "{case}");
+            // The group is where the lowest object was, in the layer or sublayer that held it.
+            if sub_on_top {
+                assert_eq!(kids(&s, parent), vec![direct_extra, g, sub], "{case}");
+                assert_eq!(kids(&s, sub), vec![nested_extra], "{case}");
+            } else {
+                assert_eq!(kids(&s, parent), vec![sub, direct_extra], "{case}");
+                assert_eq!(kids(&s, sub), vec![nested_extra, g], "{case}");
+            }
+            assert!(s.doc().unwrap().doc.node(NodeId(g)).unwrap().extras().mask.as_ref().is_some_and(|m| m.art.id == NodeId(mask)), "{case}");
+            s.execute("edit.undo", &json!({})).unwrap();
+            assert_eq!(s.doc().unwrap().doc.layers, before, "{case}: undo");
+        }
     }
 
     #[test]
