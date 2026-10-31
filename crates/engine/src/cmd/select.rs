@@ -35,8 +35,24 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!("select.none", "Deselect", ["Select"], Some("Cmd+Shift+A"), "{}", has_doc, none),
         cmd!("select.reselect", "Reselect", ["Select"], Some("Cmd+6"), "{}", has_doc, reselect),
         cmd!("select.inverse", "Inverse", ["Select"], None, "{skipTemplates?: bool (default false)}", has_doc, inverse),
-        cmd!("select.nextAbove", "Next Object Above", ["Select"], Some("Cmd+Alt+]"), "{}", has_selection, |s, _| step(s, 1)),
-        cmd!("select.nextBelow", "Next Object Below", ["Select"], Some("Cmd+Alt+["), "{}", has_selection, |s, _| step(s, -1)),
+        cmd!(
+            "select.nextAbove",
+            "Next Object Above",
+            ["Select"],
+            Some("Cmd+Alt+]"),
+            "{skipTemplates?: bool (default false)}",
+            has_selection,
+            |s, p| step(s, p, 1)
+        ),
+        cmd!(
+            "select.nextBelow",
+            "Next Object Below",
+            ["Select"],
+            Some("Cmd+Alt+["),
+            "{skipTemplates?: bool (default false)}",
+            has_selection,
+            |s, p| step(s, p, -1)
+        ),
         cmd!(
             "select.set",
             "Select Objects",
@@ -358,7 +374,7 @@ fn inverse(s: &mut Session, p: &Value) -> Result<Value> {
     ok()
 }
 
-fn step(s: &mut Session, dir: i64) -> Result<Value> {
+fn step(s: &mut Session, p: &Value, dir: i64) -> Result<Value> {
     let st = s.doc()?;
     let Some(cur) = st.selection.objects.first().copied() else { return ok() };
     let Some((par, idx, _)) = st.doc.position(cur) else { return ok() };
@@ -366,10 +382,11 @@ fn step(s: &mut Session, dir: i64) -> Result<Value> {
     // The nearest sibling in that direction that `walk_selectable` visits: hidden and locked
     // objects and sublayers are passed over.
     let can = selectable_ids(&st.doc, st.isolation);
+    let skip_templates = bool_or(p, "skipTemplates", false);
     let next = if dir > 0 {
-        siblings.iter().skip(idx + 1).find(|n| can.contains(&n.id))
+        siblings.iter().skip(idx + 1).find(|n| can.contains(&n.id) && (!skip_templates || !st.doc.has_template_ancestor(n.id)))
     } else {
-        siblings.iter().take(idx).rev().find(|n| can.contains(&n.id))
+        siblings.iter().take(idx).rev().find(|n| can.contains(&n.id) && (!skip_templates || !st.doc.has_template_ancestor(n.id)))
     };
     let Some(id) = next.map(|n| n.id) else { return ok() };
     s.select(|_, sel| sel.set([id]))?;

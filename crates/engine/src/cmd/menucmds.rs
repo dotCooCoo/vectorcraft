@@ -15,8 +15,8 @@ use vectorcraft_render::encode::{RasterExportOptions, RasterFormat};
 
 use super::edit::{duplicate_in, selected_roots, selected_roots_to_transform};
 use super::{
-    CommandSpec, EngineError, Result, Session, bad, check_numbers, check_switches, cmd, f64_or, fileio, find_command, has_doc, has_selection,
-    has_selection_outside_isolation, switch_or,
+    CommandSpec, EngineError, Result, Session, bad, bool_or, check_numbers, check_switches, cmd, f64_or, fileio, find_command, has_doc,
+    has_selection, has_selection_outside_isolation, switch_or,
 };
 
 /// Session-level (not saved) state owned by the menu commands.
@@ -79,7 +79,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Unselected Artwork",
             ["Object", "Hide"],
             Some("Cmd+Alt+Shift+3"),
-            "{} hide, in one undo step, every object select.all takes that is not selected and holds no selected object; in a group that holds one it hides the other members one by one, and a clip group, compound path or other object that holds one stays as it is; the objects of a selected layer count as selected; while Lock Guides is on, guide paths count as selected and stay as they are; object.showAll shows them again; disabled in isolation mode → {count}",
+            "{skipTemplates?: bool (default false)} hide, in one undo step, every object select.all takes that is not selected and holds no selected object; template art is omitted when requested; in a group that holds one it hides the other members one by one, and a clip group, compound path or other object that holds one stays as it is; the objects of a selected layer count as selected; while Lock Guides is on, guide paths count as selected and stay as they are; object.showAll shows them again; disabled in isolation mode → {count}",
             has_selection_outside_isolation,
             hide_unselected
         ),
@@ -325,12 +325,19 @@ fn other_layers(s: &mut Session, lock: bool) -> Result<Value> {
 /// them. The objects of a selected layer count as selected. Guide paths are left out while `guides_locked`, and so are
 /// the objects that hold one. The walk goes into a plain group that holds a selected object or such a guide path; a
 /// clip group, a Shaper group, a compound path and every other object that holds one is left out with its members.
-fn unselected(d: &vectorcraft_doc::Document, iso: Option<NodeId>, selection: &[NodeId], roots: &[NodeId], guides_locked: bool) -> Vec<NodeId> {
+fn unselected(
+    d: &vectorcraft_doc::Document,
+    iso: Option<NodeId>,
+    selection: &[NodeId],
+    roots: &[NodeId],
+    guides_locked: bool,
+    skip_templates: bool,
+) -> Vec<NodeId> {
     let mut roots: HashSet<NodeId> = roots.iter().copied().collect();
     roots.extend(selection.iter().filter_map(|id| d.node(*id)).filter(|n| n.is_layer()).flat_map(|l| l.layer_art(true)));
     let mut kept: Vec<NodeId> = roots.iter().copied().collect();
     if guides_locked {
-        super::select::walk_selectable(d, iso, false, |n| {
+        super::select::walk_selectable(d, iso, skip_templates, |n| {
             if matches!(n.kind, NodeKind::Path { guide: true, .. }) {
                 kept.push(n.id);
             }
@@ -339,7 +346,7 @@ fn unselected(d: &vectorcraft_doc::Document, iso: Option<NodeId>, selection: &[N
     }
     let holds: HashSet<NodeId> = d.index_paths(kept).values().filter_map(|p| d.ancestry_at(p)).flatten().collect();
     let mut out = vec![];
-    super::select::walk_selectable(d, iso, false, |n| {
+    super::select::walk_selectable(d, iso, skip_templates, |n| {
         if !holds.contains(&n.id) {
             out.push(n.id);
             return false;
@@ -349,11 +356,11 @@ fn unselected(d: &vectorcraft_doc::Document, iso: Option<NodeId>, selection: &[N
     out
 }
 
-fn hide_unselected(s: &mut Session, _: &Value) -> Result<Value> {
+fn hide_unselected(s: &mut Session, p: &Value) -> Result<Value> {
     let roots = selected_roots_to_transform(s)?;
     let guides_locked = s.menu.guides_locked;
     let st = s.doc()?;
-    let ids = unselected(&st.doc, st.isolation, &st.selection.objects, &roots, guides_locked);
+    let ids = unselected(&st.doc, st.isolation, &st.selection.objects, &roots, guides_locked, bool_or(p, "skipTemplates", false));
     // With nothing to hide, the document and its undo history stay as they are.
     if !ids.is_empty() {
         s.edit("Hide", |d, _| {

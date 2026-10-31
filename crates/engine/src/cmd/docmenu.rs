@@ -172,7 +172,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Recall Selection",
             ["Select"],
             None,
-            "{name} select the objects of a saved selection, leaving out those deleted since and those that are hidden or locked, inside a hidden or locked object or layer, on a template layer, or outside the isolated group or layer → {count}",
+            "{name, skipTemplates?: bool (default false)} select the objects of a saved selection, leaving out those deleted since and those that are hidden or locked, inside a hidden or locked object or layer, on a template layer when requested, or outside the isolated group or layer → {count}",
             has_saved_selection,
             recall_selection
         ),
@@ -435,7 +435,8 @@ fn recall_selection(s: &mut Session, p: &Value) -> Result<Value> {
     let ids = saved.get(i).map(|x| x.objects.clone()).unwrap_or_default();
     let st = s.doc()?;
     let can = selectable_ids(&st.doc, st.isolation);
-    s.select(|_, sel| sel.set(ids.into_iter().filter(|id| can.contains(id))))?;
+    let skip_templates = bool_or(p, "skipTemplates", false);
+    s.select(|d, sel| sel.set(ids.into_iter().filter(|id| can.contains(id) && (!skip_templates || !d.has_template_ancestor(*id)))))?;
     let st = s.doc_mut()?;
     st.recalled_selection.recall(&st.doc.saved_selections, i);
     Ok(json!({ "count": st.selection.len() }))

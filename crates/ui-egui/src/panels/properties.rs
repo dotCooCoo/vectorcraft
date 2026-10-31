@@ -268,7 +268,7 @@ fn global_edit_options(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// The cached Result(s) count: the (document, revision, options, one selected object) it was
 /// found for, and the count.
-type GlobalEditCount = Option<((u64, u64, vectorcraft_engine::cmd::globaledit::Options, Option<u64>), usize)>;
+type GlobalEditCount = Option<((u64, u64, vectorcraft_engine::cmd::globaledit::Options, Option<u64>, bool), usize)>;
 
 /// How many objects Start Global Edit would take now (the options' Result(s) line), cached per
 /// document revision, options and selected object, as finding them walks the whole document.
@@ -278,11 +278,12 @@ fn global_edit_count(app: &VectorcraftApp, ctx: &egui::Context) -> usize {
         [id] => Some(id.0),
         _ => None,
     };
-    let key = (st.uid, st.revision, app.session.global_edit_options.clone(), selected);
+    let skip_templates = !app.ui.view.templates;
+    let key = (st.uid, st.revision, app.session.global_edit_options.clone(), selected, skip_templates);
     match pstate::<GlobalEditCount>(ctx, "props-global-edit-count") {
         Some((k, count)) if k == key => count,
         _ => {
-            let count = vectorcraft_engine::cmd::globaledit::match_count(&app.session);
+            let count = vectorcraft_engine::cmd::globaledit::match_count(&app.session, skip_templates);
             set_pstate::<GlobalEditCount>(ctx, "props-global-edit-count", Some((key, count)));
             count
         }

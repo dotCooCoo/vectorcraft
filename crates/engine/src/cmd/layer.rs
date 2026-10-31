@@ -101,7 +101,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Select Art",
             [],
             None,
-            "{id, add?: bool} the Layers panel's selection column: select the visible, unlocked art of a layer (its sublayers' too), or the object itself; `add` (Shift-click) adds it to the selection, or removes it when it is all selected already → {selected: [..]}",
+            "{id, add?: bool, skipTemplates?: bool (default false)} the Layers panel's selection column: select the visible, unlocked art of a layer (its sublayers' too), omitting template art when requested, or the object itself; `add` (Shift-click) adds it to the selection, or removes it when it is all selected already → {selected: [..]}",
             has_doc,
             select_art
         ),
@@ -191,7 +191,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Target",
             [],
             None,
-            "{id, add?: bool (Shift-click: the item joins the selection, or leaves it when all selected; nothing is targeted)} target a layer, group or object as clicking its target circle in the Layers panel does: a layer gets its visible, unlocked art (its sublayers' too) selected and becomes the current layer, and appearance.*, effect.*, transparency.* and the opacity-mask commands without `ids` then act on the layer itself; anything else is selected. Any other selection change ends the targeting (`document.inspect` → target) → {id, selected: [..]}",
+            "{id, add?: bool (Shift-click: the item joins the selection, or leaves it when all selected; nothing is targeted), skipTemplates?: bool (default false)} target a layer, group or object as clicking its target circle in the Layers panel does: a layer gets its visible, unlocked art (its sublayers' too) selected, omitting template art when requested, and becomes the current layer; appearance.*, effect.*, transparency.* and the opacity-mask commands without `ids` then act on the layer itself. Anything else is selected. Any other selection change ends the targeting (`document.inspect` → target) → {id, selected: [..]}",
             has_doc,
             target
         ),
@@ -427,12 +427,16 @@ fn target(s: &mut Session, p: &Value) -> Result<Value> {
     if !in_isolation(&st.doc, st.isolation, id) {
         return Err(bad(C, "the object is outside the isolated group"));
     }
+    if bool_or(p, "skipTemplates", false) && st.doc.has_template_ancestor(id) {
+        return Err(bad(C, "the object is on a hidden template layer"));
+    }
     let layer = n.is_layer();
     let rows = st.layer_rows.clone();
+    let skip_templates = bool_or(p, "skipTemplates", false);
     if switch_or(p, "add", false, C)? {
-        s.select(|d, sel| sel.toggle_target(d, id))?;
+        s.select(|d, sel| sel.toggle_target_with_templates(d, id, skip_templates))?;
     } else {
-        s.select(|d, sel| sel.set_target(d, id))?;
+        s.select(|d, sel| sel.set_target_with_templates(d, id, skip_templates))?;
     }
     let st = s.doc_mut()?;
     // Targeting doesn't change which rows are highlighted.
@@ -685,13 +689,16 @@ fn select_art(s: &mut Session, p: &Value) -> Result<Value> {
     let n = st.doc.node(id).ok_or(EngineError::NoNode(id))?;
     // An isolated layer's own row selects the art inside it.
     let isolated_layer = st.isolation == Some(id) && n.is_layer();
-    let ids: Vec<NodeId> = if !st.doc.is_editable(id) || !(isolated_layer || in_isolation(&st.doc, st.isolation, id)) {
+    let mut ids: Vec<NodeId> = if !st.doc.is_editable(id) || !(isolated_layer || in_isolation(&st.doc, st.isolation, id)) {
         vec![]
     } else if n.is_layer() {
         n.layer_art(true)
     } else {
         vec![id]
     };
+    if bool_or(p, "skipTemplates", false) {
+        ids.retain(|id| !st.doc.has_template_ancestor(*id));
+    }
     let all_selected = !ids.is_empty() && ids.iter().all(|i| st.selection.contains(*i));
     let rows = st.layer_rows.clone();
     s.select(|_, sel| {

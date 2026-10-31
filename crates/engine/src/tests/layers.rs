@@ -213,6 +213,23 @@ fn the_selection_column_selects_a_rows_art_and_shift_adds_or_removes_it() {
     assert_eq!(ids_sel(&run(&mut s, "layer.target", json!({"id": layer.0}))), vec![c, a, g]);
 }
 
+#[test]
+fn layer_rows_omit_art_on_unlocked_template_sublayers_when_requested() {
+    let mut s = session();
+    let (layer, sub, a, g, _, c) = tree(&mut s);
+    run(&mut s, "layer.setProps", json!({"id": sub.0, "template": true, "locked": false}));
+    let selected = |s: &Session| s.doc().unwrap().selection.objects.clone();
+    run(&mut s, "layer.selectAll", json!({"id": layer.0, "skipTemplates": true}));
+    assert_eq!(selected(&s), [c]);
+    run(&mut s, "layer.selectAll", json!({"id": layer.0, "add": true, "skipTemplates": true}));
+    assert!(selected(&s).is_empty());
+    assert_eq!(ids_sel(&run(&mut s, "layer.target", json!({"id": layer.0, "skipTemplates": true}))), [c]);
+    assert!(ids_sel(&run(&mut s, "layer.target", json!({"id": layer.0, "add": true, "skipTemplates": true}))).is_empty());
+    assert!(s.execute("layer.target", &json!({"id": a.0, "skipTemplates": true})).is_err());
+    assert!(selected(&s).is_empty());
+    assert_eq!(ids_sel(&run(&mut s, "layer.target", json!({"id": layer.0}))), [c, a, g]);
+}
+
 fn ids_sel(v: &Value) -> Vec<NodeId> {
     v["selected"].as_array().unwrap().iter().map(|i| NodeId(i.as_u64().unwrap())).collect()
 }

@@ -59,6 +59,20 @@ fn shaper_scribble_rejects_malformed_explicit_targets() {
 }
 
 #[test]
+fn shaper_scribble_omits_hidden_template_candidates() {
+    let mut s = session();
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let art = rectangle(&mut s, 0.0, "#ff0000");
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+    let points = json!([[25, 20], [35, 30]]);
+    let before = node(&s, art).clone();
+    let result = s.execute("shaper.scribble", &json!({"points": points, "skipTemplates": true})).unwrap();
+    assert!(result["id"].is_null());
+    assert_eq!(node(&s, art), &before);
+    assert!(s.execute("shaper.scribble", &json!({"points": points})).is_ok());
+}
+
+#[test]
 fn shaper_merges_with_origin_color_keeps_live_originals_and_undoes_once() {
     for reverse in [false, true] {
         let mut s = session();

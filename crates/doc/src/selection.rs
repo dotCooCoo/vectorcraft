@@ -248,8 +248,12 @@ impl Selection {
     /// Target `id` (see [`Selection::target`]): a layer gets its visible, unlocked art selected
     /// (the art of its sublayers too), anything else is selected itself.
     pub fn set_target(&mut self, doc: &Document, id: NodeId) {
+        self.set_target_with_templates(doc, id, false);
+    }
+    /// Target a row while optionally omitting art inside template layers.
+    pub fn set_target_with_templates(&mut self, doc: &Document, id: NodeId, skip_templates: bool) {
         match doc.node(id) {
-            Some(n) if n.is_layer() => self.set(n.layer_art(true)),
+            Some(n) if n.is_layer() => self.set(n.layer_art(true).into_iter().filter(|i| !skip_templates || !doc.has_template_ancestor(*i))),
             _ => self.set([id]),
         }
         self.target = Some(id);
@@ -259,12 +263,16 @@ impl Selection {
     /// locked artboard is neither counted nor added, since
     /// [`Selection::deselect_on_locked_artboards`] deselects it.
     pub fn toggle_target(&mut self, doc: &Document, id: NodeId) {
+        self.toggle_target_with_templates(doc, id, false);
+    }
+    /// Toggle a target row while optionally omitting art inside template layers.
+    pub fn toggle_target_with_templates(&mut self, doc: &Document, id: NodeId, skip_templates: bool) {
         let mut ids = match doc.node(id) {
             Some(n) if n.is_layer() => n.layer_art(true),
             _ => vec![id],
         };
         let locks = doc.locked_artboards();
-        ids.retain(|i| !locks.holds_id(*i));
+        ids.retain(|i| !locks.holds_id(*i) && (!skip_templates || !doc.has_template_ancestor(*i)));
         if ids.iter().all(|i| self.contains(*i)) {
             ids.iter().for_each(|i| self.remove(*i));
         } else {

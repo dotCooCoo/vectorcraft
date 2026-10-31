@@ -15,7 +15,7 @@ use vectorcraft_render::effects;
 
 use super::super::colorcmds::recolor_links;
 use super::super::select::walk_selectable;
-use super::super::{CommandSpec, bad, checked_ids_or_selection, cmd, has_doc, has_selection, text_param};
+use super::super::{CommandSpec, bad, bool_or, checked_ids_or_selection, cmd, has_doc, has_selection, text_param};
 use crate::{Result, Session};
 
 /// The kinds Select by Color Kind selects (`addon.color.select`).
@@ -28,7 +28,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Select by Color Kind",
             ["Object", "Plug-ins", "Color Effects"],
             None,
-            "{kind: \"spotColors\" (objects painted with a spot colour swatch, solid or in a gradient's stops) | \"colorEffects\" (objects carrying a visible colour adjustment effect, on themselves or on a fill or stroke) | \"rgbImages\" | \"cmykImages\" | \"grayImages\" (embedded or linked images whose pixels are RGB, CMYK, or grayscale or 1-bit)} select those objects among the ones Select All reaches, inside groups too; locked and hidden ones are left out → {count}",
+            "{kind: \"spotColors\" (objects painted with a spot color swatch, solid or in a gradient's stops) | \"colorEffects\" (objects carrying a visible color adjustment effect, on themselves or on a fill or stroke) | \"rgbImages\" | \"cmykImages\" | \"grayImages\" (embedded or linked images whose pixels are RGB, CMYK, or grayscale or 1-bit), skipTemplates?: bool (default false)} select those objects among the ones Select All reaches, inside groups too; locked and hidden ones, and template art when requested, are left out → {count}",
             has_doc,
             select
         ),
@@ -61,7 +61,7 @@ fn select(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let st = s.doc()?;
     let mut ids: Vec<NodeId> = vec![];
-    walk_selectable(&st.doc, st.isolation, false, |n| {
+    walk_selectable(&st.doc, st.isolation, bool_or(p, "skipTemplates", false), |n| {
         if is_of_kind(&st.doc, n, kind) {
             ids.push(n.id);
             // An object taken whole: what is inside it isn't taken again.

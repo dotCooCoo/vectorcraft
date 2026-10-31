@@ -11,6 +11,20 @@ fn completed_pathfinder_operation<'a>(id: &'a str, params: &'a Value) -> Option<
     }
 }
 
+fn skips_hidden_templates(id: &str) -> bool {
+    matches!(id, "select.all" | "select.allOnArtboard" | "select.inverse" | "select.magicWand")
+        || id.starts_with("select.same.")
+        || id.starts_with("select.object.")
+        || id.starts_with("select.next")
+        || id == "select.recall"
+        || id.starts_with("select.globalEdit")
+        || id == "addon.color.select"
+        || id == "object.hide.unselected"
+        || id == "layer.selectAll"
+        || id == "layer.target"
+        || id == "shaper.scribble"
+}
+
 impl VectorcraftApp {
     /// Run a UI or engine command by id. The single entry point for every frontend path.
     pub fn run(&mut self, id: &str, params: Value) -> Result<Value, String> {
@@ -37,10 +51,7 @@ impl VectorcraftApp {
             return r;
         }
         let mut params = params;
-        if (matches!(id, "select.all" | "select.allOnArtboard" | "select.inverse" | "select.magicWand")
-            || id.starts_with("select.same.")
-            || id.starts_with("select.object.")
-            || id.starts_with("select.globalEdit"))
+        if skips_hidden_templates(id)
             && !self.ui.view.templates
             && let Some(p) = params.as_object_mut()
         {
@@ -198,5 +209,25 @@ impl VectorcraftApp {
     /// Show a transient status message.
     pub fn status(&mut self, s: impl Into<String>) {
         self.ui.status = s.into();
+    }
+}
+
+#[cfg(test)]
+mod template_command_tests {
+    use super::*;
+
+    #[test]
+    fn every_hidden_template_command_accepts_the_added_parameter() {
+        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        app.run("file.new", serde_json::json!({"width": 400, "height": 300})).unwrap();
+        app.ui.view.templates = false;
+        let ids: Vec<_> = vectorcraft_engine::command_specs().iter().filter(|spec| skips_hidden_templates(spec.id)).map(|spec| spec.id).collect();
+        assert!(!ids.is_empty());
+        for id in ids {
+            vectorcraft_engine::check_params(id, &serde_json::json!({"skipTemplates": true})).unwrap_or_else(|error| panic!("{id}: {error}"));
+            if let Err(error) = app.run(id, serde_json::json!({})) {
+                assert!(!error.contains("skipTemplates"), "{id}: {error}");
+            }
+        }
     }
 }

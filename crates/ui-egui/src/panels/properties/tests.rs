@@ -159,6 +159,24 @@ fn the_global_edit_result_count_is_cached() {
     assert_eq!(global_edit_count(&app, &ctx), 1, "other options");
 }
 
+#[test]
+fn global_edit_count_tracks_template_visibility() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    let first = app.run("shape.rectangle", json!({"x": 20, "y": 20, "width": 40, "height": 40})).unwrap()["id"].clone();
+    let layer = app.run("layer.new", json!({"top": true})).unwrap()["id"].clone();
+    app.run("shape.rectangle", json!({"x": 120, "y": 20, "width": 40, "height": 40})).unwrap();
+    app.run("layer.setProps", json!({"ids": [layer], "template": true, "locked": false})).unwrap();
+    app.run("select.set", json!({"ids": [first]})).unwrap();
+    let ctx = egui::Context::default();
+    app.ui.view.templates = true;
+    assert_eq!(global_edit_count(&app, &ctx), 2);
+    app.ui.view.templates = false;
+    assert_eq!(global_edit_count(&app, &ctx), 1);
+    app.ui.view.templates = true;
+    assert_eq!(global_edit_count(&app, &ctx), 2);
+}
+
 // Regression test for #1910: the Properties panel's flip buttons are named as the reference
 // app's Properties panel names them, not Flip Horizontal and Flip Vertical (the Transform
 // panel menu's names).

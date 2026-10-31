@@ -25,7 +25,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Shaper",
             [],
             None,
-            "{points: [[x,y]…], ids?: [id…] (default: nearby art), tolerance?: pt (4)} interior scribbles remove fills; scribbles through several regions merge with the origin fill; ending outside removes fills and boundary strokes; outside scribbles erase stroke pieces. Originals remain editable → {id, regions, strokes}",
+            "{points: [[x,y]…], ids?: [id…] (default: nearby art), tolerance?: pt (4), skipTemplates?: bool (default false)} interior scribbles remove fills; scribbles through several regions merge with the origin fill; ending outside removes fills and boundary strokes; outside scribbles erase stroke pieces. Template art is omitted when requested. Originals remain editable → {id, regions, strokes}",
             has_doc,
             scribble
         ),
@@ -546,11 +546,13 @@ fn candidates(s: &Session, p: &Value, points: &[Point], tolerance: f64) -> Resul
     let supplied = p.get("ids").map(|_| checked_ids_param(s, p, "ids", "shaper.scribble")).transpose()?;
     let expand = supplied.is_none() && st.selection.objects.len() < 2;
     let ids = supplied.unwrap_or_else(|| if st.selection.objects.len() > 1 { st.selection.objects.clone() } else { st.doc.selectable_art() });
+    let skip_templates = bool_or(p, "skipTemplates", false);
     let editable = st.doc.editable();
     let eligible: Vec<NodeId> = ids
         .into_iter()
         .filter(|id| {
             editable(*id)
+                && (!skip_templates || !st.doc.has_template_ancestor(*id))
                 && st.doc.node(*id).is_some_and(|n| {
                     !matches!(n.kind, NodeKind::Path { guide: true, .. } | NodeKind::Path { clipping: true, .. })
                         && (n.extras().shaper.is_some() || b::node_outline(n).is_some())

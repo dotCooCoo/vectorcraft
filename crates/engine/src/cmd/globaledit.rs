@@ -326,8 +326,8 @@ fn set_options(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// How many objects Start Global Edit would take now with the session's options (the Result(s)
 /// line of the options): 0 unless one supported object is selected.
-pub fn match_count(s: &Session) -> usize {
-    match_count_with_templates(s, false)
+pub fn match_count(s: &Session, skip_templates: bool) -> usize {
+    match_count_with_templates(s, skip_templates)
 }
 
 fn match_count_with_templates(s: &Session, skip_templates: bool) -> usize {
