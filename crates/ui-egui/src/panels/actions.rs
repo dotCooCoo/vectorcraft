@@ -18,16 +18,33 @@ pub struct Action {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ActionSet {
+    /// Tells the set apart from every other set in this run, even one with the same name. It is
+    /// not saved: each set gets a new id when it is made or loaded.
+    #[serde(skip, default = "next_set_id")]
+    pub id: u64,
     pub name: String,
     pub actions: Vec<Action>,
+}
+
+impl ActionSet {
+    /// A set with a new [`ActionSet::id`].
+    pub fn new(name: impl Into<String>, actions: Vec<Action>) -> Self {
+        Self { id: next_set_id(), name: name.into(), actions }
+    }
+}
+
+/// A set id no other set in this run has.
+fn next_set_id() -> u64 {
+    static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
 }
 
 /// Built-in actions (our own, handy defaults).
 pub fn default_sets() -> Vec<ActionSet> {
     let step = |c: &str, p: Value| (c.to_string(), p);
-    vec![ActionSet {
-        name: "Default Actions".into(),
-        actions: vec![
+    vec![ActionSet::new(
+        "Default Actions",
+        vec![
             Action { name: "Duplicate and Offset 10 pt".into(), steps: vec![step("object.move", json!({"dx": 10, "dy": 10, "copy": true}))] },
             Action {
                 name: "Unite and Simplify".into(),
@@ -41,7 +58,7 @@ pub fn default_sets() -> Vec<ActionSet> {
             Action { name: "Rotate 90° CW".into(), steps: vec![step("object.rotate", json!({"angle": -90}))] },
             Action { name: "Reflect Horizontal".into(), steps: vec![step("object.reflect", json!({"axis": "vertical"}))] },
         ],
-    }]
+    )]
 }
 
 /// Run an action as a single undoable batch.
@@ -86,37 +103,37 @@ fn delete_selection(app: &mut VectorcraftApp, ctx: &egui::Context) {
         ),
         _ => tl!("Delete the selected action sets and their actions?").to_string(),
     };
-    let all: Vec<&str> = app.ui.action_sets.iter().map(|s| s.name.as_str()).collect();
-    let params = json!({ "sets": sets, "all": all });
+    let ids: Vec<u64> = sets.iter().filter_map(|&s| app.ui.action_sets.get(s)).map(|s| s.id).collect();
+    let params = json!({ "sets": sets, "ids": ids });
     crate::dialogs::confirm::ask(app, &message, "", DELETE_SETS, params);
 }
 
-/// `ui.actionSet.delete {sets?: [index], all?: [name]}`: deletes the action sets at these
-/// indexes, with their actions (default: the current set). With `all`, the names of every set in
-/// the panel, in order, must equal it exactly, or nothing is deleted. A recording into a
-/// deleted set stops, and its steps are dropped; a recording into another set goes on. An open
-/// Set Options or Batch dialog for a deleted set closes. When the current set is deleted, no set
-/// is current afterwards.
+/// `ui.actionSet.delete {sets?: [index], ids?: [id]}`: deletes the action sets at these
+/// indexes, with their actions (default: the current set). `ids` holds the panel's own set ids
+/// ([`ActionSet::id`]), which Delete Selection's question passes: the sets with these ids are
+/// deleted wherever they are now, `sets` is not read, and when one of them no longer exists
+/// nothing is deleted. A recording into a deleted set stops, and its steps are dropped; a
+/// recording into another set goes on. An open Set Options or Batch dialog for a deleted set
+/// closes. When the current set is deleted, no set is current afterwards.
 pub fn delete_sets(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     let len = app.ui.action_sets.len();
-    let mut sets: Vec<usize> = match p.get("sets") {
-        None | Some(Value::Null) => app.ui.action_set.filter(|&s| s < len).into_iter().collect(),
-        Some(v) => v
+    let mut sets: Vec<usize> = match (p.get("ids"), p.get("sets")) {
+        (Some(v), _) if !v.is_null() => v
+            .as_array()
+            .ok_or("the action set ids are not a list")?
+            .iter()
+            .map(|id| {
+                id.as_u64().and_then(|id| app.ui.action_sets.iter().position(|s| s.id == id)).ok_or("the action sets changed; nothing was deleted")
+            })
+            .collect::<Result<_, _>>()?,
+        (_, None | Some(Value::Null)) => app.ui.action_set.filter(|&s| s < len).into_iter().collect(),
+        (_, Some(v)) => v
             .as_array()
             .ok_or("no such action set")?
             .iter()
             .map(|i| i.as_u64().and_then(|i| usize::try_from(i).ok()).filter(|&i| i < len).ok_or("no such action set"))
             .collect::<Result<_, _>>()?,
     };
-    match p.get("all") {
-        None | Some(Value::Null) => {}
-        Some(v) => {
-            let all = v.as_array().ok_or("the action set names are not a list")?;
-            if all.len() != len || app.ui.action_sets.iter().zip(all).any(|(s, n)| n.as_str() != Some(s.name.as_str())) {
-                return Err("the action sets changed; nothing was deleted".into());
-            }
-        }
-    }
     sets.sort_unstable();
     sets.dedup();
     if let Some((rec, ..)) = app.ui.recording.as_mut() {
@@ -272,7 +289,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
         ui.painter().circle_filled(r.center(), 6.0, if recording { egui::Color32::from_rgb(0xe0, 0x30, 0x30) } else { t.icon });
         if resp.on_hover_text(tl!("Begin Recording")).clicked() && !recording {
             if app.ui.action_sets.is_empty() {
-                app.ui.action_sets.push(ActionSet { name: "Set 1".into(), actions: vec![] });
+                app.ui.action_sets.push(ActionSet::new("Set 1", vec![]));
             }
             let set = current.filter(|&s| s < app.ui.action_sets.len()).unwrap_or(0);
             let n = app.ui.action_sets.get(set).map_or(0, |s| s.actions.len()) + 1;
@@ -404,7 +421,7 @@ mod tests {
     fn set_options_renames_the_current_set() {
         use super::super::tests_appearance::{click, frame_events, text_rect};
         let mut app = VectorcraftApp::new(Session::new(), Default::default());
-        app.ui.action_sets.push(ActionSet { name: "Mine".into(), actions: vec![] });
+        app.ui.action_sets.push(ActionSet::new("Mine", vec![]));
         let ctx = egui::Context::default();
         let texts = frame_events(&ctx, &mut app, vec![], show);
         click(&ctx, &mut app, text_rect(&texts, "▾ Mine").center(), show);
@@ -423,8 +440,8 @@ mod tests {
     fn app_with_sets() -> VectorcraftApp {
         let mut app = VectorcraftApp::new(Session::new(), Default::default());
         let action = |name: &str| Action { name: name.into(), steps: vec![("object.move".into(), json!({"dx": 1, "dy": 0}))] };
-        app.ui.action_sets.push(ActionSet { name: "Mine".into(), actions: vec![action("Nudge"), action("Nudge Again")] });
-        app.ui.action_sets.push(ActionSet { name: "Other".into(), actions: vec![] });
+        app.ui.action_sets.push(ActionSet::new("Mine", vec![action("Nudge"), action("Nudge Again")]));
+        app.ui.action_sets.push(ActionSet::new("Other", vec![]));
         app
     }
 
@@ -541,46 +558,46 @@ mod tests {
         crate::dialogs::confirm(&mut app).unwrap();
         assert_eq!(set_names(&app), ["Default Actions"]);
         // A plain click selects one set again.
-        app.ui.action_sets.extend([ActionSet { name: "A".into(), actions: vec![] }, ActionSet { name: "B".into(), actions: vec![] }]);
+        app.ui.action_sets.extend([ActionSet::new("A", vec![]), ActionSet::new("B", vec![])]);
         click_set(&ctx, &mut app, "A", egui::Modifiers::NONE);
         click_set(&ctx, &mut app, "Default Actions", egui::Modifiers::SHIFT);
         click_set(&ctx, &mut app, "B", egui::Modifiers::NONE);
         assert_eq!((app.ui.action_set, app.ui.action_sets_selected.clone()), (Some(2), vec![2]));
     }
 
-    /// The question carries the names of every set as they were when it asked: when a set before
-    /// the asked one is deleted while it is open, OK deletes nothing instead of the set that moved
+    /// The question holds the ids of the sets it asks about: when a set before the asked one is
+    /// deleted while it is open, OK deletes the asked set at its new index, not the set that moved
     /// into the asked index.
     #[test]
-    fn ok_deletes_nothing_after_the_sets_change_under_the_question() {
+    fn ok_deletes_the_asked_set_after_an_earlier_set_is_deleted_under_the_question() {
         use super::super::tests_appearance::click;
         let mut app = app_with_sets();
-        app.ui.action_sets.push(ActionSet { name: "Third".into(), actions: vec![] });
+        app.ui.action_sets.push(ActionSet::new("Third", vec![]));
         let ctx = egui::Context::default();
         click_set(&ctx, &mut app, "Other", egui::Modifiers::NONE);
         let delete = trash(&ctx, &mut app);
         click(&ctx, &mut app, delete, show);
         assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([2])));
-        let all = json!(["Default Actions", "Mine", "Other", "Third"]);
-        assert_eq!(app.ui.dialog.as_ref().map(|d| d.fields["__params"]["all"].clone()), Some(all));
+        let id = app.ui.action_sets[2].id;
+        assert_eq!(app.ui.dialog.as_ref().map(|d| d.fields["__params"]["ids"].clone()), Some(json!([id])));
         app.run(DELETE_SETS, json!({"sets": [1]})).unwrap();
         assert_eq!(set_names(&app), ["Default Actions", "Other", "Third"]);
-        let _ = crate::dialogs::confirm(&mut app);
-        assert_eq!(set_names(&app), ["Default Actions", "Other", "Third"], "OK deletes no set the question did not name");
-        let p = json!({"sets": [1], "all": ["Default Actions", "Other"]});
-        assert!(app.run(DELETE_SETS, p).is_err(), "all must list every set");
-        let p = json!({"sets": [1], "all": ["Default Actions", "Other", "Third"]});
-        assert_eq!(app.run(DELETE_SETS, p).unwrap(), json!({"deleted": 1}));
-        assert_eq!(set_names(&app), ["Default Actions", "Third"]);
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert_eq!(set_names(&app), ["Default Actions", "Third"], "OK deletes Other, the asked set");
+        let p = json!({"sets": [0], "ids": [id]});
+        assert_eq!(app.run(DELETE_SETS, p).unwrap_err(), "the action sets changed; nothing was deleted");
+        assert_eq!(set_names(&app), ["Default Actions", "Third"], "an id that is gone deletes nothing, sets is not read");
     }
 
     /// Two sets with the same name: when the asked one is deleted elsewhere while the question is
-    /// open, OK does not delete the other one, which now has the asked index and name.
+    /// open, OK does not delete the other one, which now has the asked index and name; when the
+    /// two trade places, OK deletes the asked one at its new index.
     #[test]
-    fn ok_deletes_nothing_when_a_set_of_the_same_name_moves_into_the_asked_index() {
+    fn ok_deletes_only_the_asked_one_of_two_sets_with_the_same_name() {
         use super::super::tests_appearance::click;
         let mut app = VectorcraftApp::new(Session::new(), Default::default());
-        app.ui.action_sets = vec![ActionSet { name: "X".into(), actions: vec![] }, ActionSet { name: "X".into(), actions: vec![] }];
+        let x = |n: &str| ActionSet::new("X", vec![Action { name: n.into(), steps: vec![] }]);
+        app.ui.action_sets = vec![x("first"), x("second")];
         let ctx = egui::Context::default();
         click_set(&ctx, &mut app, "X", egui::Modifiers::NONE);
         assert_eq!(app.ui.action_set, Some(0));
@@ -588,8 +605,50 @@ mod tests {
         click(&ctx, &mut app, delete, show);
         assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([0])));
         app.run(DELETE_SETS, json!({"sets": [0]})).unwrap();
-        let _ = crate::dialogs::confirm(&mut app);
-        assert_eq!(set_names(&app), ["X"], "OK deletes nothing");
+        assert!(crate::dialogs::confirm(&mut app).is_err());
+        assert_eq!(app.ui.action_sets.iter().map(|s| s.actions[0].name.as_str()).collect::<Vec<_>>(), ["second"], "OK deletes nothing");
+        app.ui.action_sets = vec![x("first"), x("second")];
+        app.ui.action_set = Some(0);
+        app.ui.action_sets_selected = vec![0];
+        let delete = trash(&ctx, &mut app);
+        click(&ctx, &mut app, delete, show);
+        assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([0])));
+        app.ui.action_sets.swap(0, 1);
+        crate::dialogs::confirm(&mut app).unwrap();
+        assert_eq!(app.ui.action_sets.iter().map(|s| s.actions[0].name.as_str()).collect::<Vec<_>>(), ["second"], "the asked set goes");
+    }
+
+    /// When the asked set is deleted while the question is open and a new set with the same name
+    /// takes its place, OK does not delete the new set.
+    #[test]
+    fn ok_does_not_delete_a_new_set_made_in_the_asked_sets_place() {
+        use super::super::tests_appearance::click;
+        let mut app = app_with_sets();
+        let ctx = egui::Context::default();
+        click_set(&ctx, &mut app, "Other", egui::Modifiers::NONE);
+        let delete = trash(&ctx, &mut app);
+        click(&ctx, &mut app, delete, show);
+        assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([2])));
+        app.run(DELETE_SETS, json!({"sets": [2]})).unwrap();
+        app.ui.action_sets.push(ActionSet::new("Other", vec![]));
+        assert_eq!(set_names(&app), ["Default Actions", "Mine", "Other"]);
+        assert!(crate::dialogs::confirm(&mut app).is_err());
+        assert_eq!(set_names(&app), ["Default Actions", "Mine", "Other"], "the new Other stays");
+    }
+
+    /// Every set has its own id, and sets read back from the saved preferences get new ids that
+    /// no other set has.
+    #[test]
+    fn action_sets_get_ids_of_their_own_when_made_and_loaded() {
+        let app = app_with_sets();
+        let saved = serde_json::to_value(&app.ui).unwrap();
+        assert!(saved["action_sets"][0].get("id").is_none(), "ids are not saved");
+        let restored = serde_json::from_value::<crate::state::UiState>(saved).unwrap();
+        let mut ids: Vec<u64> = app.ui.action_sets.iter().chain(&restored.action_sets).map(|s| s.id).collect();
+        assert_eq!(restored.action_sets.len(), 3);
+        ids.sort_unstable();
+        ids.dedup();
+        assert_eq!(ids.len(), 6, "six sets, six ids");
     }
 
     /// Shift-click on another set's name while an action is selected selects the sets from the
