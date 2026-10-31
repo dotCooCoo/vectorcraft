@@ -169,7 +169,7 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
     if !crate::take_frame_once(&mut app.shortcuts_frames, frame) {
         return;
     }
-    let previous_modifiers = std::mem::replace(&mut app.previous_shortcut_modifiers, ctx.input(|i| i.modifiers));
+    let previous_modifiers = app.previous_shortcut_modifiers.insert(ctx.viewport_id(), ctx.input(|i| i.modifiers)).unwrap_or_default();
     if !(ctx.input(|input| input.focused) || app.forwarded_frame && ctx.viewport_id() == egui::ViewportId::ROOT) {
         crate::ime::controls_without_editor(app, ctx);
         return;

@@ -928,6 +928,39 @@ fn grid_drag_paste_before_command_release_changes_skew_without_pasting() {
     assert_eq!(app.session.doc().unwrap().doc.layers[0].children().unwrap().len(), count);
 }
 
+/// A frame in another viewport does not change the modifiers remembered for a root grid drag.
+#[test]
+fn grid_drag_paste_uses_previous_modifiers_from_root_viewport() {
+    use vectorcraft_tools::{PointerEvent, PointerKind};
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    app.select_tool("polarGrid");
+    let view = app.view_info();
+    app.session.pointer(&PointerEvent::new(PointerKind::Down, 100.0, 80.0), view).unwrap();
+    app.session.pointer(&PointerEvent::new(PointerKind::Drag, 300.0, 220.0), view).unwrap();
+    let count = app.session.doc().unwrap().doc.layers[0].children().unwrap().len();
+    let ctx = egui::Context::default();
+    let aux = egui::ViewportId::from_hash_of("grid-drag-aux");
+    let run = |app: &mut VectorcraftApp, viewport, events| {
+        let mut raw = egui::RawInput { viewport_id: viewport, events, ..Default::default() };
+        raw.viewports.entry(viewport).or_default();
+        let mut out = ctx.run_ui(raw, |ui| handle(app, ui.ctx()));
+        out.textures_delta.clear();
+    };
+    run(&mut app, egui::ViewportId::ROOT, vec![egui::Event::ModifiersChanged(command_key())]);
+    run(&mut app, aux, vec![]);
+    run(
+        &mut app,
+        egui::ViewportId::ROOT,
+        vec![
+            egui::Event::Paste("<svg xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"5\" height=\"5\"/></svg>".into()),
+            egui::Event::ModifiersChanged(Modifiers::NONE),
+        ],
+    );
+    assert_eq!(app.session.tool_options()["radialSkew"], json!(10.0));
+    assert_eq!(app.session.doc().unwrap().doc.layers[0].children().unwrap().len(), count);
+}
+
 /// A command V key press supplies the modifiers for the Paste event that follows it.
 #[test]
 fn grid_drag_key_press_before_paste_changes_skew_without_pasting() {
