@@ -499,11 +499,16 @@ fn copy_page_resources(doc: &mut Document, page: &Document, nodes: &[&Node]) -> 
 
 /// The PDF importer keeps group transparency on a group, or folds it into its only child.
 /// If the editing object's state cannot be located in that art, use the PDF page as a whole.
+/// Every selected page object must carry the state, on itself or down a chain of only children.
 fn page_carries_state(editing: &Node, page: &[&Node]) -> bool {
-    fn any(node: &Node, matches: &dyn Fn(&Node) -> bool) -> bool {
-        matches(node) || node.children().into_iter().flatten().any(|child| any(child, matches))
+    fn carried(node: &Node, matches: &dyn Fn(&Node) -> bool) -> bool {
+        matches(node)
+            || match node.children().map(Vec::as_slice) {
+                Some([only]) => carried(only, matches),
+                _ => false,
+            }
     }
-    let has = |matches: &dyn Fn(&Node) -> bool| page.iter().any(|node| any(node, matches));
+    let has = |matches: &dyn Fn(&Node) -> bool| !page.is_empty() && page.iter().all(|node| carried(node, matches));
     let opacity = editing.opacity >= 0.999 || has(&|node: &Node| (node.opacity - editing.opacity).abs() < 0.001);
     let blend = editing.blend == super::BlendMode::Normal || has(&|node: &Node| node.blend == editing.blend);
     let isolate = !editing.isolate || has(&|node: &Node| node.isolate);
@@ -1139,6 +1144,35 @@ mod candidate_tests {
         let [art] = replacement.children().unwrap().as_slice() else { panic!("{replacement:?}") };
         assert_eq!(art.opacity, 0.5);
         assert_eq!(art.geometric_bounds(), Some(Rect::new(51.0, 51.0, 59.0, 59.0)));
+    }
+
+    /// Opacity on one of two page objects in the box is not the unread object's opacity.
+    #[test]
+    fn opacity_on_one_of_two_page_objects_is_not_identifiable() {
+        let mut doc = Document::new(100.0, 100.0);
+        let id = doc.alloc_id();
+        let mut editing = Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(10.0, 10.0, 40.0, 40.0)), Default::default());
+        editing.opacity = 0.5;
+        doc.insert(Some(doc.layers[0].id), 0, editing).unwrap();
+
+        let mut page = Document::new(100.0, 100.0);
+        for (bounds, opacity) in [(Rect::new(11.0, 11.0, 19.0, 19.0), 0.5), (Rect::new(21.0, 21.0, 39.0, 39.0), 1.0)] {
+            let mut art = Node::path(
+                page.alloc_id(),
+                vectorcraft_geom::shapes::rectangle(bounds),
+                vectorcraft_doc::Appearance::basic(
+                    vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK),
+                    vectorcraft_color::Paint::None,
+                    0.0,
+                ),
+            );
+            art.opacity = opacity;
+            page.insert(Some(page.layers[0].id), page.layers[0].children().unwrap().len(), art).unwrap();
+        }
+        let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let frame = Frame { page: &page, page_rect: rect, rect, whole: false, pages: vec![(rect, Affine::IDENTITY)] };
+        let result = replace_unread(&mut doc, &frame, &[(id, vec!["placed files".into()])], &[], &BTreeSet::new());
+        assert_eq!(result.unwrap_err(), "an unread object's appearance is not identifiable in the page art");
     }
 
     /// A claimed first box lets a second unread object use its own corner box.
