@@ -99,6 +99,25 @@ pub(crate) fn image_paint(n: &Node) -> Vec<(BezPath, FillRule, AppearanceItem)> 
     IMAGE_PAINT.get().map_or_else(Vec::new, |f| f(n))
 }
 
+/// One level of evaluation of a live object in a document, as the canvas draws it: type in an
+/// envelope as its distorted glyph outlines, symbol instances as their art. Effects are evaluated
+/// above this crate, so the engine registers one with [`set_live_art`].
+pub type LiveArt = fn(Option<&Document>, &Node) -> Vec<Node>;
+
+static LIVE_ART: OnceLock<LiveArt> = OnceLock::new();
+
+/// Register how a live object's art is evaluated for clicks (the first registration stays).
+pub fn set_live_art(f: LiveArt) {
+    // Already set: the same engine, registered by another session.
+    let _ = LIVE_ART.set(f);
+}
+
+/// The art live object `n` of `doc` draws ([`set_live_art`]); [`crate::live::expand_live`] while
+/// nothing is registered.
+fn live_art(doc: &Document, n: &Node) -> Vec<Node> {
+    LIVE_ART.get().map_or_else(|| crate::live::expand_live(n), |f| f(Some(doc), n))
+}
+
 /// Topmost editable object under `p`.
 pub fn hit_test(doc: &Document, p: Point, opt: HitOptions) -> Option<Hit> {
     hit_test_skipping(doc, p, opt, &|_| false, true)
@@ -621,7 +640,7 @@ fn hit_leaf(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes) -> Optio
             if n.geometric_bounds_with(symbols).is_some_and(|b| b.inflate(opt.tol, opt.tol).contains(p)) {
                 return Some(HitKind::Bounds);
             }
-            crate::live::expand_live(n).iter().find_map(|g| hit_any(g, p, opt, symbols))
+            live_art(symbols.document(), n).iter().find_map(|g| hit_any(g, p, opt, symbols))
         }
         NodeKind::Repeat(r) => r.expand(Some(symbols.document())).iter().find_map(|g| hit_any(g, p, opt, symbols)),
         NodeKind::Mesh(m) => {
