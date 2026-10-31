@@ -583,7 +583,15 @@ fn hit_stroke(n: &Node, bp: &vectorcraft_geom::BezPath, rule: vectorcraft_geom::
     stroke_contains(bp, 0.0, opt.tol, p).then_some(HitKind::Outline)
 }
 
+#[cfg(test)]
+thread_local! {
+    /// How many objects [`hit_leaf`] tested on this thread.
+    static LEAVES_TESTED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 fn hit_leaf(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes) -> Option<HitKind> {
+    #[cfg(test)]
+    LEAVES_TESTED.with(|c| c.set(c.get() + 1));
     match &n.kind {
         NodeKind::Path { path, rule, .. } => {
             let bp = path.to_bezpath();
@@ -680,6 +688,11 @@ fn on_type_path(n: &Node, t: &crate::TextObject, p: Point, tol: f64) -> bool {
 fn hit_any(n: &Node, p: Point, opt: HitOptions, symbols: &SymbolBoxes) -> Option<HitKind> {
     // Hidden art does not hit.
     if !n.visible {
+        return None;
+    }
+    // Nor art whose reach does not hold `p`, as in [`may_hit`]: a blend's steps far from `p` are
+    // passed by without being measured.
+    if !edits_contents(n) && n.extras().shaper.is_none() && n.reach_bounds_with(symbols).is_some_and(|b| !b.inflate(opt.tol, opt.tol).contains(p)) {
         return None;
     }
     match &n.kind {

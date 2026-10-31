@@ -429,6 +429,34 @@ fn a_marquee_meets_blends_and_envelopes_by_their_box() {
     }
 }
 
+/// A click just outside a blend's bounds, in the reach of its keys' strokes, tests only the steps
+/// whose own reach holds the point, not every step of the evaluated blend.
+#[test]
+fn a_click_in_a_blends_stroke_band_tests_only_the_steps_that_reach_it() {
+    let mut d = Document::new(1000.0, 1000.0);
+    let l = d.layers[0].id;
+    // 10 pt circles with 4 pt strokes, y 295 to 305, from x 10 to x 890: 200 steps about 4.3 pt apart.
+    let stroked = Appearance::basic(Paint::solid(Color::rgb(1.0, 0.0, 0.0)), Paint::solid(Color::rgb(0.0, 0.0, 1.0)), 4.0);
+    let circle = |id, x: f64| Arc::new(Node::path(id, shapes::ellipse(Rect::new(x, 295.0, x + 10.0, 305.0)), stroked.clone()));
+    let blend = d.alloc_id();
+    let keys = vec![circle(d.alloc_id(), 10.0), circle(d.alloc_id(), 880.0)];
+    let spec = crate::live::BlendSpec { spacing: crate::live::BlendSpacing::Steps(200), ..Default::default() };
+    d.insert(Some(l), 0, Node::new(blend, NodeKind::Blend { children: keys, spec: Box::new(spec) })).unwrap();
+    let count = |p: Point| {
+        LEAVES_TESTED.with(|c| c.set(0));
+        let h = hit_test(&d, p, HitOptions::default()).map(|h| h.leaf);
+        (h, LEAVES_TESTED.with(std::cell::Cell::get))
+    };
+    // On the steps' strokes halfway between the keys, 4 pt above the bounds: a few steps reach it.
+    let (h, tested) = count(Point::new(450.0, 291.0));
+    assert_eq!(h, Some(blend));
+    assert!(tested < 20, "{tested} objects tested");
+    // In the corner of the reach, outside every stroke: nothing hits.
+    let (h, tested) = count(Point::new(6.0, 291.0));
+    assert_eq!(h, None);
+    assert!(tested < 20, "{tested} objects tested");
+}
+
 /// A rectangle (40, 40)–(140, 140) clipping a filled 200 × 200 square drawn over its edges, in a
 /// clip group (or, `layer`, as the first layer's clipping mask): the group (or the layer), the
 /// clipping path and the art.
