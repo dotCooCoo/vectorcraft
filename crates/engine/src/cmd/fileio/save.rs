@@ -637,17 +637,21 @@ pub(super) fn encode_ai(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Res
         }
         // The art with placed files resolved as the pages draw them, also when the pages are blank.
         let resolved;
-        let art: &Document = if pdf_compatible {
-            &pages
+        let (art, mut resolved_warnings): (&Document, Vec<String>) = if pdf_compatible {
+            (&pages, Vec::new())
         } else {
-            resolved = crate::cmd::place::document::full_documents(&edited).0;
-            &resolved
+            let (d, w) = crate::cmd::place::document::full_documents(&edited);
+            resolved = d;
+            (&resolved, w)
         };
         let o = vectorcraft_eps::AiEditingOptions {
             title: doc.title.clone(),
             created: doc.metadata.created.or_else(vectorcraft_doc::metadata::output_time),
         };
-        vectorcraft_eps::ai_private_data(art, &o).map(Some).map_err(|e| bad(cmd, e))
+        let (data, lost) = vectorcraft_eps::ai_private_data(art, &o).map_err(|e| bad(cmd, e))?;
+        // Placed files that weren't found are written as their previews here too.
+        resolved_warnings.extend(lost);
+        Ok(Some((data, resolved_warnings)))
     };
     let (bytes, mut warnings) = super::pdf::encode_carrying(cmd, &pages, &params, native, private)?;
     warnings.extend(placed_warnings);
