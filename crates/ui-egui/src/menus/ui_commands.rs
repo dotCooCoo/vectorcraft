@@ -1111,7 +1111,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         crate::panels::actions::DELETE_SETS,
         "Delete Action Sets",
         "",
-        "{sets?: [index]} delete the Actions panel's sets at these indexes (0 is the top set), with their actions (default: the current set). The panel's Delete Selection on selected sets (Shift-click adds a range) asks first, and OK runs this. A recording into a deleted set stops and keeps nothing. An index past the last set is an error → {deleted: n}",
+        "{sets?: [index], names?: [name]} delete the Actions panel's sets at these indexes (0 is the top set), with their actions (default: the current set). With names, the set at each index must still have the name at the same position, or nothing is deleted. The panel's Delete Selection on selected sets (Shift-click adds a range) asks first, and OK runs this. A recording into a deleted set stops and keeps nothing. An index past the last set is an error → {deleted: n}",
     ),
     ("file.showPackage", "Show Package", "", "{folder} show a package folder (file.package's folder) in the file manager → {folder}"),
     (

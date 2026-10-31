@@ -86,13 +86,16 @@ fn delete_selection(app: &mut VectorcraftApp, ctx: &egui::Context) {
         ),
         _ => tl!("Delete the selected action sets and their actions?").to_string(),
     };
-    crate::dialogs::confirm::ask(app, &message, "", DELETE_SETS, json!({ "sets": sets }));
+    let names: Vec<&str> = sets.iter().filter_map(|&s| app.ui.action_sets.get(s)).map(|s| s.name.as_str()).collect();
+    let params = json!({ "sets": sets, "names": names });
+    crate::dialogs::confirm::ask(app, &message, "", DELETE_SETS, params);
 }
 
-/// `ui.actionSet.delete {sets?: [index]}`: deletes the action sets at these indexes, with their
-/// actions (default: the current set). A recording into a deleted set stops, and its steps are
-/// dropped; a recording into another set goes on. When the current set is deleted, no set is
-/// current afterwards.
+/// `ui.actionSet.delete {sets?: [index], names?: [name]}`: deletes the action sets at these
+/// indexes, with their actions (default: the current set). With `names`, the set at each index
+/// must still have the name at the same position, or nothing is deleted. A recording into a
+/// deleted set stops, and its steps are dropped; a recording into another set goes on. When the
+/// current set is deleted, no set is current afterwards.
 pub fn delete_sets(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     let len = app.ui.action_sets.len();
     let mut sets: Vec<usize> = match p.get("sets") {
@@ -101,9 +104,18 @@ pub fn delete_sets(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String>
             .as_array()
             .ok_or("no such action set")?
             .iter()
-            .map(|i| i.as_u64().map(|i| i as usize).filter(|&i| i < len).ok_or("no such action set"))
+            .map(|i| i.as_u64().and_then(|i| usize::try_from(i).ok()).filter(|&i| i < len).ok_or("no such action set"))
             .collect::<Result<_, _>>()?,
     };
+    match p.get("names") {
+        None | Some(Value::Null) => {}
+        Some(v) => {
+            let names = v.as_array().filter(|n| n.len() == sets.len()).ok_or("the action set names do not match the sets")?;
+            if sets.iter().zip(names).any(|(&s, n)| n.as_str() != app.ui.action_sets.get(s).map(|s| s.name.as_str())) {
+                return Err("the action sets changed; nothing was deleted".into());
+            }
+        }
+    }
     sets.sort_unstable();
     sets.dedup();
     if let Some((rec, ..)) = app.ui.recording.as_mut() {
@@ -521,6 +533,29 @@ mod tests {
         assert_eq!((app.ui.action_set, app.ui.action_sets_selected.clone()), (Some(2), vec![2]));
     }
 
+    /// The question names the sets it asks about: when a set before them is deleted while it is
+    /// open, OK deletes nothing instead of the set that moved into the asked index.
+    #[test]
+    fn ok_deletes_nothing_after_the_sets_change_under_the_question() {
+        use super::super::tests_appearance::click;
+        let mut app = app_with_sets();
+        app.ui.action_sets.push(ActionSet { name: "Third".into(), actions: vec![] });
+        let ctx = egui::Context::default();
+        click_set(&ctx, &mut app, "Other", egui::Modifiers::NONE);
+        let delete = trash(&ctx, &mut app);
+        click(&ctx, &mut app, delete, show);
+        assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([2])));
+        assert_eq!(app.ui.dialog.as_ref().map(|d| d.fields["__params"]["names"].clone()), Some(json!(["Other"])));
+        app.run(DELETE_SETS, json!({"sets": [1]})).unwrap();
+        assert_eq!(set_names(&app), ["Default Actions", "Other", "Third"]);
+        let _ = crate::dialogs::confirm(&mut app);
+        assert_eq!(set_names(&app), ["Default Actions", "Other", "Third"], "OK deletes no set the question did not name");
+        let p = json!({"sets": [0, 1], "names": ["Default Actions"]});
+        assert!(app.run(DELETE_SETS, p).is_err(), "names must match the sets one to one");
+        assert_eq!(app.run(DELETE_SETS, json!({"sets": [1], "names": ["Other"]})).unwrap(), json!({"deleted": 1}));
+        assert_eq!(set_names(&app), ["Default Actions", "Third"]);
+    }
+
     /// The default set can be deleted, and so can the last set: the panel is then empty, no set is
     /// current, and New Set makes a set again.
     #[test]
@@ -553,6 +588,8 @@ mod tests {
         assert_eq!(set_names(&app), ["Default Actions", "Other"]);
         assert_eq!((app.ui.recording.as_ref().map(|r| r.0), app.ui.action_set), (Some(1), Some(1)), "still recording into Other");
         assert_eq!(app.run(DELETE_SETS, json!({"sets": [5]})).unwrap_err(), "no such action set");
+        assert_eq!(app.run(DELETE_SETS, json!({"sets": [4_294_967_296u64]})).unwrap_err(), "no such action set", "above u32::MAX");
+        assert_eq!(set_names(&app), ["Default Actions", "Other"], "a refused index deletes nothing");
         assert_eq!(app.run(DELETE_SETS, json!({})).unwrap(), json!({"deleted": 1}), "the current set by default");
         assert_eq!(set_names(&app), ["Default Actions"]);
         assert!(app.ui.recording.is_none(), "the recording into the deleted set stops");
