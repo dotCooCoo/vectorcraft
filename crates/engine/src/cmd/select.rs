@@ -275,24 +275,24 @@ fn selectable_in_view(d: &Document, iso: Option<NodeId>, skip_templates: bool) -
 /// them, leaving out every hidden or locked object with what it holds. `f` returns whether to
 /// visit the objects inside the one it is given.
 pub(crate) fn walk_selectable(d: &Document, iso: Option<NodeId>, skip_templates: bool, mut f: impl FnMut(&Node) -> bool) {
-    fn inside(n: &Node, f: &mut impl FnMut(&Node) -> bool) {
-        if n.visible && !n.locked && f(n) {
+    fn inside(n: &Node, skip_templates: bool, f: &mut impl FnMut(&Node) -> bool) {
+        if n.visible && !n.locked && !(skip_templates && n.is_template()) && f(n) {
             for c in n.children().into_iter().flatten() {
-                inside(c, f);
+                inside(c, skip_templates, f);
             }
         }
     }
-    fn find(n: &Node, tops: &BTreeSet<NodeId>, f: &mut impl FnMut(&Node) -> bool) {
+    fn find(n: &Node, tops: &BTreeSet<NodeId>, skip_templates: bool, f: &mut impl FnMut(&Node) -> bool) {
         if tops.contains(&n.id) {
-            return inside(n, f);
+            return inside(n, skip_templates, f);
         }
         for c in n.children().into_iter().flatten() {
-            find(c, tops, f);
+            find(c, tops, skip_templates, f);
         }
     }
     let tops: BTreeSet<NodeId> = selectable_in_view(d, iso, skip_templates).into_iter().collect();
     for l in &d.layers {
-        find(l, &tops, &mut f);
+        find(l, &tops, skip_templates, &mut f);
     }
 }
 

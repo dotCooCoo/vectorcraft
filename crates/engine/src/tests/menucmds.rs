@@ -794,6 +794,33 @@ fn lock_unselected_artwork_skips_template_art_when_requested() {
     assert!(node(&s, template_art).locked);
 }
 
+#[test]
+fn selectable_walk_skips_template_sublayer_inside_group() {
+    let mut s = session();
+    let selected_rect = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
+    let ordinary_line = id_of(&s.execute("shape.line", &json!({"x1": 20, "y1": 0, "x2": 30, "y2": 10})).unwrap());
+    sel(&mut s, &[selected_rect, ordinary_line]);
+    let group = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let template_layer = id_of(&s.execute("layer.new", &json!({"top": true})).unwrap());
+    let template_line = id_of(&s.execute("shape.line", &json!({"x1": 40, "y1": 0, "x2": 50, "y2": 10})).unwrap());
+    s.execute("layer.setProps", &json!({"ids": [template_layer.0], "template": true, "locked": false})).unwrap();
+    std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc).move_node(template_layer, Some(group), usize::MAX).unwrap();
+    assert_eq!(s.doc().unwrap().doc.parent_of(template_layer), Some(group));
+
+    s.execute("select.object.openPaths", &json!({"skipTemplates": true})).unwrap();
+    assert_eq!(selected(&s), [ordinary_line]);
+    s.execute("select.object.openPaths", &json!({})).unwrap();
+    assert_eq!(selected(&s), [ordinary_line, template_line]);
+
+    sel(&mut s, &[selected_rect]);
+    assert_eq!(s.execute("object.hide.unselected", &json!({"skipTemplates": true})).unwrap(), json!({"count": 1}));
+    assert!(node(&s, template_layer).visible);
+    assert!(node(&s, template_line).visible);
+    s.execute("object.showAll", &json!({})).unwrap();
+    assert_eq!(s.execute("object.hide.unselected", &json!({})).unwrap(), json!({"count": 2}));
+    assert!(!node(&s, template_layer).visible);
+}
+
 /// In a plain group, Lock and Hide Unselected Artwork affect the same members of identical documents.
 #[test]
 fn lock_and_hide_unselected_artwork_choose_the_same_objects() {
