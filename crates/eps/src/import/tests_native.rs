@@ -2296,6 +2296,38 @@ fn threaded_area_type_flows_through_its_frames() {
     assert_eq!(r.document.text_threads, [ids]);
 }
 
+/// Replacing a group containing either threaded frame must use the PDF page instead.
+#[test]
+fn unread_group_holding_threaded_frame_falls_back() {
+    let frames = [
+        format!("<< /0 << /0 [ 0 0 ] /1 << /0 [ {} ] >> /2 << /0 1 >> >> >>", canvas_rect(50.0, 10.0, 54.0, 14.0)),
+        format!("<< /0 << /0 [ 0 0 ] /1 << /0 [ {} ] >> /2 << /0 1 >> >> >>", canvas_rect(70.0, 10.0, 74.0, 14.0)),
+    ];
+    let text = document_of(&frames, &[story("Threaded\\r", &[0, 1], "/0 0", "/1 10.0")]);
+    for removed in [0, 1] {
+        let grouped = os1_group(&format!("{}\n{}\nZZ", square(if removed == 0 { 50 } else { 70 }, 10), frame_object(0, removed)));
+        let other = frame_object(0, 1 - removed);
+        let art = native_with_text(&(layer("Back", true, &square(10, 10)) + &layer("Mixed", true, &format!("{grouped}\n{other}"))), &text);
+        let (doc, notes, read) = crate::layered_ai(&private(&art), pdf_three_squares(), vec![], false, true, 1.0);
+        assert!(!read, "removed frame {removed}: {notes:?}");
+        assert_eq!(names(&doc), ["Layer 1"]);
+        assert!(notes.iter().any(|n| n.contains("an unread object holds a frame of threaded type")), "removed frame {removed}: {notes:?}");
+    }
+}
+
+/// Replacing an unread group may still discard a single-frame text object.
+#[test]
+fn unread_group_holding_single_frame_uses_page_art() {
+    let frame = format!("<< /0 << /0 [ 0 0 ] /1 << /0 [ {} ] >> /2 << /0 1 >> >> >>", canvas_rect(50.0, 10.0, 54.0, 14.0));
+    let text = document_of(&[frame], &[story("Single\\r", &[0], "/0 0", "/1 10.0")]);
+    let grouped = os1_group(&format!("{}\n{}\nZZ", square(50, 10), frame_object(0, 0)));
+    let art = native_with_text(&(layer("Back", true, &square(10, 10)) + &layer("Mixed", true, &grouped)), &text);
+    let (doc, notes, read) = crate::layered_ai(&private(&art), pdf_two_squares(), vec![], false, false, 1.0);
+    assert!(read, "{notes:?}");
+    assert_eq!(names(&doc), ["Back", "Mixed"]);
+    assert!(doc.text_threads.is_empty());
+}
+
 #[test]
 fn shown_type_the_page_draws_in_pieces_comes_whole_from_the_text_document() {
     // Type on a path the page draws letter by letter: the letters lie on the path, and only the
