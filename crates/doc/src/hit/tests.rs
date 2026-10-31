@@ -78,6 +78,37 @@ fn hidden_templates_are_skipped_by_marquee() {
 }
 
 #[test]
+fn isolated_marquee_skips_template_sublayers_and_their_leaves() {
+    for group_scope in [false, true] {
+        let mut d = Document::new(100.0, 100.0);
+        let layer = d.layers[0].id;
+        let visible = d.alloc_id();
+        let template = d.alloc_id();
+        let hidden = d.alloc_id();
+        let shown = Node::path(visible, shapes::rectangle(Rect::new(0.0, 0.0, 20.0, 20.0)), Appearance::default_art());
+        let mut sublayer = Node::layer(template, "Template", crate::LayerColor::Preset(1));
+        if let NodeKind::Layer { template, children, .. } = &mut sublayer.kind {
+            *template = true;
+            children.push(Arc::new(Node::path(hidden, shapes::rectangle(Rect::new(30.0, 0.0, 50.0, 20.0)), Appearance::default_art())));
+        }
+        let scope = if group_scope {
+            let group = d.alloc_id();
+            let nested = d.alloc_id();
+            d.insert(Some(layer), 0, Node::group(group, vec![Arc::new(shown), Arc::new(Node::group(nested, vec![Arc::new(sublayer)]))])).unwrap();
+            group
+        } else {
+            d.insert(Some(layer), 0, shown).unwrap();
+            d.insert(Some(layer), 1, sublayer).unwrap();
+            layer
+        };
+        let r = Rect::new(-5.0, -5.0, 55.0, 25.0);
+        assert_eq!(marquee_with_templates(&d, r, Some(scope), false, true), vec![visible], "group scope: {group_scope}");
+        assert_eq!(marquee_with_templates(&d, r, Some(scope), true, true), vec![visible], "group scope: {group_scope}");
+        assert_eq!(marquee_with_templates(&d, r, Some(scope), true, false), vec![visible, hidden], "shown templates in group scope: {group_scope}");
+    }
+}
+
+#[test]
 fn unfilled_interior_misses() {
     let mut d = Document::new(200.0, 200.0);
     let l = d.layers[0].id;

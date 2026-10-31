@@ -1909,6 +1909,30 @@ fn hide_template_clears_selected_template_art() {
     assert_eq!(app.session.active().unwrap().selection.objects, vec![vectorcraft_doc::NodeId(visible)]);
 }
 
+#[test]
+fn hide_template_clears_template_object_slices_and_keeps_other_selection() {
+    use vectorcraft_doc::NodeId;
+
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
+    let hidden = app.session.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+    app.session.execute("object.slice.make", &json!({})).unwrap();
+    let layer = app.session.active().unwrap().doc.layers[0].id.0;
+    app.session.execute("layer.setProps", &json!({"ids": [layer], "template": true, "locked": false})).unwrap();
+    app.session.execute("layer.new", &json!({"name": "Visible"})).unwrap();
+    let visible = app.session.execute("shape.rectangle", &json!({"x": 40, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+    app.session.execute("object.slice.make", &json!({})).unwrap();
+    let user =
+        NodeId(app.session.execute("object.slice.create", &json!({"x": 0, "y": 40, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap());
+    app.run("select.set", json!({"ids": [hidden, visible]})).unwrap();
+    app.session.active_mut().unwrap().selection.slices = vec![NodeId(hidden), user, NodeId(visible)];
+
+    app.run("view.template", json!({})).unwrap();
+    let selected = &app.session.active().unwrap().selection;
+    assert_eq!(selected.objects, vec![NodeId(visible)]);
+    assert_eq!(selected.slices, vec![user, NodeId(visible)]);
+}
+
 /// General › Anti-aliased Artwork (#394): on (the default), the art's edges are smoothed on
 /// screen; off, every pixel is either painted or not, and turning it either way re-renders.
 #[test]
