@@ -1185,6 +1185,42 @@ fn color_in_dictionary_does_not_clear_outer_unresolved_pattern() {
 }
 
 #[test]
+fn gradient_instance_after_unresolved_pattern_is_read() {
+    let defs =
+        "%AI5_BeginGradient: (G)\n(G) 0 2 Bd\n[\n<00FF>\n0\n%_0 0 0 0 1 0 0 2 1 6 50 0 Bs\n%_0 0 0 0 0 0 1 2 1 6 50 100 Bs\nBD\n%AI5_EndGradient\n";
+    for (operator, flag, draw) in [("p", "", "f"), ("P", "1 ", "S")] {
+        let body = format!(
+            "(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] {operator}\n{}{draw}\n{}{flag}Bb\n1 (G) 0 0 0 1 1 0 0 1 0 0 1 Bg\n10 0 0 10 100 50 Xm\n{draw}\n0 BB\n",
+            rect_path(0.0, 0.0, 4.0, 4.0),
+            rect_path(10.0, 0.0, 14.0, 4.0),
+        );
+        let result = read(stream(&format!("{defs}{}", layer(&body))).as_bytes()).unwrap();
+        assert_unread(&result, "pattern fills");
+        let a = art(&result.doc);
+        assert_eq!(a.len(), 2, "{operator}");
+        assert_eq!(result.unread[0].0, a[0].id, "{operator}: only the pattern's path is unread");
+    }
+}
+
+#[test]
+fn unresolved_pattern_in_mask_art_stays_unread() {
+    let mask_path = rect_path(0.0, 0.0, 4.0, 4.0).lines().map(|line| format!("%_{line}\n")).collect::<String>();
+    let patterned = format!("%_(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n{mask_path}%_f\n");
+    for (art_, kind) in [(patterned.as_str(), "pattern fills"), ("%_/Mesh X!\n%_/End X!\n", "gradient meshes it can't read")] {
+        let mask = format!(
+            "%_/ArtDictionary :\n%_/Mask :\n%_X=\n{art_}%_X+\n%_(Art) ,\n%_1 /Bool (Clipping) ,\n%_1 /Bool (Linked) ,\n%_; (AI9_Mask) ,\n%_;\n"
+        );
+        let masked = format!("{RED}{}f\n{mask}", rect_path(0.0, 0.0, 4.0, 4.0));
+        let e = read(stream(&layer(&masked)).as_bytes()).unwrap_err();
+        assert!(e.contains(kind), "{e}");
+        // In a group, the group is the unread object.
+        let result = read_ok(&layer(&format!("u\n{masked}U\n")));
+        assert_unread(&result, kind);
+        assert!(result.hidden_unread.is_empty(), "{kind}: {:?}", result.hidden_unread);
+    }
+}
+
+#[test]
 fn hidden_unread_art_beside_drawn_look_needs_no_page_replacement() {
     let hidden_path = rect_path(0.0, 0.0, 4.0, 4.0).lines().map(|line| format!("%_{line}\n")).collect::<String>();
     for (operator, draw, reset) in [("p", "f", "0 0 0 1 k"), ("P", "S", "0 0 0 1 K")] {

@@ -73,6 +73,7 @@ mod document;
 mod ops;
 mod types;
 
+pub(crate) use art::join_and;
 use art::preview_png;
 pub use document::{PaletteSwatches, VariableLibrary, artboards, palette, variables};
 pub(crate) use document::{slot_frame, slot_of};

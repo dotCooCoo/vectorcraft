@@ -171,6 +171,8 @@ impl<'a> Reader<'a> {
             "b" => (true, true),
             _ => (false, false),
         };
+        // A gradient instance's paint replaces the missing pattern.
+        let unread = (fill && self.pending_unread_fill && fill_paint.is_none()) || (stroke && self.pending_unread_stroke && stroke_paint.is_none());
         let mut items = Vec::new();
         if fill && !clip {
             items.push(AppearanceItem::Fill(FillLayer {
@@ -212,15 +214,16 @@ impl<'a> Reader<'a> {
             .into();
             copy
         });
-        let unread = (fill && self.pending_unread_fill) || (stroke && self.pending_unread_stroke);
         let unread_bounds = unread.then(|| node.visual_bounds()).flatten();
         let unread_id = node.id;
         self.add(node, hidden)?;
         if unread && self.pattern.is_some() {
             // Art in a pattern's definition painted with a pattern it doesn't have: the tile can't be read.
             self.unsupported.insert("pattern fills".into());
-        } else if unread && (hidden || gs.hidden || !self.shown()) {
+        } else if unread && ((hidden && !self.in_mask()) || gs.hidden || !self.shown()) {
             self.hidden_unread.insert("pattern fills".into());
+        } else if unread && self.in_mask() {
+            self.unreadable("pattern fills", false);
         } else if unread {
             match unread_bounds {
                 Some(b) if sane(b) && b.area() > 0.0 => {
@@ -630,7 +633,7 @@ fn cmyk_rgb([c, m, y, k]: [u8; 4]) -> [u8; 3] {
 }
 
 /// `a`, `a and b`, `a, b and c`.
-pub(super) fn join_and(items: &[&str]) -> String {
+pub(crate) fn join_and(items: &[&str]) -> String {
     match items {
         [] => String::new(),
         [one] => (*one).to_string(),

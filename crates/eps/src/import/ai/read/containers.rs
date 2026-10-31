@@ -248,10 +248,7 @@ impl<'a> Reader<'a> {
         let op: String = w.chars().take(24).collect();
         // A pattern definition or an owning mask can be on `%_` lines while still
         // determining visible art. Unknown operators there must remain unread.
-        if (self.gs.hidden && self.pattern.is_none())
-            || (hidden && self.pattern.is_none() && !self.frames.iter().any(|f| matches!(f.kind, Kind::Mask)))
-            || !self.shown()
-        {
+        if (self.gs.hidden && self.pattern.is_none()) || (hidden && self.pattern.is_none() && !self.in_mask()) || !self.shown() {
             if self.hidden_unread.len() < 16 {
                 self.hidden_unread.insert(format!("`{op}`"));
             }
@@ -373,7 +370,7 @@ impl<'a> Reader<'a> {
     /// Note something the data has that isn't read: an error on a layer that shows, left out of a
     /// layer that doesn't.
     pub(super) fn unreadable(&mut self, what: &str, hidden: bool) {
-        if !hidden && !self.gs.hidden && self.shown() {
+        if (!hidden || self.in_mask()) && !self.gs.hidden && self.shown() {
             if !self.mark_unread(what.to_string()) {
                 self.unsupported.insert(what.into());
             }
@@ -396,8 +393,13 @@ impl<'a> Reader<'a> {
 
     /// Stand in for one unread object with a box that the page can match.
     pub(super) fn unread_box(&mut self, what: &str, bounds: super::Rect, hidden: bool) -> Result<Option<NodeId>, String> {
-        if hidden || self.gs.hidden || !self.shown() {
+        if (hidden && !self.in_mask()) || self.gs.hidden || !self.shown() {
             self.hidden_unread.insert(what.into());
+            return Ok(None);
+        }
+        // A mask's art isn't an object of the layers: its object, or the file, is what isn't read.
+        if self.in_mask() {
+            self.unreadable(what, false);
             return Ok(None);
         }
         let in_container = self
@@ -470,6 +472,11 @@ impl<'a> Reader<'a> {
     /// Do the layers being read show?
     pub(super) fn shown(&self) -> bool {
         self.frames.iter().all(|f| !matches!(&f.kind, Kind::Layer(a) if !a.visible))
+    }
+
+    /// Is the art being read an opacity mask's? It is on `%_` lines and still shapes what shows.
+    pub(super) fn in_mask(&self) -> bool {
+        self.frames.iter().any(|f| matches!(f.kind, Kind::Mask))
     }
 
     /// A blend's record read: the blend's own art (the group of its key objects and spine, on `%_`

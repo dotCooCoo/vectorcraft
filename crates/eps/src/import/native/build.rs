@@ -245,7 +245,7 @@ pub(super) fn build_from(
     let threaded_frames: BTreeSet<NodeId> =
         made.chunk_by(|a, b| a.0 == b.0).filter(|thread| thread.len() > 1).flatten().map(|(_, _, id)| *id).collect();
     if !unread.is_empty() {
-        let Some(frame) = frame.as_ref() else { return Err("its unread objects have no page art to use".into()) };
+        let Some(frame) = frame.as_ref() else { return Err(unread_error(&unread)) };
         let kinds = replace_unread(&mut doc, frame, &unread, &unread_elsewhere, &threaded_frames)?;
         notes.push(format!("{}: they came in as the page's art", kinds.join(", ")));
     }
@@ -511,6 +511,18 @@ fn page_carries_state(editing: &Node, page: &[&Node]) -> bool {
         || has(&|node: &Node| node.knockout == editing.knockout);
     let appearance = !matches!(editing.kind, NodeKind::Group { .. }) || *editing.appearance == vectorcraft_doc::Appearance::default();
     opacity && blend && isolate && knockout && appearance
+}
+
+/// The error for unread objects with no page art to use: what isn't read, as the reader names it.
+fn unread_error(unread: &[(NodeId, Vec<String>)]) -> String {
+    let kinds: BTreeSet<&str> = unread.iter().flat_map(|(_, kinds)| kinds.iter().map(String::as_str)).collect();
+    let (ops, other): (Vec<&str>, Vec<&str>) = kinds.into_iter().partition(|k| k.starts_with('`'));
+    let mut list: BTreeSet<String> = other.into_iter().map(String::from).collect();
+    if !ops.is_empty() {
+        list.insert(format!("operators VectorCraft doesn't know ({})", ops.join(", ")));
+    }
+    let list: Vec<&str> = list.iter().map(String::as_str).collect();
+    format!("it has {}, which VectorCraft doesn't read from it yet", ai::join_and(&list))
 }
 
 /// Replace each unread top-level object with painted page objects inside its readable bounds.
