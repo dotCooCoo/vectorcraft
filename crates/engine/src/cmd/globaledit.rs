@@ -63,7 +63,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Start Global Edit",
             ["Select"],
             None,
-            "{appearance?: bool, size?: bool, artboards?: \"all\" | range such as \"1, 3-5\", includeCanvas?: bool} (each defaults to the Global Edit Options) while Global Edit is off: start it on the one selected object, with the objects of the same shape (and, with `appearance`, the same fill and stroke; with `size`, the same width and height) on the artboards given (and, with `includeCanvas`, off every artboard) → {active: true, count, ids}; while on: stop it (Escape does the same) → {active: false}",
+            "{appearance?: bool, size?: bool, artboards?: \"all\" | range such as \"1, 3-5\", includeCanvas?: bool, skipTemplates?: bool (default false)} (other options default to the Global Edit Options) while Global Edit is off: start it on the one selected object, with the objects of the same shape (and, with `appearance`, the same fill and stroke; with `size`, the same width and height) on the artboards given (and, with `includeCanvas`, off every artboard) → {active: true, count, ids}; while on: stop it (Escape does the same) → {active: false}",
             can_toggle,
             toggle
         ),
@@ -72,7 +72,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Global Edit Options",
             [],
             None,
-            "{appearance?: bool, size?: bool, artboards?: \"all\" | range such as \"1, 3-5\", includeCanvas?: bool} set the options Start Global Edit matches with (defaults: shape only, all artboards, objects on the canvas included) → {appearance, size, artboards, includeCanvas, count: the objects Start Global Edit would take now (0 unless one supported object is selected)}",
+            "{appearance?: bool, size?: bool, artboards?: \"all\" | range such as \"1, 3-5\", includeCanvas?: bool, skipTemplates?: bool (default false)} set the options Start Global Edit matches with (defaults: shape only, all artboards, objects on the canvas included) → {appearance, size, artboards, includeCanvas, count: the objects Start Global Edit would take now (0 unless one supported object is selected)}",
             has_doc,
             set_options
         ),
@@ -139,6 +139,8 @@ pub struct GlobalEdit {
     /// The objects edited together, the one selected at the start first, each with the transform
     /// (a move and a uniform scale) that maps that first object's outline onto its own.
     pub members: Vec<(NodeId, Affine)>,
+    /// Exclude template art from propagation for this edit session.
+    pub skip_templates: bool,
     /// [`highlights`] as of a document revision: the canvas asks every frame.
     outlines: std::cell::RefCell<Option<(u64, Outlines)>>,
 }
@@ -217,10 +219,13 @@ fn close(a: f64, b: f64) -> bool {
 
 /// The members a Global Edit started on the one selected object would take, with `o`: that
 /// object first, then the others in paint order.
-fn matches(s: &Session, o: &Options) -> Result<Vec<(NodeId, Affine)>> {
+fn matches(s: &Session, o: &Options, skip_templates: bool) -> Result<Vec<(NodeId, Affine)>> {
     let st = s.doc()?;
     let d = &st.doc;
     let [id] = st.selection.objects.as_slice() else { return Err(bad(C, "select one object")) };
+    if skip_templates && d.has_template_ancestor(*id) {
+        return Err(bad(C, "the selected object is on a template layer"));
+    }
     let key = d.node(*id).ok_or_else(|| bad(C, "nothing selected"))?;
     let form = match Form::of(key) {
         Some(f) if supported(key) => f,
@@ -250,7 +255,7 @@ fn matches(s: &Session, o: &Options) -> Result<Vec<(NodeId, Affine)>> {
     };
     let mut out = vec![(*id, Affine::IDENTITY)];
     let back = form.frame.inverse();
-    super::select::walk_selectable(d, st.isolation, |n| {
+    super::select::walk_selectable(d, st.isolation, skip_templates, |n| {
         if n.id == *id {
             return false;
         }
@@ -301,13 +306,14 @@ fn toggle(s: &mut Session, p: &Value) -> Result<Value> {
         return Ok(json!({ "active": false }));
     }
     let o = s.global_edit_options.with(p, &s.doc()?.doc, C)?;
-    let members = matches(s, &o)?;
+    let skip_templates = bool_or(p, "skipTemplates", false);
+    let members = matches(s, &o, skip_templates)?;
     if members.len() < 2 {
         return Err(bad(C, "no similar objects found (rotated or reflected copies are not matched); change the Global Edit Options and try again"));
     }
     let ids: Vec<u64> = members.iter().map(|(id, _)| id.0).collect();
     let st = s.doc_mut()?;
-    st.global_edit = Some(GlobalEdit { members, outlines: Default::default() });
+    st.global_edit = Some(GlobalEdit { members, skip_templates, outlines: Default::default() });
     st.revision += 1;
     Ok(json!({ "active": true, "count": ids.len(), "ids": ids }))
 }
@@ -315,22 +321,27 @@ fn toggle(s: &mut Session, p: &Value) -> Result<Value> {
 fn set_options(s: &mut Session, p: &Value) -> Result<Value> {
     let o = s.global_edit_options.with(p, &s.doc()?.doc, OPTIONS)?;
     s.global_edit_options = o.clone();
-    Ok(o.json(match_count(s)))
+    Ok(o.json(match_count_with_templates(s, bool_or(p, "skipTemplates", false))))
 }
 
 /// How many objects Start Global Edit would take now with the session's options (the Result(s)
 /// line of the options): 0 unless one supported object is selected.
 pub fn match_count(s: &Session) -> usize {
+    match_count_with_templates(s, false)
+}
+
+fn match_count_with_templates(s: &Session, skip_templates: bool) -> usize {
     match s.active() {
-        Some(st) if st.global_edit.is_none() => matches(s, &s.global_edit_options).map_or(0, |m| m.len()),
+        Some(st) if st.global_edit.is_none() => matches(s, &s.global_edit_options, skip_templates).map_or(0, |m| m.len()),
         Some(st) => st.global_edit.as_ref().map_or(0, |g| g.members.len()),
         None => 0,
     }
 }
 
 /// Is `id` there, shown and unlocked, with every layer and group it is in?
-fn editable(d: &Document, id: NodeId) -> bool {
-    d.ancestry(id).is_some_and(|a| a.iter().all(|i| d.node(*i).is_some_and(|n| n.visible && !n.locked)))
+fn editable(d: &Document, id: NodeId, skip_templates: bool) -> bool {
+    (!skip_templates || !d.has_template_ancestor(id))
+        && d.ancestry(id).is_some_and(|a| a.iter().all(|i| d.node(*i).is_some_and(|n| n.visible && !n.locked)))
 }
 
 /// After the document of `st` was put back to an earlier one (Undo, Redo, a cancelled interaction
@@ -541,6 +552,9 @@ fn renumber(children: &mut [std::sync::Arc<Node>], own: &[NodeId], d: &mut Docum
 /// changed so (which [`Session::edit`] checks stay within the canvas, as it checks the selection).
 pub(crate) fn propagate(before: &Document, d: &mut Document, ge: &GlobalEdit, selected: [&[NodeId]; 2]) -> Vec<NodeId> {
     let model = ge.members.iter().filter(|(id, _)| selected.iter().any(|s| s.contains(id))).find_map(|(id, xf)| {
+        if ge.skip_templates && d.has_template_ancestor(*id) {
+            return None;
+        }
         let (a, b) = (before.node(*id)?, d.node(*id)?);
         if std::ptr::eq(a, b) {
             return None;
@@ -552,7 +566,7 @@ pub(crate) fn propagate(before: &Document, d: &mut Document, ge: &GlobalEdit, se
     let back = model_xf.inverse();
     let mut edited = vec![];
     for (id, xf) in &ge.members {
-        if *id == model_id || !editable(d, *id) {
+        if *id == model_id || !editable(d, *id, ge.skip_templates) {
             continue;
         }
         let mut placed = model.clone();

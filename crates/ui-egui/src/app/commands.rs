@@ -37,6 +37,15 @@ impl VectorcraftApp {
             return r;
         }
         let mut params = params;
+        if (matches!(id, "select.all" | "select.allOnArtboard" | "select.inverse" | "select.magicWand")
+            || id.starts_with("select.same.")
+            || id.starts_with("select.object.")
+            || id.starts_with("select.globalEdit"))
+            && !self.ui.view.templates
+            && let Some(p) = params.as_object_mut()
+        {
+            p.insert("skipTemplates".into(), serde_json::json!(true));
+        }
         // Paste in place, in front and in back (#693), Select › All on Active Artboard (#1006), and Align,
         // Distribute Objects and Distribute Spacing with Align to Artboard act on the active artboard, the
         // view's, which the app passes as `artboard`. A batch passes it on to those steps.

@@ -91,6 +91,7 @@ impl VectorcraftApp {
             outline: self.ui.view.outline,
             smart_guides: self.ui.view.smart_guides,
             guides: self.ui.view.guides,
+            templates: self.ui.view.templates,
             snap_to_grid: self.ui.view.snap_to_grid,
             snap_to_pixel: self.ui.view.snap_to_pixel,
             // View › Hide Edges: the canvas draws neither the bounding box (with the type widget)

@@ -21,6 +21,8 @@ pub struct ViewInfo {
     pub smart_guides: bool,
     /// View → Show Guides: the ruler guides show (and, unlocked, can be picked).
     pub guides: bool,
+    /// View → Show Template: template layers are drawn and can be selected.
+    pub templates: bool,
     pub snap_to_grid: bool,
     pub show_bbox: bool,
     /// View → Snap to Pixel: drawing and moving land on whole pixels (points at 72 ppi).
@@ -45,6 +47,7 @@ impl Default for ViewInfo {
             outline: false,
             smart_guides: true,
             guides: true,
+            templates: true,
             snap_to_grid: false,
             show_bbox: true,
             snap_to_pixel: false,
@@ -272,6 +275,7 @@ impl Session {
             outline: view.outline,
             smart_guides: view.smart_guides,
             guides: view.guides && !self.menu.guides_locked,
+            templates: view.templates,
             snap_to_grid: view.snap_to_grid,
             show_bbox: view.show_bbox,
             // Snap to Grid and Snap to Pixel are exclusive, as in Illustrator; left both on, the grid

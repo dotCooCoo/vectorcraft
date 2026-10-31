@@ -19,78 +19,128 @@ use super::{
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
-        cmd!("select.same.symbolInstance", "Symbol Instance", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same(
-            s,
+        cmd!(
             "select.same.symbolInstance",
-            |a, b| match (&a.kind, &b.kind) {
+            "Symbol Instance",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_selection,
+            |s, p| same(s, "select.same.symbolInstance", p, |a, b| match (&a.kind, &b.kind) {
                 (NodeKind::SymbolInstance { symbol: x, .. }, NodeKind::SymbolInstance { symbol: y, .. }) => x == y,
                 _ => false,
-            }
-        )),
-        cmd!("select.same.fontFamily", "Font Family", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
-            s,
-            "select.same.fontFamily",
-            |a, b| a.font_family == b.font_family
-        )),
-        cmd!("select.same.fontFamilyStyle", "Font Family & Style", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
-            s,
-            "select.same.fontFamilyStyle",
-            |a, b| a.font_family == b.font_family && a.font_style == b.font_style
-        )),
-        cmd!("select.same.fontFamilyStyleSize", "Font Family, Style & Size", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| {
-            same_text(s, "select.same.fontFamilyStyleSize", |a, b| {
-                a.font_family == b.font_family && a.font_style == b.font_style && (a.size - b.size).abs() < 1e-6
             })
-        }),
-        cmd!("select.same.fontSize", "Font Size", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
-            s,
+        ),
+        cmd!(
+            "select.same.fontFamily",
+            "Font Family",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_selection,
+            |s, p| same_text(s, "select.same.fontFamily", p, |a, b| a.font_family == b.font_family)
+        ),
+        cmd!(
+            "select.same.fontFamilyStyle",
+            "Font Family & Style",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_selection,
+            |s, p| same_text(s, "select.same.fontFamilyStyle", p, |a, b| a.font_family == b.font_family && a.font_style == b.font_style)
+        ),
+        cmd!(
+            "select.same.fontFamilyStyleSize",
+            "Font Family, Style & Size",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_selection,
+            |s, p| {
+                same_text(s, "select.same.fontFamilyStyleSize", p, |a, b| {
+                    a.font_family == b.font_family && a.font_style == b.font_style && (a.size - b.size).abs() < 1e-6
+                })
+            }
+        ),
+        cmd!(
             "select.same.fontSize",
-            |a, b| (a.size - b.size).abs() < 1e-6
-        )),
-        cmd!("select.same.textFillColor", "Text Fill Color", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
-            s,
+            "Font Size",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_selection,
+            |s, p| same_text(s, "select.same.fontSize", p, |a, b| (a.size - b.size).abs() < 1e-6)
+        ),
+        cmd!(
             "select.same.textFillColor",
-            |a, b| a.fill == b.fill
-        )),
-        cmd!("select.same.textStrokeColor", "Text Stroke Color", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
-            s,
+            "Text Fill Color",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_selection,
+            |s, p| same_text(s, "select.same.textFillColor", p, |a, b| a.fill == b.fill)
+        ),
+        cmd!(
             "select.same.textStrokeColor",
-            |a, b| a.stroke == b.stroke
-        )),
+            "Text Stroke Color",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_selection,
+            |s, p| same_text(s, "select.same.textStrokeColor", p, |a, b| a.stroke == b.stroke)
+        ),
         cmd!(
             "select.object.directionHandles",
             "Direction Handles",
             ["Select", "Object"],
             None,
-            "{} direct-select every anchor (showing all handles) of the selected paths and the paths inside the selected objects, leaving out paths that are hidden or locked, inside a hidden or locked object or layer, on a template layer, or outside the isolated group or layer → {anchors}",
+            "{skipTemplates?: bool (default false)} direct-select every anchor (showing all handles) of the selected paths and the paths inside the selected objects, leaving out paths that are hidden or locked, inside a hidden or locked object or layer, on a skipped template layer, or outside the isolated group or layer → {anchors}",
             has_selection,
             direction_handles
         ),
-        cmd!("select.object.pointText", "Point Text Objects", ["Select", "Object"], None, "{} → {count}", has_doc, |s, _| by_kind(
-            s,
-            |n| matches!(
+        cmd!(
+            "select.object.pointText",
+            "Point Text Objects",
+            ["Select", "Object"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_doc,
+            |s, p| by_kind(s, p, |n| matches!(
                 &n.kind,
                 NodeKind::Text(t) if matches!(t.kind, TextKind::Point)
-            )
-        )),
-        cmd!("select.object.areaText", "Area Text Objects", ["Select", "Object"], None, "{} → {count}", has_doc, |s, _| by_kind(s, |n| matches!(
-            &n.kind,
-            NodeKind::Text(t) if matches!(t.kind, TextKind::Area { .. })
-        ))),
-        cmd!("select.object.brushStrokes", "Brush Strokes", ["Select", "Object"], None, "{} → {count}", has_doc, |s, _| by_kind(s, |n| n
-            .appearance
-            .stroke()
-            .is_some_and(|st| st.brush.is_some()))),
+            ))
+        ),
+        cmd!(
+            "select.object.areaText",
+            "Area Text Objects",
+            ["Select", "Object"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_doc,
+            |s, p| by_kind(s, p, |n| matches!(
+                &n.kind,
+                NodeKind::Text(t) if matches!(t.kind, TextKind::Area { .. })
+            ))
+        ),
+        cmd!(
+            "select.object.brushStrokes",
+            "Brush Strokes",
+            ["Select", "Object"],
+            None,
+            "{skipTemplates?: bool (default false)} → {count}",
+            has_doc,
+            |s, p| by_kind(s, p, |n| n.appearance.stroke().is_some_and(|st| st.brush.is_some()))
+        ),
         cmd!(
             "select.object.bristleBrushStrokes",
             "Bristle Brush Strokes",
             ["Select", "Object"],
             None,
-            "{} objects whose topmost stroke has a bristle brush (type bristle in brush.list), whatever the brush is named → {count}",
+            "{skipTemplates?: bool (default false)} objects whose topmost stroke has a bristle brush (type bristle in brush.list), whatever the brush is named → {count}",
             has_doc,
-            |s, _| {
+            |s, p| {
                 let brushes = vectorcraft_brush::library(&s.doc()?.doc);
-                by_kind(s, |n| {
+                by_kind(s, p, |n| {
                     n.appearance
                         .stroke()
                         .and_then(|st| st.brush.as_deref())
@@ -259,10 +309,10 @@ impl Session {
 
 // ---------- Select ----------
 
-fn candidates(s: &Session, f: impl Fn(&Node) -> bool) -> Result<Vec<NodeId>> {
+fn candidates(s: &Session, p: &Value, f: impl Fn(&Node) -> bool) -> Result<Vec<NodeId>> {
     let st = s.doc()?;
     let mut ids = vec![];
-    walk_selectable(&st.doc, st.isolation, |n| {
+    walk_selectable(&st.doc, st.isolation, bool_or(p, "skipTemplates", false), |n| {
         if !n.is_container() && f(n) {
             ids.push(n.id);
         }
@@ -271,19 +321,19 @@ fn candidates(s: &Session, f: impl Fn(&Node) -> bool) -> Result<Vec<NodeId>> {
     Ok(ids)
 }
 
-fn finish_same(s: &mut Session, cmd: &str, ids: Vec<NodeId>) -> Result<Value> {
+fn finish_same(s: &mut Session, cmd: &str, p: &Value, ids: Vec<NodeId>) -> Result<Value> {
     let from = s.doc()?.selection.objects.clone();
     s.select(|_, sel| sel.set(ids))?;
     let st = s.doc_mut()?;
-    st.last_selection_cmd = Some((cmd.to_string(), json!({}), from));
+    st.last_selection_cmd = Some((cmd.to_string(), p.clone(), from));
     Ok(json!({ "count": st.selection.objects.len() }))
 }
 
-fn same(s: &mut Session, cmd: &str, eq: fn(&Node, &Node) -> bool) -> Result<Value> {
+fn same(s: &mut Session, cmd: &str, p: &Value, eq: fn(&Node, &Node) -> bool) -> Result<Value> {
     let st = s.doc()?;
     let r = st.selection.objects.first().and_then(|id| st.doc.node(*id)).cloned().ok_or_else(|| bad(cmd, "nothing selected"))?;
-    let ids = candidates(s, |n| eq(n, &r))?;
-    finish_same(s, cmd, ids)
+    let ids = candidates(s, p, |n| eq(n, &r))?;
+    finish_same(s, cmd, p, ids)
 }
 
 fn first_text_style(s: &Session) -> Option<CharStyle> {
@@ -304,23 +354,23 @@ fn first_text_style(s: &Session) -> Option<CharStyle> {
     out
 }
 
-fn same_text(s: &mut Session, cmd: &str, eq: fn(&CharStyle, &CharStyle) -> bool) -> Result<Value> {
+fn same_text(s: &mut Session, cmd: &str, p: &Value, eq: fn(&CharStyle, &CharStyle) -> bool) -> Result<Value> {
     let r = first_text_style(s).ok_or_else(|| bad(cmd, "select a text object"))?;
-    let ids = candidates(s, |n| match &n.kind {
+    let ids = candidates(s, p, |n| match &n.kind {
         NodeKind::Text(t) => t.runs.iter().any(|run| eq(&run.style, &r)),
         _ => false,
     })?;
-    finish_same(s, cmd, ids)
+    finish_same(s, cmd, p, ids)
 }
 
-fn by_kind(s: &mut Session, f: impl Fn(&Node) -> bool) -> Result<Value> {
-    let ids = candidates(s, f)?;
+fn by_kind(s: &mut Session, p: &Value, f: impl Fn(&Node) -> bool) -> Result<Value> {
+    let ids = candidates(s, p, f)?;
     s.select(|_, sel| sel.set(ids))?;
     // The objects selected, after Lock Guides has left out guide paths.
     Ok(json!({ "count": s.doc()?.selection.objects.len() }))
 }
 
-fn direction_handles(s: &mut Session, _: &Value) -> Result<Value> {
+fn direction_handles(s: &mut Session, p: &Value) -> Result<Value> {
     let roots = selected_roots(s)?;
     let st = s.doc()?;
     let d = &st.doc;
@@ -331,6 +381,7 @@ fn direction_handles(s: &mut Session, _: &Value) -> Result<Value> {
         if let Some(n) = d.node(*r) {
             n.walk(&mut |c| {
                 if can.contains(&c.id)
+                    && (!bool_or(p, "skipTemplates", false) || !d.has_template_ancestor(c.id))
                     && let Some(p) = c.path_data()
                 {
                     items.push((c.id, p.anchors().map(|(si, ai, _)| (si, ai)).collect()));

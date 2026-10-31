@@ -1869,6 +1869,46 @@ fn hide_template_leaves_template_layers_off_the_canvas() {
     assert_eq!(painted(&mut app), Some(shown), "Show Template draws it again as before");
 }
 
+#[test]
+fn hide_template_passes_visibility_to_tools_and_bulk_selection() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
+    let id = app.session.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+    let layer = app.session.active().unwrap().doc.layers[0].id.0;
+    app.session.execute("layer.setProps", &json!({"ids": [layer], "template": true, "locked": false})).unwrap();
+    assert!(app.view_info().templates);
+    app.run("select.all", json!({})).unwrap();
+    assert_eq!(app.session.active().unwrap().selection.objects, vec![vectorcraft_doc::NodeId(id)]);
+    app.run("view.template", json!({})).unwrap();
+    assert!(!app.view_info().templates);
+    app.run("select.all", json!({})).unwrap();
+    assert!(app.session.active().unwrap().selection.objects.is_empty());
+    app.session.execute("layer.new", &json!({"name": "Visible"})).unwrap();
+    let visible = app.session.execute("shape.rectangle", &json!({"x": 40, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+    app.run("select.magicWand", json!({"id": visible})).unwrap();
+    assert_eq!(app.session.active().unwrap().selection.objects, vec![vectorcraft_doc::NodeId(visible)]);
+    app.run("view.template", json!({})).unwrap();
+    app.run("select.magicWand", json!({"id": visible})).unwrap();
+    assert_eq!(app.session.active().unwrap().selection.objects.len(), 2);
+}
+
+#[test]
+fn hide_template_clears_selected_template_art() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
+    let id = app.session.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+    let layer = app.session.active().unwrap().doc.layers[0].id.0;
+    app.session.execute("layer.setProps", &json!({"ids": [layer], "template": true, "locked": false})).unwrap();
+    app.session.execute("layer.new", &json!({"name": "Visible"})).unwrap();
+    let visible = app.session.execute("shape.rectangle", &json!({"x": 40, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+    app.run("select.set", json!({"ids": [id, visible]})).unwrap();
+    assert_eq!(app.session.active().unwrap().selection.objects, vec![vectorcraft_doc::NodeId(id), vectorcraft_doc::NodeId(visible)]);
+    app.run("view.template", json!({})).unwrap();
+    assert_eq!(app.session.active().unwrap().selection.objects, vec![vectorcraft_doc::NodeId(visible)]);
+    app.run("select.same.shapeType", json!({})).unwrap();
+    assert_eq!(app.session.active().unwrap().selection.objects, vec![vectorcraft_doc::NodeId(visible)]);
+}
+
 /// General › Anti-aliased Artwork (#394): on (the default), the art's edges are smoothed on
 /// screen; off, every pixel is either painted or not, and turning it either way re-renders.
 #[test]

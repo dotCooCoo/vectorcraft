@@ -53,7 +53,8 @@ fn refusal(id: &str, params: serde_json::Value) -> String {
 fn an_unknown_key_is_named_with_the_nearest_accepted_one() {
     assert_eq!(refusal("file.new", json!({"widht": 300})), "unknown parameter `widht`; did you mean `width`?");
     assert_eq!(refusal("file.new", json!({"Width": 300})), "unknown parameter `Width`; did you mean `width`?");
-    assert_eq!(refusal("select.all", json!({"zzz": 1})), "unknown parameter `zzz`; the command takes no parameters");
+    assert_eq!(refusal("select.all", json!({"zzz": 1})), "unknown parameter `zzz`; the command takes: skipTemplates");
+    assert_eq!(refusal("select.none", json!({"zzz": 1})), "unknown parameter `zzz`; the command takes no parameters");
     assert_eq!(
         refusal("shape.line", json!({"x1": 0, "y1": 0, "x2": 5, "y2": 5, "colour": "red"})),
         "unknown parameter `colour`; the command takes: x1, y1, x2, y2, fill"

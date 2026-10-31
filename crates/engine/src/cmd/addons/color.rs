@@ -61,7 +61,7 @@ fn select(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let st = s.doc()?;
     let mut ids: Vec<NodeId> = vec![];
-    walk_selectable(&st.doc, st.isolation, |n| {
+    walk_selectable(&st.doc, st.isolation, false, |n| {
         if is_of_kind(&st.doc, n, kind) {
             ids.push(n.id);
             // An object taken whole: what is inside it isn't taken again.

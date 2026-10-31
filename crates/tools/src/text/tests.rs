@@ -16,6 +16,27 @@ fn doc_with_text(text: &str) -> (Document, NodeId) {
     (d, id)
 }
 
+#[test]
+fn area_type_path_pick_skips_hidden_template_art() {
+    let mut d = Document::new(100.0, 100.0);
+    let layer = d.layers[0].id;
+    let id = d.alloc_id();
+    d.insert(
+        Some(layer),
+        0,
+        Node::path(id, vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(0.0, 0.0, 50.0, 50.0)), Default::default()),
+    )
+    .unwrap();
+    if let NodeKind::Layer { template, .. } = &mut d.node_mut(layer).unwrap().kind {
+        *template = true;
+    }
+    let (selection, paint) = (Selection::default(), paint());
+    let shown = cx(&d, &selection, &paint);
+    let p = Point::new(0.0, 25.0);
+    assert_eq!(TypeTool::path_at(&shown, p, true), Some(id));
+    assert_eq!(TypeTool::path_at(&ToolContext { templates: false, ..shown }, p, true), None);
+}
+
 fn editing(text: &str) -> (Document, NodeId, TypeTool) {
     let (d, id) = doc_with_text(text);
     let mut tool = TypeTool::new("type");

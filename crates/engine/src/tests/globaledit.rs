@@ -118,6 +118,71 @@ fn global_edit_updates_art_on_unlocked_template_layers_only() {
 }
 
 #[test]
+fn global_edit_skips_template_members_when_requested() {
+    let mut s = session();
+    let first = rect(&mut s, 10.0, 10.0, 50.0, 50.0);
+    let ordinary = rect(&mut s, 100.0, 10.0, 50.0, 50.0);
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let template = rect(&mut s, 200.0, 10.0, 50.0, 50.0);
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+    assert_eq!(start(&mut s, first, json!({"skipTemplates": true})), [first, ordinary]);
+    s.execute("object.move", &json!({"dx": 10, "dy": 0})).unwrap();
+    assert_eq!(bounds(&s, ordinary), Rect::new(110.0, 10.0, 160.0, 60.0));
+    assert_eq!(bounds(&s, template), Rect::new(200.0, 10.0, 250.0, 60.0));
+}
+
+#[test]
+fn global_edit_skips_a_member_that_becomes_template_art() {
+    let mut s = session();
+    let first = rect(&mut s, 10.0, 10.0, 50.0, 50.0);
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let member = rect(&mut s, 200.0, 10.0, 50.0, 50.0);
+    assert_eq!(start(&mut s, first, json!({"skipTemplates": true})), [first, member]);
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+    assert!(s.doc().unwrap().global_edit.is_some());
+    s.execute("object.move", &json!({"dx": 10, "dy": 0})).unwrap();
+    assert_eq!(bounds(&s, member), Rect::new(200.0, 10.0, 250.0, 60.0));
+}
+
+#[test]
+fn select_same_and_object_skip_template_art_when_requested() {
+    let mut s = session();
+    let first = rect(&mut s, 10.0, 10.0, 50.0, 50.0);
+    let ordinary = rect(&mut s, 100.0, 10.0, 50.0, 50.0);
+    let ordinary_line = NodeId(s.execute("shape.line", &json!({"x1": 10, "y1": 100, "x2": 30, "y2": 120})).unwrap()["id"].as_u64().unwrap());
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let _template = rect(&mut s, 200.0, 10.0, 50.0, 50.0);
+    let template_line = NodeId(s.execute("shape.line", &json!({"x1": 200, "y1": 100, "x2": 220, "y2": 120})).unwrap()["id"].as_u64().unwrap());
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+    assert_eq!(s.doc().unwrap().doc.layer_containing(template_line), Some(layer));
+    sel(&mut s, &[first]);
+    s.execute("select.same.shapeType", &json!({"skipTemplates": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [first, ordinary]);
+    s.execute("select.object.openPaths", &json!({"skipTemplates": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary_line]);
+    s.execute("select.object.openPaths", &json!({})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects.len(), 2);
+    assert!(s.doc().unwrap().selection.objects.contains(&template_line));
+}
+
+#[test]
+fn select_text_commands_skip_template_art_when_requested() {
+    let mut s = session();
+    let ordinary = NodeId(s.execute("text.create", &json!({"x": 10, "y": 10, "text": "ordinary"})).unwrap()["id"].as_u64().unwrap());
+    let layer = NodeId(s.execute("layer.new", &json!({"top": true})).unwrap()["id"].as_u64().unwrap());
+    let template = NodeId(s.execute("text.create", &json!({"x": 100, "y": 10, "text": "template"})).unwrap()["id"].as_u64().unwrap());
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+    sel(&mut s, &[ordinary]);
+    s.execute("select.same.fontSize", &json!({"skipTemplates": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary]);
+    s.execute("select.object.pointText", &json!({"skipTemplates": true})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects, [ordinary]);
+    s.execute("select.object.pointText", &json!({})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.objects.len(), 2);
+    assert!(s.doc().unwrap().selection.objects.contains(&template));
+}
+
+#[test]
 fn size_and_appearance_options_narrow_the_match() {
     let mut s = session();
     let [a, b, c, ..] = squares(&mut s);

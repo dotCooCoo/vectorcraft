@@ -596,6 +596,27 @@ fn layers_and_lock_hide() {
     assert!(s.doc().unwrap().doc.node(b).is_none());
 }
 
+#[test]
+fn bulk_selection_skips_hidden_templates_and_keeps_shown_templates() {
+    let mut s = session();
+    let back = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
+    let layer = NodeId(s.execute("layer.new", &json!({"name": "Template"})).unwrap()["id"].as_u64().unwrap());
+    let front = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
+    s.execute("layer.setProps", &json!({"ids": [layer.0], "template": true, "locked": false})).unwrap();
+    for command in ["select.all", "select.allOnArtboard", "select.inverse"] {
+        s.execute("select.none", &json!({})).unwrap();
+        s.execute(command, &json!({})).unwrap();
+        assert_eq!(s.doc().unwrap().selection.objects, vec![back, front], "{command} with templates shown");
+        s.execute("select.none", &json!({})).unwrap();
+        s.execute(command, &json!({"skipTemplates": true})).unwrap();
+        assert_eq!(s.doc().unwrap().selection.objects, vec![back], "{command} with templates hidden");
+    }
+    s.execute("select.none", &json!({})).unwrap();
+    s.execute("object.isolate", &json!({"id": front.0})).unwrap();
+    s.execute("select.all", &json!({"skipTemplates": true})).unwrap();
+    assert!(s.doc().unwrap().selection.objects.is_empty());
+}
+
 /// A key object is one object of a selection of several: a Shift-click (`select.toggle`) or a
 /// hidden or deleted row that leaves one object selected clears the key, and `select.key` sets
 /// none on a single selected object. A Shift-drag marquee that leaves two or more objects selected

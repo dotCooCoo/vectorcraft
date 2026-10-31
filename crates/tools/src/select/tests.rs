@@ -1093,6 +1093,42 @@ fn marquee_selects() {
     assert_eq!(a, vec![Action::Exec("select.set".into(), json!({"ids": [id.0]}))]);
 }
 
+#[test]
+fn selection_tool_skips_template_art_when_the_view_hides_it() {
+    let mut d = vectorcraft_doc::Document::new(100.0, 100.0);
+    let layer = d.layers[0].id;
+    let id = d.alloc_id();
+    d.insert(
+        Some(layer),
+        0,
+        vectorcraft_doc::Node::path(
+            id,
+            vectorcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 50.0, 50.0)),
+            vectorcraft_doc::Appearance::default_art(),
+        ),
+    )
+    .unwrap();
+    if let vectorcraft_doc::NodeKind::Layer { template, .. } = &mut d.node_mut(layer).unwrap().kind {
+        *template = true;
+    }
+    let (selection, paint) = (Selection::default(), paint());
+    for (templates, expected) in [(true, vec![id.0]), (false, vec![])] {
+        let context = ToolContext { templates, ..cx(&d, &selection, &paint) };
+        let click = SelectionTool::default().pointer(&context, &ev(PointerKind::Down, 25.0, 25.0));
+        assert_eq!(
+            click.iter().find_map(|a| match a {
+                Action::Exec(c, p) if c == "select.set" => Some(p["ids"].clone()),
+                _ => None,
+            }),
+            templates.then(|| json!([id.0]))
+        );
+        let mut tool = SelectionTool::default();
+        tool.pointer(&context, &ev(PointerKind::Down, 60.0, 60.0));
+        tool.pointer(&context, &ev(PointerKind::Drag, -5.0, -5.0));
+        assert_eq!(tool.pointer(&context, &ev(PointerKind::Up, -5.0, -5.0)), vec![Action::Exec("select.set".into(), json!({"ids": expected}))]);
+    }
+}
+
 /// Escape during a marquee drag ends it: the marquee is removed, and its release selects nothing.
 #[test]
 fn escape_cancels_a_marquee() {

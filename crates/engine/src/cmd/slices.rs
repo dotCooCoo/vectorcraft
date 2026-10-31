@@ -139,7 +139,15 @@ pub fn specs() -> Vec<CommandSpec> {
             has_doc,
             list
         ),
-        cmd!("select.object.slices", "Slices", ["Select", "Object"], None, "{} select every user and object slice → {count}", has_doc, select_all),
+        cmd!(
+            "select.object.slices",
+            "Slices",
+            ["Select", "Object"],
+            None,
+            "{skipTemplates?: bool (default false)} select every user and object slice, excluding object slices on template layers when requested → {count}",
+            has_doc,
+            select_all
+        ),
         cmd!(
             "object.slice.create",
             "Create Slice",
@@ -644,8 +652,10 @@ fn list(s: &mut Session, _: &Value) -> Result<Value> {
     Ok(json!({ "slices": slices, "clipToArtboard": d.slices_clip_to_artboard, "hidden": s.menu.slices_hidden, "locked": s.menu.slices_locked }))
 }
 
-fn select_all(s: &mut Session, _: &Value) -> Result<Value> {
-    let ids = s.doc()?.doc.slice_ids();
+fn select_all(s: &mut Session, p: &Value) -> Result<Value> {
+    let d = &s.doc()?.doc;
+    let skip_templates = bool_or(p, "skipTemplates", false);
+    let ids = d.slice_ids().into_iter().filter(|id| !skip_templates || !d.has_template_ancestor(*id)).collect::<Vec<_>>();
     s.select(|_, sel| sel.set_slices(ids))?;
     // None while the slices are locked or hidden.
     Ok(json!({ "count": s.doc()?.selection.slices.len() }))

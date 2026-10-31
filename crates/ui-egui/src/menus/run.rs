@@ -284,7 +284,22 @@ fn run_ui_part4(app: &mut VectorcraftApp, id: &str, _p: &Value) -> Option<Result
         }
         "view.edges" => flag(&mut app.ui.view.edges),
         "view.artboards" => flag(&mut app.ui.view.artboards),
-        "view.template" => flag(&mut app.ui.view.templates),
+        "view.template" => {
+            let r = flag(&mut app.ui.view.templates);
+            if !app.ui.view.templates {
+                if app.session.active().is_some_and(|d| d.global_edit.is_some()) {
+                    let _ = app.run("select.globalEdit", json!({}));
+                }
+                let template_ids = app
+                    .session
+                    .active()
+                    .map(|d| d.selection.objects.iter().filter(|id| d.doc.has_template_ancestor(**id)).map(|id| id.0).collect::<Vec<_>>());
+                if let Some(ids) = template_ids.filter(|ids| !ids.is_empty()) {
+                    let _ = app.run("select.toggle", json!({ "ids": ids }));
+                }
+            }
+            r
+        }
         "view.rulers" => flag(&mut app.ui.view.rulers),
         "view.videoRulers" => {
             let v = &mut app.ui.view;

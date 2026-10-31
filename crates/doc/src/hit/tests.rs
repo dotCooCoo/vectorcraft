@@ -40,6 +40,43 @@ fn selection_click_and_select_behind_find_unlocked_template_art() {
     assert!(objects_at(&d, p, HitOptions::default(), None).is_empty());
 }
 
+fn template_selection_document() -> (Document, NodeId, NodeId) {
+    let mut d = Document::new(100.0, 100.0);
+    let visible = d.layers[0].id;
+    let back = d.alloc_id();
+    d.insert(Some(visible), 0, Node::path(back, shapes::rectangle(Rect::new(0.0, 0.0, 50.0, 50.0)), Appearance::default_art())).unwrap();
+    let layer = d.alloc_id();
+    d.insert(None, 1, Node::layer(layer, "Template", crate::LayerColor::Preset(1))).unwrap();
+    if let NodeKind::Layer { template, .. } = &mut d.node_mut(layer).unwrap().kind {
+        *template = true;
+    }
+    let front = d.alloc_id();
+    d.insert(Some(layer), 0, Node::path(front, shapes::rectangle(Rect::new(0.0, 0.0, 50.0, 50.0)), Appearance::default_art())).unwrap();
+    (d, back, front)
+}
+
+#[test]
+fn hidden_templates_are_skipped_by_click_and_select_behind() {
+    let (d, back, front) = template_selection_document();
+    let p = Point::new(25.0, 25.0);
+    let hidden = HitOptions { skip_templates: true, ..Default::default() };
+    assert_eq!(hit_test(&d, p, HitOptions::default()).map(|h| h.leaf), Some(front));
+    assert_eq!(objects_at(&d, p, HitOptions::default(), None), vec![front, back]);
+    assert_eq!(hit_test(&d, p, hidden).map(|h| h.leaf), Some(back));
+    assert_eq!(objects_at(&d, p, hidden, None), vec![back]);
+    assert!(hit_test(&d, p, HitOptions { scope: Some(front), ..hidden }).is_none());
+    assert!(objects_at(&d, p, hidden, Some(front)).is_empty());
+}
+
+#[test]
+fn hidden_templates_are_skipped_by_marquee() {
+    let (d, back, front) = template_selection_document();
+    let r = Rect::new(-5.0, -5.0, 55.0, 55.0);
+    assert_eq!(marquee_with_templates(&d, r, None, false, false), vec![back, front]);
+    assert_eq!(marquee_with_templates(&d, r, None, false, true), vec![back]);
+    assert!(marquee_with_templates(&d, r, Some(front), false, true).is_empty());
+}
+
 #[test]
 fn unfilled_interior_misses() {
     let mut d = Document::new(200.0, 200.0);
@@ -151,6 +188,7 @@ fn selected_hidden_art_on_an_unlocked_template_layer_can_be_dragged() {
     }
     let hidden = Point::new(150.0, 50.0);
     assert_eq!(selected_hidden_at(&d, hidden, HitOptions::default(), &[art_id]), Some(art_id));
+    assert_eq!(selected_hidden_at(&d, hidden, HitOptions { skip_templates: true, ..Default::default() }, &[art_id]), None);
     d.node_mut(layer).unwrap().locked = true;
     assert_eq!(selected_hidden_at(&d, hidden, HitOptions::default(), &[art_id]), None);
 }
@@ -488,8 +526,16 @@ fn masked_square(layer: bool) -> (Document, NodeId, NodeId, NodeId) {
     }
 }
 
-const SELECTING: HitOptions =
-    HitOptions { tol: 3.0, outline: false, path_only: false, type_path_only: false, skip_guides: false, clip_outlines: true, scope: None };
+const SELECTING: HitOptions = HitOptions {
+    tol: 3.0,
+    outline: false,
+    path_only: false,
+    type_path_only: false,
+    skip_guides: false,
+    skip_templates: false,
+    clip_outlines: true,
+    scope: None,
+};
 
 /// For the selection tools a clip group's clipping path is hit on its outline, within the
 /// tolerance, before the art it clips and just outside it too; inside, the art is hit.
@@ -994,6 +1040,7 @@ fn locked_art_is_found_on_an_unlocked_template_sublayer() {
     }
     let p = Point::new(25.0, 25.0);
     assert_eq!(locked_objects_at(&d, p, HitOptions::default()), vec![art_id]);
+    assert!(locked_objects_at(&d, p, HitOptions { skip_templates: true, ..Default::default() }).is_empty());
     d.node_mut(sub).unwrap().locked = true;
     assert!(locked_objects_at(&d, p, HitOptions::default()).is_empty());
 }

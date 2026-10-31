@@ -66,6 +66,8 @@ pub struct HitOptions {
     /// Guide objects (paths made into guides) are not hittable: View › Guides › Lock Guides is
     /// on or the guides are hidden.
     pub skip_guides: bool,
+    /// Template layers do not participate while the view hides them.
+    pub skip_templates: bool,
     /// The selection tools: a clip group's clipping path is hit on its outline, within the
     /// tolerance, before the art it clips, so that the mask can be reached where the art covers
     /// its edge. Off for the tools that act on what is drawn (sampling, type, gradients…);
@@ -75,7 +77,16 @@ pub struct HitOptions {
 
 impl Default for HitOptions {
     fn default() -> Self {
-        Self { tol: 3.0, outline: false, path_only: false, type_path_only: false, skip_guides: false, clip_outlines: false, scope: None }
+        Self {
+            tol: 3.0,
+            outline: false,
+            path_only: false,
+            type_path_only: false,
+            skip_guides: false,
+            skip_templates: false,
+            clip_outlines: false,
+            scope: None,
+        }
     }
 }
 
@@ -104,8 +115,8 @@ pub fn hit_test(doc: &Document, p: Point, opt: HitOptions) -> Option<Hit> {
     hit_test_skipping(doc, p, opt, &|_| false, true)
 }
 
-/// Topmost visible art for read-only sampling: locked objects and template layers participate,
-/// including art outside the editing scope. This never changes their editability.
+/// Topmost visible art for read-only sampling: locked objects and shown template layers
+/// participate, including art outside the editing scope. This never changes their editability.
 pub fn hit_test_visible(doc: &Document, p: Point, opt: HitOptions) -> Option<Hit> {
     hit_test_skipping(doc, p, opt, &|_| false, false)
 }
@@ -115,8 +126,8 @@ pub fn hit_test_visible(doc: &Document, p: Point, opt: HitOptions) -> Option<Hit
 /// click there hits nothing ([`hit_test`]), so the selection tools grab the selection by that
 /// art instead of starting a marquee: an image in a mask, picked in the Layers panel, can be
 /// dragged by its hidden part, whose frame shows while it is selected. An object that a click
-/// can't hit anyway doesn't count: hidden, locked, a guide while guides are locked
-/// or hidden, in a Shaper group's part a click can't reach, outside the isolated container
+/// can't hit anyway doesn't count: hidden, locked, on a template layer omitted by the view,
+/// a guide while guides are locked or hidden, in a Shaper group's part a click can't reach, outside the isolated container
 /// (`opt.scope`) or on a locked artboard. On a layer whose Preview is off it counts by its
 /// outline, as a click there hits it.
 pub fn selected_hidden_at(doc: &Document, p: Point, opt: HitOptions, selected: &[NodeId]) -> Option<NodeId> {
@@ -126,7 +137,7 @@ pub fn selected_hidden_at(doc: &Document, p: Point, opt: HitOptions, selected: &
         let Some(chain) = doc.ancestry(id) else { return false };
         let nodes: Vec<&Node> = chain.iter().filter_map(|a| doc.node(*a)).collect();
         if nodes.len() != chain.len()
-            || nodes.iter().any(|n| !n.visible || n.locked)
+            || nodes.iter().any(|n| !n.visible || n.locked || opt.skip_templates && is_template(n))
             || opt.scope.is_some_and(|s| !chain.contains(&s))
             || locks.holds_id(id)
         {
@@ -190,7 +201,11 @@ pub fn objects_at(doc: &Document, p: Point, opt: HitOptions, scope: Option<NodeI
         if !layer.is_layer() {
             return objects_at_repeated(doc, p, opt, scope);
         }
-        if !layer.visible || layer.locked || doc.pattern_edit.as_ref().is_some_and(|e| e.layer != layer.id) {
+        if !layer.visible
+            || layer.locked
+            || opt.skip_templates && is_template(layer)
+            || doc.pattern_edit.as_ref().is_some_and(|e| e.layer != layer.id)
+        {
             continue;
         }
         if !objects_at_layer(layer, p, opt, &symbols, &mut tops, &mut seen) {
@@ -276,7 +291,7 @@ pub const MAX_LOCKED_AT: usize = 20;
 
 /// The locked objects under `p`, topmost first, at most [`MAX_LOCKED_AT`]: each object whose own
 /// lock is on and that a click at `p` would hit if it were not locked. A locked group is listed,
-/// not what it holds. Hidden objects and everything on hidden or locked layers are left
+/// not what it holds. Hidden objects and everything on hidden, locked or skipped template layers are left
 /// out. While a pattern is edited only its tile layer is searched, and in isolation mode
 /// (`opt.scope`) only what is inside the isolated group or object.
 pub fn locked_objects_at(doc: &Document, p: Point, opt: HitOptions) -> Vec<NodeId> {
@@ -285,6 +300,9 @@ pub fn locked_objects_at(doc: &Document, p: Point, opt: HitOptions) -> Vec<NodeI
     if let Some(scope) = opt.scope
         && let Some(isolated) = doc.node(scope)
     {
+        if opt.skip_templates && doc.has_template_ancestor(scope) {
+            return out;
+        }
         if isolated.is_container() {
             locked_children(isolated, p, opt, &symbols, &mut out);
         } else if isolated.visible && isolated.locked && locked_hit(isolated, p, opt, &symbols) {
@@ -293,7 +311,11 @@ pub fn locked_objects_at(doc: &Document, p: Point, opt: HitOptions) -> Vec<NodeI
         return out;
     }
     for layer in doc.layers.iter().rev() {
-        if !layer.visible || layer.locked || doc.pattern_edit.as_ref().is_some_and(|e| e.layer != layer.id) {
+        if !layer.visible
+            || layer.locked
+            || opt.skip_templates && is_template(layer)
+            || doc.pattern_edit.as_ref().is_some_and(|e| e.layer != layer.id)
+        {
             continue;
         }
         let opt = if matches!(layer.kind, NodeKind::Layer { preview: false, .. }) { HitOptions { outline: true, ..opt } } else { opt };
@@ -379,7 +401,7 @@ fn hit_test_skipping(doc: &Document, p: Point, opt: HitOptions, skip: &dyn Fn(No
         && let Some(mut chain) = doc.ancestry(scope)
     {
         // Isolated before its artboard was locked: nothing in it hits.
-        if locks.holds_id(scope) {
+        if locks.holds_id(scope) || opt.skip_templates && doc.has_template_ancestor(scope) {
             return None;
         }
         if isolated.is_container() {
@@ -392,7 +414,7 @@ fn hit_test_skipping(doc: &Document, p: Point, opt: HitOptions, skip: &dyn Fn(No
     }
     let mut chain = Vec::new();
     for layer in doc.layers.iter().rev() {
-        if !layer.visible || editable_only && layer.locked {
+        if !layer.visible || editable_only && layer.locked || opt.skip_templates && is_template(layer) {
             continue;
         }
         // Pattern editing mode: only the tile art is editable.
@@ -438,7 +460,7 @@ fn may_hit(parent: &Node, i: usize, c: &Node, p: Point, opt: HitOptions, symbols
         return false;
     }
     // Read-only samples can read locked art; hidden art never participates.
-    if !c.visible || editable_only && c.locked {
+    if !c.visible || editable_only && c.locked || opt.skip_templates && is_template(c) {
         return false;
     }
     if opt.skip_guides && matches!(c.kind, NodeKind::Path { guide: true, .. }) {
@@ -448,6 +470,10 @@ fn may_hit(parent: &Node, i: usize, c: &Node, p: Point, opt: HitOptions, symbols
     edits_contents(c)
         || c.extras().shaper.is_some() && source_of(c, opt.scope)
         || c.reach_bounds_with(symbols).is_none_or(|b| b.inflate(opt.tol, opt.tol).contains(p))
+}
+
+fn is_template(n: &Node) -> bool {
+    matches!(n.kind, NodeKind::Layer { template: true, .. })
 }
 
 /// Is the first child of `n` the isolated container `scope`?
@@ -674,8 +700,16 @@ pub fn compound_part_at(n: &Node, p: Point, tol: f64) -> Option<NodeId> {
 /// out those on a locked artboard ([`crate::LockedArtboards::holds_id`]). Symbol instances are measured
 /// by their art ([`Node::geometric_bounds_with`]). The art of a clip group or of a layer with a
 /// clipping mask counts only when the marquee meets the region its clipping path clips to, and then
-/// only within that region's bounds.
+/// only within that region's bounds. [`marquee_with_templates`] also accepts the view's template visibility.
 pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> Vec<NodeId> {
+    marquee_with_templates(doc, r, scope, leaves, false)
+}
+
+/// The marquee selection with template layers omitted when `skip_templates` is true.
+pub fn marquee_with_templates(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool, skip_templates: bool) -> Vec<NodeId> {
+    if skip_templates && scope.is_some_and(|id| doc.has_template_ancestor(id)) {
+        return Vec::new();
+    }
     let mut out = Vec::new();
     // `tops` pairs each object with the part of `r` in which the marquee can touch it.
     let tops: Vec<(&std::sync::Arc<Node>, Rect)> = match scope.and_then(|s| doc.node(s)) {
@@ -696,19 +730,19 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
         None => doc
             .layers
             .iter()
-            .filter(|l| l.visible && !l.locked && doc.pattern_edit.as_ref().is_none_or(|e| e.layer == l.id))
-            .flat_map(|l| layer_objects(l, r))
+            .filter(|l| l.visible && !l.locked && !(skip_templates && is_template(l)) && doc.pattern_edit.as_ref().is_none_or(|e| e.layer == l.id))
+            .flat_map(|l| layer_objects(l, r, skip_templates))
             .collect(),
     };
     /// The objects of layer `l`, each with the part of `r` that the clipping masks of `l` and of
     /// the sublayers it is in leave.
-    fn layer_objects(l: &Node, r: Rect) -> Vec<(&std::sync::Arc<Node>, Rect)> {
+    fn layer_objects(l: &Node, r: Rect, skip_templates: bool) -> Vec<(&std::sync::Arc<Node>, Rect)> {
         let mut out = vec![];
         let Some(r) = marquee_in(l, r) else { return out };
         for c in l.children().into_iter().flatten() {
             if c.is_layer() {
-                if c.visible && !c.locked {
-                    out.extend(layer_objects(c, r));
+                if c.visible && !c.locked && !(skip_templates && is_template(c)) {
+                    out.extend(layer_objects(c, r, skip_templates));
                 }
             } else {
                 out.push((c, r));

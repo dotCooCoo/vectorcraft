@@ -445,6 +445,11 @@ impl Document {
         Some(out)
     }
 
+    /// Whether `id` is on a template layer or sublayer.
+    pub fn has_template_ancestor(&self, id: NodeId) -> bool {
+        self.ancestry(id).is_some_and(|chain| chain.iter().any(|id| self.node(*id).is_some_and(Node::is_template)))
+    }
+
     pub fn parent_of(&self, id: NodeId) -> Option<NodeId> {
         let a = self.ancestry(id)?;
         (a.len() >= 2).then(|| a[a.len() - 2])

@@ -126,6 +126,8 @@ pub struct ToolContext<'a> {
     pub smart_guides: bool,
     /// View → Show Guides with Lock Guides off: the selection tools pick and drag ruler guides.
     pub guides: bool,
+    /// View → Show Template: template art can be picked while it is drawn.
+    pub templates: bool,
     pub snap_to_grid: bool,
     /// Bounding box shown (View → Show/Hide Bounding Box).
     pub show_bbox: bool,
@@ -329,6 +331,7 @@ impl ToolContext<'_> {
             type_path_only: self.type_path_only,
             scope: self.isolation,
             skip_guides: !self.guides,
+            skip_templates: !self.templates,
             clip_outlines: false,
         }
     }

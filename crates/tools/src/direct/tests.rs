@@ -565,6 +565,26 @@ fn marquee_selects_anchors() {
     assert_eq!(a, vec![Action::Exec("select.anchorsMany".into(), json!({"items": [{"id": id.0, "anchors": [[0, 1]]}], "mode": "set"}))]);
 }
 
+#[test]
+fn direct_marquee_skips_hidden_template_anchors() {
+    let (mut d, id) = doc_with_rect();
+    let layer = d.layers[0].id;
+    if let NodeKind::Layer { template, .. } = &mut d.node_mut(layer).unwrap().kind {
+        *template = true;
+    }
+    let (selection, paint) = (Selection::default(), paint());
+    for templates in [true, false] {
+        let context = ToolContext { templates, ..cx(&d, &selection, &paint) };
+        let mut tool = DirectSelectionTool::new(false);
+        tool.pointer(&context, &PointerEvent::new(PointerKind::Down, 50.0, 50.0));
+        tool.pointer(&context, &PointerEvent::new(PointerKind::Drag, 120.0, 120.0));
+        let actions = tool.pointer(&context, &PointerEvent::new(PointerKind::Up, 120.0, 120.0));
+        let Some(Action::Exec(command, params)) = actions.first() else { panic!("expected a selection command") };
+        assert_eq!(command, "select.anchorsMany");
+        assert_eq!(params["items"], if templates { json!([{"id": id.0, "anchors": [[0, 0]]}]) } else { json!([]) });
+    }
+}
+
 /// #4654: a marquee over part of a segment, with neither of its anchors inside, selects that
 /// segment as a click on it does; with Shift it toggles it. Group Selection selects objects.
 #[test]

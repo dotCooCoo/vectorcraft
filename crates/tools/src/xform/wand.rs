@@ -37,7 +37,11 @@ impl Tool for MagicWandTool {
         } else {
             "set"
         };
-        vec![Action::Exec("select.magicWand".into(), json!({ "id": paint_owner(cx.doc, h.leaf).0, "mode": mode }))]
+        let mut params = json!({ "id": paint_owner(cx.doc, h.leaf).0, "mode": mode });
+        if !cx.templates {
+            params["skipTemplates"] = json!(true);
+        }
+        vec![Action::Exec("select.magicWand".into(), params)]
     }
 
     fn cursor(&self, _cx: &ToolContext, _p: Point, _m: Mods) -> Cursor {
@@ -115,7 +119,14 @@ impl Tool for LassoTool {
                     }
                 });
                 let editable = cx.doc.editable();
-                hits.retain(|(id, _)| editable(*id) && cx.doc.is_visible(*id));
+                hits.retain(|(id, _)| {
+                    editable(*id)
+                        && cx.doc.is_visible(*id)
+                        && (cx.templates
+                            || cx.doc.ancestry(*id).is_some_and(|chain| {
+                                !chain.iter().any(|id| cx.doc.node(*id).is_some_and(|n| matches!(n.kind, NodeKind::Layer { template: true, .. })))
+                            }))
+                });
                 let items: Vec<Value> = hits.iter().map(|(id, v)| json!({ "id": id.0, "anchors": anchors_json(v) })).collect();
                 let mode = if sub {
                     "subtract"
@@ -170,6 +181,36 @@ mod tests {
         assert_eq!(r, vec![Action::Exec("select.magicWand".into(), json!({"id": a.0, "mode": "add"}))]);
         let miss = t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 900.0, 900.0));
         assert_eq!(miss, vec![Action::Exec("select.none".into(), json!({}))]);
+    }
+
+    #[test]
+    fn hidden_templates_are_left_out_by_wand_and_lasso() {
+        use vectorcraft_doc::{Appearance, Document, Node};
+        use vectorcraft_geom::{Rect, shapes};
+        let mut d = Document::new(100.0, 100.0);
+        let layer = d.layers[0].id;
+        let id = d.alloc_id();
+        d.insert(Some(layer), 0, Node::path(id, shapes::rectangle(Rect::new(10.0, 10.0, 40.0, 40.0)), Appearance::default_art())).unwrap();
+        if let NodeKind::Layer { template, .. } = &mut d.node_mut(layer).unwrap().kind {
+            *template = true;
+        }
+        let (selection, paint) = (Selection::default(), paint());
+        for templates in [true, false] {
+            let context = ToolContext { templates, ..cx(&d, &selection, &paint) };
+            let wand = MagicWandTool.pointer(&context, &PointerEvent::new(PointerKind::Down, 20.0, 20.0));
+            if templates {
+                assert_eq!(wand, vec![Action::Exec("select.magicWand".into(), json!({"id": id.0, "mode": "set"}))]);
+            } else {
+                assert_eq!(wand, vec![Action::Exec("select.none".into(), json!({}))]);
+            }
+            let mut lasso = LassoTool::default();
+            lasso.pointer(&context, &PointerEvent::new(PointerKind::Down, 0.0, 0.0));
+            lasso.pointer(&context, &PointerEvent::new(PointerKind::Drag, 30.0, 0.0));
+            lasso.pointer(&context, &PointerEvent::new(PointerKind::Drag, 0.0, 30.0));
+            let actions = lasso.pointer(&context, &PointerEvent::new(PointerKind::Up, 0.0, 30.0));
+            let Some(Action::Exec(_, params)) = actions.first() else { panic!("expected a selection command") };
+            assert_eq!(params["items"].as_array().map(Vec::len), Some(usize::from(templates)));
+        }
     }
 
     /// The Lasso selects anchor points only on the art a click can pick: not on a Shaper Group's

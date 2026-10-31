@@ -49,7 +49,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Magic Wand",
             [],
             None,
-            "{id, mode?: set|add|subtract} select objects similar to `id` by the Magic Wand settings → {count}",
+            "{id, mode?: set|add|subtract, skipTemplates?: bool (default false)} select objects similar to `id` by the Magic Wand settings → {count}",
             has_doc,
             magic_wand
         ),
@@ -158,9 +158,11 @@ fn magic_wand(s: &mut Session, p: &Value) -> Result<Value> {
     let w = s.menu.wand.clone();
     // In isolation mode only the isolated group's contents can be picked, as for Select Same.
     let inside = st.isolation.map(|iso| selectable_ids(&st.doc, Some(iso)));
+    let skip_templates = bool_or(p, "skipTemplates", false);
     let hits: Vec<NodeId> = paintable(&st.doc)
         .into_iter()
         .filter(|i| inside.as_ref().is_none_or(|set| set.contains(i)))
+        .filter(|i| !skip_templates || !st.doc.has_template_ancestor(*i))
         .filter(|i| st.doc.node(*i).is_some_and(|n| w.matches(&reference, n)))
         .collect();
     let ids: Vec<NodeId> = match str_param(p, "mode").unwrap_or("set") {
@@ -177,6 +179,20 @@ fn magic_wand(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn magic_wand_skips_template_matches_when_hidden() {
+        let mut s = Session::new();
+        s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
+        let visible = rect(&mut s, 0.0, "#ffffff", 1.0);
+        let layer = s.execute("layer.new", &json!({"name": "Template"})).unwrap()["id"].as_u64().unwrap();
+        let template = rect(&mut s, 20.0, "#ffffff", 1.0);
+        s.execute("layer.setProps", &json!({"ids": [layer], "template": true, "locked": false})).unwrap();
+        s.execute("select.magicWand", &json!({"id": visible})).unwrap();
+        assert_eq!(selected(&s), vec![visible, template]);
+        s.execute("select.magicWand", &json!({"id": visible, "skipTemplates": true})).unwrap();
+        assert_eq!(selected(&s), vec![visible]);
+    }
 
     fn rect(s: &mut Session, x: f64, fill: &str, stroke_w: f64) -> u64 {
         let id = s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap()["id"].as_u64().unwrap();

@@ -19,7 +19,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "All",
             ["Select"],
             Some("Cmd+A"),
-            "{} → {count}; while the Type tool edits text, all of that text instead → {editing, start, end} (byte offsets)",
+            "{skipTemplates?: bool (default false)} → {count}; while the Type tool edits text, all of that text instead → {editing, start, end} (byte offsets)",
             has_doc,
             all
         ),
@@ -28,13 +28,13 @@ pub fn specs() -> Vec<CommandSpec> {
             "All on Active Artboard",
             ["Select"],
             Some("Cmd+Alt+A"),
-            "{artboard?: index (0-based; the app passes the active one; default: the first)}",
+            "{artboard?: index (0-based; the app passes the active one; default: the first), skipTemplates?: bool (default false)}",
             has_doc,
             all_on_artboard
         ),
         cmd!("select.none", "Deselect", ["Select"], Some("Cmd+Shift+A"), "{}", has_doc, none),
         cmd!("select.reselect", "Reselect", ["Select"], Some("Cmd+6"), "{}", has_doc, reselect),
-        cmd!("select.inverse", "Inverse", ["Select"], None, "{}", has_doc, inverse),
+        cmd!("select.inverse", "Inverse", ["Select"], None, "{skipTemplates?: bool (default false)}", has_doc, inverse),
         cmd!("select.nextAbove", "Next Object Above", ["Select"], Some("Cmd+Alt+]"), "{}", has_selection, |s, _| step(s, 1)),
         cmd!("select.nextBelow", "Next Object Below", ["Select"], Some("Cmd+Alt+["), "{}", has_selection, |s, _| step(s, -1)),
         cmd!(
@@ -106,11 +106,11 @@ pub fn specs() -> Vec<CommandSpec> {
             "Fill Color",
             ["Select", "Same"],
             None,
-            "{} the objects filled with the first selected object's fill colour (any tint of its global or spot swatch, the same tint with prefs selectSameTintPercent); a member path of a compound path selected first compares as its compound path, except in isolation mode inside that compound path",
+            "{skipTemplates?: bool (default false)} the objects filled with the first selected object's fill colour (any tint of its global or spot swatch, the same tint with prefs selectSameTintPercent); a member path of a compound path selected first compares as its compound path, except in isolation mode inside that compound path",
             has_selection,
-            |s, _| {
+            |s, p| {
                 let tint = s.prefs.select_same_tint_percent;
-                same(s, "select.same.fillColor", |a, b| same_paint(&fill_of(a), &fill_of(b), tint))
+                same(s, "select.same.fillColor", p, |a, b| same_paint(&fill_of(a), &fill_of(b), tint))
             }
         ),
         cmd!(
@@ -118,71 +118,104 @@ pub fn specs() -> Vec<CommandSpec> {
             "Stroke Color",
             ["Select", "Same"],
             None,
-            "{} the objects stroked with the first selected object's stroke colour (tints and compound paths as select.same.fillColor)",
+            "{skipTemplates?: bool (default false)} the objects stroked with the first selected object's stroke colour (tints and compound paths as select.same.fillColor)",
             has_selection,
-            |s, _| {
+            |s, p| {
                 let tint = s.prefs.select_same_tint_percent;
-                same(s, "select.same.strokeColor", |a, b| same_paint(&stroke_of(a).0, &stroke_of(b).0, tint))
+                same(s, "select.same.strokeColor", p, |a, b| same_paint(&stroke_of(a).0, &stroke_of(b).0, tint))
             }
         ),
-        cmd!("select.same.strokeWeight", "Stroke Weight", ["Select", "Same"], None, "{}", has_selection, |s, _| same(
-            s,
+        cmd!(
             "select.same.strokeWeight",
-            |a, b| (stroke_weight(a) - stroke_weight(b)).abs() < 1e-9
-        )),
+            "Stroke Weight",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)}",
+            has_selection,
+            |s, p| same(s, "select.same.strokeWeight", p, |a, b| (stroke_weight(a) - stroke_weight(b)).abs() < 1e-9)
+        ),
         cmd!(
             "select.same.fillAndStroke",
             "Fill & Stroke",
             ["Select", "Same"],
             None,
-            "{} the objects with the first selected object's fill and stroke colours (tints and compound paths as select.same.fillColor)",
+            "{skipTemplates?: bool (default false)} the objects with the first selected object's fill and stroke colours (tints and compound paths as select.same.fillColor)",
             has_selection,
-            |s, _| {
+            |s, p| {
                 let tint = s.prefs.select_same_tint_percent;
-                same(s, "select.same.fillAndStroke", |a, b| {
+                same(s, "select.same.fillAndStroke", p, |a, b| {
                     same_paint(&fill_of(a), &fill_of(b), tint) && same_paint(&stroke_of(a).0, &stroke_of(b).0, tint)
                 })
             }
         ),
-        cmd!("select.same.opacity", "Opacity", ["Select", "Same"], None, "{}", has_selection, |s, _| same(s, "select.same.opacity", |a, b| (a
-            .opacity
-            - b.opacity)
-            .abs()
-            < 1e-6)),
-        cmd!("select.same.blendingMode", "Blending Mode", ["Select", "Same"], None, "{}", has_selection, |s, _| same(
+        cmd!("select.same.opacity", "Opacity", ["Select", "Same"], None, "{skipTemplates?: bool (default false)}", has_selection, |s, p| same(
             s,
-            "select.same.blendingMode",
-            |a, b| a.blend == b.blend
+            "select.same.opacity",
+            p,
+            |a, b| (a.opacity - b.opacity).abs() < 1e-6
         )),
-        cmd!("select.same.appearance", "Appearance", ["Select", "Same"], None, "{}", has_selection, |s, _| same(
+        cmd!(
+            "select.same.blendingMode",
+            "Blending Mode",
+            ["Select", "Same"],
+            None,
+            "{skipTemplates?: bool (default false)}",
+            has_selection,
+            |s, p| same(s, "select.same.blendingMode", p, |a, b| a.blend == b.blend)
+        ),
+        cmd!("select.same.appearance", "Appearance", ["Select", "Same"], None, "{skipTemplates?: bool (default false)}", has_selection, |s, p| same(
             s,
             "select.same.appearance",
+            p,
             |a, b| a.appearance == b.appearance && a.opacity == b.opacity && a.blend == b.blend
         )),
-        cmd!("select.same.shapeType", "Shape", ["Select", "Same"], None, "{}", has_selection, |s, _| same(s, "select.same.shapeType", |a, b| a
-            .kind_label()
-            == b.kind_label())),
-        cmd!("select.object.allOnSameLayers", "All on Same Layers", ["Select", "Object"], None, "{}", has_selection, same_layers),
-        cmd!("select.object.clippingMasks", "Clipping Masks", ["Select", "Object"], None, "{}", has_doc, |s, _| by_kind(s, |n| matches!(
-            n.kind,
-            NodeKind::Path { clipping: true, .. }
-        ))),
-        cmd!("select.object.textObjects", "All Text Objects", ["Select", "Object"], None, "{}", has_doc, |s, _| by_kind(s, |n| matches!(
-            n.kind,
-            NodeKind::Text(_)
-        ))),
-        cmd!("select.object.strayPoints", "Stray Points", ["Select", "Object"], None, "{}", has_doc, |s, _| by_kind(s, |n| n
-            .path_data()
-            .is_some_and(|p| p.anchor_count() == 1))),
-        cmd!("select.object.openPaths", "Open Paths", ["Select", "Object"], None, "{}", has_doc, |s, _| by_kind(s, |n| n
-            .path_data()
-            .is_some_and(|p| !p.is_closed()))),
+        cmd!("select.same.shapeType", "Shape", ["Select", "Same"], None, "{skipTemplates?: bool (default false)}", has_selection, |s, p| same(
+            s,
+            "select.same.shapeType",
+            p,
+            |a, b| a.kind_label() == b.kind_label()
+        )),
+        cmd!(
+            "select.object.allOnSameLayers",
+            "All on Same Layers",
+            ["Select", "Object"],
+            None,
+            "{skipTemplates?: bool (default false)}",
+            has_selection,
+            same_layers
+        ),
+        cmd!(
+            "select.object.clippingMasks",
+            "Clipping Masks",
+            ["Select", "Object"],
+            None,
+            "{skipTemplates?: bool (default false)}",
+            has_doc,
+            |s, p| by_kind(s, p, |n| matches!(n.kind, NodeKind::Path { clipping: true, .. }))
+        ),
+        cmd!(
+            "select.object.textObjects",
+            "All Text Objects",
+            ["Select", "Object"],
+            None,
+            "{skipTemplates?: bool (default false)}",
+            has_doc,
+            |s, p| by_kind(s, p, |n| matches!(n.kind, NodeKind::Text(_)))
+        ),
+        cmd!("select.object.strayPoints", "Stray Points", ["Select", "Object"], None, "{skipTemplates?: bool (default false)}", has_doc, |s, p| {
+            by_kind(s, p, |n| n.path_data().is_some_and(|p| p.anchor_count() == 1))
+        }),
+        cmd!("select.object.openPaths", "Open Paths", ["Select", "Object"], None, "{skipTemplates?: bool (default false)}", has_doc, |s, p| by_kind(
+            s,
+            p,
+            |n| n.path_data().is_some_and(|p| !p.is_closed())
+        )),
         cmd!(
             "select.same.graphicStyle",
             "Graphic Style",
             ["Select", "Same"],
             None,
-            "{} the objects linked to the graphic style the first selected object is linked to (compound paths as select.same.fillColor)",
+            "{skipTemplates?: bool (default false)} the objects linked to the graphic style the first selected object is linked to (compound paths as select.same.fillColor)",
             has_selection,
             same_graphic_style
         ),
@@ -191,7 +224,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Appearance Attribute",
             ["Select", "Same"],
             None,
-            "{item?: appearance item index} the objects sharing an appearance attribute of the first selected object: its fill or stroke `item` (default: the Appearance panel's active item), else its first effect, else its topmost fill (compound paths as select.same.fillColor)",
+            "{item?: appearance item index, skipTemplates?: bool (default false)} the objects sharing an appearance attribute of the first selected object: its fill or stroke `item` (default: the Appearance panel's active item), else its first effect, else its topmost fill (compound paths as select.same.fillColor)",
             has_selection,
             same_attribute
         ),
@@ -213,10 +246,19 @@ pub(crate) fn selectable(d: &Document, iso: Option<NodeId>) -> Vec<NodeId> {
     }
 }
 
+/// Selectable art in the current view, with hidden template layers omitted when requested.
+fn selectable_in_view(d: &Document, iso: Option<NodeId>, skip_templates: bool) -> Vec<NodeId> {
+    let ids = selectable(d, iso);
+    if !skip_templates {
+        return ids;
+    }
+    ids.into_iter().filter(|id| !d.has_template_ancestor(*id)).collect()
+}
+
 /// Visit, in paint order, the objects Select All takes ([`selectable`]) and the objects inside
 /// them, leaving out every hidden or locked object with what it holds. `f` returns whether to
 /// visit the objects inside the one it is given.
-pub(crate) fn walk_selectable(d: &Document, iso: Option<NodeId>, mut f: impl FnMut(&Node) -> bool) {
+pub(crate) fn walk_selectable(d: &Document, iso: Option<NodeId>, skip_templates: bool, mut f: impl FnMut(&Node) -> bool) {
     fn inside(n: &Node, f: &mut impl FnMut(&Node) -> bool) {
         if n.visible && !n.locked && f(n) {
             for c in n.children().into_iter().flatten() {
@@ -232,7 +274,7 @@ pub(crate) fn walk_selectable(d: &Document, iso: Option<NodeId>, mut f: impl FnM
             find(c, tops, f);
         }
     }
-    let tops: BTreeSet<NodeId> = selectable(d, iso).into_iter().collect();
+    let tops: BTreeSet<NodeId> = selectable_in_view(d, iso, skip_templates).into_iter().collect();
     for l in &d.layers {
         find(l, &tops, &mut f);
     }
@@ -241,14 +283,14 @@ pub(crate) fn walk_selectable(d: &Document, iso: Option<NodeId>, mut f: impl FnM
 /// The objects [`walk_selectable`] visits.
 pub(crate) fn selectable_ids(d: &Document, iso: Option<NodeId>) -> BTreeSet<NodeId> {
     let mut ids = BTreeSet::new();
-    walk_selectable(d, iso, |n| {
+    walk_selectable(d, iso, false, |n| {
         ids.insert(n.id);
         true
     });
     ids
 }
 
-fn all(s: &mut Session, _: &Value) -> Result<Value> {
+fn all(s: &mut Session, p: &Value) -> Result<Value> {
     // While the Type tool edits text, Select All takes all of that text and leaves the art
     // selection as it is (Illustrator: text cursor in a text object).
     if s.tool_wants_text() {
@@ -262,7 +304,7 @@ fn all(s: &mut Session, _: &Value) -> Result<Value> {
         return Ok(json!({ "editing": editing, "start": 0, "end": end.unwrap_or(0) }));
     }
     let st = s.doc()?;
-    let ids = selectable(&st.doc, st.isolation);
+    let ids = selectable_in_view(&st.doc, st.isolation, bool_or(p, "skipTemplates", false));
     s.select(|_, sel| sel.set(ids.iter().copied()))?;
     Ok(json!({ "count": s.doc()?.selection.len() }))
 }
@@ -273,7 +315,7 @@ fn all_on_artboard(s: &mut Session, p: &Value) -> Result<Value> {
     let r = st.doc.artboards.get(i).map(|a| a.rect).ok_or_else(|| bad("select.allOnArtboard", "no such artboard"))?;
     // Symbol instances are measured by their art.
     let symbols = st.doc.symbol_boxes();
-    let ids: Vec<NodeId> = selectable(&st.doc, st.isolation)
+    let ids: Vec<NodeId> = selectable_in_view(&st.doc, st.isolation, bool_or(p, "skipTemplates", false))
         .into_iter()
         .filter(|id| {
             st.doc
@@ -308,9 +350,10 @@ fn reselect(s: &mut Session, _: &Value) -> Result<Value> {
     r
 }
 
-fn inverse(s: &mut Session, _: &Value) -> Result<Value> {
+fn inverse(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
-    let ids: Vec<NodeId> = selectable(&st.doc, st.isolation).into_iter().filter(|id| !st.selection.contains(*id)).collect();
+    let ids: Vec<NodeId> =
+        selectable_in_view(&st.doc, st.isolation, bool_or(p, "skipTemplates", false)).into_iter().filter(|id| !st.selection.contains(*id)).collect();
     s.select(|_, sel| sel.set(ids.iter().copied()))?;
     ok()
 }
@@ -683,10 +726,10 @@ fn same_reference<'a>(st: &'a DocState, cmd: &str) -> Result<(&'a Node, bool)> {
 /// Select > Same: the objects `eq` matches with the object [`same_reference`] returns, among those
 /// [`paint_reported`] accepts. A compound path matches as a whole. In isolation mode inside a
 /// compound path, its member paths are matched instead.
-fn same(s: &mut Session, cmd: &str, eq: impl Fn(&Node, &Node) -> bool) -> Result<Value> {
+fn same(s: &mut Session, cmd: &str, p: &Value, eq: impl Fn(&Node, &Node) -> bool) -> Result<Value> {
     let (refn, members) = same_reference(s.doc()?, cmd)?;
     let refn = refn.clone();
-    select_where(s, cmd, &json!({}), |d, n| (if members { !n.is_container() } else { paint_reported(d, n) }) && eq(n, &refn))
+    select_where(s, cmd, p, |d, n| (if members { !n.is_container() } else { paint_reported(d, n) }) && eq(n, &refn))
 }
 
 /// Select the objects [`walk_selectable`] visits that `f` accepts (not looking inside accepted
@@ -694,7 +737,7 @@ fn same(s: &mut Session, cmd: &str, eq: impl Fn(&Node, &Node) -> bool) -> Result
 pub(crate) fn select_where(s: &mut Session, cmd: &str, p: &Value, f: impl Fn(&Document, &Node) -> bool) -> Result<Value> {
     let st = s.doc()?;
     let mut ids = vec![];
-    walk_selectable(&st.doc, st.isolation, |n| {
+    walk_selectable(&st.doc, st.isolation, bool_or(p, "skipTemplates", false), |n| {
         if f(&st.doc, n) {
             ids.push(n.id);
             return false;
@@ -709,12 +752,12 @@ pub(crate) fn select_where(s: &mut Session, cmd: &str, p: &Value, f: impl Fn(&Do
     Ok(json!({ "count": st.selection.objects.len() }))
 }
 
-fn same_graphic_style(s: &mut Session, _: &Value) -> Result<Value> {
+fn same_graphic_style(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "select.same.graphicStyle";
     let st = s.doc()?;
     let (refn, _) = same_reference(st, cmd)?;
     let id = super::style::linked_style(&st.doc, refn).map(|g| g.id).ok_or_else(|| bad(cmd, "the selection has no graphic style"))?;
-    select_where(s, cmd, &json!({}), |d, n| n.extras().graphic_style == Some(id) && super::style::linked_style(d, n).is_some())
+    select_where(s, cmd, p, |d, n| n.extras().graphic_style == Some(id) && super::style::linked_style(d, n).is_some())
 }
 
 /// An appearance attribute Select > Same > Appearance Attribute matches.
@@ -742,7 +785,7 @@ fn same_attribute(s: &mut Session, p: &Value) -> Result<Value> {
     })
 }
 
-fn same_layers(s: &mut Session, _: &Value) -> Result<Value> {
+fn same_layers(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
     // The layers or sublayers the selected objects are on (art in their sublayers too).
     let layers: BTreeSet<NodeId> = st.selection.objects.iter().filter_map(|id| st.doc.layer_containing(*id)).collect();
@@ -753,15 +796,16 @@ fn same_layers(s: &mut Session, _: &Value) -> Result<Value> {
         });
     }
     // The objects Select All takes there (in isolation mode, those in the isolated group or layer).
-    let ids: Vec<NodeId> = selectable(&st.doc, st.isolation).into_iter().filter(|id| on.contains(id)).collect();
+    let ids: Vec<NodeId> =
+        selectable_in_view(&st.doc, st.isolation, bool_or(p, "skipTemplates", false)).into_iter().filter(|id| on.contains(id)).collect();
     s.select(|_, sel| sel.set(ids.iter().copied()))?;
     ok()
 }
 
-fn by_kind(s: &mut Session, f: fn(&Node) -> bool) -> Result<Value> {
+fn by_kind(s: &mut Session, p: &Value, f: fn(&Node) -> bool) -> Result<Value> {
     let st = s.doc()?;
     let mut ids = vec![];
-    walk_selectable(&st.doc, st.isolation, |n| {
+    walk_selectable(&st.doc, st.isolation, bool_or(p, "skipTemplates", false), |n| {
         if f(n) {
             ids.push(n.id);
         }

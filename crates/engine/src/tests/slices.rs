@@ -71,6 +71,24 @@ fn an_object_slice_follows_its_object_and_releases_back_to_it() {
 }
 
 #[test]
+fn select_object_slices_skips_template_art_when_requested() {
+    let mut s = session();
+    let user = user_slice(&mut s, [0.0, 0.0, 10.0, 10.0]);
+    let ordinary = rect(&mut s, 20.0, 20.0, 20.0, 20.0);
+    run(&mut s, "object.slice.make", json!({}));
+    let layer = run(&mut s, "layer.new", json!({"top": true}))["id"].as_u64().unwrap();
+    let template = rect(&mut s, 100.0, 20.0, 20.0, 20.0);
+    run(&mut s, "object.slice.make", json!({}));
+    run(&mut s, "layer.setProps", json!({"ids": [layer], "template": true, "locked": false}));
+
+    run(&mut s, "select.object.slices", json!({"skipTemplates": true}));
+    assert_eq!(s.doc().unwrap().selection.slices, [NodeId(user), NodeId(ordinary)]);
+    run(&mut s, "select.object.slices", json!({}));
+    assert_eq!(s.doc().unwrap().selection.slices.len(), 3);
+    assert!(s.doc().unwrap().selection.slices.contains(&NodeId(template)));
+}
+
+#[test]
 fn releasing_a_user_slice_leaves_an_unpainted_rectangle() {
     let mut s = session();
     let id = user_slice(&mut s, [10.0, 20.0, 30.0, 40.0]);

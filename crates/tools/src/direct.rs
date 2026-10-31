@@ -312,21 +312,31 @@ pub(crate) fn in_scope(doc: &vectorcraft_doc::Document, scope: Option<NodeId>, i
 /// Visit the nodes Direct Selection may pick. In isolation mode that is the isolated object and
 /// its contents; art around it is locked and the walk does not reach it. A Shaper Group's original
 /// shapes, its first child, are left out unless they are the isolated object (Construction mode),
-/// as clicks leave them out.
-fn walk_pickable<'a>(doc: &'a vectorcraft_doc::Document, scope: Option<NodeId>, mut f: impl FnMut(&'a Node)) {
-    fn walk<'a>(n: &'a Node, f: &mut impl FnMut(&'a Node)) {
+/// as clicks leave them out. Template layers are left out while the view hides them.
+fn walk_pickable<'a>(cx: &ToolContext<'a>, mut f: impl FnMut(&'a Node)) {
+    fn walk<'a>(n: &'a Node, skip_templates: bool, f: &mut impl FnMut(&'a Node)) {
+        if skip_templates && matches!(n.kind, NodeKind::Layer { template: true, .. }) {
+            return;
+        }
         f(n);
         for c in n.children().into_iter().flatten().skip(usize::from(n.extras().shaper.is_some())) {
-            walk(c, f);
+            walk(c, skip_templates, f);
         }
     }
-    if let Some(id) = scope
-        && let Some(n) = doc.node(id)
+    if let Some(id) = cx.isolation
+        && let Some(n) = cx.doc.node(id)
     {
-        walk(n, &mut f);
-    } else if scope.is_none() {
-        for l in &doc.layers {
-            walk(l, &mut f);
+        if !cx.templates
+            && cx.doc.ancestry(id).is_some_and(|chain| {
+                chain.iter().any(|id| cx.doc.node(*id).is_some_and(|n| matches!(n.kind, NodeKind::Layer { template: true, .. })))
+            })
+        {
+            return;
+        }
+        walk(n, !cx.templates, &mut f);
+    } else if cx.isolation.is_none() {
+        for l in &cx.doc.layers {
+            walk(l, !cx.templates, &mut f);
         }
     }
 }
@@ -334,7 +344,7 @@ fn walk_pickable<'a>(doc: &'a vectorcraft_doc::Document, scope: Option<NodeId>, 
 /// The spines of the editable blends, topmost first: (blend, spine).
 pub(crate) fn spines(cx: &ToolContext) -> Vec<(NodeId, PathData)> {
     let mut v = vec![];
-    walk_pickable(cx.doc, cx.isolation, |n| {
+    walk_pickable(cx, |n| {
         if let NodeKind::Blend { children, spec } = &n.kind
             && let Some((path, _)) = vectorcraft_doc::live::blend_spine(children, spec)
         {
@@ -395,7 +405,7 @@ fn editable_path(n: &Node) -> Option<Cow<'_, PathData>> {
 /// The editable objects `f` accepts, topmost first.
 fn anchor_owners(cx: &ToolContext, f: fn(&Node) -> bool) -> Vec<NodeId> {
     let mut v = vec![];
-    walk_pickable(cx.doc, cx.isolation, |n| {
+    walk_pickable(cx, |n| {
         if f(n) {
             v.push(n.id)
         }
@@ -1356,7 +1366,7 @@ impl DirectSelectionTool {
         // With Group Selection's enclosed marquee, the tool selects the objects inside it
         // (members of groups too), each whole, as a click selects one.
         if enclosed {
-            let mut touched = vectorcraft_doc::hit::marquee(cx.doc, r, cx.isolation, true);
+            let mut touched = vectorcraft_doc::hit::marquee_with_templates(cx.doc, r, cx.isolation, true, !cx.templates);
             let editable = cx.doc.editable();
             touched.retain(|id| editable(*id));
             let ids: Vec<Value> = crate::select::inside(cx, r, touched).into_iter().map(|id| json!(id.0)).collect();
@@ -1365,7 +1375,7 @@ impl DirectSelectionTool {
         }
         // Anchors inside the rect, on editable paths inside isolation mode.
         let mut sel: Vec<(NodeId, Vec<AnchorRef>)> = vec![];
-        walk_pickable(cx.doc, cx.isolation, |n| {
+        walk_pickable(cx, |n| {
             if let NodeKind::Path { path, .. } = &n.kind {
                 let v: Vec<AnchorRef> = path.anchors().filter(|(_, _, a)| r.contains(a.p)).map(|(s, i, _)| (s, i)).collect();
                 if !v.is_empty() {
@@ -1378,7 +1388,7 @@ impl DirectSelectionTool {
         // (with Shift, toggled), and the type with them, whole.
         let mut framed: Vec<(NodeId, BTreeSet<AnchorRef>)> = vec![];
         if !self.group {
-            walk_pickable(cx.doc, cx.isolation, |n| {
+            walk_pickable(cx, |n| {
                 if is_area_type(n)
                     && let Some(frame) = editable_path(n)
                 {
@@ -1396,7 +1406,7 @@ impl DirectSelectionTool {
         let mut meshed: Vec<NodeId> = vec![];
         if !self.group {
             let mut inside: Vec<(NodeId, usize)> = vec![];
-            walk_pickable(cx.doc, cx.isolation, |n| {
+            walk_pickable(cx, |n| {
                 if editable(n.id)
                     && let Some(grid) = grid_of(n)
                 {
@@ -1427,7 +1437,7 @@ impl DirectSelectionTool {
         }
         // Objects without anchors to pick (type, images, symbols…) are selected whole when
         // the marquee touches them, as with the Selection tool (#927).
-        for id in vectorcraft_doc::hit::marquee(cx.doc, r, cx.isolation, true) {
+        for id in vectorcraft_doc::hit::marquee_with_templates(cx.doc, r, cx.isolation, true, !cx.templates) {
             let whole = cx.doc.node(id).is_some_and(|n| !matches!(n.kind, NodeKind::Path { .. } | NodeKind::Compound { .. }));
             if whole && !sel.iter().any(|(s, _)| *s == id) && !framed.iter().any(|(f, _)| *f == id) && !meshed.contains(&id) {
                 sel.push((id, vec![]));
@@ -1438,7 +1448,7 @@ impl DirectSelectionTool {
         // selected, as a click on it selects it (#4654).
         let mut crossed: Vec<(NodeId, Vec<AnchorRef>)> = vec![];
         if !self.group {
-            walk_pickable(cx.doc, cx.isolation, |n| {
+            walk_pickable(cx, |n| {
                 if let NodeKind::Path { path, .. } = &n.kind
                     && editable(n.id)
                 {

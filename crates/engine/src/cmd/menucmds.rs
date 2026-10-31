@@ -330,7 +330,7 @@ fn unselected(d: &vectorcraft_doc::Document, iso: Option<NodeId>, selection: &[N
     roots.extend(selection.iter().filter_map(|id| d.node(*id)).filter(|n| n.is_layer()).flat_map(|l| l.layer_art(true)));
     let mut kept: Vec<NodeId> = roots.iter().copied().collect();
     if guides_locked {
-        super::select::walk_selectable(d, iso, |n| {
+        super::select::walk_selectable(d, iso, false, |n| {
             if matches!(n.kind, NodeKind::Path { guide: true, .. }) {
                 kept.push(n.id);
             }
@@ -339,7 +339,7 @@ fn unselected(d: &vectorcraft_doc::Document, iso: Option<NodeId>, selection: &[N
     }
     let holds: HashSet<NodeId> = d.index_paths(kept).values().filter_map(|p| d.ancestry_at(p)).flatten().collect();
     let mut out = vec![];
-    super::select::walk_selectable(d, iso, |n| {
+    super::select::walk_selectable(d, iso, false, |n| {
         if !holds.contains(&n.id) {
             out.push(n.id);
             return false;
