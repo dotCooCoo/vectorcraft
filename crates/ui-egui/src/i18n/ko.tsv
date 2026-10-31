@@ -1222,6 +1222,13 @@ font-technology	Variable	가변
 	Create Path	패스 만들기
 	Create Slice	슬라이스 만들기
 	Create Sub-folders	하위 폴더 만들기
+	Clear Selection	선택 지우기
+	Export PDFs As:	PDF 내보내기 방식:
+	Single File	단일 파일
+	Multiple Files	여러 파일
+	Format Presets	형식 사전 설정
+	Grid View	격자 보기
+	Selected: {n}, Total number of files to export: {m}	선택됨: {n}, 내보낼 총 파일 수: {m}
 	Create Text	텍스트 만들기
 	Created	만든 날짜
 	Created:	만든 날짜:
@@ -1288,7 +1295,6 @@ font-technology	Variable	가변
 	Delete Workspace	작업 영역 삭제
 	Delete the graphic style “{name}”?	그래픽 스타일 “{name}”을(를) 삭제하시겠습니까?
 	Delete theme	테마 삭제
-	Delete these {count} swatches and groups?	견본과 그룹 {count}개를 삭제하시겠습니까?
 	Delete this saved preset	저장된 이 프리셋 삭제
 	Delete {kind} Style	{kind} 스타일 삭제
 	Delete “{name}”?	“{name}”을(를) 삭제하시겠습니까?
@@ -3354,7 +3360,7 @@ gradient-kind	Radial	방사형
 	Client-side (.html)	클라이언트 측 (.html)
 	Cmd	Cmd
 	Collect Links in a Separate Folder	링크를 별도 폴더에 모으기
-	Color (, or <)	색상 (, 또는 <)
+	Color (, or Shift+,)	색상 (, 또는 Shift+,)
 	Color Group	색상 그룹
 	Color Library	색상 라이브러리
 	Color Management	색상 관리
@@ -3449,7 +3455,7 @@ file-filter	Templates	템플릿
 	General › Placement › X	일반 › 배치 › X
 	General › Thumbnails	일반 › 축소판
 	Global Process Color, CMYK	글로벌 프로세스 색상, CMYK
-	Gradient (. or >)	그레이디언트 (. 또는 >)
+	Gradient (. or Shift+.)	그레이디언트 (. 또는 Shift+.)
 	Graph Data	그래프 데이터
 	Graph Type	그래프 유형
 	Graph Design	그래프 디자인
@@ -3698,6 +3704,7 @@ file-filter	Templates	템플릿
 imageTrace	Outline	윤곽선
 @plural	Color Table ({n} color)|Color Table ({n} colors)	색상 표 ({n}색)|색상 표 ({n}색)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	그래픽 스타일 {n}개를 삭제하시겠습니까?|그래픽 스타일 {n}개를 삭제하시겠습니까?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	견본과 그룹 {n}개를 삭제하시겠습니까?
 @plural	{n} Layer|{n} Layers	레이어 {n}개|레이어 {n}개
 @plural	{n} Object|{n} Objects	개체 {n}개|개체 {n}개
 @plural	{n} area highlighted|{n} areas highlighted	강조된 영역 {n}개|강조된 영역 {n}개
@@ -4353,6 +4360,7 @@ theme	Appearance	외관
 @msg	nothing to export: the document has no visible art (or turn on Use Artboards)	내보낼 항목이 없습니다: 문서에 보이는 아트웍이 없습니다(또는 아트보드 사용을 켜세요)
 @msg	add a format to export	내보낼 형식을 추가하세요
 @msg	check an asset to export	내보낼 자산을 체크하세요
+@msg	check an artboard to export	내보낼 대지를 체크하세요
 @msg	check a layer to export	내보낼 레이어를 선택하십시오
 @msg	select the art to export first	먼저 내보낼 아트를 선택하십시오
 @msg	`{tool}` isn't a freehand tool	`{tool}`은(는) 프리핸드 도구가 아닙니다
@@ -4472,6 +4480,7 @@ theme	Appearance	외관
 @msg	no such perspective grid preset	해당 원근 격자 프리셋이 없습니다
 @msg	no such recent file	해당 최근 파일이 없습니다
 @msg	no such recent font	해당 최근 글꼴이 없습니다
+@msg	some text is hidden or locked, so its font wasn't replaced	일부 텍스트가 숨겨져 있거나 잠겨 있어 해당 글꼴을 바꾸지 않았습니다
 @msg	no such saved selection	해당 저장된 선택 영역이 없습니다
 @msg	no such user library	해당 사용자 라이브러리가 없습니다
 @msg	no such view	해당 보기가 없습니다
@@ -5491,6 +5500,7 @@ anchor	Points:	포인트:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	텍스트 나누기
 	Combine Point Text	포인트 문자 결합
+	Join Point Text	포인트 문자 연결
 	Remove Breaks	나누기 제거
 	Split Text at Cursor	커서 위치에서 텍스트 나누기
 	Set Alignment, Keep Position	위치를 유지하며 정렬 설정
@@ -5519,6 +5529,7 @@ breakText	Glyphs	글리프
 @msg	Select horizontal point or area type whose text fits	텍스트가 모두 들어가는 가로 포인트 문자 또는 영역 문자를 선택하십시오
 @msg	Nothing to split at the cursor	커서 위치에서 나눌 내용이 없습니다
 @msg	Select two or more one-line point type objects on one baseline to combine	결합하려면 같은 기준선에 있는 한 줄짜리 포인트 문자 오브젝트를 두 개 이상 선택하십시오
+@msg	Select two or more one-line point type objects to join	연결하려면 한 줄짜리 포인트 문자 오브젝트를 두 개 이상 선택하십시오
 @msg	No line breaks to remove	제거할 강제 줄 바꿈이 없습니다
 @msg	No paragraph breaks to remove	제거할 단락 나누기가 없습니다
 @msg	Too many breaks to remove at once	한 번에 제거할 나누기가 너무 많습니다
@@ -5572,3 +5583,15 @@ breakText	Glyphs	글리프
 	Gap 4	간격 4
 	Dash 5	대시 5
 	Gap 5	간격 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	배치 도구
+	Arrange in Grid…	격자로 배치…
+	Arrange in Grid	격자로 배치
+	Swap Objects	개체 맞바꾸기
+	Swap Objects and Sizes	개체와 크기 맞바꾸기
+	Replace with Top Object…	맨 위 개체로 바꾸기…
+	Replace with Top Object	맨 위 개체로 바꾸기
+	Set Size of Each…	각각 크기 설정…
+	Set Size of Each	각각 크기 설정
+@msg	select exactly two objects	개체를 정확히 두 개 선택하세요
+@msg	give `width` or `height`	`width` 또는 `height`를 지정하세요

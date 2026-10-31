@@ -38,6 +38,74 @@ fn paths(s: &Session) -> Vec<(NodeId, PathData)> {
     v
 }
 
+#[test]
+fn blob_tip_angle_changes_horizontal_extent_and_stays_page_oriented() {
+    let bounds = |points: serde_json::Value, angle: i32, roundness: i32| {
+        let mut s = session();
+        s.execute("path.blob", &json!({"points": points, "size": 40, "angle": angle, "roundness": roundness, "merge": false})).unwrap();
+        paths(&s)[0].1.control_bounds().unwrap()
+    };
+    let flat = bounds(json!([[100, 200], [300, 200]]), 0, 25);
+    let tilted = bounds(json!([[100, 200], [300, 200]]), 45, 25);
+    assert!(flat.height() < 15.0, "flat tip height: {}", flat.height());
+    assert!(tilted.height() > 25.0, "tilted tip height: {}", tilted.height());
+    let vertical = bounds(json!([[200, 100], [200, 300]]), 45, 25);
+    assert!((vertical.width() - tilted.height()).abs() < 2.0);
+    let round = bounds(json!([[100, 200], [300, 200]]), 45, 100);
+    assert!((round.height() - 40.0).abs() < 2.0);
+}
+
+#[test]
+fn blob_pressure_peak_stays_at_the_sample_with_a_flat_tip() {
+    use kurbo::ParamCurveNearest;
+    use vectorcraft_geom::Point;
+
+    let mut s = session();
+    s.execute(
+        "path.blob",
+        &json!({"points": [[100, 100, 0.0], [200, 100, 1.0], [200, 200, 0.0]],
+            "size": 10, "sizeMode": "pressure", "sizeVariation": 8,
+            "roundness": 25, "merge": false}),
+    )
+    .unwrap();
+    let outline = &paths(&s)[0].1;
+    let near_peak = Point::new(200.0, 110.0);
+    let past_peak = Point::new(200.0, 140.0);
+    let distance = |p: Point| outline.to_bezpath().segments().map(|seg| seg.nearest(p, 0.01).distance_sq.sqrt()).fold(f64::INFINITY, f64::min);
+    assert!(distance(near_peak) > distance(past_peak), "pressure must narrow after the corner sample");
+}
+
+#[test]
+fn blob_tip_zero_and_invalid_values_are_safe() {
+    let mut s = session();
+    s.execute("path.blob", &json!({"points": [[100, 100], [300, 100]], "size": 40, "roundness": 0})).unwrap();
+    let b = paths(&s)[0].1.control_bounds().unwrap();
+    assert!(b.height().is_finite() && b.height() > 0.0);
+    for (key, value) in [("angle", json!("NaN")), ("roundness", json!("oops"))] {
+        let mut p = json!({"points": [[100, 100], [300, 100]]});
+        p[key] = value;
+        assert!(s.execute("path.blob", &p).is_err(), "{key}: {p}");
+    }
+    s.execute("path.blob", &json!({"points": [[100, 200], [300, 200]], "angle": 1e300, "roundness": -1e300, "merge": false})).unwrap();
+    assert!(paths(&s)[1].1.control_bounds().unwrap().height().is_finite());
+}
+
+#[test]
+fn blob_pressure_size_works_with_flat_tip() {
+    let mut s = session();
+    s.execute(
+        "path.blob",
+        &json!({"points": [[100, 100, 0], [200, 100, 1]], "size": 40, "sizeMode": "pressure", "sizeVariation": 15, "roundness": 25, "merge": false}),
+    )
+    .unwrap();
+    let variable = paths(&s)[0].1.control_bounds().unwrap();
+    let mut fixed = session();
+    fixed.execute("path.blob", &json!({"points": [[100, 100], [200, 100]], "size": 40, "roundness": 25, "merge": false})).unwrap();
+    let baseline = paths(&fixed)[0].1.control_bounds().unwrap();
+    assert!(variable.height() > baseline.height(), "{} <= {}", variable.height(), baseline.height());
+    assert!(variable.height() < 20.0, "flat tip height: {}", variable.height());
+}
+
 fn path(s: &Session, id: NodeId) -> PathData {
     s.doc().unwrap().doc.node(id).unwrap().path_data().unwrap().clone()
 }

@@ -42,7 +42,7 @@ const ROWS: &[Row] = &[
     (&["blobBrush", "eraser"], None, &["size", "sizeMode", "sizeVariation"]),
     (&["blobBrush"], None, &["fidelity", "keepSelected", "mergeOnlySelection"]),
     // Eraser Tool Options' tip shape.
-    (&["eraser"], None, &["angle", "roundness"]),
+    (&["blobBrush", "eraser"], None, &["angle", "roundness"]),
     // Live Paint Selection Tool Options (`builder::LivePaintSelectionTool`).
     (&["livePaintSelection"], None, &["selectFills", "selectStrokes", "color", "width"]),
     (&["polygon"], None, &["sides"]),

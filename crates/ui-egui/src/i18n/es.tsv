@@ -509,7 +509,7 @@ font-technology	Variable	Variables
 	Collect in New Layer	Reunir en capa nueva
 	Collect Links in a Separate Folder	Reunir vínculos en una carpeta aparte
 	Color	Color
-	Color (, or <)	Color (, o <)
+	Color (, or Shift+,)	Color (, o Shift+,)
 	Color Adjustments	Ajustes de color
 	Color bars	Barras de color
 	Color blindness – Deuteranopia-type	Daltonismo – tipo deuteranopía
@@ -663,6 +663,13 @@ font-technology	Variable	Variables
 	Create Report	Crear informe
 	Create Slice	Crear sector
 	Create Sub-folders	Crear subcarpetas
+	Clear Selection	Borrar selección
+	Export PDFs As:	Exportar PDF como:
+	Single File	Un solo archivo
+	Multiple Files	Varios archivos
+	Format Presets	Preajustes de formato
+	Grid View	Vista de cuadrícula
+	Selected: {n}, Total number of files to export: {m}	Seleccionados: {n}, número total de archivos para exportar: {m}
 	Create Text	Crear texto
 	Create Trim Marks	Crear marcas de recorte
 	Created	Creado
@@ -747,7 +754,6 @@ font-technology	Variable	Variables
 	Delete the graphic style “{name}”?	¿Eliminar el estilo gráfico “{name}”?
 	Delete Theme	Eliminar tema
 	Delete theme	Eliminar tema
-	Delete these {count} swatches and groups?	¿Eliminar estas {count} muestras y grupos?
 	Delete these {n} graphic styles?	¿Eliminar estos {n} estilos gráficos?
 	Delete this saved preset	Eliminar este preajuste guardado
 	Delete this {n} graphic style?	¿Eliminar {n} estilo gráfico?
@@ -1273,7 +1279,7 @@ font-technology	Variable	Variables
 	GPL palettes keep solid colours only, as RGB.	Las paletas GPL solo conservan colores sólidos, en RGB.
 	GPU Performance	Rendimiento de GPU
 	Gradient	Degradado
-	Gradient (. or >)	Degradado (. o >)
+	Gradient (. or Shift+.)	Degradado (. o Shift+.)
 	Gradient across stroke	Degradado a lo ancho del trazo
 	Gradient along stroke	Degradado a lo largo del trazo
 	Gradient and Mesh Resolution:	Resolución de degradados y mallas:
@@ -3690,6 +3696,7 @@ imageTrace	Outline	Contorno
 @plural	{n} item|{n} items	{n} elemento|{n} elementos
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Tabla de colores ({n} color)|Tabla de colores ({n} colores)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	¿Eliminar {n} estilo gráfico?|¿Eliminar estos {n} estilos gráficos?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	¿Eliminar {n} muestra o grupo?|¿Eliminar estas {n} muestras y grupos?
 @plural	{n} Layer|{n} Layers	{n} capa|{n} capas
 @plural	{n} Object|{n} Objects	{n} objeto|{n} objetos
 @plural	{n} area highlighted|{n} areas highlighted	{n} área resaltada|{n} áreas resaltadas
@@ -4068,6 +4075,7 @@ axis	Both	Ambos
 @msg	cannot split an open path at its end point	no se puede dividir un trazado abierto en su punto final
 @msg	closing needs three anchors	cerrar necesita tres puntos de ancla
 @msg	check an asset to export	marca un recurso para exportar
+@msg	check an artboard to export	marca una mesa de trabajo para exportar
 @msg	check a layer to export	marque una capa para exportar
 @msg	select the art to export first	seleccione primero la ilustración que desea exportar
 @msg	choice must be "merge" or "add", not `{choice}`	choice debe ser "merge" o "add", no `{choice}`
@@ -4210,6 +4218,7 @@ axis	Both	Ambos
 @msg	no such perspective grid preset	no existe ese preajuste de cuadrícula de perspectiva
 @msg	no such recent file	no existe ese archivo reciente
 @msg	no such recent font	no existe esa fuente reciente
+@msg	some text is hidden or locked, so its font wasn't replaced	parte del texto está oculto o bloqueado, así que su fuente no se ha reemplazado
 @msg	no such saved selection	no existe esa selección guardada
 @msg	no such segment	no existe ese segmento
 @msg	no such spine point	no existe ese punto del eje
@@ -5852,6 +5861,7 @@ anchor	Points:	Puntos:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Dividir texto
 	Combine Point Text	Combinar texto de punto
+	Join Point Text	Unir texto de punto
 	Remove Breaks	Quitar saltos
 	Split Text at Cursor	Dividir texto en el cursor
 	Set Alignment, Keep Position	Definir alineación manteniendo la posición
@@ -5880,6 +5890,7 @@ breakText	Glyphs	Glifos
 @msg	Select horizontal point or area type whose text fits	Seleccione texto de punto o de área horizontal cuyo texto quepa
 @msg	Nothing to split at the cursor	No hay nada que dividir en el cursor
 @msg	Select two or more one-line point type objects on one baseline to combine	Seleccione dos o más objetos de texto de punto de una línea sobre la misma línea base para combinarlos
+@msg	Select two or more one-line point type objects to join	Seleccione dos o más objetos de texto de punto de una línea para unirlos
 @msg	No line breaks to remove	No hay saltos de línea que quitar
 @msg	No paragraph breaks to remove	No hay saltos de párrafo que quitar
 @msg	Too many breaks to remove at once	Demasiados saltos para quitarlos a la vez
@@ -5932,3 +5943,15 @@ breakText	Glyphs	Glifos
 	Gap 4	Hueco 4
 	Dash 5	Guion 5
 	Gap 5	Hueco 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Herramientas de organización
+	Arrange in Grid…	Organizar en cuadrícula…
+	Arrange in Grid	Organizar en cuadrícula
+	Swap Objects	Intercambiar objetos
+	Swap Objects and Sizes	Intercambiar objetos y tamaños
+	Replace with Top Object…	Reemplazar por el objeto superior…
+	Replace with Top Object	Reemplazar por el objeto superior
+	Set Size of Each…	Definir el tamaño de cada uno…
+	Set Size of Each	Definir el tamaño de cada uno
+@msg	select exactly two objects	selecciona exactamente dos objetos
+@msg	give `width` or `height`	indica `width` o `height`

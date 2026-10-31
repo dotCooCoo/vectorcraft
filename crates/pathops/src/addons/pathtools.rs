@@ -185,7 +185,7 @@ pub fn add_anchors(sp: &SubPath, which: SegmentKind, spacing: AnchorSpacing, cap
         };
         let c = sp.segment(seg);
         let len = c.arclen(ACCURACY);
-        if !picked || !(len > TINY && len.is_finite()) {
+        if !(picked && len > TINY && len.is_finite()) {
             continue;
         }
         let (count, step) = match spacing {

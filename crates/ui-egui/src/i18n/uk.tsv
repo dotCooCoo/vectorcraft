@@ -503,7 +503,7 @@ font-technology	Variable	Варіативні
 	Collect in New Layer	Зібрати у новий шар
 	Collect Links in a Separate Folder	Зібрати зв’язки в окрему папку
 	Color	Колір
-	Color (, or <)	Колір (, або <)
+	Color (, or Shift+,)	Колір (, або Shift+,)
 	Color Adjustments	Налаштування кольору
 	Color bars	Кольорові смуги
 	Color blindness – Deuteranopia-type	Дальтонізм - дейтеранопія
@@ -657,6 +657,13 @@ font-technology	Variable	Варіативні
 	Create Report	Створити звіт
 	Create Slice	Створити фрагмент
 	Create Sub-folders	Створити вкладені папки
+	Clear Selection	Зняти виділення
+	Export PDFs As:	Експортувати PDF як:
+	Single File	Один файл
+	Multiple Files	Кілька файлів
+	Format Presets	Набори форматів
+	Grid View	Сітка
+	Selected: {n}, Total number of files to export: {m}	Вибрано: {n}, усього файлів для експорту: {m}
 	Create Text	Створити текст
 	Create Trim Marks	Створити мітки підрізування
 	Created	Створено
@@ -741,7 +748,6 @@ font-technology	Variable	Варіативні
 	Delete the graphic style “{name}”?	Видалити графічний стиль «{name}»?
 	Delete Theme	Видалити тему
 	Delete theme	Видалити тему
-	Delete these {count} swatches and groups?	Видалити ці зразки та групи ({count})?
 	Delete these {n} graphic styles?	Видалити ці графічні стилі ({n})?
 	Delete this saved preset	Видалити цей збережений набір
 	Delete this {n} graphic style?	Видалити цей графічний стиль ({n})?
@@ -1277,7 +1283,7 @@ file-filter	Templates	Шаблони
 	GPL palettes keep solid colours only, as RGB.	Палітри GPL зберігають лише суцільні кольори RGB.
 	GPU Performance	Продуктивність GPU
 	Gradient	Градієнт
-	Gradient (. or >)	Градієнт (. або >)
+	Gradient (. or Shift+.)	Градієнт (. або Shift+.)
 	Gradient across stroke	Градієнт упоперек обведення
 	Gradient along stroke	Градієнт вздовж обведення
 	Gradient and Mesh Resolution:	Роздільна здатність градієнтів і сіток:
@@ -3719,6 +3725,7 @@ imageTrace	Outline	Контур
 @plural	{n} item|{n} items	{n} елемент|{n} елементи|{n} елементів
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Таблиця кольорів ({n} колір)|Таблиця кольорів ({n} кольори)|Таблиця кольорів ({n} кольорів)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Видалити цей графічний стиль ({n})?|Видалити ці графічні стилі ({n})?|Видалити ці графічні стилі ({n})?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Видалити зразки та групи ({n})?|Видалити {n} зразки та групи?|Видалити {n} зразків і груп?
 @plural	{n} Layer|{n} Layers	{n} шар|{n} шари|{n} шарів
 @plural	{n} Object|{n} Objects	{n} об’єкт|{n} об’єкти|{n} об’єктів
 @plural	{n} area highlighted|{n} areas highlighted	Підсвічено {n} область|Підсвічено {n} області|Підсвічено {n} областей
@@ -4092,6 +4099,7 @@ axis	Both	Обидві
 @msg	cannot split an open path at its end point	не можна розділити відкритий контур у його кінцевій точці
 @msg	closing needs three anchors	для замикання потрібні три опорні точки
 @msg	check an asset to export	позначте ресурс для експорту
+@msg	check an artboard to export	позначте монтажну область для експорту
 @msg	check a layer to export	позначте шар для експорту
 @msg	select the art to export first	спочатку виділіть об’єкти для експорту
 @msg	choice must be "merge" or "add", not `{choice}`	choice має бути "merge" або "add", а не `{choice}`
@@ -4234,6 +4242,7 @@ axis	Both	Обидві
 @msg	no such perspective grid preset	такого набору сітки перспективи немає
 @msg	no such recent file	такого останнього файлу немає
 @msg	no such recent font	такого останнього шрифту немає
+@msg	some text is hidden or locked, so its font wasn't replaced	частина тексту прихована або заблокована, тому її шрифт не замінено
 @msg	no such saved selection	такого збереженого виділення немає
 @msg	no such segment	такого сегменту немає
 @msg	no such spine point	такої точки осі немає
@@ -5508,6 +5517,7 @@ anchor	Points:	Точки:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Розбити текст
 	Combine Point Text	Об’єднати текст із точки
+	Join Point Text	З’єднати текст із точки
 	Remove Breaks	Видалити розриви
 	Split Text at Cursor	Розбити текст біля курсора
 	Set Alignment, Keep Position	Задати вирівнювання, зберігши положення
@@ -5536,6 +5546,7 @@ breakText	Glyphs	Гліфи
 @msg	Select horizontal point or area type whose text fits	Виділіть горизонтальний текст із точки або в області, текст якого вміщується
 @msg	Nothing to split at the cursor	Біля курсора нічого розбивати
 @msg	Select two or more one-line point type objects on one baseline to combine	Виділіть два або більше однорядкових об’єктів тексту з точки на одній базовій лінії, щоб об’єднати їх
+@msg	Select two or more one-line point type objects to join	Виділіть два або більше однорядкових об’єктів тексту з точки, щоб з’єднати їх
 @msg	No line breaks to remove	Немає розривів рядків для видалення
 @msg	No paragraph breaks to remove	Немає розривів абзаців для видалення
 @msg	Too many breaks to remove at once	Забагато розривів, щоб видалити їх за раз
@@ -5589,3 +5600,15 @@ breakText	Glyphs	Гліфи
 	Gap 4	Проміжок 4
 	Dash 5	Штрих 5
 	Gap 5	Проміжок 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Інструменти розміщення
+	Arrange in Grid…	Розмістити сіткою…
+	Arrange in Grid	Розмістити сіткою
+	Swap Objects	Поміняти об’єкти місцями
+	Swap Objects and Sizes	Поміняти об’єкти місцями та розмірами
+	Replace with Top Object…	Замінити верхнім об’єктом…
+	Replace with Top Object	Замінити верхнім об’єктом
+	Set Size of Each…	Задати розмір кожного…
+	Set Size of Each	Задати розмір кожного
+@msg	select exactly two objects	виділіть рівно два об’єкти
+@msg	give `width` or `height`	укажіть `width` або `height`

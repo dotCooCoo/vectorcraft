@@ -1127,12 +1127,12 @@ lighting	Light	Lys
 	 to set spacing and orientation	 for at angive afstand og orientering
 	Apply	Anvend
 	Change Screen Mode (F)	Skift skærmtilstand (F)
-	Color (, or <)	Farve (, eller <)
+	Color (, or Shift+,)	Farve (, eller Skift+,)
 	Draw Behind	Tegn bagved
 	Draw Inside	Tegn indeni
 	Draw Normal	Tegn normalt
 	Expand:	Udvid:
-	Gradient (. or >)	Gradient (. eller >)
+	Gradient (. or Shift+.)	Gradient (. eller Skift+.)
 	H:	H:
 	Modify	Ændr
 	Navigate	Navigér
@@ -1755,7 +1755,6 @@ lighting	Light	Lys
 	Weight:	Vægt:
 	Art using a deleted global swatch keeps its colour.	Grafik, der bruger en slettet global farveprøve, bevarer sin farve.
 	Color Group: {name}	Farvegruppe: {name}
-	Delete these {count} swatches and groups?	Slet disse {count} farveprøver og grupper?
 	Delete “{name}”?	Slet »{name}«?
 	Document Swatches	Dokumentfarveprøver
 	Edit or Apply Color Group	Redigér eller anvend farvegruppe
@@ -2062,6 +2061,13 @@ lighting	Light	Lys
 	Use Artboards	Brug tegnebrætter
 	Choose a folder	Vælg en mappe
 	Create Sub-folders	Opret undermapper
+	Clear Selection	Ryd markering
+	Export PDFs As:	Eksportér PDF'er som:
+	Single File	Én fil
+	Multiple Files	Flere filer
+	Format Presets	Formatforudindstillinger
+	Grid View	Gittervisning
+	Selected: {n}, Total number of files to export: {m}	Valgt: {n}, samlet antal filer, der eksporteres: {m}
 	Export Asset	Eksportér aktiv
 	Export to:	Eksportér til:
 	Format Settings	Formatindstillinger
@@ -3854,6 +3860,7 @@ imageTrace	Outline	Kontur
 @plural	{n} item|{n} items	{n} element|{n} elementer
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Farvetabel ({n} farve)|Farvetabel ({n} farver)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Vil du slette denne {n} grafikstil?|Vil du slette disse {n} grafikstile?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Slet denne {n} farveprøve eller gruppe?|Slet disse {n} farveprøver og grupper?
 @plural	{n} Layer|{n} Layers	{n} lag|{n} lag
 @plural	{n} Object|{n} Objects	{n} objekt|{n} objekter
 @plural	{n} area highlighted|{n} areas highlighted	{n} område fremhævet|{n} områder fremhævet
@@ -4067,6 +4074,7 @@ imageTrace	Outline	Kontur
 @msg	cannot split an open path at its end point	kan ikke opdele en åben kurve i dens endepunkt
 @msg	closing needs three anchors	lukning kræver tre ankerpunkter
 @msg	check an asset to export	afkryds et aktiv, der skal eksporteres
+@msg	check an artboard to export	afkryds en tegneflade, der skal eksporteres
 @msg	choice must be "merge" or "add", not `{choice}`	valget skal være "merge" eller "add", ikke `{choice}`
 @msg	choose a direction to divide in	vælg en retning at opdele i
 @msg	choose a folder to export to	vælg en mappe at eksportere til
@@ -4199,6 +4207,7 @@ imageTrace	Outline	Kontur
 @msg	no such perspective grid preset	ingen sådan perspektivgitterforudindstilling
 @msg	no such recent file	ingen sådan seneste fil
 @msg	no such recent font	ingen sådan seneste skrifttype
+@msg	some text is hidden or locked, so its font wasn't replaced	noget tekst er skjult eller låst, så dens skrifttype blev ikke erstattet
 @msg	no such saved selection	ingen sådan gemt markering
 @msg	no such segment	intet sådant segment
 @msg	no such subpath	ingen sådan delsti
@@ -5814,6 +5823,7 @@ anchor	Points:	Punkter:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Opdel tekst
 	Combine Point Text	Kombiner punkttekst
+	Join Point Text	Sammenføj punkttekst
 	Remove Breaks	Fjern skift
 	Split Text at Cursor	Opdel tekst ved markøren
 	Set Alignment, Keep Position	Angiv justering, bevar placering
@@ -5842,6 +5852,7 @@ breakText	Glyphs	Glyffer
 @msg	Select horizontal point or area type whose text fits	Vælg vandret punkt- eller områdetekst, hvis tekst kan være der
 @msg	Nothing to split at the cursor	Intet at opdele ved markøren
 @msg	Select two or more one-line point type objects on one baseline to combine	Vælg to eller flere punkttekstobjekter på én linje på samme grundlinje for at kombinere dem
+@msg	Select two or more one-line point type objects to join	Vælg to eller flere punkttekstobjekter på én linje for at sammenføje dem
 @msg	No line breaks to remove	Ingen linjeskift at fjerne
 @msg	No paragraph breaks to remove	Ingen afsnitsskift at fjerne
 @msg	Too many breaks to remove at once	For mange skift til at fjerne på én gang
@@ -5894,3 +5905,15 @@ breakText	Glyphs	Glyffer
 	Gap 4	Mellemrum 4
 	Dash 5	Streg 5
 	Gap 5	Mellemrum 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Arrangeringsværktøjer
+	Arrange in Grid…	Arrangér i gitter…
+	Arrange in Grid	Arrangér i gitter
+	Swap Objects	Byt objekter
+	Swap Objects and Sizes	Byt objekter og størrelser
+	Replace with Top Object…	Erstat med øverste objekt…
+	Replace with Top Object	Erstat med øverste objekt
+	Set Size of Each…	Angiv størrelse for hver…
+	Set Size of Each	Angiv størrelse for hver
+@msg	select exactly two objects	markér præcis to objekter
+@msg	give `width` or `height`	angiv `width` eller `height`

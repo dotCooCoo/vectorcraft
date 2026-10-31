@@ -50,6 +50,8 @@ mod system_fonts;
 mod tablet;
 mod window;
 mod window_frame;
+#[cfg(windows)]
+mod windows_cores;
 mod windows_stylus;
 mod xwayland;
 
@@ -184,6 +186,9 @@ fn main() -> std::process::ExitCode {
     // Before desktop services, so every start-up warning is recorded (`logging`).
     let logger = logging::install();
     vectorcraft_ui_egui::i18n::detect_system_lang_in_background();
+    // Before the first render: the cores the process may run on.
+    #[cfg(windows)]
+    windows_cores::install();
     // Before the first font scan (the app's start): the fonts font services load (#579).
     #[cfg(windows)]
     system_fonts::install();

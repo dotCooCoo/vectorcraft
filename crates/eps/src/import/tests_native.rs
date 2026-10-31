@@ -841,6 +841,46 @@ fn type_on_a_hidden_layer_comes_from_the_text_document() {
     assert!(!r.warnings.iter().any(|w| w.contains("couldn't be read")), "{:?}", r.warnings);
 }
 
+/// A run that sets no colour of its own takes its character style's (here `[Normal Character
+/// Style]`, black), not the text document's base attributes (here white, which hid the type).
+/// A style takes what it doesn't set from the style it is based on, and a run's own setting wins.
+#[test]
+fn type_from_the_text_document_takes_its_character_styles_attributes() {
+    let own_fill = "/53 << /99 /CAITextPaint /0 << /0 2 /1 [ 1.0 0.0 1.0 0.0 0.0 ] >> >> ";
+    let run = |style: u8| format!("/5 {style} /6 << /0 0 /1 14.0 >>");
+    let doc = text_document(&[
+        ("Normal\r", 0, (8200.0, 8180.0), (0.0, 0.0), 0.0),
+        ("Based\r", 0, (8200.0, 8170.0), (0.0, 0.0), 0.0),
+        ("Own\r", 0, (8200.0, 8160.0), (0.0, 0.0), 0.0),
+    ])
+    // The first two runs set no colour, the second of the style based on the normal one.
+    .replacen(own_fill, "", 2)
+    .replacen(&run(0), "/5 X", 1)
+    .replacen(&run(0), &run(1), 1)
+    .replacen("/5 X", &run(0), 1)
+    // The document's base attributes: grey level 1, white, with auto leading.
+    .replacen("/2 << /1 12.0 >>", "/2 << /1 12.0 /4 true /53 << /99 /SimplePaint /0 << /0 0 /1 [ 1.0 1.0 ] >> >> >>", 1)
+    // Its character styles: the normal one black with 18-point leading, and one based on it in red.
+    .replacen(
+        "/0 << /1 <<",
+        "/0 << /5 << /0 [ << /0 << /0 ([Normal Character Style]) /6 << /4 false /5 18.0 \
+         /53 << /99 /SimplePaint /0 << /0 1 /1 [ 1.0 0.0 0.0 0.0 ] >> >> >> >> >> \
+         << /0 << /0 (Red) /5 0 /6 << /53 << /99 /SimplePaint /0 << /0 1 /1 [ 1.0 1.0 0.0 0.0 ] >> >> >> >> >> ] >> /1 <<",
+        1,
+    );
+    let spare = text_object(0) + &text_object(1) + &text_object(2);
+    let art = native_with_text(&(layer("Back", true, &square(10, 10)) + &layer("Spare", false, &spare)), &doc);
+    let r = import(&eps(&page_square(10, 10), &art)).unwrap();
+    let texts = text_of(&r.document.layers[1]);
+    assert_eq!(texts.iter().map(|t| t.plain_text()).collect::<Vec<_>>(), ["Normal", "Based", "Own"], "{:?}", r.warnings);
+    let style = |i: usize| (texts[i].runs[0].style.fill.clone(), texts[i].runs[0].style.leading);
+    let solid = vectorcraft_color::Paint::solid;
+    use vectorcraft_color::Color;
+    assert_eq!(style(0), (solid(Color::rgb(0.0, 0.0, 0.0)), Some(18.0)), "the normal style's");
+    assert_eq!(style(1), (solid(Color::rgb(1.0, 0.0, 0.0)), Some(18.0)), "its style's colour, the leading of the one it's based on");
+    assert_eq!(style(2), (solid(Color::cmyk(0.0, 1.0, 0.0, 0.0)), Some(18.0)), "the run's own colour");
+}
+
 #[test]
 fn type_from_the_text_document_keeps_its_case_setting() {
     // Key 12 of a character style is its case: 1 Small Caps, 2 All Caps. The characters stay as
