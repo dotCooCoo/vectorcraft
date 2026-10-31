@@ -587,6 +587,51 @@ fn a_marquee_over_part_of_a_segment_selects_it() {
     assert!(!drag(&mut g, Mods::default()).iter().any(|a| matches!(a, Action::Exec(c, _) if c == "select.segments")));
 }
 
+/// #4890: with Alt held as a Direct Selection marquee begins, the marquee selects each path it
+/// touches whole (a group's member without its group), and with Alt+Shift it toggles them; the
+/// cursor stays Group Selection's plus during the drag. Without Alt it selects the segment.
+#[test]
+fn an_alt_marquee_selects_the_paths_it_touches_whole() {
+    use vectorcraft_doc::{Appearance, Node};
+    let (mut d, id) = doc_with_rect();
+    let l = d.layers[0].id;
+    let (g, other) = (d.alloc_id(), d.alloc_id());
+    d.insert(Some(l), 1, Node::group(g, vec![])).unwrap();
+    let square = vectorcraft_geom::shapes::rectangle(Rect::new(300.0, 100.0, 400.0, 200.0));
+    d.insert(Some(g), 0, Node::path(other, square, Appearance::default_art())).unwrap();
+    // A compound path of two squares side by side.
+    let (compound, left, right) = (d.alloc_id(), d.alloc_id(), d.alloc_id());
+    let part = |id, r| std::sync::Arc::new(Node::path(id, vectorcraft_geom::shapes::rectangle(r), Appearance::default_art()));
+    let parts = vec![part(left, Rect::new(100.0, 300.0, 140.0, 340.0)), part(right, Rect::new(160.0, 300.0, 200.0, 340.0))];
+    let mut c = Node::new(compound, vectorcraft_doc::NodeKind::Compound { children: parts, rule: vectorcraft_geom::FillRule::EvenOdd });
+    c.appearance = Appearance::default_art().into();
+    d.insert(Some(l), 2, c).unwrap();
+    let p = paint();
+    let alt = Mods { alt: true, ..Mods::default() };
+    // Across the middle of a square's top edge, with no anchor inside.
+    let drag = |s: &Selection, (x, y): (f64, f64), m: Mods| {
+        let c = cx(&d, s, &p);
+        let mut t = DirectSelectionTool::new(false);
+        t.pointer(&c, &PointerEvent::new(PointerKind::Down, x - 10.0, y - 10.0).with_mods(m));
+        t.pointer(&c, &PointerEvent::new(PointerKind::Drag, x + 10.0, y + 10.0).with_mods(m));
+        let cursor = if m.alt { Cursor::GroupSelection } else { Cursor::ArrowHollow };
+        assert_eq!(t.cursor(&c, Point::new(x + 10.0, y + 10.0), Mods::default()), cursor, "{m:?}");
+        t.pointer(&c, &PointerEvent::new(PointerKind::Up, x + 10.0, y + 10.0).with_mods(m))
+    };
+    let none = Selection::default();
+    let set = |id: NodeId| vec![Action::Exec("select.set".into(), json!({"ids": [id.0]}))];
+    assert_eq!(drag(&none, (150.0, 100.0), alt), set(id));
+    assert_eq!(drag(&none, (350.0, 100.0), alt), set(other));
+    assert_eq!(drag(&none, (180.0, 300.0), alt), set(right), "a compound path's path, without the compound path");
+    let mut whole = Selection::default();
+    whole.set([id]);
+    let shift = Mods { shift: true, ..alt };
+    assert_eq!(drag(&whole, (150.0, 100.0), shift), vec![Action::Exec("select.toggle".into(), json!({"ids": [id.0]}))]);
+    let plain = drag(&none, (150.0, 100.0), Mods::default());
+    let segment = Action::Exec("select.segments".into(), json!({"id": id.0, "segments": [[0, 0]], "mode": "add"}));
+    assert!(plain.contains(&segment), "{plain:?}");
+}
+
 #[test]
 fn marquee_selects_ruler_guides() {
     let (mut d, id) = doc_with_rect();

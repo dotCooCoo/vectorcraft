@@ -248,6 +248,30 @@ fn a_marquee_leaves_a_clip_group_by_its_clipped_away_art() {
     assert_eq!(marquee(&d, shown, Some(g), false).len(), 2, "the mask and the art");
 }
 
+/// #4890: [`marquee_parts`] gives the paths of a compound path that a marquee touches, where
+/// [`marquee`] gives the compound path; in a clip group only the paths it touches where the art
+/// shows.
+#[test]
+fn marquee_parts_gives_the_touched_paths_of_a_compound_path() {
+    let mut d = Document::new(300.0, 200.0);
+    let l = d.layers[0].id;
+    let mask = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)), Appearance::default());
+    let (g, compound, a, b) = (d.alloc_id(), d.alloc_id(), d.alloc_id(), d.alloc_id());
+    let part = |id, r| Arc::new(Node::path(id, shapes::rectangle(r), Appearance::default_art()));
+    let children = vec![part(a, Rect::new(10.0, 10.0, 50.0, 50.0)), part(b, Rect::new(150.0, 10.0, 190.0, 50.0))];
+    let c = Node::new(compound, NodeKind::Compound { children, rule: vectorcraft_geom::FillRule::EvenOdd });
+    let mut clip = Node::group(g, vec![Arc::new(mask), Arc::new(c)]);
+    clip.set_clips(true);
+    d.insert(Some(l), 0, clip).unwrap();
+    // Across both paths' top edges (and the mask's left edge); the second path lies where the
+    // mask hides it.
+    let across = Rect::new(-5.0, 5.0, 200.0, 15.0);
+    let art = |ids: Vec<NodeId>| ids.into_iter().filter(|id| [compound, a, b].contains(id)).collect::<Vec<_>>();
+    assert_eq!(art(marquee(&d, across, None, true)), vec![compound]);
+    assert_eq!(art(marquee_parts(&d, across, None)), vec![a]);
+    assert_eq!(art(marquee_parts(&d, across, Some(g))), vec![a]);
+}
+
 /// #2345: in the corner of a diamond mask's box, outside the diamond, a marquee over the
 /// clipped art's corner leaves the clip group. An open mask clips to its area closed by a
 /// straight line, and a marquee across that line takes the art it reaches inside.

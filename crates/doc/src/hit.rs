@@ -676,6 +676,17 @@ pub fn compound_part_at(n: &Node, p: Point, tol: f64) -> Option<NodeId> {
 /// clipping mask counts only when the marquee meets the region its clipping path clips to, and then
 /// only within that region's bounds.
 pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> Vec<NodeId> {
+    marquee_with(doc, r, scope, leaves, false)
+}
+
+/// The leaf objects touched by a marquee rect, as [`marquee`] with `leaves` finds them, except
+/// that a compound path gives the paths of it that the marquee touches, as the Group Selection
+/// tool's clicks pick them ([`compound_part_at`]).
+pub fn marquee_parts(doc: &Document, r: Rect, scope: Option<NodeId>) -> Vec<NodeId> {
+    marquee_with(doc, r, scope, true, true)
+}
+
+fn marquee_with(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool, parts: bool) -> Vec<NodeId> {
     let mut out = Vec::new();
     // `tops` pairs each object with the part of `r` in which the marquee can touch it.
     let tops: Vec<(&std::sync::Arc<Node>, Rect)> = match scope.and_then(|s| doc.node(s)) {
@@ -735,15 +746,18 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
             }),
         }
     }
-    fn collect_leaves(n: &Node, s: &SymbolBoxes, r: Rect, scope: Option<NodeId>, out: &mut Vec<NodeId>) {
+    fn collect_leaves(n: &Node, s: &SymbolBoxes, r: Rect, (scope, parts): (Option<NodeId>, bool), out: &mut Vec<NodeId>) {
         match &n.kind {
             NodeKind::Layer { children, .. } | NodeKind::Group { children, .. } | NodeKind::Intertwine { children } => {
                 let Some(r) = marquee_in(n, r) else { return };
                 for (i, c) in children.iter().enumerate() {
                     if c.visible && !c.locked && !shaper_hides(n, i, scope) {
-                        collect_leaves(c, s, r, scope, out);
+                        collect_leaves(c, s, r, (scope, parts), out);
                     }
                 }
+            }
+            NodeKind::Compound { children, .. } if parts => {
+                out.extend(children.iter().filter(|c| c.visible && touches(c, s, r, scope)).map(|c| c.id));
             }
             _ => {
                 if touches(n, s, r, scope) {
@@ -759,7 +773,7 @@ pub fn marquee(doc: &Document, r: Rect, scope: Option<NodeId>, leaves: bool) -> 
             continue;
         }
         if leaves {
-            collect_leaves(t, &symbols, r, scope, &mut out);
+            collect_leaves(t, &symbols, r, (scope, parts), &mut out);
         } else if touches(t, &symbols, r, scope) {
             out.push(t.id);
         }
