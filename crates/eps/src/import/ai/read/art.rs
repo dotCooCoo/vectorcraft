@@ -216,7 +216,7 @@ impl<'a> Reader<'a> {
         let unread_bounds = unread.then(|| node.visual_bounds()).flatten();
         let unread_id = node.id;
         self.add(node, hidden)?;
-        if unread && hidden {
+        if unread && (hidden || gs.hidden || !self.shown()) {
             self.hidden_unread.insert("pattern fills".into());
         } else if unread {
             match unread_bounds {
@@ -484,6 +484,8 @@ impl<'a> Reader<'a> {
                 let boxed = other.as_ref().and_then(|p| Some((p.matrix?, p.bounds?))).filter(|(_, b)| sane(*b) && b.area() > 0.0);
                 let mut have_bounds = false;
                 if self.shown()
+                    && !self.gs.hidden
+                    && !hidden
                     && let Some((m, b)) = boxed
                 {
                     let centre = self.template.map(|t| ((t[0] + t[2]) / 2.0, (t[1] + t[3]) / 2.0));
@@ -502,7 +504,7 @@ impl<'a> Reader<'a> {
                         return Ok(());
                     }
                 }
-                if self.shown() && !hidden && !have_bounds {
+                if self.shown() && !self.gs.hidden && !hidden && !have_bounds {
                     self.unsupported.insert("placed files".into());
                 } else {
                     self.unreadable("placed files", hidden);

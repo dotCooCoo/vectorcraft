@@ -997,6 +997,19 @@ fn previewless_placement_records_box_corner_as_alternative() {
     assert_ne!(r.unread_elsewhere[0].1, r.doc.node(r.unread[0].0).unwrap().visual_bounds().unwrap());
 }
 
+/// A previewless locked placement keeps its edit lock on the page-art placeholder.
+#[test]
+fn previewless_placement_placeholder_inherits_lock() {
+    let mut data = placed(true, "[5 0 0 -5 0 200]", "missing.png", None, "");
+    let at = data.windows(15).position(|w| w == b"%AI5_BeginPlace").unwrap();
+    data.splice(at..at, *b"1 A\n");
+    let result = read(&data).unwrap();
+    assert_unread(&result, "placed files");
+    let node = result.doc.node(result.unread[0].0).unwrap();
+    assert!(node.locked);
+    assert!(node.visible);
+}
+
 #[test]
 fn placed_files_are_linked_images_showing_their_preview() {
     // A 2×1 preview (premultiplied ARGB, a padded row) of a file of 4×2 pixels.
@@ -1173,6 +1186,38 @@ fn unknown_operator_on_hidden_line_does_not_mark_drawn_group_unread() {
     assert!(result.unread.is_empty(), "{:?}", result.unread);
     assert!(result.hidden_unread.contains("`frobnicate`"));
     assert_eq!(art(&result.doc)[0].children().expect("group children").len(), 1);
+}
+
+/// A commented closing delimiter does not hide a visible group's unread content.
+#[test]
+fn visible_group_closed_on_hidden_line_stays_unread() {
+    let body = format!("u\n1 2 frobnicate\n{RED}{}f\n%_U\n", rect_path(10.0, 0.0, 14.0, 4.0));
+    let result = read_ok(&layer(&body));
+    assert_eq!(result.unread.len(), 1);
+    assert!(result.unread[0].1.contains(&"`frobnicate`".to_string()));
+    assert!(!result.hidden_unread.contains("`frobnicate`"));
+}
+
+/// `Xw` hides unread objects even when their operators are on ordinary lines.
+#[test]
+fn xw_hidden_unread_keeps_visible_group_sibling() {
+    for unread in
+        ["1 2 frobnicate\n", "(Absent) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n0 0 m\n4 0 L\n4 4 L\nf\n", "/SymbolInstance :\n(Absent) /SymbolRef ,\n;\n"]
+    {
+        let body = format!("u\n1 Xw\n{unread}0 Xw\n0 0 0 1 k\n{}f\nU\n", rect_path(10.0, 0.0, 14.0, 4.0));
+        let result = read_ok(&layer(&body));
+        assert!(result.unread.is_empty(), "{unread}: {:?}", result.unread);
+        assert!(!result.hidden_unread.is_empty(), "{unread}");
+        let children = art(&result.doc);
+        let group_art = children[0].children().expect("group children");
+        assert_eq!(group_art.iter().filter(|node| node.visible).count(), 1, "{unread}");
+    }
+    let mut data = placed(true, "[5 0 0 -5 0 200]", "missing.png", None, "0 Xw\n");
+    let at = data.windows(15).position(|w| w == b"%AI5_BeginPlace").unwrap();
+    data.splice(at..at, *b"1 Xw\n");
+    let result = read(&data).unwrap();
+    assert!(result.unread.is_empty());
+    assert!(result.hidden_unread.contains("placed files"));
 }
 
 #[test]

@@ -365,7 +365,8 @@ impl<'a> Reader<'a> {
             } else {
                 self.pending_unread_stroke = true;
             }
-        } else {
+        }
+        if !self.shown() || self.gs.hidden {
             self.hidden_unread.insert("pattern fills".into());
         }
     }

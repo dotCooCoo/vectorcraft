@@ -129,7 +129,11 @@ impl<'a> Reader<'a> {
                 let (fills, kids): (Vec<Node>, Vec<Node>) = ungrouped(kids).into_iter().partition(|n| self.clip_fills.contains(&n.id));
                 painted = self.compound(fills, &gs);
                 let Some(n) = self.compound(kids, &gs) else {
-                    self.unsupported.extend(unread);
+                    if gs.hidden || !self.shown() {
+                        self.hidden_unread.extend(unread);
+                    } else {
+                        self.unsupported.extend(unread);
+                    }
                     return Ok(());
                 };
                 n
@@ -147,7 +151,11 @@ impl<'a> Reader<'a> {
             self.compound_groups.insert(node.id);
         }
         if !unread.is_empty() {
-            self.unread.push((node.id, unread));
+            if !node.visible || !self.shown() {
+                self.hidden_unread.extend(unread);
+            } else {
+                self.unread.push((node.id, unread));
+            }
         }
         self.add(node, opened_hidden || hidden)?;
         if let Some(p) = painted {
@@ -240,7 +248,7 @@ impl<'a> Reader<'a> {
         let op: String = w.chars().take(24).collect();
         // A pattern definition or an owning mask can be on `%_` lines while still
         // determining visible art. Unknown operators there must remain unread.
-        if (hidden && self.pattern.is_none() && !self.frames.iter().any(|f| matches!(f.kind, Kind::Mask))) || !self.shown() {
+        if self.gs.hidden || (hidden && self.pattern.is_none() && !self.frames.iter().any(|f| matches!(f.kind, Kind::Mask))) || !self.shown() {
             if self.hidden_unread.len() < 16 {
                 self.hidden_unread.insert(format!("`{op}`"));
             }
@@ -362,7 +370,7 @@ impl<'a> Reader<'a> {
     /// Note something the data has that isn't read: an error on a layer that shows, left out of a
     /// layer that doesn't.
     pub(super) fn unreadable(&mut self, what: &str, hidden: bool) {
-        if !hidden && self.shown() {
+        if !hidden && !self.gs.hidden && self.shown() {
             if !self.mark_unread(what.to_string()) {
                 self.unsupported.insert(what.into());
             }
@@ -385,7 +393,7 @@ impl<'a> Reader<'a> {
 
     /// Stand in for one unread object with a box that the page can match.
     pub(super) fn unread_box(&mut self, what: &str, bounds: super::Rect, hidden: bool) -> Result<Option<NodeId>, String> {
-        if hidden || !self.shown() {
+        if hidden || self.gs.hidden || !self.shown() {
             self.hidden_unread.insert(what.into());
             return Ok(None);
         }
@@ -399,7 +407,8 @@ impl<'a> Reader<'a> {
             return Ok(None);
         }
         let path = vectorcraft_geom::shapes::rectangle(bounds);
-        let node = Node::path(self.doc.alloc_id(), path, super::Appearance::default());
+        let gs = self.gs.clone();
+        let node = self.new_node(NodeKind::Path { path, rule: FillRule::NonZero, live: None, clipping: false, guide: false }, &gs);
         let id = node.id;
         if in_container {
             self.mark_unread(what.into());
