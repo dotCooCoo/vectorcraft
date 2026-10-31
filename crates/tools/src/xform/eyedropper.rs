@@ -546,6 +546,55 @@ mod tests {
         assert_eq!(crate::xform::eyedropper::sample_color_at(&cx(&d, &s, &p), at).map(|c| c.to_hex()), Some("#ff0000".into()));
         // Where the turned key leaves the point empty, the click passes the blend by.
         assert_eq!(crate::xform::eyedropper::sample_color_at(&cx(&d, &s, &p), Point::new(60.0, 90.0)).map(|c| c.to_hex()), Some("#00ff00".into()));
+        // A red key clipped to its right half, centred on (125, 100): the line to the blue key's
+        // centre turns it about 53°, and its hidden left half reaches (89, 52).
+        let mut clip = solid_rect(&mut d, Rect::new(100.0, 95.0, 150.0, 105.0), Color::BLACK);
+        clip.appearance = Default::default();
+        if let NodeKind::Path { clipping, .. } = &mut clip.kind {
+            *clipping = true;
+        }
+        let red = solid_rect(&mut d, Rect::new(50.0, 95.0, 150.0, 105.0), Color::rgb(1.0, 0.0, 0.0));
+        let key = Node::new(d.alloc_id(), NodeKind::Group { children: vec![std::sync::Arc::new(clip), std::sync::Arc::new(red)], clip: true });
+        if let Some(NodeKind::Blend { children, .. }) = d.node_mut(id).map(|n| &mut n.kind) {
+            children[0] = std::sync::Arc::new(key);
+        }
+        let hidden = Point::new(89.0, 52.0);
+        assert!(d.node(id).unwrap().geometric_bounds().is_some_and(|b| !b.contains(hidden)));
+        assert_eq!(hit_test(&d, hidden, cx(&d, &s, &p).hit_options()).map(|h| h.leaf), Some(d.layers[0].children().unwrap()[1].id));
+        assert_eq!(crate::xform::eyedropper::sample_color_at(&cx(&d, &s, &p), hidden).map(|c| c.to_hex()), Some("#00ff00".into()));
+    }
+
+    /// The stroke of an envelope's distorted contents paints past the envelope's bounds: a click
+    /// there hits the envelope and samples the stroke.
+    #[test]
+    fn shift_click_samples_an_envelopes_stroke_past_its_bounds() {
+        use vectorcraft_geom::{Affine, Rect};
+        let mut id = None;
+        let d = doc_with_live_over_green(|d| {
+            let a = vectorcraft_doc::Appearance::basic(Paint::solid(Color::rgb(1.0, 0.0, 0.0)), Paint::solid(Color::rgb(0.0, 0.0, 1.0)), 10.0);
+            let red = Node::path(d.alloc_id(), vectorcraft_geom::shapes::rectangle(Rect::new(300.0, 300.0, 420.0, 320.0)), a);
+            let kind = vectorcraft_doc::EnvelopeKind::Warp { style: "arc".into(), bend: 50.0, h: 0.0, v: 0.0, horizontal: true };
+            let content = vec![std::sync::Arc::new(red)];
+            let n = Node::new(
+                d.alloc_id(),
+                NodeKind::Envelope {
+                    content,
+                    kind: Box::new(kind),
+                    fidelity: 50.0,
+                    editing: false,
+                    options: Default::default(),
+                    frame: Box::new(Affine::IDENTITY),
+                },
+            );
+            id = Some(n.id);
+            n
+        });
+        let (s, p) = (Selection::default(), paint());
+        // The middle of the band's top edge stays at y 300, and its 10 pt stroke reaches y 295.
+        let at = Point::new(360.0, 296.0);
+        assert!(d.node(id.unwrap()).unwrap().geometric_bounds().is_some_and(|b| !b.inflate(3.0, 3.0).contains(at)));
+        assert_eq!(hit_test(&d, at, cx(&d, &s, &p).hit_options()).map(|h| h.leaf), id);
+        assert_eq!(crate::xform::eyedropper::sample_color_at(&cx(&d, &s, &p), at).map(|c| c.to_hex()), Some("#0000ff".into()));
     }
 
     /// Shift-click on an envelope samples its distorted contents where they are drawn, and a point
