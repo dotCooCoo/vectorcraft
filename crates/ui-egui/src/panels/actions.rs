@@ -86,14 +86,14 @@ fn delete_selection(app: &mut VectorcraftApp, ctx: &egui::Context) {
         ),
         _ => tl!("Delete the selected action sets and their actions?").to_string(),
     };
-    let names: Vec<&str> = sets.iter().filter_map(|&s| app.ui.action_sets.get(s)).map(|s| s.name.as_str()).collect();
-    let params = json!({ "sets": sets, "names": names });
+    let all: Vec<&str> = app.ui.action_sets.iter().map(|s| s.name.as_str()).collect();
+    let params = json!({ "sets": sets, "all": all });
     crate::dialogs::confirm::ask(app, &message, "", DELETE_SETS, params);
 }
 
-/// `ui.actionSet.delete {sets?: [index], names?: [name]}`: deletes the action sets at these
-/// indexes, with their actions (default: the current set). With `names`, the set at each index
-/// must still have the name at the same position, or nothing is deleted. A recording into a
+/// `ui.actionSet.delete {sets?: [index], all?: [name]}`: deletes the action sets at these
+/// indexes, with their actions (default: the current set). With `all`, the names of every set in
+/// the panel, in order, must equal it exactly, or nothing is deleted. A recording into a
 /// deleted set stops, and its steps are dropped; a recording into another set goes on. When the
 /// current set is deleted, no set is current afterwards.
 pub fn delete_sets(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
@@ -107,11 +107,11 @@ pub fn delete_sets(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String>
             .map(|i| i.as_u64().and_then(|i| usize::try_from(i).ok()).filter(|&i| i < len).ok_or("no such action set"))
             .collect::<Result<_, _>>()?,
     };
-    match p.get("names") {
+    match p.get("all") {
         None | Some(Value::Null) => {}
         Some(v) => {
-            let names = v.as_array().filter(|n| n.len() == sets.len()).ok_or("the action set names do not match the sets")?;
-            if sets.iter().zip(names).any(|(&s, n)| n.as_str() != app.ui.action_sets.get(s).map(|s| s.name.as_str())) {
+            let all = v.as_array().ok_or("the action set names are not a list")?;
+            if all.len() != len || app.ui.action_sets.iter().zip(all).any(|(s, n)| n.as_str() != Some(s.name.as_str())) {
                 return Err("the action sets changed; nothing was deleted".into());
             }
         }
@@ -194,7 +194,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
                 // Shift-click selects the sets from the current one to the one clicked; the current
                 // set stays as it was.
                 match current {
-                    Some(c) if shift && selected.is_none() && sets_selected.contains(&c) => sets_selected = (c.min(si)..=c.max(si)).collect(),
+                    Some(c) if shift && sets_selected.contains(&c) => sets_selected = (c.min(si)..=c.max(si)).collect(),
                     _ => {
                         current = Some(si);
                         sets_selected = vec![si];
@@ -533,8 +533,9 @@ mod tests {
         assert_eq!((app.ui.action_set, app.ui.action_sets_selected.clone()), (Some(2), vec![2]));
     }
 
-    /// The question names the sets it asks about: when a set before them is deleted while it is
-    /// open, OK deletes nothing instead of the set that moved into the asked index.
+    /// The question carries the names of every set as they were when it asked: when a set before
+    /// the asked one is deleted while it is open, OK deletes nothing instead of the set that moved
+    /// into the asked index.
     #[test]
     fn ok_deletes_nothing_after_the_sets_change_under_the_question() {
         use super::super::tests_appearance::click;
@@ -545,15 +546,51 @@ mod tests {
         let delete = trash(&ctx, &mut app);
         click(&ctx, &mut app, delete, show);
         assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([2])));
-        assert_eq!(app.ui.dialog.as_ref().map(|d| d.fields["__params"]["names"].clone()), Some(json!(["Other"])));
+        let all = json!(["Default Actions", "Mine", "Other", "Third"]);
+        assert_eq!(app.ui.dialog.as_ref().map(|d| d.fields["__params"]["all"].clone()), Some(all));
         app.run(DELETE_SETS, json!({"sets": [1]})).unwrap();
         assert_eq!(set_names(&app), ["Default Actions", "Other", "Third"]);
         let _ = crate::dialogs::confirm(&mut app);
         assert_eq!(set_names(&app), ["Default Actions", "Other", "Third"], "OK deletes no set the question did not name");
-        let p = json!({"sets": [0, 1], "names": ["Default Actions"]});
-        assert!(app.run(DELETE_SETS, p).is_err(), "names must match the sets one to one");
-        assert_eq!(app.run(DELETE_SETS, json!({"sets": [1], "names": ["Other"]})).unwrap(), json!({"deleted": 1}));
+        let p = json!({"sets": [1], "all": ["Default Actions", "Other"]});
+        assert!(app.run(DELETE_SETS, p).is_err(), "all must list every set");
+        let p = json!({"sets": [1], "all": ["Default Actions", "Other", "Third"]});
+        assert_eq!(app.run(DELETE_SETS, p).unwrap(), json!({"deleted": 1}));
         assert_eq!(set_names(&app), ["Default Actions", "Third"]);
+    }
+
+    /// Two sets with the same name: when the asked one is deleted elsewhere while the question is
+    /// open, OK does not delete the other one, which now has the asked index and name.
+    #[test]
+    fn ok_deletes_nothing_when_a_set_of_the_same_name_moves_into_the_asked_index() {
+        use super::super::tests_appearance::click;
+        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        app.ui.action_sets = vec![ActionSet { name: "X".into(), actions: vec![] }, ActionSet { name: "X".into(), actions: vec![] }];
+        let ctx = egui::Context::default();
+        click_set(&ctx, &mut app, "X", egui::Modifiers::NONE);
+        assert_eq!(app.ui.action_set, Some(0));
+        let delete = trash(&ctx, &mut app);
+        click(&ctx, &mut app, delete, show);
+        assert_eq!(asked(&app).map(|(_, sets)| sets), Some(json!([0])));
+        app.run(DELETE_SETS, json!({"sets": [0]})).unwrap();
+        let _ = crate::dialogs::confirm(&mut app);
+        assert_eq!(set_names(&app), ["X"], "OK deletes nothing");
+    }
+
+    /// Shift-click on another set's name while an action is selected selects the sets from the
+    /// current one to it and clears the action.
+    #[test]
+    fn shift_click_on_a_set_with_an_action_selected_selects_the_range() {
+        use super::super::tests_appearance::{click, frame_events, text_rect};
+        let mut app = app_with_sets();
+        let ctx = egui::Context::default();
+        let texts = frame_events(&ctx, &mut app, vec![], show);
+        click(&ctx, &mut app, text_rect(&texts, "Nudge").center(), show);
+        frame_events(&ctx, &mut app, vec![], show);
+        assert_eq!(pstate::<Option<(usize, usize)>>(&ctx, "actions-selected"), Some((1, 0)));
+        click_set(&ctx, &mut app, "Other", egui::Modifiers::SHIFT);
+        assert_eq!((app.ui.action_set, app.ui.action_sets_selected.clone()), (Some(1), vec![1, 2]));
+        assert_eq!(pstate::<Option<(usize, usize)>>(&ctx, "actions-selected"), None, "the action is no longer selected");
     }
 
     /// The default set can be deleted, and so can the last set: the panel is then empty, no set is
