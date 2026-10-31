@@ -5545,6 +5545,17 @@ anchor	Points:	點：
 @msg	choose anchors where two sides meet at an angle: only those take a corner	請選取兩邊成角相交的錨點：只有這些錨點才能設定轉角
 @msg	give `anchor`, the index of the anchor to slide	請提供 `anchor`，即要滑動的錨點索引
 @msg	that anchor can't slide: an end of an open path has nowhere to go	該錨點無法滑動：開放路徑的端點無處可去
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	共用邊合併工具
+	Merge Shared Edge	合併共用邊
+	Keep Shared Points Together	保持共用點在一起
+	Shared Edges	共用邊
+	Coincidence:	重合容差：
+@msg	`a` and `b` must be two different paths	`a` 和 `b` 必須是兩條不同的路徑
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` 必須為 0.25 到 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` 必須為 0 到 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` 必須是 "average"、"a" 或 "b"
+@msg	the paths have nothing to merge there	這裡沒有可合併的路徑部分
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	分割文字
@@ -5589,3 +5600,44 @@ breakText	Glyphs	字符
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` 必須是 lines、paragraphs、words 或 glyphs，而不是 {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` 必須是 "line" 或 "paragraph"，而不是 {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` 必須是 "left"、"center" 或 "right"，而不是 {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	路徑效果
+	Reverse Direction	反轉方向
+	Align to Corners and Ends	對齊轉角和端點
+	Count	數量
+	Max Count	最大數量
+	Start Length	起點長度
+	Start Percent	起點百分比
+	Start Shape	起點形狀
+	End Length	終點長度
+	End Percent	終點百分比
+	End Shape	終點形狀
+	By Count	依數量
+	By Distance	依距離
+	Both	兩者
+	Shorter Than Length	短於長度
+	Anchors	錨點
+	Dashes to Geometry	虛線轉為幾何圖形
+	Dashes to Geometry…	虛線轉為幾何圖形…
+	Add Anchors	增加錨點
+	Add Anchors…	增加錨點…
+	Smooth Anchors	平滑錨點
+	Smooth Anchors…	平滑錨點…
+	Simplify Anchors	簡化錨點
+	Simplify Anchors…	簡化錨點…
+	Split at Anchors	在錨點處分割
+	Split at Anchors…	在錨點處分割…
+	Extend Path…	延長路徑…
+	Close Path…	封閉路徑…
+	Retract Handles…	收回控制把手…
+	Dash 1	虛線 1
+	Gap 1	間隙 1
+	Dash 2	虛線 2
+	Gap 2	間隙 2
+	Dash 3	虛線 3
+	Gap 3	間隙 3
+	Dash 4	虛線 4
+	Gap 4	間隙 4
+	Dash 5	虛線 5
+	Gap 5	間隙 5

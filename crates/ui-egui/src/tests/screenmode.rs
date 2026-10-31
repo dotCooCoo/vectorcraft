@@ -366,9 +366,25 @@ fn cancelling_tools_move_keeps_the_next_escape_action() {
 }
 
 #[test]
+fn cancelling_tools_move_keeps_the_tools_escape() {
+    for mode in [0, 1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.select_tool("intertwine");
+        let (original, to) = begin_tools_move(&mut app, &ctx);
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.toolbar_pos, original, "move canceled in mode {mode}");
+        assert_eq!(app.session.tool_id(), "intertwine", "move Escape keeps the tool in mode {mode}");
+        release_drag(&mut app, &ctx, to);
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.session.tool_id(), "selection", "later Escape reaches the tool in mode {mode}");
+    }
+}
+
+#[test]
 fn cancelling_ruler_origin_drag_keeps_the_next_escape_action() {
     for mode in [0, 1, 2] {
-        for action in ["pattern", "isolation", "flyout"] {
+        for action in ["drawer", "pattern", "isolation", "global", "flyout"] {
             let ctx = egui::Context::default();
             let mut app = in_screen_mode(&ctx, mode);
             let to = begin_ruler_origin_drag(&mut app, &ctx);
@@ -381,6 +397,22 @@ fn cancelling_ruler_origin_drag_keeps_the_next_escape_action() {
             frame(&mut app, &ctx, escape());
             assert!(!escape_action_active(&app, action), "later Escape ends {action} in mode {mode}");
         }
+    }
+}
+
+#[test]
+fn cancelling_ruler_origin_drag_keeps_the_tools_escape() {
+    for mode in [0, 1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.select_tool("intertwine");
+        let to = begin_ruler_origin_drag(&mut app, &ctx);
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.session.tool_id(), "intertwine", "drag Escape keeps the tool in mode {mode}");
+        release_drag(&mut app, &ctx, to);
+        assert!(!crate::canvas::ruler_origin_dragging(&ctx));
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.session.tool_id(), "selection", "later Escape reaches the tool in mode {mode}");
     }
 }
 

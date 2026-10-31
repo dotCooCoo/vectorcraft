@@ -5806,6 +5806,17 @@ anchor	Points:	Punkter:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	vælg ankerpunkter, hvor to sider mødes i en vinkel: kun de kan få et hjørne
 @msg	give `anchor`, the index of the anchor to slide	angiv `anchor`, indekset for det ankerpunkt, der skal skubbes
 @msg	that anchor can't slide: an end of an open path has nowhere to go	det ankerpunkt kan ikke skubbes: enden af en åben sti har ingen steder at gå hen
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Værktøj til fletning af fælles kant
+	Merge Shared Edge	Flet fælles kant
+	Keep Shared Points Together	Hold fælles punkter sammen
+	Shared Edges	Fælles kanter
+	Coincidence:	Sammenfald:
+@msg	`a` and `b` must be two different paths	`a` og `b` skal være to forskellige stier
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` skal være fra 0.25 til 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` skal være fra 0 til 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` skal være "average", "a" eller "b"
+@msg	the paths have nothing to merge there	stierne har intet at flette her
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Opdel tekst
@@ -5850,3 +5861,43 @@ breakText	Glyphs	Glyffer
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` skal være lines, paragraphs, words eller glyphs, ikke {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` skal være "line" eller "paragraph", ikke {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` skal være "left", "center" eller "right", ikke {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Kurveeffekter
+	Reverse Direction	Omvend retning
+	Align to Corners and Ends	Juster til hjørner og ender
+	Count	Antal
+	Max Count	Største antal
+	Start Length	Startlængde
+	Start Percent	Startprocent
+	Start Shape	Startform
+	End Length	Slutlængde
+	End Percent	Slutprocent
+	End Shape	Slutform
+	By Count	Efter antal
+	By Distance	Efter afstand
+	Both	Begge
+	Shorter Than Length	Kortere end længden
+	Dashes to Geometry	Streger til geometri
+	Dashes to Geometry…	Streger til geometri…
+	Add Anchors	Tilføj ankerpunkter
+	Add Anchors…	Tilføj ankerpunkter…
+	Smooth Anchors	Udglat ankerpunkter
+	Smooth Anchors…	Udglat ankerpunkter…
+	Simplify Anchors	Forenkl ankerpunkter
+	Simplify Anchors…	Forenkl ankerpunkter…
+	Split at Anchors	Opdel ved ankerpunkter
+	Split at Anchors…	Opdel ved ankerpunkter…
+	Extend Path…	Forlæng sti…
+	Close Path…	Luk sti…
+	Retract Handles…	Træk håndtag ind…
+	Dash 1	Streg 1
+	Gap 1	Mellemrum 1
+	Dash 2	Streg 2
+	Gap 2	Mellemrum 2
+	Dash 3	Streg 3
+	Gap 3	Mellemrum 3
+	Dash 4	Streg 4
+	Gap 4	Mellemrum 4
+	Dash 5	Streg 5
+	Gap 5	Mellemrum 5

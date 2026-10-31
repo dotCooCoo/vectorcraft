@@ -5885,6 +5885,17 @@ anchor	Points:	Точки:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	выберите опорные точки, где две стороны сходятся под углом: только они принимают угол
 @msg	give `anchor`, the index of the anchor to slide	укажите `anchor`, индекс опорной точки для сдвига
 @msg	that anchor can't slide: an end of an open path has nowhere to go	эту опорную точку нельзя сдвинуть: концу открытого контура некуда двигаться
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Инструмент «Слияние общего края»
+	Merge Shared Edge	Объединить общий край
+	Keep Shared Points Together	Держать общие точки вместе
+	Shared Edges	Общие края
+	Coincidence:	Совпадение:
+@msg	`a` and `b` must be two different paths	`a` и `b` должны быть двумя разными контурами
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` должно быть от 0.25 до 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` должно быть от 0 до 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` должно быть "average", "a" или "b"
+@msg	the paths have nothing to merge there	здесь у контуров нечего объединять
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Разбить текст
@@ -5929,3 +5940,43 @@ breakText	Glyphs	Глифы
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` должен быть lines, paragraphs, words или glyphs, а не {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` должен быть "line" или "paragraph", а не {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` должен быть "left", "center" или "right", а не {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Эффекты контура
+	Reverse Direction	Обратить направление
+	Align to Corners and Ends	Выровнять по углам и концам
+	Count	Количество
+	Max Count	Наибольшее количество
+	Start Length	Длина в начале
+	Start Percent	Проценты в начале
+	Start Shape	Форма в начале
+	End Length	Длина в конце
+	End Percent	Проценты в конце
+	End Shape	Форма в конце
+	By Count	По количеству
+	By Distance	По расстоянию
+	Both	Оба
+	Shorter Than Length	Короче длины
+	Dashes to Geometry	Штрихи в геометрию
+	Dashes to Geometry…	Штрихи в геометрию…
+	Add Anchors	Добавить опорные точки
+	Add Anchors…	Добавить опорные точки…
+	Smooth Anchors	Сгладить опорные точки
+	Smooth Anchors…	Сгладить опорные точки…
+	Simplify Anchors	Упростить опорные точки
+	Simplify Anchors…	Упростить опорные точки…
+	Split at Anchors	Разрезать в опорных точках
+	Split at Anchors…	Разрезать в опорных точках…
+	Extend Path…	Продлить контур…
+	Close Path…	Замкнуть контур…
+	Retract Handles…	Убрать маркеры…
+	Dash 1	Штрих 1
+	Gap 1	Зазор 1
+	Dash 2	Штрих 2
+	Gap 2	Зазор 2
+	Dash 3	Штрих 3
+	Gap 3	Зазор 3
+	Dash 4	Штрих 4
+	Gap 4	Зазор 4
+	Dash 5	Штрих 5
+	Gap 5	Зазор 5

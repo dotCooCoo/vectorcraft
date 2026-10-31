@@ -205,8 +205,9 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
         presentation_keys(app, ctx, escape_pair);
         return;
     }
-    let escape_held_by_drag =
-        crate::canvas::dragging(ctx) || crate::canvas::ruler_origin_dragging(ctx) || crate::tools_float::escape_cancelled_move(ctx);
+    // Escape that cancels a ruler-origin drag or floating Tools move skips the tool and later Escape actions.
+    let escape_ended_gesture = crate::canvas::ruler_origin_dragging(ctx) || crate::tools_float::escape_cancelled_move(ctx);
+    let escape_held_by_drag = crate::canvas::dragging(ctx) || escape_ended_gesture;
     let typing = ctx.egui_wants_keyboard_input();
     // Escape closes Edit Toolbar's drawer first (egui drops a drag from it on Escape already).
     if app.ui.tools_drawer && !typing && !escape_held_by_drag && ctx.input_mut(|i| i.consume_key(Modifiers::NONE, Key::Escape)) {
@@ -224,6 +225,10 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
             // chords run one, and while another tool is busy none does.
             let text = app.session.tool_wants_text();
             if (text || !busy) && ctx.input(|i| runs_a_command(i, k, text)) {
+                continue;
+            }
+            if k == Key::Escape && escape_ended_gesture {
+                remember_escape_pair(ctx, k, escape_pair);
                 continue;
             }
             // A key the tool claims (Esc with a loaded place cursor) is only the tool's.
@@ -276,10 +281,7 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
                 }
             }
             // An Escape that ended something can start a pair too. One that closed a popup cannot.
-            if k == Key::Escape && escape_pair.is_some() && !egui::Popup::is_any_open(ctx) {
-                let now = ctx.input(|i| i.time);
-                ctx.data_mut(|d| d.insert_temp(escape_pair_id(), now));
-            }
+            remember_escape_pair(ctx, k, escape_pair);
             if k == Key::Enter && !busy && !claimed {
                 // Enter with a selection tool opens the Move dialog, as a double-click on its button
                 // does.
@@ -342,6 +344,13 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
     }
     nudge_and_clear(app, ctx);
     single_key_shortcuts(app, ctx);
+}
+
+fn remember_escape_pair(ctx: &egui::Context, key: Key, escape_pair: Option<bool>) {
+    if key == Key::Escape && escape_pair.is_some() && !egui::Popup::is_any_open(ctx) {
+        let now = ctx.input(|i| i.time);
+        ctx.data_mut(|d| d.insert_temp(escape_pair_id(), now));
+    }
 }
 
 /// Dispatch unmodified text keys to command bindings or tools.

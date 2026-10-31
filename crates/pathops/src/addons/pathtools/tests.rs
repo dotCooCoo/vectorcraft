@@ -359,3 +359,78 @@ fn the_slide_a_pointer_asks_for_and_where_the_tangent_stops() {
     assert_eq!(stops.len(), 4, "{stops:?}");
     assert!(stops.windows(2).all(|w| w[0] < w[1]));
 }
+
+#[test]
+fn add_anchors_spaces_them_by_count_or_distance() {
+    let sq = line(&[(0.0, 0.0), (90.0, 0.0), (90.0, 90.0), (0.0, 90.0)], true);
+    let out = add_anchors(&sq, SegmentKind::All, AnchorSpacing::Count(2), 100, 100).unwrap();
+    assert_eq!(out.anchors.len(), 12);
+    assert!(near(out.anchors[1].p.x, 30.0, 1e-6) && near(out.anchors[2].p.x, 60.0, 1e-6));
+    assert!(out.closed);
+    let out = add_anchors(&sq, SegmentKind::All, AnchorSpacing::Distance(40.0), 100, 100).unwrap();
+    assert_eq!(out.anchors.len(), 12, "at 40 and 80, none past the segment");
+    assert!(near(out.anchors[2].p.x, 80.0, 1e-6));
+    assert_eq!(add_anchors(&sq, SegmentKind::All, AnchorSpacing::Distance(1.0), 3, 100).unwrap().anchors.len(), 16, "the cap");
+    assert_eq!(add_anchors(&sq, SegmentKind::All, AnchorSpacing::Distance(0.0), 3, 100).unwrap(), sq);
+    assert_eq!(add_anchors(&sq, SegmentKind::Curved, AnchorSpacing::Count(1), 3, 100).unwrap(), sq, "no curves");
+    assert_eq!(add_anchors(&sq, SegmentKind::All, AnchorSpacing::Count(3), 9, 12).unwrap().anchors.len(), 16, "room for all of them");
+    assert!(add_anchors(&sq, SegmentKind::All, AnchorSpacing::Count(3), 9, 11).is_none(), "no room");
+    // A curve keeps its shape, and a zero-length segment gets nothing.
+    let bent = SubPath::new(
+        vec![
+            Anchor { h_out: pt(0.0, 50.0), ..Anchor::corner(pt(0.0, 0.0)) },
+            Anchor { h_in: pt(100.0, 50.0), ..Anchor::corner(pt(100.0, 0.0)) },
+            Anchor::corner(pt(100.0, 0.0)),
+        ],
+        false,
+    );
+    let out = add_anchors(&bent, SegmentKind::Curved, AnchorSpacing::Count(3), 9, 9).unwrap();
+    assert_eq!(out.anchors.len(), 6);
+    assert!(near(length(&out), length(&bent), 1e-4));
+    assert_eq!(add_anchors(&bent, SegmentKind::Straight, AnchorSpacing::Count(3), 9, 9).unwrap(), bent);
+}
+
+#[test]
+fn smoothing_every_anchor_reads_the_same_either_way_along_the_path() {
+    let zig = line(&[(0.0, 0.0), (30.0, 40.0), (70.0, 0.0), (100.0, 50.0)], false);
+    let mut there = zig.clone();
+    smooth_anchors(&mut there, SMOOTH_RATIO);
+    let mut back = zig.clone();
+    back.reverse();
+    smooth_anchors(&mut back, SMOOTH_RATIO);
+    back.reverse();
+    for (a, b) in there.anchors.iter().zip(&back.anchors) {
+        assert!(a.h_in.distance(b.h_in) < 1e-9 && a.h_out.distance(b.h_out) < 1e-9, "{a:?} {b:?}");
+    }
+    assert!(there.anchors[1].kind == AnchorKind::Smooth && there.anchors[0].has_out() && there.anchors[3].has_in());
+    // Nothing to smooth.
+    for mut sp in [SubPath::default(), line(&[(1.0, 1.0)], false), line(&[(1.0, 1.0)], true)] {
+        let before = sp.clone();
+        smooth_anchors(&mut sp, SMOOTH_RATIO);
+        assert_eq!(sp, before);
+    }
+}
+
+#[test]
+fn splitting_reads_an_anchors_kind_from_its_handles() {
+    // Smooth by its handles though it is called a corner, as a path read back from an outline is.
+    let run = SubPath::new(
+        vec![
+            Anchor::corner(pt(0.0, 0.0)),
+            Anchor { h_in: pt(40.0, 0.0), h_out: pt(60.0, 0.0), ..Anchor::corner(pt(50.0, 0.0)) },
+            Anchor::corner(pt(100.0, 0.0)),
+            Anchor::corner(pt(100.0, 50.0)),
+        ],
+        false,
+    );
+    assert_eq!(split_at_anchors(&run, false, true).len(), 2);
+    assert_eq!(split_at_anchors(&run, true, false).len(), 2);
+    assert_eq!(split_at_anchors(&run, true, true).len(), 3);
+    assert_eq!(split_at_anchors(&run, false, false), std::slice::from_ref(&run));
+    let pieces = split_at_anchors(&run, true, true);
+    assert!(near(pieces.iter().map(length).sum::<f64>(), length(&run), 1e-6), "the shape stays");
+    // A closed subpath opens at its first cut.
+    let sq = line(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)], true);
+    assert_eq!(split_at_anchors(&sq, true, false).len(), 3);
+    assert!(split_at_anchors(&sq, true, false).iter().all(|p| !p.closed));
+}

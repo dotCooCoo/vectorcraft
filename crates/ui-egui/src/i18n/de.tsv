@@ -5492,6 +5492,17 @@ anchor	Points:	Punkte:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	Ankerpunkte wählen, an denen zwei Seiten im Winkel aufeinandertreffen: nur diese können eine Ecke bekommen
 @msg	give `anchor`, the index of the anchor to slide	`anchor` angeben, den Index des zu verschiebenden Ankerpunkts
 @msg	that anchor can't slide: an end of an open path has nowhere to go	dieser Ankerpunkt lässt sich nicht verschieben: das Ende eines offenen Pfads kann nirgendwohin
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Gemeinsame-Kante-Werkzeug
+	Merge Shared Edge	Gemeinsame Kante zusammenfügen
+	Keep Shared Points Together	Gemeinsame Punkte zusammenhalten
+	Shared Edges	Gemeinsame Kanten
+	Coincidence:	Übereinstimmung:
+@msg	`a` and `b` must be two different paths	`a` und `b` müssen zwei verschiedene Pfade sein
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` muss von 0.25 bis 200 pt sein
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` muss von 0 bis 3 pt sein
+@msg	`follow` must be "average", "a" or "b"	`follow` muss "average", "a" oder "b" sein
+@msg	the paths have nothing to merge there	die Pfade haben hier nichts zusammenzufügen
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Text aufteilen
@@ -5536,3 +5547,44 @@ breakText	Glyphs	Glyphen
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` muss lines, paragraphs, words oder glyphs sein, nicht {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` muss "line" oder "paragraph" sein, nicht {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` muss "left", "center" oder "right" sein, nicht {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Pfadeffekte
+	Reverse Direction	Richtung umkehren
+	Align to Corners and Ends	An Ecken und Enden ausrichten
+	Count	Anzahl
+	Max Count	Höchstanzahl
+	Start Length	Startlänge
+	Start Percent	Start in Prozent
+	Start Shape	Startform
+	End Length	Endlänge
+	End Percent	Ende in Prozent
+	End Shape	Endform
+	By Count	Nach Anzahl
+	By Distance	Nach Abstand
+	Both	Beide
+	Shorter Than Length	Kürzer als Länge
+	Anchors	Ankerpunkte
+	Dashes to Geometry	Striche in Geometrie
+	Dashes to Geometry…	Striche in Geometrie…
+	Add Anchors	Ankerpunkte hinzufügen
+	Add Anchors…	Ankerpunkte hinzufügen…
+	Smooth Anchors	Ankerpunkte glätten
+	Smooth Anchors…	Ankerpunkte glätten…
+	Simplify Anchors	Ankerpunkte vereinfachen
+	Simplify Anchors…	Ankerpunkte vereinfachen…
+	Split at Anchors	An Ankerpunkten teilen
+	Split at Anchors…	An Ankerpunkten teilen…
+	Extend Path…	Pfad verlängern…
+	Close Path…	Pfad schließen…
+	Retract Handles…	Griffe einziehen…
+	Dash 1	Strich 1
+	Gap 1	Lücke 1
+	Dash 2	Strich 2
+	Gap 2	Lücke 2
+	Dash 3	Strich 3
+	Gap 3	Lücke 3
+	Dash 4	Strich 4
+	Gap 4	Lücke 4
+	Dash 5	Strich 5
+	Gap 5	Lücke 5

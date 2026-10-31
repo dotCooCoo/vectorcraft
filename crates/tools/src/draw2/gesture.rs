@@ -14,6 +14,8 @@
 //! collect the drag polyline (shown as an overlay) and run one command on release. With Shift held, the Blob Brush's points stay on the horizontal or
 //! vertical line through the press point. Alt held at the press, or before the Blob Brush's drag
 //! has moved, switches the Blob Brush to the Smooth tool: the drag smooths the selected paths.
+//! Alt held at a Paintbrush press with a selected path also smooths; Alt pressed after its stroke
+//! begins closes the path on release.
 //! Alt held at the Knife's press makes it cut along the straight line from the press point to the
 //! pointer, even if Alt is released during the drag. Shift on each drag or release constrains that
 //! line to 45° steps from the canvas axes.
@@ -26,8 +28,8 @@ use super::{FEEDBACK, eraser_area, points_json, polyline};
 use crate::guides::DrawSnap;
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey};
 
-/// How far from its drag the Smooth tool smooths, in screen pixels. The Pencil uses the same
-/// radius while Alt switches it to the Smooth tool.
+/// How far from its drag the Smooth tool smooths, in screen pixels. Alt smoothing with the
+/// Pencil, Paintbrush or Blob Brush uses the same radius.
 const SMOOTH_RADIUS: f64 = 12.0;
 
 /// The finest Fidelity (screen pixels) a Pencil or Paintbrush stroke is fitted at while it is drawn:
@@ -79,7 +81,8 @@ pub struct GestureTool {
     /// or merges into (on for the Pencil and Paintbrush, off for the Blob Brush).
     pub keep_selected: bool,
     /// "Alt key toggles to Smooth Tool": holding Alt with the Pencil tool smooths selected paths
-    /// instead of closing the path (Pencil only, off by default).
+    /// instead of closing the path (Pencil only, off by default). Paintbrush Alt smoothing with a
+    /// selected path and Blob Brush Alt smoothing do not use this toggle.
     pub alt_smooth: bool,
     /// "Live preview" (Pencil only, on by default): the stroke shows with its fill and stroke as it
     /// is drawn. Off, only a thin line follows the pen while drawing, and the path takes its fill
@@ -89,10 +92,10 @@ pub struct GestureTool {
     /// preview shows the points joined by straight segments and the release fits them (Pencil
     /// only, on by default).
     pub live_fit: bool,
-    /// The Smooth tool's Fidelity, used when Alt switches the Pencil or Blob Brush to Smooth.
+    /// The Smooth tool's Fidelity, used when Alt switches the Pencil, Paintbrush or Blob Brush to Smooth.
     /// The engine sets it from Smooth Tool Options (`smoothFidelity`).
     smooth_fidelity: f64,
-    /// Active drag is smoothing with the Pencil or the Blob Brush (Alt held).
+    /// Active drag is smoothing with the Pencil, Paintbrush or Blob Brush (Alt held).
     smoothing: bool,
     /// The pointer has moved from the press point, by any distance (a move too short to add a
     /// point counts).
@@ -124,6 +127,22 @@ fn redraw_targets(cx: &ToolContext, id: NodeId) -> Vec<NodeId> {
         NodeKind::Compound { children, .. } => children.iter().filter(|c| c.path_data().is_some()).map(|c| c.id).collect(),
         _ => vec![],
     }
+}
+
+/// Whether the selection contains a path the Smooth command can act on.
+fn has_selected_smooth_path(cx: &ToolContext) -> bool {
+    let editable = cx.doc.editable();
+    cx.selection.objects.iter().filter_map(|id| cx.doc.node(*id)).any(|n| {
+        let mut found = false;
+        n.walk(&mut |child| {
+            if matches!(&child.kind, NodeKind::Path { guide: false, path, .. } if path.control_bounds().is_some() && path.subpaths.iter().any(|sp| sp.anchors.len() >= 3))
+                && editable(child.id)
+            {
+                found = true;
+            }
+        });
+        found
+    })
 }
 
 impl GestureTool {
@@ -402,7 +421,7 @@ impl GestureTool {
                 // Close Paths When Ends Are Within is off at 0 pixels.
                 let near = pts.last().is_some_and(|&end| self.ends_near_start(cx, end));
                 // A straight line has two points: closing it would draw it back over itself.
-                let closed = !self.straight && ((m.alt && !self.alt_smooth) || (self.extend.is_none() && near));
+                let closed = !self.straight && ((m.alt && (self.id == "paintbrush" || !self.alt_smooth)) || (self.extend.is_none() && near));
                 let mut params = self.freehand_params(closed);
                 // A Pencil stroke that continues a selected path and ends on an open end of another
                 // path selected at the press connects the two.
@@ -464,9 +483,12 @@ impl Tool for GestureTool {
                 self.active = true;
                 self.began = false;
                 self.near_start = false;
-                // Alt switches the Pencil to the Smooth tool while Alt key toggles to Smooth Tool is on, and always
-                // switches the Blob Brush.
-                self.smoothing = ev.mods.alt && (self.id == "blobBrush" || (self.id == "pencil" && self.alt_smooth));
+                // Alt switches the Pencil when its toggle is on, the Blob Brush always, and the
+                // Paintbrush when the press has a selected path.
+                self.smoothing = ev.mods.alt
+                    && (self.id == "blobBrush"
+                        || (self.id == "pencil" && self.alt_smooth)
+                        || (self.id == "paintbrush" && has_selected_smooth_path(cx)));
                 // Alt draws a straight line only while it doesn't lend the Smooth tool; with Shift
                 // too, the line keeps Shift's 45° steps. Alt makes the Knife cut along a straight line.
                 self.straight = (self.id == "pencil" && !self.smoothing && (ev.mods.shift || ev.mods.alt)) || (self.id == "knife" && ev.mods.alt);
@@ -694,9 +716,13 @@ impl Tool for GestureTool {
         o
     }
     fn cursor(&self, cx: &ToolContext, p: Point, m: Mods) -> Cursor {
-        // A drag that smooths, or Alt before a Pencil or Blob Brush stroke has begun to draw (a
-        // stroke that has begun keeps drawing with Alt).
-        if self.smoothing || (self.id == "pencil" && self.alt_smooth && m.alt && !self.began) || self.blob_alt_smooths(m) {
+        // An active smoothing drag, or Alt before a press that would switch the Pencil, Paintbrush
+        // or Blob Brush to Smooth. A Paintbrush stroke already drawing keeps drawing with Alt.
+        if self.smoothing
+            || (self.id == "pencil" && self.alt_smooth && m.alt && !self.began)
+            || (!self.active && self.id == "paintbrush" && m.alt && has_selected_smooth_path(cx))
+            || self.blob_alt_smooths(m)
+        {
             return Cursor::Smooth;
         }
         // Before a press that would draw a straight line: over an end of a selected open path,
@@ -707,7 +733,7 @@ impl Tool for GestureTool {
         // Alt held at the release closes the path (`finish`).
         // A straight line stays open, so its release has nothing to close, and before a press Alt
         // gives the Pencil a straight line.
-        if self.draws_path() && !self.alt_smooth && m.alt && !self.straight && (self.active || self.id != "pencil") {
+        if self.draws_path() && (self.id == "paintbrush" || !self.alt_smooth) && m.alt && !self.straight && (self.active || self.id != "pencil") {
             return if self.id == "paintbrush" { Cursor::PaintbrushClose } else { Cursor::PencilClose };
         }
         // A release near a freehand stroke's start closes it too (`finish`): the ring shows while
@@ -789,7 +815,7 @@ impl Tool for GestureTool {
             "altSmooth" => self.alt_smooth = v.as_bool().unwrap_or(self.alt_smooth),
             "livePreview" if self.id == "pencil" => self.live_preview = v.as_bool().unwrap_or(self.live_preview),
             "liveFit" if self.id == "pencil" => self.live_fit = v.as_bool().unwrap_or(self.live_fit),
-            "smoothFidelity" if matches!(self.id, "pencil" | "blobBrush") => {
+            "smoothFidelity" if matches!(self.id, "pencil" | "paintbrush" | "blobBrush") => {
                 self.smooth_fidelity = v.as_f64().unwrap_or(self.smooth_fidelity).clamp(super::min_fidelity("smooth"), 100.0)
             }
             "keepSelected" => self.keep_selected = v.as_bool().unwrap_or(self.keep_selected),

@@ -1226,8 +1226,9 @@ const DOCK_LABELS: &[(&str, &str)] = &[
 fn floating_size(panel: &str) -> egui::Vec2 {
     match panel {
         "properties" | "layers" | "libraries" => egui::vec2(300.0, 420.0),
-        // Tall enough to show its Corners section, last in it, which the Corner Tool's menu item opens.
-        crate::addons::pathtools::ID => egui::vec2(260.0, 540.0),
+        // Tall enough to show its Corners and Shared Edges sections, last in it, which the Corner
+        // Tool's and Shared Edge Merge Tool's menu items open.
+        crate::addons::pathtools::ID => egui::vec2(260.0, 660.0),
         _ => egui::vec2(260.0, 360.0),
     }
 }

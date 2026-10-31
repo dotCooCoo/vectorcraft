@@ -5938,6 +5938,17 @@ anchor	Points:	Pisteet:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	valitse ankkuripisteet, joissa kaksi sivua kohtaa kulmassa: vain niihin voi tehdä kulman
 @msg	give `anchor`, the index of the anchor to slide	anna `anchor`, liu’utettavan ankkuripisteen indeksi
 @msg	that anchor can't slide: an end of an open path has nowhere to go	tätä ankkuripistettä ei voi liu’uttaa: avoimen polun päällä ei ole minne mennä
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Yhteisen reunan yhdistämistyökalu
+	Merge Shared Edge	Yhdistä yhteinen reuna
+	Keep Shared Points Together	Pidä yhteiset pisteet yhdessä
+	Shared Edges	Yhteiset reunat
+	Coincidence:	Yhtenevyys:
+@msg	`a` and `b` must be two different paths	`a` ja `b` on oltava kaksi eri polkua
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` on oltava 0.25–200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` on oltava 0–3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` on oltava "average", "a" tai "b"
+@msg	the paths have nothing to merge there	poluilla ei ole tässä mitään yhdistettävää
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Jaa teksti
@@ -5982,3 +5993,43 @@ breakText	Glyphs	Merkit
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` on oltava lines, paragraphs, words tai glyphs, ei {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` on oltava "line" tai "paragraph", ei {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` on oltava "left", "center" tai "right", ei {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Polkutehosteet
+	Reverse Direction	Käännä suunta
+	Align to Corners and Ends	Tasaa kulmiin ja päihin
+	Count	Määrä
+	Max Count	Enimmäismäärä
+	Start Length	Alun pituus
+	Start Percent	Alun prosentti
+	Start Shape	Alun muoto
+	End Length	Lopun pituus
+	End Percent	Lopun prosentti
+	End Shape	Lopun muoto
+	By Count	Määrän mukaan
+	By Distance	Etäisyyden mukaan
+	Both	Molemmat
+	Shorter Than Length	Pituutta lyhyemmät
+	Dashes to Geometry	Katkoviivat geometriaksi
+	Dashes to Geometry…	Katkoviivat geometriaksi…
+	Add Anchors	Lisää ankkuripisteitä
+	Add Anchors…	Lisää ankkuripisteitä…
+	Smooth Anchors	Pyöristä ankkuripisteet
+	Smooth Anchors…	Pyöristä ankkuripisteet…
+	Simplify Anchors	Yksinkertaista ankkuripisteet
+	Simplify Anchors…	Yksinkertaista ankkuripisteet…
+	Split at Anchors	Jaa ankkuripisteistä
+	Split at Anchors…	Jaa ankkuripisteistä…
+	Extend Path…	Jatka polkua…
+	Close Path…	Sulje polku…
+	Retract Handles…	Vedä kahvat sisään…
+	Dash 1	Viiva 1
+	Gap 1	Väli 1
+	Dash 2	Viiva 2
+	Gap 2	Väli 2
+	Dash 3	Viiva 3
+	Gap 3	Väli 3
+	Dash 4	Viiva 4
+	Gap 4	Väli 4
+	Dash 5	Viiva 5
+	Gap 5	Väli 5

@@ -5850,6 +5850,17 @@ anchor	Points:	Puntos:
 @msg	choose anchors where two sides meet at an angle: only those take a corner	elija puntos de ancla donde dos lados se encuentren en ángulo: solo esos admiten una esquina
 @msg	give `anchor`, the index of the anchor to slide	indique `anchor`, el índice del punto de ancla que deslizar
 @msg	that anchor can't slide: an end of an open path has nowhere to go	ese punto de ancla no se puede deslizar: el extremo de un trazado abierto no tiene adónde ir
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Herramienta Combinar borde compartido
+	Merge Shared Edge	Combinar borde compartido
+	Keep Shared Points Together	Mantener juntos los puntos compartidos
+	Shared Edges	Bordes compartidos
+	Coincidence:	Coincidencia:
+@msg	`a` and `b` must be two different paths	`a` y `b` deben ser dos trazados distintos
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` debe ser de 0.25 a 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` debe ser de 0 a 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` debe ser "average", "a" o "b"
+@msg	the paths have nothing to merge there	los trazados no tienen nada que combinar aquí
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Dividir texto
@@ -5894,3 +5905,43 @@ breakText	Glyphs	Glifos
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` debe ser lines, paragraphs, words o glyphs, no {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` debe ser "line" o "paragraph", no {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` debe ser "left", "center" o "right", no {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Efectos de trazado
+	Reverse Direction	Invertir dirección
+	Align to Corners and Ends	Alinear con esquinas y extremos
+	Count	Cantidad
+	Max Count	Cantidad máxima
+	Start Length	Longitud inicial
+	Start Percent	Porcentaje inicial
+	Start Shape	Forma inicial
+	End Length	Longitud final
+	End Percent	Porcentaje final
+	End Shape	Forma final
+	By Count	Por cantidad
+	By Distance	Por distancia
+	Both	Ambos
+	Shorter Than Length	Más cortos que la longitud
+	Dashes to Geometry	Guiones a geometría
+	Dashes to Geometry…	Guiones a geometría…
+	Add Anchors	Agregar puntos de ancla
+	Add Anchors…	Agregar puntos de ancla…
+	Smooth Anchors	Suavizar puntos de ancla
+	Smooth Anchors…	Suavizar puntos de ancla…
+	Simplify Anchors	Simplificar puntos de ancla
+	Simplify Anchors…	Simplificar puntos de ancla…
+	Split at Anchors	Dividir en puntos de ancla
+	Split at Anchors…	Dividir en puntos de ancla…
+	Extend Path…	Prolongar trazado…
+	Close Path…	Cerrar trazado…
+	Retract Handles…	Retraer manejadores…
+	Dash 1	Guion 1
+	Gap 1	Hueco 1
+	Dash 2	Guion 2
+	Gap 2	Hueco 2
+	Dash 3	Guion 3
+	Gap 3	Hueco 3
+	Dash 4	Guion 4
+	Gap 4	Hueco 4
+	Dash 5	Guion 5
+	Gap 5	Hueco 5

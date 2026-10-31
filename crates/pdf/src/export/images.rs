@@ -1,4 +1,4 @@
-use super::exporter::{UNDECODED, q, writable, xf};
+use super::exporter::{UNDECODED, UNWRITABLE_IMAGE, q, writable, xf};
 use super::{Arc, BlendMode, Color, Exporter, Image, NodeKind, Paint, Rect, Size, Surface, cmyk, krilla};
 use krilla::color::device_n::{Colorant, DeviceNSpace, Process};
 use krilla::image::{BitsPerComponent, CustomImage, ImageColorspace};
@@ -57,10 +57,10 @@ impl Exporter<'_> {
     /// that ink (a DeviceN space of the one ink, which lists its Separation space), Registration in
     /// every process ink and every spot ink of the document, other colors in gray, RGB or CMYK as
     /// the Output settings write them. The coverage is resampled as the Compression settings ask
-    /// ([`crate::images::coverage_sized`]). `None` when the paint isn't a solid color or the pixels
-    /// can't be decoded or its color channel exceeds [`vectorcraft_doc::MAX_RASTER_ALLOC`]; cached
-    /// like [`Self::load_image`]. With `interpolate` (and the export's own setting), viewers may
-    /// smooth it.
+    /// ([`crate::images::coverage_sized`]). `None` when the paint isn't a solid color, the image is
+    /// missing or left out, its pixels can't be decoded, or its color channel exceeds
+    /// [`vectorcraft_doc::MAX_RASTER_ALLOC`]; image rejections are cached like [`Self::load_image`].
+    /// With `interpolate` (and the export's own setting), viewers may smooth it.
     pub(super) fn colorized_image(&mut self, im: &vectorcraft_doc::ImageObject, paint: &Paint, interpolate: bool) -> Option<Image> {
         let Paint::Solid { color, swatch, tint } = paint else { return None };
         let size = placed_size(im);
@@ -73,11 +73,15 @@ impl Exporter<'_> {
             return i.clone();
         }
         let doc = self.doc;
-        let (width, height, alpha) = doc
+        let Some((width, height, alpha)) = doc
             .image_blob(im)
             .filter(|_| !self.left_out.contains(&im.key))
             .and_then(|b| b.coverage())
-            .and_then(|(w, h, cover)| crate::images::coverage_sized(w, h, cover, size, self.compression))?;
+            .and_then(|(w, h, cover)| crate::images::coverage_sized(w, h, cover, size, self.compression))
+        else {
+            self.images.insert(cache, None);
+            return None;
+        };
         let n = alpha.len();
         let registration = swatch.as_deref() == Some(vectorcraft_color::swatch::REGISTRATION);
         let inks: Vec<(String, [f32; 4])> = if registration {
@@ -103,7 +107,10 @@ impl Exporter<'_> {
                 other => (other.to_rgb().map(q).to_vec(), ImageColorspace::Rgb),
             },
         };
-        tinted_color_len(samples.len(), n)?;
+        if tinted_color_len(samples.len(), n).is_none() {
+            self.images.insert(cache, None);
+            return None;
+        }
         let color = Arc::new(samples.repeat(n));
         let img = Image::from_custom(Tinted { color, alpha: Arc::new(alpha), width, height, space, device_n }, interpolate).ok();
         self.images.insert(cache, img.clone());
@@ -190,10 +197,23 @@ impl Exporter<'_> {
     pub(super) fn image(&mut self, s: &mut Surface, im: &vectorcraft_doc::ImageObject, img: Option<Image>, pixelated: bool) {
         // An image placed or sized beyond [`MAX_COORD`] is left out.
         if !writable(s, im.xf, Rect::new(0.0, 0.0, im.width.max(1).into(), im.height.max(1).into())) {
+            if self.image_left_out.is_some() {
+                self.image_left_out = Some(true);
+                self.warn(UNWRITABLE_IMAGE);
+            }
             return;
         }
-        let Some(img) = img.or_else(|| self.load_image(im, placed_size(im), !pixelated)) else { return };
-        let Some(size) = Size::from_wh(im.width.max(1) as f32, im.height.max(1) as f32) else { return };
+        let Some(img) = img.or_else(|| self.load_image(im, placed_size(im), !pixelated)) else {
+            self.image_left_out = self.image_left_out.map(|_| true);
+            return;
+        };
+        let Some(size) = Size::from_wh(im.width.max(1) as f32, im.height.max(1) as f32) else {
+            if self.image_left_out.is_some() {
+                self.image_left_out = Some(true);
+                self.warn(UNWRITABLE_IMAGE);
+            }
+            return;
+        };
         s.push_transform(&xf(im.xf));
         s.draw_image(img, size);
         s.pop();
@@ -256,7 +276,31 @@ pub(super) fn embed(blob: &vectorcraft_doc::ImageBlob, interpolate: bool, sixtee
 
 #[cfg(test)]
 mod tests {
-    use super::tinted_color_len;
+    use super::{Exporter, tinted_color_len};
+    use vectorcraft_color::{Color, Paint};
+    use vectorcraft_doc::{Document, ImageBlob, ImageObject};
+    use vectorcraft_geom::Affine;
+
+    #[test]
+    fn colorized_image_caches_rejected_images() {
+        let mut doc = Document::new(10.0, 10.0);
+        doc.images.insert("bad".into(), ImageBlob::png(vec![1, 2, 3]));
+        doc.images.insert("left-out".into(), ImageBlob::png(vec![1, 2, 3]));
+        let settings = crate::PdfSettings::default();
+        let mut exporter = Exporter::new(&doc, &settings);
+        exporter.left_out.insert("left-out".into());
+        let paint = Paint::solid(Color::rgb(1.0, 0.0, 0.0));
+
+        for key in ["missing", "bad", "left-out"] {
+            let image =
+                ImageObject { key: key.into(), width: 1, height: 1, xf: Affine::IDENTITY, link: None, placement: Default::default(), pixels: None };
+            assert!(exporter.colorized_image(&image, &paint, true).is_none(), "{key}");
+            let cache = format!("{key}\u{0}{paint:?}\u{0}1.000x1.000");
+            assert!(matches!(exporter.images.get(&cache), Some(None)), "rejection for {key} was not cached");
+            assert!(exporter.colorized_image(&image, &paint, true).is_none(), "second call for {key}");
+        }
+        assert_eq!(exporter.images.len(), 3);
+    }
 
     #[test]
     fn tinted_color_rejects_oversized_and_overflowing_buffers() {

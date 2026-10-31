@@ -5749,6 +5749,17 @@ anchor	Points:	点：
 @msg	choose anchors where two sides meet at an angle: only those take a corner	请选择两条边成角相交的锚点：只有这些锚点才能设置转角
 @msg	give `anchor`, the index of the anchor to slide	请提供 `anchor`，即要滑动的锚点索引
 @msg	that anchor can't slide: an end of an open path has nowhere to go	该锚点无法滑动：开放路径的端点无处可去
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	共享边合并工具
+	Merge Shared Edge	合并共享边
+	Keep Shared Points Together	保持共享点在一起
+	Shared Edges	共享边
+	Coincidence:	重合容差：
+@msg	`a` and `b` must be two different paths	`a` 和 `b` 必须是两条不同的路径
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` 必须为 0.25 到 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` 必须为 0 到 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` 必须是 "average"、"a" 或 "b"
+@msg	the paths have nothing to merge there	这里没有可合并的路径部分
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	拆分文本
@@ -5793,3 +5804,43 @@ breakText	Glyphs	字形
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` 必须是 lines、paragraphs、words 或 glyphs，而不是 {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` 必须是 "line" 或 "paragraph"，而不是 {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` 必须是 "left"、"center" 或 "right"，而不是 {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	路径效果
+	Reverse Direction	反转方向
+	Align to Corners and Ends	对齐转角和端点
+	Count	数量
+	Max Count	最大数量
+	Start Length	起点长度
+	Start Percent	起点百分比
+	Start Shape	起点形状
+	End Length	终点长度
+	End Percent	终点百分比
+	End Shape	终点形状
+	By Count	按数量
+	By Distance	按距离
+	Both	两者
+	Shorter Than Length	短于长度
+	Dashes to Geometry	虚线转为几何图形
+	Dashes to Geometry…	虚线转为几何图形…
+	Add Anchors	添加锚点
+	Add Anchors…	添加锚点…
+	Smooth Anchors	平滑锚点
+	Smooth Anchors…	平滑锚点…
+	Simplify Anchors	简化锚点
+	Simplify Anchors…	简化锚点…
+	Split at Anchors	在锚点处分割
+	Split at Anchors…	在锚点处分割…
+	Extend Path…	延长路径…
+	Close Path…	闭合路径…
+	Retract Handles…	收回手柄…
+	Dash 1	虚线 1
+	Gap 1	间隔 1
+	Dash 2	虚线 2
+	Gap 2	间隔 2
+	Dash 3	虚线 3
+	Gap 3	间隔 3
+	Dash 4	虚线 4
+	Gap 4	间隔 4
+	Dash 5	虚线 5
+	Gap 5	间隔 5

@@ -5963,6 +5963,17 @@ shape	Open	Öppen
 @msg	choose anchors where two sides meet at an angle: only those take a corner	välj ankarpunkter där två sidor möts i en vinkel: bara de kan få ett hörn
 @msg	give `anchor`, the index of the anchor to slide	ange `anchor`, indexet för ankarpunkten som ska skjutas
 @msg	that anchor can't slide: an end of an open path has nowhere to go	den ankarpunkten kan inte skjutas: änden av en öppen bana har ingenstans att ta vägen
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Verktyg för sammanfogning av gemensam kant
+	Merge Shared Edge	Sammanfoga gemensam kant
+	Keep Shared Points Together	Håll ihop gemensamma punkter
+	Shared Edges	Gemensamma kanter
+	Coincidence:	Sammanfall:
+@msg	`a` and `b` must be two different paths	`a` och `b` måste vara två olika banor
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` måste vara från 0.25 till 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` måste vara från 0 till 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` måste vara "average", "a" eller "b"
+@msg	the paths have nothing to merge there	banorna har inget att sammanfoga här
 
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Dela upp text
@@ -6007,3 +6018,43 @@ breakText	Glyphs	Glyfer
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` måste vara lines, paragraphs, words eller glyphs, inte {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` måste vara "line" eller "paragraph", inte {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` måste vara "left", "center" eller "right", inte {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Baneffekter
+	Reverse Direction	Vänd riktning
+	Align to Corners and Ends	Justera mot hörn och ändar
+	Count	Antal
+	Max Count	Högsta antal
+	Start Length	Startlängd
+	Start Percent	Startprocent
+	Start Shape	Startform
+	End Length	Slutlängd
+	End Percent	Slutprocent
+	End Shape	Slutform
+	By Count	Efter antal
+	By Distance	Efter avstånd
+	Both	Båda
+	Shorter Than Length	Kortare än längden
+	Dashes to Geometry	Streck till geometri
+	Dashes to Geometry…	Streck till geometri…
+	Add Anchors	Lägg till ankarpunkter
+	Add Anchors…	Lägg till ankarpunkter…
+	Smooth Anchors	Jämna ut ankarpunkter
+	Smooth Anchors…	Jämna ut ankarpunkter…
+	Simplify Anchors	Förenkla ankarpunkter
+	Simplify Anchors…	Förenkla ankarpunkter…
+	Split at Anchors	Dela vid ankarpunkter
+	Split at Anchors…	Dela vid ankarpunkter…
+	Extend Path…	Förläng bana…
+	Close Path…	Stäng bana…
+	Retract Handles…	Dra in handtag…
+	Dash 1	Streck 1
+	Gap 1	Mellanrum 1
+	Dash 2	Streck 2
+	Gap 2	Mellanrum 2
+	Dash 3	Streck 3
+	Gap 3	Mellanrum 3
+	Dash 4	Streck 4
+	Gap 4	Mellanrum 4
+	Dash 5	Streck 5
+	Gap 5	Mellanrum 5
