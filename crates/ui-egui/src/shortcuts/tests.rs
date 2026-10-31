@@ -1089,6 +1089,7 @@ fn grid_drag_only_suppresses_claimed_v_textless_paste() {
     let command = command_key();
     frame(&mut app, vec![egui::Event::ModifiersChanged(command), release(Key::V, command)]);
     assert_eq!(count(&app), initial, "the grid takes command V");
+    assert_eq!(app.session.tool_options()["radialSkew"], json!(10.0), "a release-only command V changes the grid skew once");
     frame(&mut app, vec![egui::Event::ModifiersChanged(Modifiers::NONE), release(Key::Paste, Modifiers::NONE)]);
     assert_eq!(count(&app), initial + 1, "the Paste key pastes while the grid is dragged");
     let alt_command = command | Modifiers::ALT;

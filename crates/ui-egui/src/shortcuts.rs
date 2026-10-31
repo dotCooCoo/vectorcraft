@@ -394,6 +394,8 @@ fn grid_textless_paste(app: &mut VectorcraftApp, busy: bool, view: ViewInfo, tex
             && matches!(app.session.tool_id(), "rectangularGrid" | "polarGrid")
             && app.session.tool_claims_key(ToolKey::Letter('v'), view)
         {
+            let requests = app.session.tool_key(ToolKey::Letter('v'), Mods::default(), view);
+            crate::canvas::apply_requests(app, requests);
             None
         } else {
             Some(modifiers)
