@@ -19,7 +19,8 @@
 //! - Setup: `0 Bn` (no gradient definitions, §3), the color swatches (`%AI5_BeginPalette`,
 //!   `0 0 Pb`, the Registration swatch, each swatch's color operator and `(name) Pc`, a color group as `0 (name) count Pg`
 //!   before its swatches, `PB`), then the artboards as the `ArtboardArray` of the `/Document`
-//!   dictionary and the canvas size as its `AIDocumentCanvasSize`, on `%_` lines.
+//!   dictionary's `/Recorded` part and the canvas size as its `AIDocumentCanvasSize`, on `%_`
+//!   lines.
 //! - Layers: `%AI5_BeginLayer`, `visible preview unlocked printing dimmed 0 1 colorIndex r g b 0
 //!   dimPercent 0 Lb` (14 operands; a color that isn't one of the preset layer colors has the
 //!   index -1), `(name) Ln`, the layer's name as an XML id in an `/ArtDictionary`, its art and
@@ -304,7 +305,10 @@ fn ruler_units(u: Unit) -> u8 {
 /// the canvas (`RulerOrigin`, `origin` being art space's origin there), its pixel aspect ratio
 /// (`PAR`), `DisplayMark` 0 (as in the files users sent), whether it is the selected one (the
 /// first) and its name; then the canvas's size. Apps that read the editing data drop a record that
-/// lacks any of the first five.
+/// lacks any of the first five. Both sit in the dictionary the `/Document` marks `/Recorded`,
+/// followed by an empty `/NotRecorded` one, as in the files users sent: apps that read the editing
+/// data do not read artboards from the `/NotRecorded` dictionary, and then place the art one
+/// artboard's height above a default artboard.
 fn artboards(s: &mut String, doc: &Document, to_art: Affine, origin: (f64, f64)) {
     s.push_str("%AI9_BeginDocumentData\n%_/Document :\n%_/Dictionary :\n%_/Array :\n");
     for (i, ab) in doc.artboards.iter().enumerate() {
@@ -323,7 +327,7 @@ fn artboards(s: &mut String, doc: &Document, to_art: Affine, origin: (f64, f64))
     }
     s.push_str("%_; (ArtboardArray) ,\n");
     let _ = writeln!(s, "%_{CANVAS_SIZE} /Int (AIDocumentCanvasSize) ,");
-    s.push_str("%_; /NotRecorded ,\n%_;\n%AI9_EndDocumentData\n");
+    s.push_str("%_; /Recorded ,\n%_/Dictionary : /NotRecorded ,\n%_; /NotRecorded ,\n%_;\n%AI9_EndDocumentData\n");
 }
 
 #[cfg(test)]

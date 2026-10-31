@@ -342,6 +342,76 @@ fn art_lies_on_its_artboard_in_ruler_space() {
     assert_eq!(bounds, Rect::new(10.0, 20.0, 30.0, 40.0));
 }
 
+/// A gray rectangle at `r` (document space) in `doc`'s first layer.
+fn add_rect(doc: &mut Document, r: Rect) {
+    let rect = Node::path(doc.alloc_id(), shapes::rectangle(r), Appearance::basic(solid(Color::gray(0.5)), Paint::None, 0.0));
+    let layer = doc.layers[0].id;
+    doc.insert(Some(layer), usize::MAX, rect).unwrap();
+}
+
+/// The end of the document data: the artboards and the canvas size in the `/Recorded` part of the
+/// `/Document` dictionary, then an empty `/NotRecorded` part.
+const RECORDED: &str = "%_; (ArtboardArray) ,\n%_16383 /Int (AIDocumentCanvasSize) ,\n%_; /Recorded ,\n%_/Dictionary : /NotRecorded ,\n%_; /NotRecorded ,\n%_;\n%AI9_EndDocumentData\n";
+
+/// One letter-size artboard: the art 36 points in from its top-left corner, the artboard's record
+/// and the boxes, with the artboards in the `/Recorded` part of the `/Document` dictionary.
+#[test]
+fn one_artboard_is_recorded_with_its_art_in_place() {
+    let mut doc = Document::new(612.0, 792.0);
+    doc.artboards[0].name = "Page".into();
+    add_rect(&mut doc, Rect::new(36.0, 36.0, 576.0, 756.0));
+    let text = program(&doc);
+    for line in [
+        "%%BoundingBox: 36 -756 576 -36\n",
+        "%AI3_Cropmarks: 0 -792 612 0\n",
+        "%AI3_TemplateBox: 306.5 -396.5 306.5 -396.5\n",
+        "\n36 -36 m\n",
+        "%_0 0 /RealPointRelToROrigin\n%_ (PositionPoint1) ,\n%_612 -792 /RealPointRelToROrigin\n%_ (PositionPoint2) ,\n%_7885 7795 /RealPoint\n%_ (RulerOrigin) ,\n",
+        "%_(Page) /UnicodeString (Name) ,\n%_; ,\n",
+        RECORDED,
+    ] {
+        assert!(text.contains(line), "{line}\n{text}");
+    }
+    let read = read_back(&doc);
+    assert_eq!(read.artboards.iter().map(|a| (a.name.as_str(), a.rect)).collect::<Vec<_>>(), [("Page", Rect::new(0.0, 0.0, 612.0, 792.0))]);
+    let bounds = read.layers.iter().filter_map(|l| l.visual_bounds()).reduce(|a, b| a.union(b)).unwrap();
+    assert_eq!(bounds, Rect::new(36.0, 36.0, 576.0, 756.0));
+}
+
+/// Two named artboards of different sizes, tops aligned: each record holds its corners in art
+/// space and its top-left corner on the canvas, where the two together are centered.
+#[test]
+fn artboards_of_different_sizes_keep_their_names_and_places() {
+    let mut doc = Document::new(400.0, 300.0);
+    doc.artboards[0].name = "Front".into();
+    let mut back = doc.artboards[0].clone();
+    (back.id, back.name, back.rect) = (2, "Back".into(), Rect::new(440.0, 0.0, 740.0, 500.0));
+    doc.artboards.push(back);
+    add_rect(&mut doc, Rect::new(50.0, 50.0, 150.0, 100.0));
+    add_rect(&mut doc, Rect::new(490.0, 50.0, 590.0, 100.0));
+    let text = program(&doc);
+    for line in [
+        "%AI3_Cropmarks: 0 -300 400 0\n",
+        "%AI3_TemplateBox: 370.5 -250.5 370.5 -250.5\n",
+        "\n50 -50 m\n",
+        "\n490 -50 m\n",
+        "%_0 0 /RealPointRelToROrigin\n%_ (PositionPoint1) ,\n%_400 -300 /RealPointRelToROrigin\n%_ (PositionPoint2) ,\n%_7821 7941 /RealPoint\n%_ (RulerOrigin) ,\n",
+        "%_1 /Bool (IsArtboardSelected) ,\n%_(Front) /UnicodeString (Name) ,\n",
+        "%_440 0 /RealPointRelToROrigin\n%_ (PositionPoint1) ,\n%_740 -500 /RealPointRelToROrigin\n%_ (PositionPoint2) ,\n%_8261 7941 /RealPoint\n%_ (RulerOrigin) ,\n",
+        "%_0 /Bool (IsArtboardSelected) ,\n%_(Back) /UnicodeString (Name) ,\n",
+        RECORDED,
+    ] {
+        assert!(text.contains(line), "{line}\n{text}");
+    }
+    let read = read_back(&doc);
+    assert_eq!(
+        read.artboards.iter().map(|a| (a.name.as_str(), a.rect)).collect::<Vec<_>>(),
+        [("Front", Rect::new(0.0, 0.0, 400.0, 300.0)), ("Back", Rect::new(440.0, 0.0, 740.0, 500.0))]
+    );
+    let bounds = read.layers.iter().filter_map(|l| l.visual_bounds()).reduce(|a, b| a.union(b)).unwrap();
+    assert_eq!(bounds, Rect::new(50.0, 50.0, 590.0, 100.0));
+}
+
 #[test]
 fn a_pdf_carries_the_data_on_its_first_page() {
     let doc = sample();
