@@ -5856,4 +5856,47 @@ breakText	Glyphs	Glifos
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` deve ser lines, paragraphs, words ou glyphs, não {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` deve ser "line" ou "paragraph", não {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` deve ser "left", "center" ou "right", não {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Distance	Distância
+	Mode	Modo
+	Path Effects	Efeitos de Caminho
+	Reverse Direction	Inverter Direção
+	Align to Corners and Ends	Alinhar aos Cantos e Extremidades
+	Count	Quantidade
+	Max Count	Quantidade Máxima
+	Start Length	Comprimento Inicial
+	Start Percent	Porcentagem Inicial
+	Start Shape	Forma Inicial
+	End Length	Comprimento Final
+	End Percent	Porcentagem Final
+	End Shape	Forma Final
+	By Count	Por Quantidade
+	By Distance	Por Distância
+	Both	Ambos
+	Shorter Than Length	Mais Curtas que o Comprimento
+	Dashes to Geometry	Traços em Geometria
+	Dashes to Geometry…	Traços em Geometria…
+	Add Anchors	Adicionar Pontos de Ancoragem
+	Add Anchors…	Adicionar Pontos de Ancoragem…
+	Smooth Anchors	Suavizar Pontos de Ancoragem
+	Smooth Anchors…	Suavizar Pontos de Ancoragem…
+	Simplify Anchors	Simplificar Pontos de Ancoragem
+	Simplify Anchors…	Simplificar Pontos de Ancoragem…
+	Split at Anchors	Dividir nos Pontos de Ancoragem
+	Split at Anchors…	Dividir nos Pontos de Ancoragem…
+	Extend Path…	Estender Caminho…
+	Close Path…	Fechar Caminho…
+	Retract Handles…	Recolher Alças…
+	Dash 1	Traço 1
+	Gap 1	Lacuna 1
+	Dash 2	Traço 2
+	Gap 2	Lacuna 2
+	Dash 3	Traço 3
+	Gap 3	Lacuna 3
+	Dash 4	Traço 4
+	Gap 4	Lacuna 4
+	Dash 5	Traço 5
+	Gap 5	Lacuna 5
+
 @msg	{_1}: they came in as the page's art	{_1}: foram importados como arte da página

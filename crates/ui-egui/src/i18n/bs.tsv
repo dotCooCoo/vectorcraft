@@ -5852,6 +5852,48 @@ swatch	Yellow Green	Žuto-zelena
 	Position:	Položaj:
 	Font Size:	Veličina fonta:
 shape	Open	Otvoren
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Retract Handles	Uvuci ručke
+	Curved	Zakrivljeno
+	Path Effects	Efekti putanje
+	Reverse Direction	Obrni smjer
+	Align to Corners and Ends	Poravnaj s uglovima i krajevima
+	Count	Broj
+	Max Count	Najveći broj
+	Start Length	Dužina na početku
+	Start Percent	Postotak na početku
+	Start Shape	Oblik na početku
+	End Length	Dužina na kraju
+	End Percent	Postotak na kraju
+	End Shape	Oblik na kraju
+	By Count	Po broju
+	By Distance	Po udaljenosti
+	Both	Oba
+	Shorter Than Length	Kraće od dužine
+	Dashes to Geometry	Crtice u geometriju
+	Dashes to Geometry…	Crtice u geometriju…
+	Add Anchors	Dodaj sidra
+	Add Anchors…	Dodaj sidra…
+	Smooth Anchors	Zagladi sidra
+	Smooth Anchors…	Zagladi sidra…
+	Simplify Anchors	Pojednostavi sidra
+	Simplify Anchors…	Pojednostavi sidra…
+	Split at Anchors	Razdvoji na sidrima
+	Split at Anchors…	Razdvoji na sidrima…
+	Extend Path…	Produži putanju…
+	Close Path…	Zatvori putanju…
+	Retract Handles…	Uvuci ručke…
+	Dash 1	Crtica 1
+	Gap 1	Razmak 1
+	Dash 2	Crtica 2
+	Gap 2	Razmak 2
+	Dash 3	Crtica 3
+	Gap 3	Razmak 3
+	Dash 4	Crtica 4
+	Gap 4	Razmak 4
+	Dash 5	Crtica 5
+	Gap 5	Razmak 5
 # Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
 	Corner Tool	Alat za uglove
 	Slide Anchor Along Path	Klizanje sidra po putanji

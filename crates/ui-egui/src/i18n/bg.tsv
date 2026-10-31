@@ -5828,4 +5828,46 @@ breakText	Glyphs	Глифи
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` трябва да е lines, paragraphs, words или glyphs, а не {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` трябва да е "line" или "paragraph", а не {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` трябва да е "left", "center" или "right", а не {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Mode	Режим
+	Path Effects	Ефекти на пътя
+	Reverse Direction	Обръщане на посоката
+	Align to Corners and Ends	Подравняване към ъглите и краищата
+	Count	Брой
+	Max Count	Максимален брой
+	Start Length	Дължина в началото
+	Start Percent	Процент в началото
+	Start Shape	Форма в началото
+	End Length	Дължина в края
+	End Percent	Процент в края
+	End Shape	Форма в края
+	By Count	По брой
+	By Distance	По разстояние
+	Both	И двете
+	Shorter Than Length	По-къси от дължината
+	Dashes to Geometry	Тирета в геометрия
+	Dashes to Geometry…	Тирета в геометрия…
+	Add Anchors	Добавяне на опорни точки
+	Add Anchors…	Добавяне на опорни точки…
+	Smooth Anchors	Заглаждане на опорните точки
+	Smooth Anchors…	Заглаждане на опорните точки…
+	Simplify Anchors	Опростяване на опорните точки
+	Simplify Anchors…	Опростяване на опорните точки…
+	Split at Anchors	Разделяне в опорните точки
+	Split at Anchors…	Разделяне в опорните точки…
+	Extend Path…	Удължаване на път…
+	Close Path…	Затваряне на пътя…
+	Retract Handles…	Прибиране на дръжките…
+	Dash 1	Тире 1
+	Gap 1	Разстояние 1
+	Dash 2	Тире 2
+	Gap 2	Разстояние 2
+	Dash 3	Тире 3
+	Gap 3	Разстояние 3
+	Dash 4	Тире 4
+	Gap 4	Разстояние 4
+	Dash 5	Тире 5
+	Gap 5	Разстояние 5
+
 @msg	{_1}: they came in as the page's art	{_1}: те са внесени като изображението от страницата

@@ -161,9 +161,8 @@ fn expand_appearances(d: &mut Document) {
     }
 }
 
-/// Expand every layer's pattern fills that paint a transparent image into their tiles, so those
-/// images flatten like any other transparent image. The writer would otherwise draw them opaque
-/// over white.
+/// Expand every layer's pattern fills that paint an image with see-through pixels, a colorize paint,
+/// opacity or blending into their tiles, so those images can be flattened.
 fn expand_image_patterns(d: &mut Document) -> Result<()> {
     let keys = super::super::flatten::see_through_images(d);
     let layers: Vec<NodeId> = d.layers.iter().map(|l| l.id).collect();

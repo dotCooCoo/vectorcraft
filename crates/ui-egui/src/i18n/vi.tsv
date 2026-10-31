@@ -5539,4 +5539,46 @@ breakText	Glyphs	Glyph
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` phải là lines, paragraphs, words hoặc glyphs, không phải {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` phải là "line" hoặc "paragraph", không phải {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` phải là "left", "center" hoặc "right", không phải {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Hiệu ứng đường dẫn
+	Reverse Direction	Đảo ngược hướng
+	Align to Corners and Ends	Căn theo góc và đầu mút
+	Count	Số lượng
+	Max Count	Số lượng tối đa
+	Start Length	Độ dài đầu
+	Start Percent	Phần trăm đầu
+	Start Shape	Hình dạng đầu
+	End Length	Độ dài cuối
+	End Percent	Phần trăm cuối
+	End Shape	Hình dạng cuối
+	By Count	Theo số lượng
+	By Distance	Theo khoảng cách
+	Both	Cả hai
+	Shorter Than Length	Ngắn hơn độ dài
+	Anchors	Điểm neo
+	Dashes to Geometry	Nét đứt thành hình học
+	Dashes to Geometry…	Nét đứt thành hình học…
+	Add Anchors	Thêm các điểm neo
+	Add Anchors…	Thêm các điểm neo…
+	Smooth Anchors	Làm mượt điểm neo
+	Smooth Anchors…	Làm mượt điểm neo…
+	Simplify Anchors	Đơn giản hóa điểm neo
+	Simplify Anchors…	Đơn giản hóa điểm neo…
+	Split at Anchors	Tách tại điểm neo
+	Split at Anchors…	Tách tại điểm neo…
+	Extend Path…	Kéo dài đường dẫn…
+	Close Path…	Đóng đường dẫn…
+	Retract Handles…	Thu tay nắm…
+	Dash 1	Nét 1
+	Gap 1	Khoảng hở 1
+	Dash 2	Nét 2
+	Gap 2	Khoảng hở 2
+	Dash 3	Nét 3
+	Gap 3	Khoảng hở 3
+	Dash 4	Nét 4
+	Gap 4	Khoảng hở 4
+	Dash 5	Nét 5
+	Gap 5	Khoảng hở 5
+
 @msg	{_1}: they came in as the page's art	{_1}: đã được nhập dưới dạng hình vẽ của trang

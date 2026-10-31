@@ -5793,4 +5793,46 @@ breakText	Glyphs	Glify
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` musi mieć wartość lines, paragraphs, words lub glyphs, a nie {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` musi mieć wartość "line" lub "paragraph", a nie {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` musi mieć wartość "left", "center" lub "right", a nie {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Efekty ścieżki
+	Reverse Direction	Odwróć kierunek
+	Align to Corners and Ends	Wyrównaj do narożników i końców
+	Count	Liczba
+	Max Count	Maksymalna liczba
+	Start Length	Długość na początku
+	Start Percent	Procent na początku
+	Start Shape	Kształt na początku
+	End Length	Długość na końcu
+	End Percent	Procent na końcu
+	End Shape	Kształt na końcu
+	By Count	Według liczby
+	By Distance	Według odległości
+	Both	Oba
+	Shorter Than Length	Krótsze niż długość
+	Anchors	Punkty kontrolne
+	Dashes to Geometry	Kreski jako geometria
+	Dashes to Geometry…	Kreski jako geometria…
+	Add Anchors	Dodaj punkty kontrolne
+	Add Anchors…	Dodaj punkty kontrolne…
+	Smooth Anchors	Wygładź punkty kontrolne
+	Smooth Anchors…	Wygładź punkty kontrolne…
+	Simplify Anchors	Uprość punkty kontrolne
+	Simplify Anchors…	Uprość punkty kontrolne…
+	Split at Anchors	Podziel w punktach kontrolnych
+	Split at Anchors…	Podziel w punktach kontrolnych…
+	Extend Path…	Przedłuż ścieżkę…
+	Close Path…	Zamknij ścieżkę…
+	Retract Handles…	Schowaj uchwyty…
+	Dash 1	Kreska 1
+	Gap 1	Odstęp 1
+	Dash 2	Kreska 2
+	Gap 2	Odstęp 2
+	Dash 3	Kreska 3
+	Gap 3	Odstęp 3
+	Dash 4	Kreska 4
+	Gap 4	Odstęp 4
+	Dash 5	Kreska 5
+	Gap 5	Odstęp 5
+
 @msg	{_1}: they came in as the page's art	{_1}: zaimportowano je jako grafikę strony

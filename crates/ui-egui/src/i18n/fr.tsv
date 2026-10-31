@@ -5937,4 +5937,45 @@ breakText	Glyphs	Glyphes
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` doit valoir lines, paragraphs, words ou glyphs, et non {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` doit valoir "line" ou "paragraph", et non {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` doit valoir "left", "center" ou "right", et non {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Effets de tracé
+	Reverse Direction	Inverser le sens
+	Align to Corners and Ends	Aligner sur les angles et extrémités
+	Count	Nombre
+	Max Count	Nombre maximal
+	Start Length	Longueur au début
+	Start Percent	Pourcentage au début
+	Start Shape	Forme au début
+	End Length	Longueur à la fin
+	End Percent	Pourcentage à la fin
+	End Shape	Forme à la fin
+	By Count	Par nombre
+	By Distance	Par distance
+	Both	Les deux
+	Shorter Than Length	Plus courtes que la longueur
+	Dashes to Geometry	Tirets en géométrie
+	Dashes to Geometry…	Tirets en géométrie…
+	Add Anchors	Ajouter des points d’ancrage
+	Add Anchors…	Ajouter des points d’ancrage…
+	Smooth Anchors	Lisser les points d’ancrage
+	Smooth Anchors…	Lisser les points d’ancrage…
+	Simplify Anchors	Simplifier les points d’ancrage
+	Simplify Anchors…	Simplifier les points d’ancrage…
+	Split at Anchors	Scinder aux points d’ancrage
+	Split at Anchors…	Scinder aux points d’ancrage…
+	Extend Path…	Prolonger le tracé…
+	Close Path…	Fermer le tracé…
+	Retract Handles…	Rétracter les poignées…
+	Dash 1	Tiret 1
+	Gap 1	Écart 1
+	Dash 2	Tiret 2
+	Gap 2	Écart 2
+	Dash 3	Tiret 3
+	Gap 3	Écart 3
+	Dash 4	Tiret 4
+	Gap 4	Écart 4
+	Dash 5	Tiret 5
+	Gap 5	Écart 5
+
 @msg	{_1}: they came in as the page's art	{_1} : ils ont été importés comme le dessin de la page

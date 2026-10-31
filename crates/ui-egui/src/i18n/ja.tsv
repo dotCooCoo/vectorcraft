@@ -5626,4 +5626,46 @@ breakText	Glyphs	字形
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` は lines、paragraphs、words、glyphs のいずれかにしてください({other} は使用できません)
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` は "line" または "paragraph" にしてください({other} は使用できません)
 @msg	`align` must be "left", "center" or "right", not {other}	`align` は "left"、"center"、"right" のいずれかにしてください({other} は使用できません)
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	パス効果
+	Reverse Direction	方向を反転
+	Align to Corners and Ends	コーナーと先端に整列
+	Count	個数
+	Max Count	最大個数
+	Start Length	始点の長さ
+	Start Percent	始点のパーセント
+	Start Shape	始点の形状
+	End Length	終点の長さ
+	End Percent	終点のパーセント
+	End Shape	終点の形状
+	By Count	個数で指定
+	By Distance	距離で指定
+	Both	両方
+	Shorter Than Length	長さより短いもの
+	Anchors	アンカーポイント
+	Dashes to Geometry	破線をジオメトリに
+	Dashes to Geometry…	破線をジオメトリに…
+	Add Anchors	アンカーポイントを追加
+	Add Anchors…	アンカーポイントを追加…
+	Smooth Anchors	アンカーポイントをスムーズに
+	Smooth Anchors…	アンカーポイントをスムーズに…
+	Simplify Anchors	アンカーポイントを単純化
+	Simplify Anchors…	アンカーポイントを単純化…
+	Split at Anchors	アンカーポイントで分割
+	Split at Anchors…	アンカーポイントで分割…
+	Extend Path…	パスを延長…
+	Close Path…	パスを閉じる…
+	Retract Handles…	ハンドルを収める…
+	Dash 1	線分 1
+	Gap 1	間隔 1
+	Dash 2	線分 2
+	Gap 2	間隔 2
+	Dash 3	線分 3
+	Gap 3	間隔 3
+	Dash 4	線分 4
+	Gap 4	間隔 4
+	Dash 5	線分 5
+	Gap 5	間隔 5
+
 @msg	{_1}: they came in as the page's art	{_1}: ページのアートとして読み込みました

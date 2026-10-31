@@ -5929,4 +5929,45 @@ breakText	Glyphs	Glifs
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` ha de ser lines, paragraphs, words o glyphs, no {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` ha de ser "line" o "paragraph", no {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` ha de ser "left", "center" o "right", no {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Efectes de traçat
+	Reverse Direction	Inverteix la direcció
+	Align to Corners and Ends	Alinea a les cantonades i als extrems
+	Count	Nombre
+	Max Count	Nombre màxim
+	Start Length	Longitud a l’inici
+	Start Percent	Percentatge a l’inici
+	Start Shape	Forma a l’inici
+	End Length	Longitud al final
+	End Percent	Percentatge al final
+	End Shape	Forma al final
+	By Count	Per nombre
+	By Distance	Per distància
+	Both	Tots dos
+	Shorter Than Length	Més curts que la longitud
+	Dashes to Geometry	Traços a geometria
+	Dashes to Geometry…	Traços a geometria…
+	Add Anchors	Afegeix punts d’ancoratge
+	Add Anchors…	Afegeix punts d’ancoratge…
+	Smooth Anchors	Suavitza els punts d’ancoratge
+	Smooth Anchors…	Suavitza els punts d’ancoratge…
+	Simplify Anchors	Simplifica els punts d’ancoratge
+	Simplify Anchors…	Simplifica els punts d’ancoratge…
+	Split at Anchors	Divideix als punts d’ancoratge
+	Split at Anchors…	Divideix als punts d’ancoratge…
+	Extend Path…	Allarga el traçat…
+	Close Path…	Tanca el traçat…
+	Retract Handles…	Retrau les nanses…
+	Dash 1	Guió 1
+	Gap 1	Separació 1
+	Dash 2	Guió 2
+	Gap 2	Separació 2
+	Dash 3	Guió 3
+	Gap 3	Separació 3
+	Dash 4	Guió 4
+	Gap 4	Separació 4
+	Dash 5	Guió 5
+	Gap 5	Separació 5
+
 @msg	{_1}: they came in as the page's art	{_1}: han entrat com a art de la pàgina

@@ -5994,4 +5994,45 @@ breakText	Glyphs	Glyfer
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` måste vara lines, paragraphs, words eller glyphs, inte {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` måste vara "line" eller "paragraph", inte {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` måste vara "left", "center" eller "right", inte {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Baneffekter
+	Reverse Direction	Vänd riktning
+	Align to Corners and Ends	Justera mot hörn och ändar
+	Count	Antal
+	Max Count	Högsta antal
+	Start Length	Startlängd
+	Start Percent	Startprocent
+	Start Shape	Startform
+	End Length	Slutlängd
+	End Percent	Slutprocent
+	End Shape	Slutform
+	By Count	Efter antal
+	By Distance	Efter avstånd
+	Both	Båda
+	Shorter Than Length	Kortare än längden
+	Dashes to Geometry	Streck till geometri
+	Dashes to Geometry…	Streck till geometri…
+	Add Anchors	Lägg till ankarpunkter
+	Add Anchors…	Lägg till ankarpunkter…
+	Smooth Anchors	Jämna ut ankarpunkter
+	Smooth Anchors…	Jämna ut ankarpunkter…
+	Simplify Anchors	Förenkla ankarpunkter
+	Simplify Anchors…	Förenkla ankarpunkter…
+	Split at Anchors	Dela vid ankarpunkter
+	Split at Anchors…	Dela vid ankarpunkter…
+	Extend Path…	Förläng bana…
+	Close Path…	Stäng bana…
+	Retract Handles…	Dra in handtag…
+	Dash 1	Streck 1
+	Gap 1	Mellanrum 1
+	Dash 2	Streck 2
+	Gap 2	Mellanrum 2
+	Dash 3	Streck 3
+	Gap 3	Mellanrum 3
+	Dash 4	Streck 4
+	Gap 4	Mellanrum 4
+	Dash 5	Streck 5
+	Gap 5	Mellanrum 5
+
 @msg	{_1}: they came in as the page's art	{_1}: de importerades som sidans bild

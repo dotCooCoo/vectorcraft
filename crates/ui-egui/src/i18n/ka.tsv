@@ -5928,4 +5928,45 @@ breakText	Glyphs	გლიფები
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` უნდა იყოს lines, paragraphs, words ან glyphs და არა {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` უნდა იყოს "line" ან "paragraph" და არა {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` უნდა იყოს "left", "center" ან "right" და არა {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	ტრაექტორიის ეფექტები
+	Reverse Direction	მიმართულების შებრუნება
+	Align to Corners and Ends	კუთხეებთან და ბოლოებთან სწორება
+	Count	რაოდენობა
+	Max Count	მაქსიმალური რაოდენობა
+	Start Length	საწყისი სიგრძე
+	Start Percent	საწყისი პროცენტი
+	Start Shape	საწყისი ფორმა
+	End Length	საბოლოო სიგრძე
+	End Percent	საბოლოო პროცენტი
+	End Shape	საბოლოო ფორმა
+	By Count	რაოდენობით
+	By Distance	მანძილით
+	Both	ორივე
+	Shorter Than Length	სიგრძეზე მოკლე
+	Dashes to Geometry	ტირეები გეომეტრიად
+	Dashes to Geometry…	ტირეები გეომეტრიად…
+	Add Anchors	საყრდენი წერტილების დამატება
+	Add Anchors…	საყრდენი წერტილების დამატება…
+	Smooth Anchors	საყრდენი წერტილების მოგლუვება
+	Smooth Anchors…	საყრდენი წერტილების მოგლუვება…
+	Simplify Anchors	საყრდენი წერტილების გამარტივება
+	Simplify Anchors…	საყრდენი წერტილების გამარტივება…
+	Split at Anchors	დაყოფა საყრდენ წერტილებზე
+	Split at Anchors…	დაყოფა საყრდენ წერტილებზე…
+	Extend Path…	ტრაექტორიის გაგრძელება…
+	Close Path…	ტრაექტორიის შეკვრა…
+	Retract Handles…	სახელურების შეკეცვა…
+	Dash 1	ტირე 1
+	Gap 1	შუალედი 1
+	Dash 2	ტირე 2
+	Gap 2	შუალედი 2
+	Dash 3	ტირე 3
+	Gap 3	შუალედი 3
+	Dash 4	ტირე 4
+	Gap 4	შუალედი 4
+	Dash 5	ტირე 5
+	Gap 5	შუალედი 5
+
 @msg	{_1}: they came in as the page's art	{_1}: იმპორტირებულია გვერდის გამოსახულების სახით

@@ -2118,6 +2118,14 @@ fn a_blends_transparency_follows_its_record() {
         assert_eq!((a[0].opacity, a[0].knockout), (0.6, Knockout::On), "live: {live}");
         assert_eq!(a[1].opacity, 1.0, "the next object's own state");
     }
+    // A layer whose last object is a blend: a state block that ends `7 () XW` before `LB` is the
+    // layer's, and the blend keeps the state it had.
+    let body = format!("{}1 0.35 0 0 0 Xy\n0 0 Xd\n7 () XW\n", blend_file(straight, [Some("A"), Some("B")], &blend_record(&['A', 'B'])));
+    let doc = read_ok(&layer(&body)).doc;
+    assert_eq!((doc.layers[0].opacity, doc.layers[0].blend), (0.35, BlendMode::Multiply), "the layer's state");
+    let a = art(&doc);
+    assert!(matches!(a[0].kind, NodeKind::Blend { .. }), "{:?}", a[0].kind);
+    assert_eq!((a[0].opacity, a[0].blend), (1.0, BlendMode::Normal), "the blend's own state");
 }
 
 /// The blend is live: moving a key moves the steps between it and the other key with it.

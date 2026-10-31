@@ -5969,4 +5969,45 @@ breakText	Glyphs	Merkit
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` on oltava lines, paragraphs, words tai glyphs, ei {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` on oltava "line" tai "paragraph", ei {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` on oltava "left", "center" tai "right", ei {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Polkutehosteet
+	Reverse Direction	Käännä suunta
+	Align to Corners and Ends	Tasaa kulmiin ja päihin
+	Count	Määrä
+	Max Count	Enimmäismäärä
+	Start Length	Alun pituus
+	Start Percent	Alun prosentti
+	Start Shape	Alun muoto
+	End Length	Lopun pituus
+	End Percent	Lopun prosentti
+	End Shape	Lopun muoto
+	By Count	Määrän mukaan
+	By Distance	Etäisyyden mukaan
+	Both	Molemmat
+	Shorter Than Length	Pituutta lyhyemmät
+	Dashes to Geometry	Katkoviivat geometriaksi
+	Dashes to Geometry…	Katkoviivat geometriaksi…
+	Add Anchors	Lisää ankkuripisteitä
+	Add Anchors…	Lisää ankkuripisteitä…
+	Smooth Anchors	Pyöristä ankkuripisteet
+	Smooth Anchors…	Pyöristä ankkuripisteet…
+	Simplify Anchors	Yksinkertaista ankkuripisteet
+	Simplify Anchors…	Yksinkertaista ankkuripisteet…
+	Split at Anchors	Jaa ankkuripisteistä
+	Split at Anchors…	Jaa ankkuripisteistä…
+	Extend Path…	Jatka polkua…
+	Close Path…	Sulje polku…
+	Retract Handles…	Vedä kahvat sisään…
+	Dash 1	Viiva 1
+	Gap 1	Väli 1
+	Dash 2	Viiva 2
+	Gap 2	Väli 2
+	Dash 3	Viiva 3
+	Gap 3	Väli 3
+	Dash 4	Viiva 4
+	Gap 4	Väli 4
+	Dash 5	Viiva 5
+	Gap 5	Väli 5
+
 @msg	{_1}: they came in as the page's art	{_1}: ne tuotiin sivun piirroksena

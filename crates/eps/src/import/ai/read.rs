@@ -196,8 +196,8 @@ struct Reader<'a> {
     mesh_ended: bool,
     /// A layer's own state (`Xy` after its art, before `LB`), until something says the art moves on.
     layer_state: Option<(f32, BlendMode, bool, Knockout)>,
-    /// The state a mesh had before an `Xy` right after its end, which is the layer's instead when
-    /// the layer's `LB` follows rather than the mesh's own `6 () XW`.
+    /// The state a mesh or blend had before an `Xy` right after its end, which is the layer's
+    /// instead when the layer's `LB` follows rather than their own `6 () XW`.
     mesh_undo: Option<(f32, BlendMode, bool, Knockout)>,
     /// Painted copies of clipping paths that have a fill (drawn under what they clip).
     clip_fills: HashSet<NodeId>,

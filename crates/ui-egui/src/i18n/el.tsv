@@ -5890,4 +5890,46 @@ breakText	Glyphs	Γλύφοι
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	το `by` πρέπει να είναι lines, paragraphs, words ή glyphs, όχι {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	το `kind` πρέπει να είναι "line" ή "paragraph", όχι {other}
 @msg	`align` must be "left", "center" or "right", not {other}	το `align` πρέπει να είναι "left", "center" ή "right", όχι {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Mode	Λειτουργία
+	Path Effects	Εφέ διαδρομής
+	Reverse Direction	Αντιστροφή κατεύθυνσης
+	Align to Corners and Ends	Στοίχιση σε γωνίες και άκρα
+	Count	Πλήθος
+	Max Count	Μέγιστο πλήθος
+	Start Length	Μήκος αρχής
+	Start Percent	Ποσοστό αρχής
+	Start Shape	Σχήμα αρχής
+	End Length	Μήκος τέλους
+	End Percent	Ποσοστό τέλους
+	End Shape	Σχήμα τέλους
+	By Count	Κατά πλήθος
+	By Distance	Κατά απόσταση
+	Both	Και τα δύο
+	Shorter Than Length	Μικρότερες από το μήκος
+	Dashes to Geometry	Παύλες σε γεωμετρία
+	Dashes to Geometry…	Παύλες σε γεωμετρία…
+	Add Anchors	Προσθήκη σημείων αγκύρωσης
+	Add Anchors…	Προσθήκη σημείων αγκύρωσης…
+	Smooth Anchors	Εξομάλυνση σημείων αγκύρωσης
+	Smooth Anchors…	Εξομάλυνση σημείων αγκύρωσης…
+	Simplify Anchors	Απλοποίηση σημείων αγκύρωσης
+	Simplify Anchors…	Απλοποίηση σημείων αγκύρωσης…
+	Split at Anchors	Διαχωρισμός στα σημεία αγκύρωσης
+	Split at Anchors…	Διαχωρισμός στα σημεία αγκύρωσης…
+	Extend Path…	Επέκταση διαδρομής…
+	Close Path…	Κλείσιμο διαδρομής…
+	Retract Handles…	Σύμπτυξη λαβών…
+	Dash 1	Παύλα 1
+	Gap 1	Διάκενο 1
+	Dash 2	Παύλα 2
+	Gap 2	Διάκενο 2
+	Dash 3	Παύλα 3
+	Gap 3	Διάκενο 3
+	Dash 4	Παύλα 4
+	Gap 4	Διάκενο 4
+	Dash 5	Παύλα 5
+	Gap 5	Διάκενο 5
+
 @msg	{_1}: they came in as the page's art	{_1}: εισήχθησαν ως γραφικά της σελίδας

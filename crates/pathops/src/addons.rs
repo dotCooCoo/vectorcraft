@@ -20,5 +20,5 @@ pub mod segment_reshape;
 pub use cleanup::{
     Rejoined, close_nearly_closed, merge_duplicate_anchors, near_point_groups, rejoin, remove_collinear_anchors, retract_tiny_handles,
 };
-pub use keep_shape::{SHARP_CORNER_DEG, remove_anchor_keep_shape, simplify_anchors_keep_shape, simplify_keep_shape};
+pub use keep_shape::{PT_PER_TOLERANCE, SHARP_CORNER_DEG, remove_anchor_keep_shape, simplify_anchors_keep_shape, simplify_keep_shape};
 pub use segment_reshape::{ReshapeMode, reshape_segment};

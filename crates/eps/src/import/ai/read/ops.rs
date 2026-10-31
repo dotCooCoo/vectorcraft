@@ -410,7 +410,7 @@ impl<'a> Reader<'a> {
     /// of a state block.
     /// The state block of a layer whose art ended (`Xy`, `Xd`, `XW`, then `LB`) is read at the
     /// `LB`, and can have the stroke style between its `Xy` and `Xd`: that keeps the layer's state,
-    /// and what a mesh before it had (`mesh_undo`).
+    /// and what a mesh or blend before it had (`mesh_undo`).
     fn state_block_continues(&mut self, w: &str) {
         if matches!(w, "Xy" | "Xd" | "XW" | "BB" | "LB") {
             return;
@@ -422,10 +422,9 @@ impl<'a> Reader<'a> {
         }
     }
 
-    /// `mode opacity isolate knockout shape Xy`; after a group's end, the group's too, after a
-    /// blend's record the blend's, and right after a gradient mesh's `/End X!` (before its `Xd` and
-    /// `6 () XW`), the mesh's, unless the layer's `LB` follows: then it is the layer's (see
-    /// `end_layer`).
+    /// `mode opacity isolate knockout shape Xy`; after a group's end, the group's too, and right
+    /// after a gradient mesh's `/End X!` or a blend's record (before their `Xd` and `6 () XW`),
+    /// theirs, unless the layer's `LB` follows: then it is the layer's (see `end_layer`).
     fn transparency(&mut self, vals: &[V], mesh_ended: bool) {
         let n = Self::nums(vals);
         let [mode, opacity, rest @ ..] = n.as_slice() else { return };
@@ -441,13 +440,15 @@ impl<'a> Reader<'a> {
         gs.knockout_shape = rest.get(2).is_some_and(|v| *v != 0.0);
         let gs = self.gs.clone();
         let in_layer = matches!(self.frames.last(), Some(Frame { kind: Kind::Layer(_), .. }));
-        if let Some(n) = self.last_object().filter(|n| mesh_ended && matches!(n.kind, NodeKind::Mesh(_))) {
-            // The mesh's, or the layer's when it is the layer's last object: kept for either.
+        if let Some(n) =
+            self.last_object().filter(|n| (mesh_ended && matches!(n.kind, NodeKind::Mesh(_))) || matches!(n.kind, NodeKind::Blend { .. }))
+        {
+            // The mesh's or blend's, or the layer's when it is the layer's last object: kept for either.
             let before = (n.opacity, n.blend, n.isolate, n.knockout);
             (n.opacity, n.blend, n.isolate, n.knockout) = (gs.opacity, gs.blend, gs.isolate, gs.knockout);
             self.mesh_undo = Some(before);
             self.layer_state = in_layer.then_some((gs.opacity, gs.blend, gs.isolate, gs.knockout));
-        } else if self.last_object().is_some_and(|n| matches!(n.kind, NodeKind::Group { .. } | NodeKind::Compound { .. } | NodeKind::Blend { .. })) {
+        } else if self.last_object().is_some_and(|n| matches!(n.kind, NodeKind::Group { .. } | NodeKind::Compound { .. })) {
             if let Some(n) = self.last_object() {
                 n.opacity = gs.opacity;
                 n.blend = gs.blend;

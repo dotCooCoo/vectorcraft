@@ -2317,6 +2317,88 @@ fn live_paint_bucket_tool_fills_face() {
 }
 
 #[test]
+fn live_paint_bucket_alt_sample_paints_next_face_without_changing_selection() {
+    let mut s = session();
+    let g = live(&mut s);
+    let src = rect(&mut s, 300.0, 0.0, 100.0, 100.0);
+    s.execute("paint.setFill", &json!({"color": "#ff0000"})).unwrap();
+    s.execute("paint.setStroke", &json!({"color": "#0000ff"})).unwrap();
+    s.execute("stroke.set", &json!({"weight": 12})).unwrap();
+    let dst = rect(&mut s, 500.0, 0.0, 50.0, 50.0);
+    s.execute("paint.default", &json!({})).unwrap();
+    let before = (s.doc().unwrap().doc.clone(), s.doc().unwrap().selection.clone());
+    let face_before = vectorcraft_tools::builder::face_at(&node(&s, g), Point::new(125.0, 50.0)).unwrap().appearance.fill_paint();
+    let v = ViewInfo::default();
+    s.select_tool("livePaintBucket", v).unwrap();
+    s.pointer(&PointerEvent::new(PointerKind::Down, 350.0, 50.0).with_mods(Mods { alt: true, ..Default::default() }), v).unwrap();
+    assert_eq!(s.paint.fill.color(), Some(Color::rgb8(255, 0, 0)));
+    assert_eq!(s.paint.stroke.color(), Some(Color::rgb8(0, 0, 255)));
+    assert_eq!(s.paint.stroke_width, 12.0);
+    assert_eq!((s.doc().unwrap().doc.clone(), s.doc().unwrap().selection.clone()), before);
+    assert_eq!(node(&s, dst).appearance.fill_paint().color(), Some(Color::WHITE));
+    assert_eq!(node(&s, src).appearance.fill_paint().color(), Some(Color::rgb8(255, 0, 0)));
+    assert_eq!(vectorcraft_tools::builder::face_at(&node(&s, g), Point::new(125.0, 50.0)).unwrap().appearance.fill_paint(), face_before);
+    s.pointer(&PointerEvent::new(PointerKind::Down, 125.0, 50.0), v).unwrap();
+    assert_eq!(
+        vectorcraft_tools::builder::face_at(&node(&s, g), Point::new(125.0, 50.0)).unwrap().appearance.fill_paint().color(),
+        Some(Color::rgb8(255, 0, 0))
+    );
+}
+
+#[test]
+fn live_paint_bucket_alt_image_samples_fill_and_clears_stroke() {
+    let mut s = session();
+    let img = image::RgbaImage::from_raw(1, 1, vec![0, 255, 0, 255]).unwrap();
+    let mut png = vec![];
+    img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+    s.edit("Place", |d, _| {
+        d.images.insert("px".into(), ImageBlob::png(png));
+        let id = d.alloc_id();
+        let im = ImageObject {
+            key: "px".into(),
+            width: 1,
+            height: 1,
+            xf: Affine::translate((300.0, 0.0)) * Affine::scale(100.0),
+            link: None,
+            placement: Default::default(),
+            pixels: None,
+        };
+        d.insert(d.default_layer(), 0, Node::new(id, NodeKind::Image(Box::new(im)))).map_err(|e| EngineError::Other(e.to_string()))
+    })
+    .unwrap();
+    let dst = rect(&mut s, 500.0, 0.0, 50.0, 50.0);
+    s.execute("paint.setStroke", &json!({"color": "#0000ff"})).unwrap();
+    let before = (s.doc().unwrap().doc.clone(), s.doc().unwrap().selection.clone());
+    let v = ViewInfo::default();
+    s.select_tool("livePaintBucket", v).unwrap();
+    s.pointer(&PointerEvent::new(PointerKind::Down, 350.0, 50.0).with_mods(Mods { alt: true, ..Default::default() }), v).unwrap();
+    assert_eq!(s.paint.fill.color(), Some(Color::rgb8(0, 255, 0)));
+    assert!(s.paint.stroke.is_none());
+    assert_eq!((s.doc().unwrap().doc.clone(), s.doc().unwrap().selection.clone()), before);
+    assert_eq!(node(&s, dst).appearance.stroke_paint().color(), Some(Color::rgb8(0, 0, 255)));
+}
+
+#[test]
+fn live_paint_bucket_alt_shift_gradient_samples_active_stroke_only() {
+    let mut s = session();
+    let src = rect(&mut s, 300.0, 0.0, 100.0, 100.0);
+    s.execute("paint.setFill", &json!({"gradient": {"stops": [{"offset": 0, "color": "#ff0000"}, {"offset": 1, "color": "#0000ff"}]}})).unwrap();
+    let dst = rect(&mut s, 500.0, 0.0, 50.0, 50.0);
+    s.execute("paint.setStroke", &json!({"color": "#ffffff"})).unwrap();
+    let fill = s.paint.fill.clone();
+    let before = (s.doc().unwrap().doc.clone(), s.doc().unwrap().selection.clone());
+    let v = ViewInfo::default();
+    s.select_tool("livePaintBucket", v).unwrap();
+    s.pointer(&PointerEvent::new(PointerKind::Down, 350.0, 50.0).with_mods(Mods { alt: true, shift: true, ..Default::default() }), v).unwrap();
+    let sampled = s.paint.stroke.color().unwrap().to_rgb();
+    assert!(sampled[0] > 0.0 && sampled[2] > 0.0 && sampled[1] < 0.01, "{sampled:?}");
+    assert_eq!(s.paint.fill, fill);
+    assert_eq!((s.doc().unwrap().doc.clone(), s.doc().unwrap().selection.clone()), before);
+    assert_eq!(node(&s, dst).appearance.stroke_paint().color(), Some(Color::WHITE));
+    assert!(matches!(node(&s, src).appearance.fill_paint(), Paint::Gradient(_)));
+}
+
+#[test]
 fn live_paint_selection_marquee_selects_what_it_touches() {
     let mut s = session();
     let g = live(&mut s);

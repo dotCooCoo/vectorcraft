@@ -5887,4 +5887,45 @@ breakText	Glyphs	Glyphs
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` moet lines, paragraphs, words of glyphs zijn, niet {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` moet "line" of "paragraph" zijn, niet {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` moet "left", "center" of "right" zijn, niet {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Padeffecten
+	Reverse Direction	Richting omkeren
+	Align to Corners and Ends	Uitlijnen op hoeken en uiteinden
+	Count	Aantal
+	Max Count	Maximumaantal
+	Start Length	Beginlengte
+	Start Percent	Beginpercentage
+	Start Shape	Beginvorm
+	End Length	Eindlengte
+	End Percent	Eindpercentage
+	End Shape	Eindvorm
+	By Count	Op aantal
+	By Distance	Op afstand
+	Both	Beide
+	Shorter Than Length	Korter dan lengte
+	Dashes to Geometry	Streepjes naar geometrie
+	Dashes to Geometry…	Streepjes naar geometrie…
+	Add Anchors	Ankerpunten toevoegen
+	Add Anchors…	Ankerpunten toevoegen…
+	Smooth Anchors	Ankerpunten gladmaken
+	Smooth Anchors…	Ankerpunten gladmaken…
+	Simplify Anchors	Ankerpunten vereenvoudigen
+	Simplify Anchors…	Ankerpunten vereenvoudigen…
+	Split at Anchors	Splitsen bij ankerpunten
+	Split at Anchors…	Splitsen bij ankerpunten…
+	Extend Path…	Pad verlengen…
+	Close Path…	Pad sluiten…
+	Retract Handles…	Grepen intrekken…
+	Dash 1	Streepje 1
+	Gap 1	Tussenruimte 1
+	Dash 2	Streepje 2
+	Gap 2	Tussenruimte 2
+	Dash 3	Streepje 3
+	Gap 3	Tussenruimte 3
+	Dash 4	Streepje 4
+	Gap 4	Tussenruimte 4
+	Dash 5	Streepje 5
+	Gap 5	Tussenruimte 5
+
 @msg	{_1}: they came in as the page's art	{_1}: ze zijn geïmporteerd als pagina-afbeelding

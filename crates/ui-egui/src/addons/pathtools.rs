@@ -30,6 +30,20 @@ pub const KIND: &str = "pathToolOptions";
 const CLOSE_MODES: [(&str, &str); 3] = [("handles", "Keep Handles"), ("straight", "Straight"), ("smooth", "Smooth")];
 const LABEL_W: f32 = 64.0;
 
+/// The parameters of the add-on's Path Effects that pick one of some values, as (label, value).
+pub(crate) fn effect_choices(effect: &str, key: &str) -> Option<&'static [(&'static str, &'static str)]> {
+    use vectorcraft_effects::addons::path as fx;
+    match (effect, key) {
+        (fx::ADD_ANCHORS, "target") => Some(&[("All", "all"), ("Curved", "curved"), ("Straight", "straight")]),
+        (fx::ADD_ANCHORS, "spacing") => Some(&[("By Count", "count"), ("By Distance", "distance")]),
+        (fx::EXTEND, "startShape" | "endShape") => Some(&[("Straight", "straight"), ("Arc", "arc")]),
+        (fx::CLOSE, "mode") => Some(&[("Straight", "straight"), ("Smooth", "smooth")]),
+        (fx::RETRACT, "handles") => Some(&[("All", "all"), ("Shorter Than Length", "shorter")]),
+        (fx::SPLIT, "anchors") => Some(&[("Corner", "corner"), ("Smooth", "smooth"), ("Both", "both")]),
+        _ => None,
+    }
+}
+
 /// Object › Plug-ins › Path Precision Tools.
 pub fn menu() -> Vec<Item> {
     let tool = |label, id: &str| Item::Cmd(label, "tool.select", json!({ "tool": id }));

@@ -111,7 +111,13 @@ mod tests {
     fn a_temp_dir_starts_empty_in_a_process_and_stays_for_later_calls() {
         let tag = "fresh-temp-dir";
         let left = std::env::temp_dir().join(format!("vectorcraft-testkit-{tag}-{}", std::process::id()));
-        std::fs::create_dir_all(left.join("nested")).unwrap();
+        // Made private, as `temp_dir` makes it: a directory others can reach is refused, not reused.
+        #[cfg_attr(not(unix), allow(unused_mut))]
+        let mut b = std::fs::DirBuilder::new();
+        b.recursive(true);
+        #[cfg(unix)]
+        std::os::unix::fs::DirBuilderExt::mode(&mut b, 0o700);
+        b.create(left.join("nested")).unwrap();
         std::fs::write(left.join("left.txt"), b"an earlier process").unwrap();
         let dir = super::temp_dir(tag);
         assert_eq!(dir, left);

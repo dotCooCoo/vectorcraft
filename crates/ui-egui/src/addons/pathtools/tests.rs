@@ -161,3 +161,51 @@ fn the_corner_section_shows_the_tools_values_and_applies_them_to_the_selection()
     assert_eq!(app.session.doc().unwrap().doc.node(id).unwrap().path_data().unwrap().anchor_count(), 6);
     assert!(painted_text(&mut app, show).contains("Corners selected: 2"), "still selected");
 }
+
+#[test]
+fn effect_path_effects_lists_the_live_effects_and_their_dialogs_pick_from_their_values() {
+    let mut app = app();
+    let entries = menus::menu_entries(&app);
+    let at = |label: &str| entries.iter().find(|e| e.path == ["Effect", "Path Effects"] && e.label == label);
+    for label in [
+        "Dashes to Geometry…",
+        "Add Anchors…",
+        "Extend Path…",
+        "Close Path…",
+        "Smooth Anchors…",
+        "Retract Handles…",
+        "Simplify Anchors…",
+        "Split at Anchors…",
+    ] {
+        assert_eq!(at(label).expect(label).command.as_deref(), Some("effect.dialog"), "{label}");
+    }
+    // No options: applied at once.
+    assert_eq!(at("Reverse Direction").expect("listed").command.as_deref(), Some("effect.apply"));
+    assert_eq!(entries.iter().filter(|e| e.path == ["Effect", "Path Effects"]).count(), 9);
+    // The dialog opens with the effect's parameters, each choice on a list.
+    app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 40, "height": 40})).unwrap();
+    menus::invoke(&mut app, "effect.dialog", json!({"effect": "addon.path.addAnchors"}));
+    assert_eq!(app.ui.dialog.as_ref().map(|d| d.kind.as_str()), Some("effect"));
+    let text = painted_text(&mut app, |app, ui| crate::dialogs::show(app, ui.ctx()));
+    assert!(text.contains("Add Anchors") && text.contains("Max Count:") && text.contains("All"), "{text}");
+    app.ui.dialog = None;
+    let _ = app.session.cancel_interaction();
+    menus::invoke(&mut app, "effect.dialog", json!({"effect": "addon.path.dashes"}));
+    let text = painted_text(&mut app, |app, ui| crate::dialogs::show(app, ui.ctx()));
+    assert!(text.contains("Dash 1:") && text.contains("Gap 5:") && text.contains("Align to Corners and Ends:"), "{text}");
+    for (effect, key) in [
+        ("addon.path.addAnchors", "target"),
+        ("addon.path.addAnchors", "spacing"),
+        ("addon.path.extend", "startShape"),
+        ("addon.path.extend", "endShape"),
+        ("addon.path.close", "mode"),
+        ("addon.path.retract", "handles"),
+        ("addon.path.split", "anchors"),
+    ] {
+        let doc = vectorcraft_effects::effect_info(effect).unwrap();
+        let options = super::effect_choices(effect, key).expect(key);
+        let default = doc.defaults[key].as_str().unwrap();
+        assert!(options.iter().any(|(_, value)| *value == default), "{effect} {key}");
+        assert!(options.iter().all(|(_, value)| doc.params.contains(&format!("\"{value}\""))), "{effect} {key}");
+    }
+}

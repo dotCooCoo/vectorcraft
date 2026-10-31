@@ -1,4 +1,4 @@
-use super::compare::{MAX_DIFFERENCE, PageView, compare};
+use super::compare::{MAX_DIFFERENCE, PageView, compare, difference};
 use super::plan::plan;
 use super::slots::{
     ART_LEFT_OUT, Content, MAX_PAIRS, MAX_SLOTS, MAX_TEXT, OUTLINE_REACH, TEXT_LEFT_OUT, TYPE_LEFT_OUT, collect_slots, extent, few, fill_slots,
@@ -87,6 +87,10 @@ pub(super) fn build_from(
         // scale, which `to_doc` carries, so its art and the page reach the same size (#2031).
         let fits = |r: &Rect| (r.width() - page_rect.width()).abs() <= 0.5 && (r.height() - page_rect.height()).abs() <= 0.5;
         let mut rect = to_doc.transform_rect_bbox(art_box);
+        // A PDF saved with some of its artboards has pages for those only, the first of them not
+        // always the first artboard: the editing data keeps them all (`first`, the page's).
+        let first = shown_artboard(&doc, visible, page, page_rect, fits);
+        rect = doc.artboards.get(first).filter(|_| first > 0).map_or(rect, |a| a.rect);
         // A `.ai` whose PDF part's pages are cropped to its art (each page the box of all of it,
         // the editing data's bounding box) rather than to its artboards: the layers are compared
         // with the page on that box, and keep their artboards. Each page then holds all the art
@@ -129,9 +133,7 @@ pub(super) fn build_from(
         // A `.ai` read as its PDF part has a page for each artboard, in a row: the type on each
         // goes where the layers have that artboard.
         let pages: Vec<Rect> = visible.artboards.iter().map(|a| a.rect).collect();
-        let same =
-            |(a, p): (&vectorcraft_doc::Artboard, &Rect)| (a.rect.width() - p.width()).abs() <= 0.5 && (a.rect.height() - p.height()).abs() <= 0.5;
-        let boards = (pages.len() == doc.artboards.len() && doc.artboards.iter().zip(&pages).all(same)).then_some(&doc.artboards);
+        let boards = page_boards(&doc.artboards, first, &pages);
         let page_moves: Vec<(Rect, Affine)> = pages
             .iter()
             .enumerate()
@@ -714,6 +716,40 @@ fn in_units(board: Option<Rect>, page: &Document, unit: f64) -> bool {
     let (Some(board), Some(p)) = (board, page.artboards.first().map(|a| a.rect)) else { return false };
     let fits = |k: f64| (board.width() - p.width() / k).abs() <= 0.5 && (board.height() - p.height() / k).abs() <= 0.5;
     unit.is_finite() && unit > 1.0 && fits(unit) && !fits(1.0)
+}
+
+/// The most artboards [`shown_artboard`] weighs, a render each.
+const MAX_BOARDS_WEIGHED: usize = 16;
+
+/// Which of the artboards of `doc` (the layers' document) the page `page_rect` of `visible` shows,
+/// when `visible` has fewer pages than `doc` has artboards (a PDF saved with a range of them): of
+/// those of the page's size (`fits`), the one whose art draws most like the page, the first of
+/// them on a tie. Else (and for an EPS, whose page is its art) the first artboard (0).
+fn shown_artboard(doc: &Document, visible: &Document, page: Page, page_rect: Rect, fits: impl Fn(&Rect) -> bool) -> usize {
+    if matches!(page, Page::Art) || visible.artboards.len() >= doc.artboards.len() {
+        return 0;
+    }
+    let sized: Vec<usize> = doc.artboards.iter().enumerate().filter(|(_, a)| fits(&a.rect)).map(|(i, _)| i).take(MAX_BOARDS_WEIGHED).collect();
+    if let [only] = sized.as_slice() {
+        return *only;
+    }
+    let mut best: Option<(usize, f64)> = None;
+    for (i, a) in sized.iter().filter_map(|&i| Some((i, doc.artboards.get(i)?))) {
+        let d = difference(visible, page_rect, doc, a.rect).any;
+        if best.is_none_or(|(_, b)| d < b) {
+            best = Some((i, d));
+        }
+    }
+    best.map_or(0, |(i, _)| i)
+}
+
+/// The artboards of the layers' document (`boards`) that the pages show, one a page from the
+/// first page's (`first`), when they are the pages' sizes: every artboard, or those of a PDF saved
+/// with some of them (`first` after the first artboard).
+fn page_boards<'a>(boards: &'a [vectorcraft_doc::Artboard], first: usize, pages: &[Rect]) -> Option<&'a [vectorcraft_doc::Artboard]> {
+    let same = |(a, p): (&vectorcraft_doc::Artboard, &Rect)| (a.rect.width() - p.width()).abs() <= 0.5 && (a.rect.height() - p.height()).abs() <= 0.5;
+    let shown = boards.get(first..first.saturating_add(pages.len()))?;
+    ((first > 0 || pages.len() == boards.len()) && shown.iter().zip(pages).all(same)).then_some(shown)
 }
 
 /// Draw `doc`'s layers and artboards `k` times as large, from the origin, with their strokes,

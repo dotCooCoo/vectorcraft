@@ -593,6 +593,13 @@ impl Renderer {
             if self.skipped(f, c) {
                 continue;
             }
+            // Hard-edge coverage is binary, so an opaque fill replaces its knockout shape exactly.
+            // This also serves supersampled exports. Analytical AA keeps the erase/add passes:
+            // their intermediate rounding can differ from source-over at partially covered edges.
+            if f.opts.anti_alias == crate::AntiAlias::None && crate::node_checks::opaque_knockout_fill(c) {
+                self.draw_arc(ctx, f, c);
+                continue;
+            }
             self.knockout_pass(ctx, f, c, Compose::DestOut);
             match &backdrop {
                 Some(b) => self.knockout_over(ctx, f, c, b),

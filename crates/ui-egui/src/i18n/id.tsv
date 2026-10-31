@@ -5843,4 +5843,45 @@ breakText	Glyphs	Glif
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` harus lines, paragraphs, words, atau glyphs, bukan {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` harus "line" atau "paragraph", bukan {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` harus "left", "center", atau "right", bukan {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Efek jalur
+	Reverse Direction	Balikkan arah
+	Align to Corners and Ends	Sejajarkan ke sudut dan ujung
+	Count	Jumlah
+	Max Count	Jumlah maksimum
+	Start Length	Panjang awal
+	Start Percent	Persen awal
+	Start Shape	Bentuk awal
+	End Length	Panjang akhir
+	End Percent	Persen akhir
+	End Shape	Bentuk akhir
+	By Count	Menurut jumlah
+	By Distance	Menurut jarak
+	Both	Keduanya
+	Shorter Than Length	Lebih pendek dari panjang
+	Dashes to Geometry	Garis putus ke geometri
+	Dashes to Geometry…	Garis putus ke geometri…
+	Add Anchors	Tambahkan titik jangkar
+	Add Anchors…	Tambahkan titik jangkar…
+	Smooth Anchors	Haluskan titik jangkar
+	Smooth Anchors…	Haluskan titik jangkar…
+	Simplify Anchors	Sederhanakan titik jangkar
+	Simplify Anchors…	Sederhanakan titik jangkar…
+	Split at Anchors	Pisahkan di titik jangkar
+	Split at Anchors…	Pisahkan di titik jangkar…
+	Extend Path…	Perpanjang jalur…
+	Close Path…	Tutup jalur…
+	Retract Handles…	Tarik masuk pegangan…
+	Dash 1	Garis 1
+	Gap 1	Jarak 1
+	Dash 2	Garis 2
+	Gap 2	Jarak 2
+	Dash 3	Garis 3
+	Gap 3	Jarak 3
+	Dash 4	Garis 4
+	Gap 4	Jarak 4
+	Dash 5	Garis 5
+	Gap 5	Jarak 5
+
 @msg	{_1}: they came in as the page's art	{_1}: diimpor sebagai gambar halaman

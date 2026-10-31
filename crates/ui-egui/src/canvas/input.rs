@@ -379,27 +379,18 @@ fn drag_held(app: &mut VectorcraftApp, ui: &Ui, f: &Pointing, d: Drag, p: Pos2) 
             // the last position only, so a costly drag preview runs once a frame.
             let moves = tool_frame_moves(ui, app);
             // A frame whose pointer ends where the last one did still moved in between.
-            let mods_changed = tool_drag_mods_changed(ui, mods(m, space));
+            let backquote = ui.input(|i| i.key_down(egui::Key::Backtick));
+            let mods_changed = tool_drag_mods_changed(ui, mods(m, space), backquote);
             if tool_drag_moved(ui, &xf, p, pointer) || mods_changed || !moves.is_empty() {
                 for (at, force) in moves {
                     let pressure = force.unwrap_or_else(|| pen_pressure(ui, app, false));
-                    dispatch(
-                        app,
-                        &PointerEvent {
-                            kind: PointerKind::Drag,
-                            pos: xf.to_doc(at),
-                            mods: mods(m, space),
-                            backquote: ui.input(|i| i.key_down(egui::Key::Backtick)),
-                            pressure,
-                        },
-                        view,
-                    );
+                    dispatch(app, &PointerEvent { kind: PointerKind::Drag, pos: xf.to_doc(at), mods: mods(m, space), backquote, pressure }, view);
                 }
                 let ev = PointerEvent {
                     kind: PointerKind::Drag,
                     pos: xf.to_doc(p),
                     mods: mods(m, space),
-                    backquote: ui.input(|i| i.key_down(egui::Key::Backtick)),
+                    backquote,
                     pressure: pen_pressure(ui, app, false),
                 };
                 dispatch(app, &ev, view);

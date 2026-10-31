@@ -5780,4 +5780,45 @@ breakText	Glyphs	字形
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` 必须是 lines、paragraphs、words 或 glyphs，而不是 {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` 必须是 "line" 或 "paragraph"，而不是 {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` 必须是 "left"、"center" 或 "right"，而不是 {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	路径效果
+	Reverse Direction	反转方向
+	Align to Corners and Ends	对齐转角和端点
+	Count	数量
+	Max Count	最大数量
+	Start Length	起点长度
+	Start Percent	起点百分比
+	Start Shape	起点形状
+	End Length	终点长度
+	End Percent	终点百分比
+	End Shape	终点形状
+	By Count	按数量
+	By Distance	按距离
+	Both	两者
+	Shorter Than Length	短于长度
+	Dashes to Geometry	虚线转为几何图形
+	Dashes to Geometry…	虚线转为几何图形…
+	Add Anchors	添加锚点
+	Add Anchors…	添加锚点…
+	Smooth Anchors	平滑锚点
+	Smooth Anchors…	平滑锚点…
+	Simplify Anchors	简化锚点
+	Simplify Anchors…	简化锚点…
+	Split at Anchors	在锚点处分割
+	Split at Anchors…	在锚点处分割…
+	Extend Path…	延长路径…
+	Close Path…	闭合路径…
+	Retract Handles…	收回手柄…
+	Dash 1	虚线 1
+	Gap 1	间隔 1
+	Dash 2	虚线 2
+	Gap 2	间隔 2
+	Dash 3	虚线 3
+	Gap 3	间隔 3
+	Dash 4	虚线 4
+	Gap 4	间隔 4
+	Dash 5	虚线 5
+	Gap 5	间隔 5
+
 @msg	{_1}: they came in as the page's art	{_1}：已作为页面图稿导入

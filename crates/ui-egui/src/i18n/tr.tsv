@@ -5896,4 +5896,45 @@ breakText	Glyphs	Glifler
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by`, lines, paragraphs, words veya glyphs olmalı, {other} değil
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind`, "line" veya "paragraph" olmalı, {other} değil
 @msg	`align` must be "left", "center" or "right", not {other}	`align`, "left", "center" veya "right" olmalı, {other} değil
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Yol Efektleri
+	Reverse Direction	Yönü Ters Çevir
+	Align to Corners and Ends	Köşelere ve Uçlara Hizala
+	Count	Sayı
+	Max Count	En Fazla Sayı
+	Start Length	Başlangıç Uzunluğu
+	Start Percent	Başlangıç Yüzdesi
+	Start Shape	Başlangıç Şekli
+	End Length	Bitiş Uzunluğu
+	End Percent	Bitiş Yüzdesi
+	End Shape	Bitiş Şekli
+	By Count	Sayıya Göre
+	By Distance	Mesafeye Göre
+	Both	Her İkisi
+	Shorter Than Length	Uzunluktan Kısa Olanlar
+	Dashes to Geometry	Çizgileri Geometriye Dönüştür
+	Dashes to Geometry…	Çizgileri Geometriye Dönüştür…
+	Add Anchors	Bağlantı Noktaları Ekle
+	Add Anchors…	Bağlantı Noktaları Ekle…
+	Smooth Anchors	Bağlantı Noktalarını Yumuşat
+	Smooth Anchors…	Bağlantı Noktalarını Yumuşat…
+	Simplify Anchors	Bağlantı Noktalarını Basitleştir
+	Simplify Anchors…	Bağlantı Noktalarını Basitleştir…
+	Split at Anchors	Bağlantı Noktalarından Böl
+	Split at Anchors…	Bağlantı Noktalarından Böl…
+	Extend Path…	Yolu Uzat…
+	Close Path…	Yolu Kapat…
+	Retract Handles…	Kolları Geri Çek…
+	Dash 1	Çizgi 1
+	Gap 1	Boşluk 1
+	Dash 2	Çizgi 2
+	Gap 2	Boşluk 2
+	Dash 3	Çizgi 3
+	Gap 3	Boşluk 3
+	Dash 4	Çizgi 4
+	Gap 4	Boşluk 4
+	Dash 5	Çizgi 5
+	Gap 5	Boşluk 5
+
 @msg	{_1}: they came in as the page's art	{_1}: sayfanın çizimi olarak içe aktarıldılar

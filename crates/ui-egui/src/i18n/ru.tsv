@@ -5916,4 +5916,45 @@ breakText	Glyphs	Глифы
 @msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` должен быть lines, paragraphs, words или glyphs, а не {other}
 @msg	`kind` must be "line" or "paragraph", not {other}	`kind` должен быть "line" или "paragraph", а не {other}
 @msg	`align` must be "left", "center" or "right", not {other}	`align` должен быть "left", "center" или "right", а не {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Эффекты контура
+	Reverse Direction	Обратить направление
+	Align to Corners and Ends	Выровнять по углам и концам
+	Count	Количество
+	Max Count	Наибольшее количество
+	Start Length	Длина в начале
+	Start Percent	Проценты в начале
+	Start Shape	Форма в начале
+	End Length	Длина в конце
+	End Percent	Проценты в конце
+	End Shape	Форма в конце
+	By Count	По количеству
+	By Distance	По расстоянию
+	Both	Оба
+	Shorter Than Length	Короче длины
+	Dashes to Geometry	Штрихи в геометрию
+	Dashes to Geometry…	Штрихи в геометрию…
+	Add Anchors	Добавить опорные точки
+	Add Anchors…	Добавить опорные точки…
+	Smooth Anchors	Сгладить опорные точки
+	Smooth Anchors…	Сгладить опорные точки…
+	Simplify Anchors	Упростить опорные точки
+	Simplify Anchors…	Упростить опорные точки…
+	Split at Anchors	Разрезать в опорных точках
+	Split at Anchors…	Разрезать в опорных точках…
+	Extend Path…	Продлить контур…
+	Close Path…	Замкнуть контур…
+	Retract Handles…	Убрать маркеры…
+	Dash 1	Штрих 1
+	Gap 1	Зазор 1
+	Dash 2	Штрих 2
+	Gap 2	Зазор 2
+	Dash 3	Штрих 3
+	Gap 3	Зазор 3
+	Dash 4	Штрих 4
+	Gap 4	Зазор 4
+	Dash 5	Штрих 5
+	Gap 5	Зазор 5
+
 @msg	{_1}: they came in as the page's art	{_1}: импортированы как графика страницы

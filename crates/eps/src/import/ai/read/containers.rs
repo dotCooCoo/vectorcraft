@@ -202,9 +202,9 @@ impl<'a> Reader<'a> {
         self.pending_unread_stroke = false;
         let mut f = self.close("LB", |k| matches!(k, Kind::Layer(_)))?;
         let state = self.layer_state.take();
-        // An `Xy` right after the layer's last mesh, then `LB`: the layer's, not the mesh's.
+        // An `Xy` right after the layer's last mesh or blend, then `LB`: the layer's, not theirs.
         if let (Some(_), Some(before)) = (state, self.mesh_undo.take())
-            && let Some(mesh) = f.children.last_mut().filter(|n| matches!(n.kind, NodeKind::Mesh(_)))
+            && let Some(mesh) = f.children.last_mut().filter(|n| matches!(n.kind, NodeKind::Mesh(_) | NodeKind::Blend { .. }))
         {
             (mesh.opacity, mesh.blend, mesh.isolate, mesh.knockout) = before;
         }

@@ -6,6 +6,8 @@
 //! and the UI's.
 
 mod corners;
+#[cfg(test)]
+mod effect_tests;
 mod shape;
 #[cfg(test)]
 mod tests;
@@ -22,7 +24,6 @@ use super::super::pathops::Beside;
 use super::super::{
     CommandSpec, bad, checked_id, checked_ids_or_selection, cmd, finite_numbers, has_doc, has_selection, number_or, switch_or, text_param,
 };
-use super::cleanup::PT_PER_TOLERANCE;
 use crate::{EngineError, Result, Session};
 
 /// The Anchor Eraser Brush's tolerance by default (the scale Simplify Anchors (Keep Shape) uses).
@@ -256,7 +257,7 @@ fn erase(s: &mut Session, p: &Value) -> Result<Value> {
     let ids = paths_under(d, &roots);
     let paths: Vec<(NodeId, &PathData)> = ids.iter().filter_map(|id| Some((*id, d.node(*id)?.path_data()?))).collect();
     check_size(paths.iter().map(|(_, p)| *p), C)?;
-    let tol = if ignore { f64::INFINITY } else { tolerance * PT_PER_TOLERANCE };
+    let tol = if ignore { f64::INFINITY } else { tolerance * po::PT_PER_TOLERANCE };
     let mut removed = 0;
     let mut changed = vec![];
     for (id, path) in paths {

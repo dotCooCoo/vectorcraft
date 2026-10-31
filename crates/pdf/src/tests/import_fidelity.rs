@@ -241,6 +241,41 @@ fn isolate_and_knockout_flags_of_a_group_are_kept() {
     assert!(all(&d).iter().all(|n| !matches!(n.kind, NodeKind::Group { .. })));
 }
 
+#[test]
+fn knockout_groups_after_a_group_drawn_straight_keep_their_flag() {
+    // Two knockout groups (ISO 32000-1, 11.4.6.3), each of a full-opacity element and a 50% one,
+    // both elements groups of their own. A full-opacity element adds nothing as a group and is
+    // drawn straight onto its parent; the knockout group after it still knocks out.
+    let x = first_extra(1);
+    let ring = |at: usize| {
+        let res = format!("/ExtGState << /A << /ca 1 >> /B << /ca 0.5 >> >> /XObject << /E {} 0 R /F {} 0 R >>", at, at + 1);
+        stream(
+            &format!("/Type /XObject /Subtype /Form /BBox [0 0 100 100] /Group << /S /Transparency /K true >> /Resources << {res} >>"),
+            "q /A gs /E Do Q q /B gs /F Do Q",
+        )
+    };
+    let element = |art: &str| stream("/Type /XObject /Subtype /Form /BBox [0 0 100 100] /Group << /S /Transparency >>", art);
+    let d = open(&one_page(
+        "/X0 Do /X1 Do",
+        &format!("/XObject << /X0 {x} 0 R /X1 {} 0 R >>", x + 1),
+        &[
+            &ring(x + 2),
+            &ring(x + 4),
+            &element("0 0 1 rg 10 10 40 40 re f"),
+            &element("0 0 1 rg 20 20 20 20 re f"),
+            &element("0 0 1 rg 50 50 40 40 re f"),
+            &element("0 0 1 rg 60 60 20 20 re f"),
+        ],
+    ));
+    let groups: Vec<Node> = all(&d).into_iter().filter(|n| matches!(n.kind, NodeKind::Group { .. })).collect();
+    assert_eq!(groups.len(), 2, "{groups:?}");
+    for g in &groups {
+        assert_eq!(g.knockout, Knockout::On, "{g:?}");
+        let opacities: Vec<f32> = g.children().unwrap().iter().map(|c| c.opacity).collect();
+        assert_eq!(opacities, [1.0, 0.5]);
+    }
+}
+
 // ---------- tiling patterns ----------
 
 #[test]
