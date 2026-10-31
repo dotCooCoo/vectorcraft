@@ -245,7 +245,14 @@ fn make(s: &mut Session, p: &Value) -> Result<Value> {
         // their layers, above the topmost of them there.
         let last = art[art.len() - 1];
         let lowest = d.layer_of(art[0]);
-        let anchor = art.iter().rev().copied().find(|id| d.layer_of(*id) == lowest).unwrap_or(last);
+        let mut anchor = art.iter().rev().copied().find(|id| d.layer_of(*id) == lowest).unwrap_or(last);
+        // Art from another layer goes beside the outermost object that holds the anchor, not into
+        // a group (which may clip it or change its opacity).
+        if anchor != last
+            && let Some(outer) = d.ancestry(anchor).and_then(|a| a.into_iter().find(|id| d.node(*id).is_some_and(|n| !n.is_layer())))
+        {
+            anchor = outer;
+        }
         let target = if let [one] = art {
             *one
         } else if anchor == last && separate(d, art) {
@@ -603,6 +610,14 @@ mod tests {
             s.execute("edit.undo", &json!({})).unwrap();
             assert_eq!(s.doc().unwrap().doc.layers, before, "{ids:?}: undo");
         }
+        // Art in a group of the lowest layer: the masked group goes beside that group, not into it.
+        select(&mut s, &[a, a2]);
+        let held = s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
+        let g = s.execute("transparency.makeOpacityMask", &json!({ "ids": [a, b, top] })).unwrap()["id"].as_u64().unwrap();
+        let d = &s.doc().unwrap().doc;
+        let l1_kids: Vec<u64> = d.node(NodeId(l1)).unwrap().children().unwrap().iter().map(|c| c.id.0).collect();
+        assert_eq!(l1_kids, vec![held, g]);
+        assert_eq!(d.node(NodeId(g)).unwrap().children().unwrap().iter().map(|c| c.id.0).collect::<Vec<_>>(), vec![a, b]);
     }
 
     #[test]
