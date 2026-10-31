@@ -125,7 +125,8 @@ the suite) keep the agent to the folders you give it:
   doesn't exist is refused, as is a link that leads nowhere (writing through it would create its target).
   The result is compared with the root by whole folder names: `/work2/x` is not inside `/work`. On
   Windows case is ignored, UNC paths (`\\server\share\…`) are resolved like drive-letter ones, and
-  device names (`CON`, `NUL`, `COM1`…) are refused.
+  device names (`CON`, `NUL`, `COM1`…) and a `:` in a name after the drive (an NTFS alternate data stream
+  such as `x.svg:evil`, which hides data in a stream no folder listing shows) are refused.
 - With `--connect`, the server makes the paths of `open_file`, `save_file`, `export` (`path` or
   `options.path`) and `screenshot {path}` absolute against its own working directory before it sends
   them to the app. Paths inside `run_command` and `command_batch` params go to the app as given, and the
@@ -2642,7 +2643,7 @@ naming the key; the document does not change and no undo step is recorded: `t`, 
 `path.reshapeSegment` and `object.blend.spine.reshapeSegment`; `x`, `y` and `t` in `path.curvatureEdit`; `x` and `y`
 in `path.convertAnchor`; `t` in `path.insertAnchor`; `fidelity` and the `within` of `redraw` in `path.freehand` (and in
 `brush.freehand`, which runs it); `size`, `sizeVariation`, `angle` and `roundness` in `path.eraseRegion`;
-`size`, `sizeVariation` and `fidelity` in `path.blob`; `width` in `path.eraseSegments`;
+`size`, `sizeVariation`, `angle`, `roundness` and `fidelity` in `path.blob`; `width` in `path.eraseSegments`;
 `radius` and `fidelity` in `path.smoothRegion`; `tolerance` in `path.joinScrub`; `dx` and `dy` in `path.moveAnchors`;
 and `dx`, `dy`, `tol` and `radius` in `path.reshape`. A null is read as a key left out. `path.convertAnchor` refuses
 an `x` without a `y`, or a `y` without an `x`, with "x and y must be given together". `path.freehand`,
@@ -3199,7 +3200,7 @@ Pen's second anchor at (150, 431), in line with the square's centre.
   give its Kerning or Tracking field the keyboard focus with the value selected, or open its font family menu with the
   search field focused; each replies `{field: "kerning" | "tracking" | "fontName"}`. Without selected type or text the
   Type tool edits, the panel shows and the command fails.
-  shows it, in the same text; at a caret it leaves the text as it is. The UI command `type.underline` (Cmd+Shift+U,
+  The UI command `type.underline` (Cmd+Shift+U,
   in remote mode `press_key {key: "U", mods: {cmd: true, shift: true}}` or `invoke_menu`) does what the Character
   panel's Underline button does: it underlines the Type tool's selected text or the selected type objects, or removes
   the underline when the text the panel shows is underlined, and returns whether the text is now underlined.
@@ -3832,7 +3833,8 @@ without its formatting, taking the style at the caret.
 `document.exportDxf` (also `document.export` / `export` with format `dxf`) writes a CAD drawing, ASCII DXF R12 to 2018
 (`version`: `R12`, `R13`, `R14`, `2000`, `2004`, `2007`, `2010`, `2013`, `2018`; default `2018`). Each layer becomes a
 DXF layer (hidden layers switched off, locked ones locked, non-printing ones not plotted; template layers left out),
-straight paths become polylines, curved ones cubic splines through every anchor, fills their outlines followed by
+straight paths become polylines (an open path of one straight segment becomes a line, except for a stroke weight
+before 2000), curved ones cubic splines through every anchor, fills their outlines followed by
 solid hatches (laser and cutter software reads the outlines and skips hatches; R12 has no hatches: the outlines
 alone), strokes lines with their lineweight and a linetype per dash pattern, and placed images image entities linked
 to PNG or JPEG files (`rasterFormat`) written next to the drawing (`linked` in the result). Coordinates are y up
@@ -3840,8 +3842,10 @@ from the bottom-left corner of the first artboard (or `artboard`), in drawing un
 1 mm = 1 unit, which sets `$INSUNITS`); `scaleLineweights` scales the lineweights with them. `colors` is `8`, `16` or
 `256` indexed colours, or `true` (default; true colour with the nearest index, DXF 2004 and later). `preserve:
 "appearance"` (default) writes type as glyph outlines and the strokes a CAD line can't draw (inside or outside,
-width profiles, arrowheads) as filled outlines; `"editability"` keeps type as text and every stroke a line.
-`alterPaths` writes every stroke as its filled outline, `outlineText` outlines type, `selectedOnly` writes only the
+width profiles, arrowheads, dashes offset into their pattern) as filled outlines; `"editability"` keeps type as text
+and every stroke a line. `alterPaths` writes as filled outlines those strokes (with `"editability"` too), strokes
+wider than the widest lineweight (2.11 mm), and every stroke in R13 and R14, which have no lineweights; it keeps other
+strokes as lines. `outlineText` outlines type, `selectedOnly` writes only the
 selected objects in their layers (every export takes it), and `useArtboards: true` writes one drawing per chosen
 artboard holding the art over it. What DXF can't hold (gradients and patterns as one colour, blending, opacity masks,
 raster effects, clipping) comes back in `warnings`. In R13 and later, an image that can't be decoded is left out with
@@ -3983,8 +3987,9 @@ each file deflated, or stored when deflating does not make it smaller.
 A row is `{format, scale?}` where `scale` is a factor (`2`, `"2x"`), a pixel width (`"100w"` or `width: 100`), a
 height (`"100h"`) or a resolution (`"72ppi"`); raster rows name their files `@2x`, `@100w`… unless `suffix` says
 otherwise. `fullDocument` writes one file per row instead (a PDF of every artboard, other formats the bounds of all
-art), `includeBleed` grows each artboard by the document's bleed, `subfolders` puts each row's files in a sub-folder
-(its size or format, or its own `folder`), `preset: "mobile"` or `"density"` (Android-style ldpi…xxxhdpi
+art), `includeBleed` grows each artboard by the document's bleed, `pdfs: "single"` (Export PDFs As › Single file)
+writes the artboards a PDF row exports as the pages of one PDF named after the document, `subfolders` puts each
+row's files in a sub-folder (its size or format, or its own `folder`; `folders: "format"` sorts by format instead), `preset: "mobile"` or `"density"` (Android-style ldpi…xxxhdpi
 sub-folders) replaces the rows, and `settings: {png: {…}, jpg: {…}, svg: {…}, pdf: {preset}}` gives every row of a
 format its options. On every platform, `/`, `\`, `:`, `<`, `>`, `"`, `|`, `?`, `*` and control characters from a
 prefix, a suffix, a name pattern or an item's name become `-` in file and folder names, a folder name ends without
@@ -5474,7 +5479,10 @@ distance along the plane's normal), so copies, duplicates and pastes stay attach
 `perspectiveSelection` tool, a drag moves the selection within its plane (`perspective.move`; Alt copies), the
 bounding-box handles scale it in plane space (`perspective.transform`; Shift keeps proportions, Alt scales about the
 centre), and `press_key` `5` during a drag switches the move to perpendicular to the plane (press again to switch
-back). `press_key` Escape during a move, a resize or a plane widget drag cancels it and puts the objects and the
+back). Holding Shift during an in-plane move constrains each object's displacement to an axis or 45° diagonal of its
+own plane. `perspective.move` accepts `constrain: true` (default false) and adjusts Snap to Grid along the constrained
+direction on the first object's plane and depth.
+`press_key` Escape during a move, a resize or a plane widget drag cancels it and puts the objects and the
 grid back. The arrow keys nudge a selection in perspective by the keyboard increment (`perspective.nudge`; Shift ×10, Alt
 copies). Object › Transform › Transform Again repeats the last perspective move or scale in plane space.
 
@@ -5719,7 +5727,7 @@ envelopes, graphs, symbols), are left out.
 | `strayPoints` | Paths of one anchor (not clipping paths) | Removes them |
 | `unpainted` | Paths and compound paths with no fill and no stroke | Removes them |
 | `zeroOpacity` | Objects at 0 % opacity | Removes them |
-| `duplicateObjects` | A path stacked directly on an identical one (geometry, paint, opacity) | Removes the upper one |
+| `duplicateObjects` | A path stacked directly on an identical one (geometry, paint, opacity), or type stacked directly on the same type (text, styles, paint) within 1 pt of it | Removes the upper one |
 | `offArtboard` | Top-level objects that touch no artboard | Removes them |
 | `duplicateAnchors` | Neighbouring anchors within 0.01 pt | Merges them |
 | `tinyHandles` | Handles shorter than 0.01 pt | Retracts them |
@@ -5766,6 +5774,11 @@ glyph of its first character lands where it was drawn.
   more than 1 em, another look (paint, opacity, effects) or a piece that can't keep its place once joined (a ligature
   forming across the join) starts another object. Each object made takes the place and paint of its leftmost piece. The
   main use is type from a PDF that arrives one glyph per object.
+- `addon.cleanup.joinText {ids?}` (Join Point Text) joins one-line horizontal point type into one point type object,
+  for text that arrives one line or fragment per object. Pieces turned and sheared like the top-left one are read as
+  lines (baselines within 0.4 em), top to bottom; a line's pieces join left to right with a space between them. Each
+  line becomes a left-aligned paragraph whose leading is the distance from the baseline above, so the lines stay where
+  they were. Character styles stay; the object takes the top-left piece's place and paint. Returns `{id, joined, lines}`.
 - `addon.cleanup.removeBreaks {kind, ids?}` removes the forced line breaks (`kind: "line"`) or paragraph returns
   (`"paragraph"`) in the characters selected with a Type tool, else in all the text of the selected type. A break
   between two words becomes a space; merged paragraphs take the first one's paragraph style.
@@ -6146,4 +6159,30 @@ one, out of range values and a request with no fix on.
 
 ```json
 {"name":"run_command","arguments":{"command":"addon.color.printFixes","params":{"scope":"document","inkLimit":300,"removeWhiteOverprint":true,"overprintBlack":100}}}
+```
+
+## Arrange Tools add-on
+
+Arrange Tools is a built-in add-on that lays out, swaps, replaces and sizes selected objects: its commands are
+`addon.arrange.*`, and in the desktop app it lives in Object › Plug-ins › Arrange Tools. Each command acts on the
+top-level selected objects and is one undo step; a run that moves nothing makes no step. Places and sizes are measured
+as `object.setBounds` measures them (Use Preview Bounds), except Arrange in Grid, which uses visual bounds.
+
+| Command | Parameters (default) | Does |
+|---|---|---|
+| `addon.arrange.grid` | `layout`: `grid`, `row`, `column` (`grid`); `columns`: 1…10000 (⌈√count⌉, never more than the count); `gapX` pt (10), `gapY` pt (`gapX`), each −1000000…1000000; `centerOnArtboard` (false) | Lays the objects out in their stacking order from the back, left to right and top to bottom. Each cell is as wide as the widest object in its column and as tall as the tallest in its row, and each object is centred in its cell. The grid starts at the selection's top-left, or is centred on the artboard under the selection's centre (the first artboard when none is there). → `{count}` |
+| `addon.arrange.swap` | `size` (false); `scaleStrokes` (the Scale Strokes & Effects preference) | Swaps the bounds centres of exactly two selected objects (off otherwise); with `size`, each also takes the other's width and height. |
+| `addon.arrange.replace` | `fit`: `keep`, `bounds` (the replaced object's width and height), `proportional` (fits inside them) (`keep`); `scaleStrokes`; `keep` (false) | Puts a copy of the topmost selected object centred on each of the other selected objects, in that object's place in the stacking order; the replaced objects are deleted unless `keep` (the copy then goes right above each). Needs two objects or more; the copies are selected. → `{ids}` |
+| `addon.arrange.size` | `width`, `height` pt, 0.001…1000000 (at least one); `proportional` (false: a side not given stays; true: it follows the given one in proportion); `reference` 0…8 (4, the centre); `scaleStrokes` | Gives every selected object that width and height, keeping its reference point in place (the 9-point grid row by row from the top-left). |
+
+Zoom to Selection is the UI command `addon.arrange.zoomSelection {}` (remote mode only): it zooms and centres the
+active view so the selection's visual bounds fill the window with a margin, as `view.fitArtboard` fits the artboard,
+and fails with nothing selected. Arrange in Grid…, Replace with Top Object… and Set Size of Each… open dialogs
+(`ui.menuDialog {command}`, dialog kinds `arrangeGrid`, `arrangeReplace` and `arrangeSize`) whose fields are the
+command's parameters, with Preview; Set Size of Each's `__width` and `__height` say which sizes OK applies.
+
+```json
+{"name":"run_command","arguments":{"command":"addon.arrange.grid","params":{"columns":4,"gapX":12,"gapY":12}}}
+{"name":"run_command","arguments":{"command":"addon.arrange.replace","params":{"fit":"proportional"}}}
+{"name":"run_command","arguments":{"command":"addon.arrange.size","params":{"width":72,"proportional":true}}}
 ```

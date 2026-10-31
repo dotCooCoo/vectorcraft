@@ -1141,12 +1141,12 @@ lighting	Light	Licht
 	 to set spacing and orientation	 om de tussenruimte en de oriëntatie in te stellen
 	Apply	Toepassen
 	Change Screen Mode (F)	Schermmodus wisselen (F)
-	Color (, or <)	Kleur (, of <)
+	Color (, or Shift+,)	Kleur (, of Shift+,)
 	Draw Behind	Achter tekenen
 	Draw Inside	Binnen tekenen
 	Draw Normal	Normaal tekenen
 	Expand:	Uitvouwen:
-	Gradient (. or >)	Verloop (. of >)
+	Gradient (. or Shift+.)	Verloop (. of Shift+.)
 	H:	H:
 	Modify	Wijzigen
 	Navigate	Navigeren
@@ -1769,7 +1769,6 @@ lighting	Light	Licht
 	Weight:	Dikte:
 	Art using a deleted global swatch keeps its colour.	Artwork met een verwijderd globaal staal behoudt zijn kleur.
 	Color Group: {name}	Kleurgroep: {name}
-	Delete these {count} swatches and groups?	Deze {count} stalen en groepen verwijderen?
 	Delete “{name}”?	„{name}” verwijderen?
 	Document Swatches	Documentstalen
 	Edit or Apply Color Group	Kleurgroep bewerken of toepassen
@@ -2076,6 +2075,13 @@ lighting	Light	Licht
 	Use Artboards	Tekenborden gebruiken
 	Choose a folder	Kies een map
 	Create Sub-folders	Submappen maken
+	Clear Selection	Selectie wissen
+	Export PDFs As:	PDF's exporteren als:
+	Single File	Eén bestand
+	Multiple Files	Meerdere bestanden
+	Format Presets	Indelingsvoorinstellingen
+	Grid View	Rasterweergave
+	Selected: {n}, Total number of files to export: {m}	Geselecteerd: {n}, totaal aantal te exporteren bestanden: {m}
 	Export Asset	Asset exporteren
 	Export to:	Exporteren naar:
 	Format Settings	Indelingsinstellingen
@@ -2837,32 +2843,32 @@ theme	Appearance	Vormgeving
 	Remove Asset	Asset verwijderen
 	Rename Asset	Asset hernoemen
 	Fill Rule	Vulregel
-	Apply Brush	Kwast toepassen
+	Apply Brush	Penseel toepassen
 	Break Link to Symbol	Koppeling met symbool verbreken
-	Brush Definition	Kwastdefinitie
-	Brush Options…	Kwastopties…
-	Current Brush	Huidige kwast
-	Current Symbol	Huidige symbool
-	Delete Brush	Kwast verwijderen
+	Brush Definition	Penseeldefinitie
+	Brush Options…	Penseelopties…
+	Current Brush	Huidig penseel
+	Current Symbol	Huidig symbool
+	Delete Brush	Penseel verwijderen
 	Delete Symbol	Symbool verwijderen
-	Duplicate Brush	Kwast dupliceren
+	Duplicate Brush	Penseel dupliceren
 	Duplicate Symbol	Symbool dupliceren
 	Edit Symbol	Symbool bewerken
-	Expand Brush Strokes	Kwaststreken omzetten
-	New Brush…	Nieuwe kwast…
-	New Brush	Nieuwe kwast
+	Expand Brush Strokes	Penseelstreken omzetten
+	New Brush…	Nieuw penseel…
+	New Brush	Nieuw penseel
 	Calligraphic Brush	Kalligrafisch penseel
 	Scatter Brush	Verspreidingspenseel
 	Art Brush	Artpenseel
 	Bristle Brush	Borstelpenseel
 	Pattern Brush	Patroonpenseel
 	Select art to make a scatter, art or pattern brush.	Selecteer illustratie om een verspreidings-, art- of patroonpenseel te maken.
-	Brush Art	Kwastillustratie
+	Brush Art	Penseelillustratie
 	New Symbol	Nieuw symbool
 	New Symbol…	Nieuw symbool…
 	Place Symbol Instance	Symboolexemplaar plaatsen
 	Redefine Symbol	Symbool opnieuw definiëren
-	Remove Brush Stroke	Kwaststreek verwijderen
+	Remove Brush Stroke	Penseelstreek verwijderen
 	Replace Symbol	Symbool vervangen
 	Select All Instances	Alle exemplaren selecteren
 	Symbol Sprayer	Symboolspuit
@@ -2938,7 +2944,7 @@ theme	Appearance	Vormgeving
 	Saved Selections	Opgeslagen selecties
 	Select Guides	Hulplijnen selecteren
 	Move Guide to Layer	Hulplijn naar laag verplaatsen
-	Blob Brush	BLOB-kwast
+	Blob Brush	Blob-penseel
 	Convert Anchor Point	Ankerpunt omzetten
 	Curvature	Kromming
 	Delete Anchor Point	Ankerpunt verwijderen
@@ -3421,7 +3427,7 @@ theme	Appearance	Vormgeving
 	Delete Swatch	Kleurstaal verwijderen
 	Duplicate Swatch	Kleurstaal dupliceren
 	Merge Swatches	Kleurstalen samenvoegen
-	Move Brush	Kwast verplaatsen
+	Move Brush	Penseel verplaatsen
 	Move Swatch	Kleurstaal verplaatsen
 	New Color Group	Nieuwe kleurgroep
 	New Swatch	Nieuw kleurstaal
@@ -3868,6 +3874,7 @@ imageTrace	Outline	Contour
 @plural	{n} item|{n} items	{n} item|{n} items
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Kleurentabel ({n} kleur)|Kleurentabel ({n} kleuren)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Deze {n} grafische stijl verwijderen?|Deze {n} grafische stijlen verwijderen?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Deze {n} staal of groep verwijderen?|Deze {n} stalen en groepen verwijderen?
 @plural	{n} Layer|{n} Layers	{n} laag|{n} lagen
 @plural	{n} Object|{n} Objects	{n} object|{n} objecten
 @plural	{n} area highlighted|{n} areas highlighted	{n} gebied gemarkeerd|{n} gebieden gemarkeerd
@@ -4081,6 +4088,7 @@ imageTrace	Outline	Contour
 @msg	cannot split an open path at its end point	kan een open pad niet splitsen op zijn eindpunt
 @msg	closing needs three anchors	voor sluiten zijn drie ankers nodig
 @msg	check an asset to export	vink een asset aan om te exporteren
+@msg	check an artboard to export	vink een tekengebied aan om te exporteren
 @msg	choice must be "merge" or "add", not `{choice}`	choice moet "merge" of "add" zijn, niet `{choice}`
 @msg	choose a direction to divide in	kies een richting om in te verdelen
 @msg	choose a folder to export to	kies een map om naar te exporteren
@@ -4211,6 +4219,7 @@ imageTrace	Outline	Contour
 @msg	no such perspective grid preset	perspectiefrastervoorinstelling bestaat niet
 @msg	no such recent file	recent bestand bestaat niet
 @msg	no such recent font	recent lettertype bestaat niet
+@msg	some text is hidden or locked, so its font wasn't replaced	een deel van de tekst is verborgen of vergrendeld, dus het lettertype ervan is niet vervangen
 @msg	no such saved selection	opgeslagen selectie bestaat niet
 @msg	no such segment	segment bestaat niet
 @msg	no such subpath	subpad bestaat niet
@@ -5858,6 +5867,7 @@ anchor	Points:	Punten:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Tekst splitsen
 	Combine Point Text	Punttekst combineren
+	Join Point Text	Punttekst samenvoegen
 	Remove Breaks	Einden verwijderen
 	Split Text at Cursor	Tekst splitsen bij cursor
 	Set Alignment, Keep Position	Uitlijning instellen, positie behouden
@@ -5886,6 +5896,7 @@ breakText	Glyphs	Glyphs
 @msg	Select horizontal point or area type whose text fits	Selecteer horizontale punt- of vlaktekst waarvan de tekst past
 @msg	Nothing to split at the cursor	Niets te splitsen bij de cursor
 @msg	Select two or more one-line point type objects on one baseline to combine	Selecteer twee of meer punttekstobjecten van één regel op één basislijn om ze te combineren
+@msg	Select two or more one-line point type objects to join	Selecteer twee of meer punttekstobjecten van één regel om ze samen te voegen
 @msg	No line breaks to remove	Geen regeleinden om te verwijderen
 @msg	No paragraph breaks to remove	Geen alinea-einden om te verwijderen
 @msg	Too many breaks to remove at once	Te veel einden om in één keer te verwijderen
@@ -5938,3 +5949,15 @@ breakText	Glyphs	Glyphs
 	Gap 4	Tussenruimte 4
 	Dash 5	Streepje 5
 	Gap 5	Tussenruimte 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Schikgereedschappen
+	Arrange in Grid…	In raster schikken…
+	Arrange in Grid	In raster schikken
+	Swap Objects	Objecten omwisselen
+	Swap Objects and Sizes	Objecten en formaten omwisselen
+	Replace with Top Object…	Vervangen door bovenste object…
+	Replace with Top Object	Vervangen door bovenste object
+	Set Size of Each…	Formaat van elk instellen…
+	Set Size of Each	Formaat van elk instellen
+@msg	select exactly two objects	selecteer precies twee objecten
+@msg	give `width` or `height`	geef `width` of `height` op

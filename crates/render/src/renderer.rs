@@ -361,7 +361,7 @@ impl Renderer {
         self.begin_frame();
         (self.knockout, self.nested, self.backdrop, self.picture) = (false, 0, None, None);
         self.clip_paths.clear();
-        self.draw_node(&mut ctx, &frame, n, true);
+        self.draw_forced_arc(&mut ctx, &frame, &Arc::new(n.clone()));
         let pm = self.finish(&mut ctx, vello_cpu::RasterizerSettings::default());
         self.end_frame();
         Some(Rendered { width: size, height: size, pixels: pm.data_as_u8_slice().to_vec() })

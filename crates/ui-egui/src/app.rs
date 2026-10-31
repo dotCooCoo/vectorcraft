@@ -400,7 +400,8 @@ impl VectorcraftApp {
         crate::ime::install_hooks(ctx);
         self.adopt_context(ctx);
         if !self.styled {
-            theme::apply(ctx, self.ui.brightness);
+            // The saved accent, color scheme and canvas color, not the defaults (#4837).
+            prefs_dialog::reapply(self, ctx);
             egui_extras::install_image_loaders(ctx);
             self.styled = true;
         }

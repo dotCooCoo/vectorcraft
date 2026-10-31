@@ -497,7 +497,7 @@ font-technology	Variable	Variabla
 	Collect in New Layer	Samla i nytt lager
 	Collect Links in a Separate Folder	Samla länkar i en separat mapp
 	Color	Färg
-	Color (, or <)	Färg (, eller <)
+	Color (, or Shift+,)	Färg (, eller Shift+,)
 	Color Adjustments	Färgjusteringar
 	Color bars	Färgstaplar
 	Color blindness – Deuteranopia-type	Färgblindhet – deuteranopi
@@ -651,6 +651,13 @@ font-technology	Variable	Variabla
 	Create Report	Skapa rapport
 	Create Slice	Skapa skiva
 	Create Sub-folders	Skapa undermappar
+	Clear Selection	Rensa markering
+	Export PDFs As:	Exportera PDF-filer som:
+	Single File	En fil
+	Multiple Files	Flera filer
+	Format Presets	Formatförinställningar
+	Grid View	Rutnätsvy
+	Selected: {n}, Total number of files to export: {m}	Markerade: {n}, totalt antal filer att exportera: {m}
 	Create Text	Skapa text
 	Create Trim Marks	Skapa skärmärken
 	Created	Skapad
@@ -734,7 +741,6 @@ font-technology	Variable	Variabla
 	Delete the graphic style “{name}”?	Radera grafikstilen ”{name}”?
 	Delete Theme	Radera tema
 	Delete theme	Radera tema
-	Delete these {count} swatches and groups?	Radera dessa {count} färgrutor och grupper?
 	Delete these {n} graphic styles?	Radera dessa {n} grafikstilar?
 	Delete this saved preset	Radera den här sparade förinställningen
 	Delete this {n} graphic style?	Radera denna {n} grafikstil?
@@ -1238,7 +1244,7 @@ font-technology	Variable	Variabla
 	GPL palettes keep solid colours only, as RGB.	GPL-paletter sparar bara enfärgade färger, som RGB.
 	GPU Performance	GPU-prestanda
 	Gradient	Gradient
-	Gradient (. or >)	Gradient (. eller >)
+	Gradient (. or Shift+.)	Gradient (. eller Shift+.)
 	Gradient across stroke	Gradient tvärs över konturen
 	Gradient along stroke	Gradient längs konturen
 	Gradient and Mesh Resolution:	Upplösning för gradienter och nät:
@@ -3618,6 +3624,7 @@ imageTrace	Outline	Kontur
 @plural	{n} item|{n} items	{n} objekt|{n} objekt
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Färgtabell ({n} färg)|Färgtabell ({n} färger)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Radera {n} grafisk stil?|Radera de här {n} grafiska stilarna?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Radera {n} färgruta eller grupp?|Radera dessa {n} färgrutor och grupper?
 @plural	{n} Layer|{n} Layers	{n} lager|{n} lager
 @plural	{n} Object|{n} Objects	{n} objekt|{n} objekt
 @plural	{n} area highlighted|{n} areas highlighted	{n} område framhävt|{n} områden framhävda
@@ -3979,6 +3986,7 @@ axis	Both	Båda
 @msg	cannot split an open path at its end point	kan inte dela en öppen bana vid dess slutpunkt
 @msg	closing needs three anchors	att sluta banan kräver tre ankarpunkter
 @msg	check an asset to export	kryssa för en resurs att exportera
+@msg	check an artboard to export	kryssa för en rityta att exportera
 @msg	check a layer to export	markera ett lager att exportera
 @msg	select the art to export first	markera först teckningen som ska exporteras
 @msg	choice must be "merge" or "add", not `{choice}`	choice måste vara "merge" eller "add", inte `{choice}`
@@ -4121,6 +4129,7 @@ axis	Both	Båda
 @msg	no such perspective grid preset	förinställningen för perspektivrutnät finns inte
 @msg	no such recent file	den senaste filen finns inte
 @msg	no such recent font	det senaste typsnittet finns inte
+@msg	some text is hidden or locked, so its font wasn't replaced	en del text är dold eller låst, så dess typsnitt ersattes inte
 @msg	no such saved selection	den sparade markeringen finns inte
 @msg	no such segment	segmentet finns inte
 @msg	no such spine point	ryggradspunkten finns inte
@@ -5875,8 +5884,6 @@ anchor	Points:	Punkter:
 	Arrow Scale:	Pilskala:
 	Arrow Style:	Pilstil:
 	Check for Updates…	Sök efter uppdateringar…
-	Checking for updates…	Söker efter uppdateringar…
-	Could not check for updates:\n{error}	Det gick inte att söka efter uppdateringar:\n{error}
 	Dimension Lines	Måttlinjer
 	Dimension Text	Måttal
 	Extension Lines	Måttgränslinjer
@@ -5898,7 +5905,6 @@ anchor	Points:	Punkter:
 	Tracing the colors…	Vektoriserar färgerna…
 	Units & Scale	Enheter & skala
 	VectorCraft Updates	Uppdateringar för VectorCraft
-	VectorCraft {version} is currently the newest version available.	VectorCraft {version} är för närvarande den senaste tillgängliga versionen.
 	Yonroku-ban	Yonroku-ban
 @msg	image '{key}' has no pixels and was left out	bilden '{key}' har inga pixlar och utelämnades
 @msg	not an RTF file: it doesn't start with {\\rtf	inte en RTF-fil: den börjar inte med {\\rtf
@@ -5965,6 +5971,7 @@ shape	Open	Öppen
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Dela upp text
 	Combine Point Text	Kombinera punkttext
+	Join Point Text	Sammanfoga punkttext
 	Remove Breaks	Ta bort brytningar
 	Split Text at Cursor	Dela text vid markören
 	Set Alignment, Keep Position	Ställ in justering, behåll position
@@ -5993,6 +6000,7 @@ breakText	Glyphs	Glyfer
 @msg	Select horizontal point or area type whose text fits	Markera vågrät punkt- eller områdestext vars text får plats
 @msg	Nothing to split at the cursor	Inget att dela vid markören
 @msg	Select two or more one-line point type objects on one baseline to combine	Markera två eller fler enradiga punkttextobjekt på samma baslinje för att kombinera dem
+@msg	Select two or more one-line point type objects to join	Markera två eller fler enradiga punkttextobjekt för att sammanfoga dem
 @msg	No line breaks to remove	Inga radbrytningar att ta bort
 @msg	No paragraph breaks to remove	Inga styckebrytningar att ta bort
 @msg	Too many breaks to remove at once	För många brytningar att ta bort på en gång
@@ -6045,3 +6053,15 @@ breakText	Glyphs	Glyfer
 	Gap 4	Mellanrum 4
 	Dash 5	Streck 5
 	Gap 5	Mellanrum 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Ordningsverktyg
+	Arrange in Grid…	Ordna i rutnät…
+	Arrange in Grid	Ordna i rutnät
+	Swap Objects	Byt plats på objekt
+	Swap Objects and Sizes	Byt plats och storlek på objekt
+	Replace with Top Object…	Ersätt med översta objektet…
+	Replace with Top Object	Ersätt med översta objektet
+	Set Size of Each…	Ange storlek för vart och ett…
+	Set Size of Each	Ange storlek för vart och ett
+@msg	select exactly two objects	markera exakt två objekt
+@msg	give `width` or `height`	ange `width` eller `height`

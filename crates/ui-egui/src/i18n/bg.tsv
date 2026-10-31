@@ -495,7 +495,7 @@ font-technology	Variable	Променливи
 	Collect in New Layer	Събиране в нов слой
 	Collect Links in a Separate Folder	Събиране на връзките в отделна папка
 	Color	Цвят
-	Color (, or <)	Цвят (, или <)
+	Color (, or Shift+,)	Цвят (, или Shift+,)
 	Color Adjustments	Цветови корекции
 	Color bars	Цветови скали
 	Color blindness – Deuteranopia-type	Цветна слепота – тип девтеранопия
@@ -649,6 +649,13 @@ font-technology	Variable	Променливи
 	Create Report	Създаване на отчет
 	Create Slice	Създаване на отрязък
 	Create Sub-folders	Създаване на подпапки
+	Clear Selection	Изчистване на избора
+	Export PDFs As:	Експортиране на PDF като:
+	Single File	Един файл
+	Multiple Files	Няколко файла
+	Format Presets	Предварителни настройки на формата
+	Grid View	Изглед на мрежа
+	Selected: {n}, Total number of files to export: {m}	Избрани: {n}, общ брой файлове за експортиране: {m}
 	Create Text	Създаване на текст
 	Create Trim Marks	Създаване на режещи знаци
 	Created	Създадено
@@ -732,7 +739,6 @@ font-technology	Variable	Променливи
 	Delete the graphic style “{name}”?	Изтриване на графичния стил „{name}“?
 	Delete Theme	Изтриване на тема
 	Delete theme	Изтриване на тема
-	Delete these {count} swatches and groups?	Изтриване на тези {count} образца и групи?
 	Delete these {n} graphic styles?	Изтриване на тези {n} графични стила?
 	Delete this saved preset	Изтриване на тази запазена предварителна настройка
 	Delete this {n} graphic style?	Изтриване на този {n} графичен стил?
@@ -1236,7 +1242,7 @@ font-technology	Variable	Променливи
 	GPL palettes keep solid colours only, as RGB.	Палитрите GPL запазват само плътни цветове като RGB.
 	GPU Performance	Производителност на графичния процесор
 	Gradient	Градиент
-	Gradient (. or >)	Градиент (. или >)
+	Gradient (. or Shift+.)	Градиент (. или Shift+.)
 	Gradient across stroke	Градиент напречно на щриха
 	Gradient along stroke	Градиент по дължината на щриха
 	Gradient and Mesh Resolution:	Разделителна способност на градиент и мрежа:
@@ -3618,6 +3624,7 @@ imageTrace	Outline	Контур
 @plural	{n} item|{n} items	{n} обект|{n} обекта
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Цветна таблица ({n} цвят)|Цветна таблица ({n} цвята)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Изтриване на този графичен стил ({n})?|Изтриване на тези графични стилове ({n})?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Изтриване на този {n} образец или група?|Изтриване на тези {n} образца и групи?
 @plural	{n} Layer|{n} Layers	{n} слой|{n} слоя
 @plural	{n} Object|{n} Objects	{n} обект|{n} обекта
 @plural	{n} area highlighted|{n} areas highlighted	{n} осветена област|{n} осветени области
@@ -3952,6 +3959,7 @@ axis	Both	И двете
 @msg	cannot split an open path at its end point	отворен път не може да бъде разделен в крайната му точка
 @msg	closing needs three anchors	затварянето изисква три опорни точки
 @msg	check an asset to export	изберете актив за експортиране
+@msg	check an artboard to export	изберете монтажна област за експортиране
 @msg	check a layer to export	отметнете слой за експортиране
 @msg	select the art to export first	първо изберете графиката за експортиране
 @msg	choice must be "merge" or "add", not `{choice}`	изборът трябва да бъде "merge" или "add", а не `{choice}`
@@ -4091,6 +4099,7 @@ axis	Both	И двете
 @msg	no such perspective grid preset	няма такава предварителна настройка за перспективна мрежа
 @msg	no such recent file	няма такъв скорошен файл
 @msg	no such recent font	няма такъв скорошен шрифт
+@msg	some text is hidden or locked, so its font wasn't replaced	част от текста е скрит или заключен, затова шрифтът му не беше заменен
 @msg	no such saved selection	няма такава запазена селекция
 @msg	no such segment	няма такъв сегмент
 @msg	no such spine point	няма такава точка от оста
@@ -5799,6 +5808,7 @@ anchor	Points:	Точки:
 # Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
 	Break Text	Разделяне на текст
 	Combine Point Text	Обединяване на точков текст
+	Join Point Text	Съединяване на точков текст
 	Remove Breaks	Премахване на прекъсвания
 	Split Text at Cursor	Разделяне на текст при курсора
 	Set Alignment, Keep Position	Задаване на подравняване със запазване на позицията
@@ -5827,6 +5837,7 @@ breakText	Glyphs	Глифи
 @msg	Select horizontal point or area type whose text fits	Изберете хоризонтален точков текст или текст в зона, чийто текст се побира
 @msg	Nothing to split at the cursor	При курсора няма какво да се раздели
 @msg	Select two or more one-line point type objects on one baseline to combine	Изберете два или повече едноредови обекта с точков текст на една базова линия, за да ги обедините
+@msg	Select two or more one-line point type objects to join	Изберете два или повече едноредови обекта с точков текст, за да ги съедините
 @msg	No line breaks to remove	Няма прекъсвания на редове за премахване
 @msg	No paragraph breaks to remove	Няма прекъсвания на абзаци за премахване
 @msg	Too many breaks to remove at once	Твърде много прекъсвания за премахване наведнъж
@@ -5880,3 +5891,15 @@ breakText	Glyphs	Глифи
 	Gap 4	Разстояние 4
 	Dash 5	Тире 5
 	Gap 5	Разстояние 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Инструменти за подреждане
+	Arrange in Grid…	Подреждане в мрежа…
+	Arrange in Grid	Подреждане в мрежа
+	Swap Objects	Размяна на обекти
+	Swap Objects and Sizes	Размяна на обекти и размери
+	Replace with Top Object…	Замяна с горния обект…
+	Replace with Top Object	Замяна с горния обект
+	Set Size of Each…	Задаване на размер на всеки…
+	Set Size of Each	Задаване на размер на всеки
+@msg	select exactly two objects	изберете точно два обекта
+@msg	give `width` or `height`	задайте `width` или `height`
