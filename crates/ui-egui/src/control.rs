@@ -9,7 +9,7 @@
 //! - `ui.menu.list`: flattened menu tree
 //! - `ui.contextMenu.list`: the canvas context menu for the current selection, flattened
 //! - `ui.tool.select {tool}`, `ui.tool.list`
-//! - `ui.pointer {events:[{kind: down|drag|up|move|doubleclick, x, y, space?: "doc"|"screen"}], mods?}`:
+//! - `ui.pointer {events:[{kind: down|drag|up|move|doubleclick, x, y, backquote?, space?: "doc"|"screen"}], mods?, backquote?}`:
 //!   drive the active tool through the same path as the mouse
 //! - `ui.key {key, shift?, alt?, cmd?}` / `ui.text {text}`: synthetic keyboard input
 //! - `ui.move {x, y}` / `ui.click {x, y, button?, count?, shift?…}` / `ui.drag {x, y, toX, toY, steps?}`:
@@ -534,7 +534,8 @@ fn pointer_events(app: &mut VectorcraftApp, ctx: &egui::Context, req: &ControlRe
             Some(xf) if screen => crate::canvas::pose_on_page(q, &xf),
             _ => q,
         });
-        crate::canvas::dispatch(app, &PointerEvent { kind, pos, mods, pressure: PointerEvent::json_pressure(e), pen }, view);
+        let backquote = e.get("backquote").and_then(Value::as_bool).unwrap_or_else(|| p.get("backquote").and_then(Value::as_bool).unwrap_or(false));
+        crate::canvas::dispatch(app, &PointerEvent { kind, pos, mods, backquote, pressure: PointerEvent::json_pressure(e), pen }, view);
         let hold = PointerEvent::json_hold(e);
         if hold > 0.0 {
             let r = app.session.tool_tick(hold, view);

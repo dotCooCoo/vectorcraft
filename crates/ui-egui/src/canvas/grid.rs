@@ -205,6 +205,7 @@ pub(super) fn ruler_input(app: &mut VectorcraftApp, ui: &Ui, full: egui::Rect, c
             kind,
             pos: p.map_or(Point::ZERO, |p| xf.to_doc(p)),
             mods: mods(ui.input(|i| i.modifiers), false),
+            backquote: ui.input(|i| i.key_down(egui::Key::Backtick)),
             pressure: 1.0,
             pen: None,
         };

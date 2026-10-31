@@ -702,6 +702,24 @@ group = "Drawing and editing tools"
 shown_when = ["The Parametric Shape Tool (Path Precision Tools add-on): a drag draws a re-editable shape out from its centre; a click selects one and shows its handles."]
 hotspot = "Exact: the centre of the shape being drawn."
 
+[[cursor]]
+id = "CornerTool"
+group = "Drawing and editing tools"
+shown_when = ["The Corner Tool (Path Precision Tools add-on): a click or drag on an anchor where two sides meet cuts a corner there; a drag on a corner's marker resizes it; an Alt-drag cuts corners on every anchor inside the marquee."]
+hotspot = "Exact: the anchor or marker being picked."
+
+[[cursor]]
+id = "SlideAnchor"
+group = "Drawing and editing tools"
+shown_when = ["The Slide Anchor Along Path tool (Path Precision Tools add-on): a drag moves an anchor along the curve it sits on."]
+hotspot = "Exact: the anchor being dragged follows it along the path."
+
+[[cursor]]
+id = "SharedEdge"
+group = "Drawing and editing tools"
+shown_when = ["The Shared Edge Merge Tool (Path Precision Tools add-on): a click merges the touching edges of two paths under the round brush, or brings their anchors together there."]
+hotspot = "Exact: the centre of the brush, drawn by the app as a circle around the cursor."
+
 # ── Symbolism tools ───────────────────────────────────────────────────────────────────────────────
 # The brush size is drawn by the app as a circle around the cursor.
 

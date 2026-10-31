@@ -1140,12 +1140,12 @@ lighting	Light	Światło
 	 to set spacing and orientation	 aby ustawić odstęp i orientację
 	Apply	Zastosuj
 	Change Screen Mode (F)	Zmień tryb ekranu (F)
-	Color (,)	Kolor (,)
+	Color (, or Shift+,)	Kolor (, lub Shift+,)
 	Draw Behind	Rysuj pod spodem
 	Draw Inside	Rysuj wewnątrz
 	Draw Normal	Rysuj normalnie
 	Expand:	Rozszerz:
-	Gradient (.)	Gradient (.)
+	Gradient (. or Shift+.)	Gradient (. lub Shift+.)
 	H:	W:
 	Modify	Modyfikuj
 	Navigate	Nawigacja
@@ -1864,7 +1864,6 @@ lighting	Light	Światło
 	Weight:	Grubość:
 	Art using a deleted global swatch keeps its colour.	Kompozycja używająca usuniętej próbki globalnej zachowa swój kolor.
 	Color Group: {name}	Grupa kolorów: {name}
-	Delete these {count} swatches and groups?	Usunąć te próbki i grupy ({count})?
 	Delete “{name}”?	Usunąć „{name}”?
 	Document Swatches	Próbki dokumentu
 	Edit or Apply Color Group	Edytuj lub zastosuj grupę kolorów
@@ -2175,6 +2174,13 @@ lighting	Light	Światło
 	Use Artboards	Użyj obszarów kompozycji
 	Choose a folder	Wybierz folder
 	Create Sub-folders	Utwórz podfoldery
+	Clear Selection	Wyczyść zaznaczenie
+	Export PDFs As:	Eksportuj pliki PDF jako:
+	Single File	Jeden plik
+	Multiple Files	Wiele plików
+	Format Presets	Ustawienia formatów
+	Grid View	Widok siatki
+	Selected: {n}, Total number of files to export: {m}	Zaznaczono: {n}, łączna liczba plików do eksportu: {m}
 	Export Asset	Eksportuj zasób
 	Export to:	Eksportuj do:
 	Format Settings	Ustawienia formatu
@@ -3950,6 +3956,7 @@ imageTrace	Outline	Kontur
 @plural	{n} item|{n} items	{n} element|{n} elementy|{n} elementów
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Tablica kolorów ({n} kolor)|Tablica kolorów ({n} kolory)|Tablica kolorów ({n} kolorów)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Usunąć {n} styl graficzny?|Usunąć {n} style graficzne?|Usunąć {n} stylów graficznych?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Usunąć {n} próbkę lub grupę?|Usunąć {n} próbki i grupy?|Usunąć {n} próbek i grup?
 @plural	{n} Layer|{n} Layers	{n} warstwa|{n} warstwy|{n} warstw
 @plural	{n} Object|{n} Objects	{n} obiekt|{n} obiekty|{n} obiektów
 @plural	{n} area highlighted|{n} areas highlighted	Wyróżniono {n} obszar|Wyróżniono {n} obszary|Wyróżniono {n} obszarów
@@ -4201,6 +4208,7 @@ imageTrace	Outline	Kontur
 @msg	cannot split an open path at its end point	nie można podzielić otwartej ścieżki w jej punkcie końcowym
 @msg	closing needs three anchors	zamknięcie wymaga trzech punktów
 @msg	check an asset to export	zaznacz zasób do eksportu
+@msg	check an artboard to export	zaznacz obszar kompozycji do eksportu
 @msg	check a layer to export	zaznacz warstwę do eksportu
 @msg	select the art to export first	najpierw zaznacz grafikę do eksportu
 @msg	choice must be "merge" or "add", not `{choice}`	wybór musi mieć wartość "merge" lub "add", nie `{choice}`
@@ -4343,6 +4351,7 @@ imageTrace	Outline	Kontur
 @msg	no such perspective grid preset	brak takiego ustawienia siatki perspektywy
 @msg	no such recent file	brak takiego ostatniego pliku
 @msg	no such recent font	brak takiej ostatniej czcionki
+@msg	some text is hidden or locked, so its font wasn't replaced	część tekstu jest ukryta lub zablokowana, więc jego czcionka nie została zastąpiona
 @msg	no such saved selection	brak takiego zapisanego zaznaczenia
 @msg	no such segment	brak takiego segmentu
 @msg	no such spine point	brak takiego punktu grzbietu
@@ -5739,3 +5748,125 @@ anchor	Points:	Punkty:
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	podaj `inkLimit`, `removeWhiteOverprint` lub `overprintBlack`
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Poprawki farb drukarskich działają w dokumentach CMYK: najpierw wybierz Plik › Tryb koloru dokumentu › Kolor CMYK
 @msg	`{key}` must be 0..{max}	`{key}` musi wynosić 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Narzędzie Narożniki
+	Slide Anchor Along Path	Przesuń punkt kontrolny wzdłuż ścieżki
+	Set Corners	Ustaw narożniki
+	Remove Corners	Usuń narożniki
+	Corners selected: {count}	Zaznaczone narożniki: {count}
+	Apply to Selected Anchors	Zastosuj do zaznaczonych punktów kontrolnych
+@msg	`radius` must be from 0 to 1000000 pt	`radius` musi wynosić od 0 do 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` musi być liczbą od -0.98 do 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	wybierz punkty kontrolne, w których dwa boki spotykają się pod kątem: tylko one mogą mieć narożnik
+@msg	give `anchor`, the index of the anchor to slide	podaj `anchor`, indeks punktu kontrolnego do przesunięcia
+@msg	that anchor can't slide: an end of an open path has nowhere to go	tego punktu kontrolnego nie można przesunąć: koniec otwartej ścieżki nie ma dokąd pójść
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Narzędzie Scal wspólną krawędź
+	Merge Shared Edge	Scal wspólną krawędź
+	Keep Shared Points Together	Trzymaj wspólne punkty razem
+	Shared Edges	Wspólne krawędzie
+	Coincidence:	Zbieżność:
+@msg	`a` and `b` must be two different paths	`a` i `b` muszą być dwiema różnymi ścieżkami
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` musi mieć od 0.25 do 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` musi mieć od 0 do 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` musi mieć wartość "average", "a" lub "b"
+@msg	the paths have nothing to merge there	ścieżki nie mają tu nic do scalenia
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Podziel tekst
+	Combine Point Text	Połącz tekst punktowy
+	Join Point Text	Złącz tekst punktowy
+	Remove Breaks	Usuń podziały
+	Split Text at Cursor	Podziel tekst w miejscu kursora
+	Set Alignment, Keep Position	Ustaw wyrównanie, zachowaj położenie
+	Reset Text Transform	Resetuj przekształcenie tekstu
+	Replace Missing Fonts…	Zastąp brakujące czcionki…
+	Replace Missing Fonts	Zastąp brakujące czcionki
+	Remove Line Breaks	Usuń podziały wiersza
+	Remove Paragraph Breaks	Usuń podziały akapitu
+	Break Text into Lines	Podziel tekst na wiersze
+	Break Text into Paragraphs	Podziel tekst na akapity
+	Break Text into Words	Podziel tekst na słowa
+	Break Text into Glyphs	Podziel tekst na glify
+	Reset Text Transform and Scale	Resetuj przekształcenie i skalę tekstu
+	Set Alignment, Keep Position:	Ustaw wyrównanie, zachowaj położenie:
+	Break Text into:	Podziel tekst na:
+	Split at Cursor	Podziel w miejscu kursora
+	Reset Transform	Resetuj przekształcenie
+	Shift-click: break into paragraphs	Kliknięcie z Shift: podziel na akapity
+	Alt-click: reset the horizontal scale too	Kliknięcie z Alt: resetuj także skalę poziomą
+breakText	Lines	Wiersze
+breakText	Words	Słowa
+breakText	Glyphs	Glify
+@msg	Click in type with a Type tool to split it	Kliknij w tekst narzędziem Tekst, aby go podzielić
+@msg	Too many type objects to change at once	Zbyt wiele obiektów tekstowych do zmiany naraz
+@msg	Too many pieces to make at once	Zbyt wiele części do utworzenia naraz
+@msg	Select horizontal point or area type whose text fits	Zaznacz poziomy tekst punktowy lub akapitowy, którego tekst się mieści
+@msg	Nothing to split at the cursor	Nie ma nic do podzielenia w miejscu kursora
+@msg	Select two or more one-line point type objects on one baseline to combine	Zaznacz co najmniej dwa jednowierszowe obiekty tekstu punktowego na jednej linii bazowej, aby je połączyć
+@msg	Select two or more one-line point type objects to join	Zaznacz co najmniej dwa jednowierszowe obiekty tekstu punktowego, aby je złączyć
+@msg	No line breaks to remove	Brak podziałów wiersza do usunięcia
+@msg	No paragraph breaks to remove	Brak podziałów akapitu do usunięcia
+@msg	Too many breaks to remove at once	Zbyt wiele podziałów do usunięcia naraz
+@msg	Select point type	Zaznacz tekst punktowy
+@msg	The point type is aligned that way already	Tekst punktowy jest już tak wyrównany
+@msg	The point type has no transform to reset	Tekst punktowy nie ma przekształcenia do zresetowania
+@msg	No fonts are missing	Nie brakuje żadnych czcionek
+@msg	the replacement font is not available	czcionka zastępcza jest niedostępna
+@msg	missing `align`	brak `align`
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` musi mieć wartość lines, paragraphs, words lub glyphs, a nie {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` musi mieć wartość "line" lub "paragraph", a nie {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` musi mieć wartość "left", "center" lub "right", a nie {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Efekty ścieżki
+	Reverse Direction	Odwróć kierunek
+	Align to Corners and Ends	Wyrównaj do narożników i końców
+	Count	Liczba
+	Max Count	Maksymalna liczba
+	Start Length	Długość na początku
+	Start Percent	Procent na początku
+	Start Shape	Kształt na początku
+	End Length	Długość na końcu
+	End Percent	Procent na końcu
+	End Shape	Kształt na końcu
+	By Count	Według liczby
+	By Distance	Według odległości
+	Both	Oba
+	Shorter Than Length	Krótsze niż długość
+	Anchors	Punkty kontrolne
+	Dashes to Geometry	Kreski jako geometria
+	Dashes to Geometry…	Kreski jako geometria…
+	Add Anchors	Dodaj punkty kontrolne
+	Add Anchors…	Dodaj punkty kontrolne…
+	Smooth Anchors	Wygładź punkty kontrolne
+	Smooth Anchors…	Wygładź punkty kontrolne…
+	Simplify Anchors	Uprość punkty kontrolne
+	Simplify Anchors…	Uprość punkty kontrolne…
+	Split at Anchors	Podziel w punktach kontrolnych
+	Split at Anchors…	Podziel w punktach kontrolnych…
+	Extend Path…	Przedłuż ścieżkę…
+	Close Path…	Zamknij ścieżkę…
+	Retract Handles…	Schowaj uchwyty…
+	Dash 1	Kreska 1
+	Gap 1	Odstęp 1
+	Dash 2	Kreska 2
+	Gap 2	Odstęp 2
+	Dash 3	Kreska 3
+	Gap 3	Odstęp 3
+	Dash 4	Kreska 4
+	Gap 4	Odstęp 4
+	Dash 5	Kreska 5
+	Gap 5	Odstęp 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Narzędzia układania
+	Arrange in Grid…	Ułóż w siatce…
+	Arrange in Grid	Ułóż w siatce
+	Swap Objects	Zamień obiekty miejscami
+	Swap Objects and Sizes	Zamień obiekty miejscami i rozmiarami
+	Replace with Top Object…	Zastąp górnym obiektem…
+	Replace with Top Object	Zastąp górnym obiektem
+	Set Size of Each…	Ustaw rozmiar każdego…
+	Set Size of Each	Ustaw rozmiar każdego
+@msg	select exactly two objects	zaznacz dokładnie dwa obiekty
+@msg	give `width` or `height`	podaj `width` lub `height`

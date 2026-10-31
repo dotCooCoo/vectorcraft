@@ -220,8 +220,8 @@ impl Session {
                 }
             }
         }
-        // Alt switches the Pencil or Blob Brush to Smooth, using Smooth Tool Options' Fidelity.
-        if matches!(t.id(), "pencil" | "blobBrush")
+        // Alt switches the Pencil, Paintbrush or Blob Brush to Smooth, using Smooth Tool Options' Fidelity.
+        if matches!(t.id(), "pencil" | "paintbrush" | "blobBrush")
             && let Some(v) = prefs.tool_settings.get("smooth").and_then(|s| s.get("fidelity"))
         {
             t.set_option("smoothFidelity", v);
@@ -457,6 +457,11 @@ impl Session {
         // 1–4 pick the active perspective plane while the grid is shown.
         if let Some(plane) = self.plane_key(key) {
             self.execute("perspective.plane.set", &serde_json::json!({ "plane": plane.id() }))?;
+            if self.tool_id() == "perspectiveSelection" {
+                let acts = self.with_tool_cx(view, |t, cx| t.key(cx, key, mods));
+                self.take_tool_panic()?;
+                return self.apply_actions(acts);
+            }
             return Ok(vec![]);
         }
         let acts = self.with_tool_cx(view, |t, cx| t.key(cx, key, mods));
@@ -633,8 +638,8 @@ impl Session {
 
     /// Set options of tool `id` (default: the active tool). Another tool's persistent options are
     /// stored for when it is chosen, and the active tool takes those it shares with it (the
-    /// Liquify tools' Global Brush Dimensions, the Smooth tool's Fidelity for the Pencil's and
-    /// Blob Brush's Alt smoothing). Returns the tool's options.
+    /// Liquify tools' Global Brush Dimensions, the Smooth tool's Fidelity for Pencil, Paintbrush
+    /// and Blob Brush Alt smoothing). Returns the tool's options.
     pub fn set_tool_options(&mut self, id: Option<&str>, values: &Map<String, Value>) -> Value {
         let active = id.is_none_or(|id| id == self.tool.id());
         self.tool_set_since_reset |= active;

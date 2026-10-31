@@ -245,8 +245,9 @@ impl MeshReader {
                 _ => return None,
             };
             let &[x, y, nx, ny, nw, px, py, pw] = geometry else { return None };
-            // Non-unit rational weights need a different surface representation.
-            if nw != 1.0 || pw != 1.0 {
+            // Weights are 1, or 0 on some corners, which draw as the same cubic edges (checked
+            // against the files' pages). Others would need a rational surface.
+            if ![nw, pw].iter().all(|w| *w == 1.0 || *w == 0.0) {
                 return None;
             }
             if ![opacity, x, y, nx, ny, px, py].iter().all(|v| v.is_finite()) {
@@ -629,6 +630,25 @@ mod tests {
             second.p
         );
         assert!((first.handles[H_DOWN] - Vec2::new(0.0, 1.0)).hypot() < 1e-9, "{:?}", first.handles);
+    }
+
+    /// A corner's handle weights are 1, or 0 on some corners, which draw as the same patch; any
+    /// other weight leaves the patch unread.
+    #[test]
+    fn corners_with_handle_weights_of_zero_are_read() {
+        let read = |nw: f64, pw: f64| {
+            let mut reader = MeshReader::default();
+            patch(&mut reader, &[0.5, 1.0, 0.0, 0.0, 0.0, 0.3, nw, 0.3, 0.0, pw]);
+            reader
+        };
+        for (nw, pw) in [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0)] {
+            let reader = read(nw, pw);
+            assert!(!reader.unread, "{nw} {pw}");
+            let p = &reader.patches[0].points[0];
+            assert_eq!((p.handles[H_DOWN], p.handles[H_RIGHT]), (Vec2::new(0.0, 0.3), Vec2::new(0.3, 0.0)));
+        }
+        let reader = read(0.5, 1.0);
+        assert!(reader.unread && reader.patches.is_empty());
     }
 
     #[test]

@@ -509,7 +509,7 @@ font-technology	Variable	Variabili
 	Collect in New Layer	Raccogli in un nuovo livello
 	Collect Links in a Separate Folder	Raccogli i collegamenti in una cartella separata
 	Color	Colore
-	Color (,)	Colore (,)
+	Color (, or Shift+,)	Colore (, o Shift+,)
 	Color Adjustments	Regolazioni colore
 	Color bars	Barre colore
 	Color blindness – Deuteranopia-type	Daltonismo – tipo deuteranopia
@@ -663,6 +663,13 @@ font-technology	Variable	Variabili
 	Create Report	Crea rapporto
 	Create Slice	Crea sezione
 	Create Sub-folders	Crea sottocartelle
+	Clear Selection	Cancella selezione
+	Export PDFs As:	Esporta PDF come:
+	Single File	File singolo
+	Multiple Files	Più file
+	Format Presets	Predefiniti formato
+	Grid View	Vista griglia
+	Selected: {n}, Total number of files to export: {m}	Selezionati: {n}, numero totale di file da esportare: {m}
 	Create Text	Crea testo
 	Create Trim Marks	Crea segni di taglio
 	Created	Creato
@@ -747,7 +754,6 @@ font-technology	Variable	Variabili
 	Delete the graphic style “{name}”?	Eliminare lo stile grafico “{name}”?
 	Delete Theme	Elimina tema
 	Delete theme	Elimina tema
-	Delete these {count} swatches and groups?	Eliminare questi {count} campioni e gruppi?
 	Delete these {n} graphic styles?	Eliminare questi {n} stili grafici?
 	Delete this saved preset	Elimina questo preset salvato
 	Delete this {n} graphic style?	Eliminare {n} stile grafico?
@@ -1283,7 +1289,7 @@ file-filter	Templates	Modelli
 	GPL palettes keep solid colours only, as RGB.	Le palette GPL conservano solo i colori pieni, in RGB.
 	GPU Performance	Prestazioni GPU
 	Gradient	Sfumatura
-	Gradient (.)	Sfumatura (.)
+	Gradient (. or Shift+.)	Sfumatura (. o Shift+.)
 	Gradient across stroke	Sfumatura trasversale alla traccia
 	Gradient along stroke	Sfumatura lungo la traccia
 	Gradient and Mesh Resolution:	Risoluzione sfumature e trame:
@@ -3728,6 +3734,7 @@ imageTrace	Outline	Contorno
 @plural	{n} item|{n} items	{n} elemento|{n} elementi
 @plural	Color Table ({n} color)|Color Table ({n} colors)	Tabella colori ({n} colore)|Tabella colori ({n} colori)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	Eliminare {n} stile grafico?|Eliminare questi {n} stili grafici?
+@plural	Delete this {n} swatch or group?|Delete these {n} swatches and groups?	Eliminare {n} campione o gruppo?|Eliminare questi {n} campioni e gruppi?
 @plural	{n} Layer|{n} Layers	{n} livello|{n} livelli
 @plural	{n} Object|{n} Objects	{n} oggetto|{n} oggetti
 @plural	{n} area highlighted|{n} areas highlighted	{n} area evidenziata|{n} aree evidenziate
@@ -4110,6 +4117,7 @@ axis	Both	Entrambi
 @msg	cannot split an open path at its end point	impossibile dividere un tracciato aperto nel suo punto finale
 @msg	closing needs three anchors	per chiudere servono tre punti di ancoraggio
 @msg	check an asset to export	spunta una risorsa da esportare
+@msg	check an artboard to export	spunta una tavola da disegno da esportare
 @msg	check a layer to export	seleziona un livello da esportare
 @msg	select the art to export first	seleziona prima la grafica da esportare
 @msg	choice must be "merge" or "add", not `{choice}`	choice deve essere "merge" o "add", non `{choice}`
@@ -4252,6 +4260,7 @@ axis	Both	Entrambi
 @msg	no such perspective grid preset	preset di griglia prospettica inesistente
 @msg	no such recent file	file recente inesistente
 @msg	no such recent font	font recente inesistente
+@msg	some text is hidden or locked, so its font wasn't replaced	parte del testo è nascosta o bloccata, quindi il suo font non è stato sostituito
 @msg	no such saved selection	selezione salvata inesistente
 @msg	no such segment	segmento inesistente
 @msg	no such spine point	punto della dorsale inesistente
@@ -5503,3 +5512,125 @@ anchor	Points:	Punti:
 @msg	give `inkLimit`, `removeWhiteOverprint` or `overprintBlack`	indica `inkLimit`, `removeWhiteOverprint` o `overprintBlack`
 @msg	Print Ink Fixes works on CMYK documents: choose File › Document Color Mode › CMYK Color first	Le correzioni inchiostri di stampa funzionano nei documenti CMYK: scegli prima File › Metodo colore documento › Colore CMYK
 @msg	`{key}` must be 0..{max}	`{key}` deve essere 0..{max}
+# Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path.
+	Corner Tool	Strumento Angoli
+	Slide Anchor Along Path	Fai scorrere il punto di ancoraggio lungo il tracciato
+	Set Corners	Imposta angoli
+	Remove Corners	Rimuovi angoli
+	Corners selected: {count}	Angoli selezionati: {count}
+	Apply to Selected Anchors	Applica ai punti di ancoraggio selezionati
+@msg	`radius` must be from 0 to 1000000 pt	`radius` deve essere da 0 a 1000000 pt
+@msg	`t` must be a number from -0.98 to 0.98	`t` deve essere un numero da -0.98 a 0.98
+@msg	choose anchors where two sides meet at an angle: only those take a corner	scegli punti di ancoraggio in cui due lati si incontrano ad angolo: solo quelli accettano un angolo
+@msg	give `anchor`, the index of the anchor to slide	indica `anchor`, l’indice del punto di ancoraggio da far scorrere
+@msg	that anchor can't slide: an end of an open path has nowhere to go	quel punto di ancoraggio non può scorrere: l’estremità di un tracciato aperto non ha dove andare
+# Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together.
+	Shared Edge Merge Tool	Strumento Fondi bordo condiviso
+	Merge Shared Edge	Fondi bordo condiviso
+	Keep Shared Points Together	Mantieni uniti i punti condivisi
+	Shared Edges	Bordi condivisi
+	Coincidence:	Coincidenza:
+@msg	`a` and `b` must be two different paths	`a` e `b` devono essere due tracciati diversi
+@msg	`diameter` must be from 0.25 to 200 pt	`diameter` deve essere da 0.25 a 200 pt
+@msg	`tolerance` must be from 0 to 3 pt	`tolerance` deve essere da 0 a 3 pt
+@msg	`follow` must be "average", "a" or "b"	`follow` deve essere "average", "a" o "b"
+@msg	the paths have nothing to merge there	i tracciati non hanno nulla da fondere qui
+
+# Artwork Cleanup add-on: its text tools (Object › Plug-ins › Artwork Cleanup and the panel's Text row) and their messages.
+	Break Text	Dividi testo
+	Combine Point Text	Combina testo con punto
+	Join Point Text	Unisci testo con punto
+	Remove Breaks	Rimuovi interruzioni
+	Split Text at Cursor	Dividi testo al cursore
+	Set Alignment, Keep Position	Imposta allineamento mantenendo la posizione
+	Reset Text Transform	Reimposta trasformazione testo
+	Replace Missing Fonts…	Sostituisci font mancanti…
+	Replace Missing Fonts	Sostituisci font mancanti
+	Remove Line Breaks	Rimuovi interruzioni di riga
+	Remove Paragraph Breaks	Rimuovi interruzioni di paragrafo
+	Break Text into Lines	Dividi testo in righe
+	Break Text into Paragraphs	Dividi testo in paragrafi
+	Break Text into Words	Dividi testo in parole
+	Break Text into Glyphs	Dividi testo in glifi
+	Reset Text Transform and Scale	Reimposta trasformazione e scala testo
+	Set Alignment, Keep Position:	Imposta allineamento mantenendo la posizione:
+	Break Text into:	Dividi testo in:
+	Split at Cursor	Dividi al cursore
+	Reset Transform	Reimposta trasformazione
+	Shift-click: break into paragraphs	Shift+clic: dividi in paragrafi
+	Alt-click: reset the horizontal scale too	Alt+clic: reimposta anche la scala orizzontale
+breakText	Lines	Righe
+breakText	Words	Parole
+breakText	Glyphs	Glifi
+@msg	Click in type with a Type tool to split it	Fai clic nel testo con uno strumento Testo per dividerlo
+@msg	Too many type objects to change at once	Troppi oggetti di testo da modificare in una volta
+@msg	Too many pieces to make at once	Troppi pezzi da creare in una volta
+@msg	Select horizontal point or area type whose text fits	Seleziona testo con punto o in area orizzontale il cui testo ci sta
+@msg	Nothing to split at the cursor	Niente da dividere al cursore
+@msg	Select two or more one-line point type objects on one baseline to combine	Seleziona due o più oggetti di testo con punto su una riga sulla stessa linea di base per combinarli
+@msg	Select two or more one-line point type objects to join	Seleziona due o più oggetti di testo con punto su una riga per unirli
+@msg	No line breaks to remove	Nessuna interruzione di riga da rimuovere
+@msg	No paragraph breaks to remove	Nessuna interruzione di paragrafo da rimuovere
+@msg	Too many breaks to remove at once	Troppe interruzioni da rimuovere in una volta
+@msg	Select point type	Seleziona testo con punto
+@msg	The point type is aligned that way already	Il testo con punto è già allineato così
+@msg	The point type has no transform to reset	Il testo con punto non ha trasformazioni da reimpostare
+@msg	No fonts are missing	Non mancano font
+@msg	the replacement font is not available	il font sostitutivo non è disponibile
+@msg	missing `align`	`align` mancante
+@msg	`by` must be lines, paragraphs, words or glyphs, not {other}	`by` deve essere lines, paragraphs, words o glyphs, non {other}
+@msg	`kind` must be "line" or "paragraph", not {other}	`kind` deve essere "line" o "paragraph", non {other}
+@msg	`align` must be "left", "center" or "right", not {other}	`align` deve essere "left", "center" o "right", non {other}
+
+# Path Precision Tools add-on: Path Effects (Effect › Path Effects).
+	Path Effects	Effetti tracciato
+	Reverse Direction	Inverti direzione
+	Align to Corners and Ends	Allinea ad angoli ed estremità
+	Count	Numero
+	Max Count	Numero massimo
+	Start Length	Lunghezza iniziale
+	Start Percent	Percentuale iniziale
+	Start Shape	Forma iniziale
+	End Length	Lunghezza finale
+	End Percent	Percentuale finale
+	End Shape	Forma finale
+	By Count	Per numero
+	By Distance	Per distanza
+	Both	Entrambi
+	Shorter Than Length	Più corte della lunghezza
+	Anchors	Punti di ancoraggio
+	Dashes to Geometry	Tratti in geometria
+	Dashes to Geometry…	Tratti in geometria…
+	Add Anchors	Aggiungi punti di ancoraggio
+	Add Anchors…	Aggiungi punti di ancoraggio…
+	Smooth Anchors	Smussa punti di ancoraggio
+	Smooth Anchors…	Smussa punti di ancoraggio…
+	Simplify Anchors	Semplifica punti di ancoraggio
+	Simplify Anchors…	Semplifica punti di ancoraggio…
+	Split at Anchors	Dividi ai punti di ancoraggio
+	Split at Anchors…	Dividi ai punti di ancoraggio…
+	Extend Path…	Estendi tracciato…
+	Close Path…	Chiudi tracciato…
+	Retract Handles…	Ritira maniglie…
+	Dash 1	Tratto 1
+	Gap 1	Spazio 1
+	Dash 2	Tratto 2
+	Gap 2	Spazio 2
+	Dash 3	Tratto 3
+	Gap 3	Spazio 3
+	Dash 4	Tratto 4
+	Gap 4	Spazio 4
+	Dash 5	Tratto 5
+	Gap 5	Spazio 5
+# Arrange Tools add-on (Object › Plug-ins › Arrange Tools).
+	Arrange Tools	Strumenti di disposizione
+	Arrange in Grid…	Disponi in griglia…
+	Arrange in Grid	Disponi in griglia
+	Swap Objects	Scambia oggetti
+	Swap Objects and Sizes	Scambia oggetti e dimensioni
+	Replace with Top Object…	Sostituisci con l’oggetto superiore…
+	Replace with Top Object	Sostituisci con l’oggetto superiore
+	Set Size of Each…	Imposta dimensione di ciascuno…
+	Set Size of Each	Imposta dimensione di ciascuno
+@msg	select exactly two objects	seleziona esattamente due oggetti
+@msg	give `width` or `height`	indica `width` o `height`

@@ -164,6 +164,11 @@ enum Drag {
     Present,
 }
 
+/// Whether the canvas is holding a pointer drag across frames.
+pub(crate) fn dragging(ctx: &egui::Context) -> bool {
+    ctx.data(|d| d.get_temp::<Drag>(drag_id()).is_some())
+}
+
 /// Paint the document canvas, complete or cached artwork, navigation and tool overlays.
 pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
