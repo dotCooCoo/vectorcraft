@@ -27,6 +27,25 @@ fn skips_hidden_templates(id: &str) -> bool {
         || id == "shaper.scribble"
 }
 
+fn hide_templates_for_command(id: &str, params: &mut Value) {
+    if matches!(id, "command.batch" | "action.batch") {
+        if let Some(steps) = params.get_mut("commands").and_then(Value::as_array_mut) {
+            for step in steps {
+                let Some(step) = step.as_object_mut() else { continue };
+                if step.get("command").and_then(Value::as_str).is_some_and(skips_hidden_templates)
+                    && let Some(step_params) = step.entry("params").or_insert_with(|| serde_json::json!({})).as_object_mut()
+                {
+                    step_params.insert("skipTemplates".into(), serde_json::json!(true));
+                }
+            }
+        }
+    } else if skips_hidden_templates(id)
+        && let Some(p) = params.as_object_mut()
+    {
+        p.insert("skipTemplates".into(), serde_json::json!(true));
+    }
+}
+
 impl VectorcraftApp {
     /// Run a UI or engine command by id. The single entry point for every frontend path.
     pub fn run(&mut self, id: &str, params: Value) -> Result<Value, String> {
@@ -53,11 +72,8 @@ impl VectorcraftApp {
             return r;
         }
         let mut params = params;
-        if skips_hidden_templates(id)
-            && !self.ui.view.templates
-            && let Some(p) = params.as_object_mut()
-        {
-            p.insert("skipTemplates".into(), serde_json::json!(true));
+        if !self.ui.view.templates {
+            hide_templates_for_command(id, &mut params);
         }
         // Paste in place, in front and in back (#693), Select › All on Active Artboard (#1006), and Align,
         // Distribute Objects and Distribute Spacing with Align to Artboard act on the active artboard, the
@@ -231,5 +247,42 @@ mod template_command_tests {
                 assert!(!error.contains("skipTemplates"), "{id}: {error}");
             }
         }
+    }
+
+    #[test]
+    fn hidden_templates_are_skipped_by_batch_selection_steps() {
+        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        app.run("file.new", serde_json::json!({"width": 100, "height": 100})).unwrap();
+        let hidden = app.run("shape.rectangle", serde_json::json!({"x": 0, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        let layer = app.session.active().unwrap().doc.layers[0].id.0;
+        app.run("layer.setProps", serde_json::json!({"ids": [layer], "template": true, "locked": false})).unwrap();
+        app.run("layer.new", serde_json::json!({"name": "Visible"})).unwrap();
+        let visible = app.run("shape.rectangle", serde_json::json!({"x": 40, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
+        app.run("view.template", serde_json::json!({})).unwrap();
+
+        for step in [
+            serde_json::json!({"command": "select.all"}),
+            serde_json::json!({"command": "select.all", "params": {}}),
+            serde_json::json!({"command": "select.all", "params": {"skipTemplates": false}}),
+        ] {
+            app.run("command.batch", serde_json::json!({"commands": [step]})).unwrap();
+            assert_eq!(app.session.active().unwrap().selection.objects, vec![vectorcraft_doc::NodeId(visible)]);
+        }
+        app.run("select.all", serde_json::json!({"skipTemplates": false})).unwrap();
+        assert_eq!(app.session.active().unwrap().selection.objects, vec![vectorcraft_doc::NodeId(visible)]);
+        assert_ne!(hidden, visible);
+    }
+
+    #[test]
+    fn hidden_templates_are_added_to_action_batch_steps() {
+        let mut params = serde_json::json!({"commands": [
+            {"command": "select.all"},
+            {"command": "select.reselect", "params": {"skipTemplates": false}},
+            {"command": "shape.rectangle", "params": {"x": 1}}
+        ]});
+        hide_templates_for_command("action.batch", &mut params);
+        assert_eq!(params["commands"][0]["params"]["skipTemplates"], true);
+        assert_eq!(params["commands"][1]["params"]["skipTemplates"], true);
+        assert!(params["commands"][2]["params"].get("skipTemplates").is_none());
     }
 }

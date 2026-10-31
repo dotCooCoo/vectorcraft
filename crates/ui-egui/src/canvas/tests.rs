@@ -1930,6 +1930,26 @@ fn hide_template_clears_selected_template_art() {
 }
 
 #[test]
+fn hide_template_clears_empty_template_layer_targets() {
+    use vectorcraft_doc::NodeId;
+
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
+    let layer = app.session.active().unwrap().doc.layers[0].id.0;
+    let sublayer = app.run("layer.newSublayer", json!({"parent": layer, "name": "Empty sublayer"})).unwrap()["id"].as_u64().unwrap();
+    app.run("layer.setProps", json!({"ids": [layer], "template": true, "locked": false})).unwrap();
+    for target in [layer, sublayer] {
+        app.run("layer.target", json!({"id": target})).unwrap();
+        assert_eq!(app.session.active().unwrap().selection.target, Some(NodeId(target)));
+        assert!(app.session.active().unwrap().selection.objects.is_empty());
+        app.run("view.template", json!({})).unwrap();
+        assert_eq!(app.session.active().unwrap().selection.target, None);
+        assert!(app.run("appearance.addFill", json!({})).is_err());
+        app.run("view.template", json!({})).unwrap();
+    }
+}
+
+#[test]
 fn hide_template_clears_template_object_slices_and_keeps_other_selection() {
     use vectorcraft_doc::NodeId;
 

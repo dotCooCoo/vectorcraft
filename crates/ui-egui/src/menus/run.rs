@@ -301,11 +301,15 @@ fn run_ui_part4(app: &mut VectorcraftApp, id: &str, _p: &Value) -> Option<Result
                     .session
                     .active()
                     .map(|d| d.selection.objects.iter().filter(|id| d.doc.has_template_ancestor(**id)).map(|id| id.0).collect::<Vec<_>>());
+                let template_target = app.session.active().is_some_and(|d| d.selection.target.is_some_and(|id| d.doc.has_template_ancestor(id)));
                 if let Some(ids) = template_ids.filter(|ids| !ids.is_empty()) {
                     let _ = app.run("select.toggle", json!({ "ids": ids }));
                 }
                 if let (Some(d), Some(slices)) = (app.session.active_mut(), remaining_slices) {
                     d.selection.slices = slices;
+                    if template_target {
+                        d.selection.target = None;
+                    }
                 }
             }
             r
