@@ -366,7 +366,8 @@ impl<'a> Reader<'a> {
                 self.pending_unread_stroke = true;
             }
         }
-        if !self.shown() || self.gs.hidden {
+        // In a pattern's definition, only art painted with it makes the tile unreadable (see `paint`).
+        if self.pattern.is_none() && (!self.shown() || self.gs.hidden) {
             self.hidden_unread.insert("pattern fills".into());
         }
     }

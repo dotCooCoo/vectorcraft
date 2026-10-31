@@ -305,6 +305,29 @@ fn a_pattern_it_cant_read_is_an_error_only_where_it_fills() {
     assert!(read_ok(&format!("{typed}{}", layer(""))).doc.patterns.is_empty());
 }
 
+/// A pattern whose definition paints with a pattern it doesn't have isn't kept, on `%_` lines or
+/// not: a fill with it is something the file has that isn't read.
+#[test]
+fn a_pattern_painting_with_an_unread_pattern_is_not_kept() {
+    for prefix in ["%_", ""] {
+        let tile = rect_path(0.0, 0.0, 8.0, 8.0).replace('\n', &format!("\n{prefix}"));
+        let def = format!(
+            "%AI3_BeginPattern: (Nest)\n(Nest) 0 0 8 8\n{prefix}(Missing) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n{prefix}{tile}f\nE\n%AI3_EndPattern\n"
+        );
+        let s = read_ok(&format!("{def}{}", layer(&(rect_path(0.0, 0.0, 1.0, 1.0) + "f\n"))));
+        assert!(s.doc.patterns.is_empty(), "{prefix:?}: {:?}", s.doc.patterns.iter().map(|p| &p.name).collect::<Vec<_>>());
+        let r = read(
+            stream(&format!("{def}{}", layer(&format!("(Nest) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p\n{}f\n", rect_path(0.0, 0.0, 1.0, 1.0))))).as_bytes(),
+        )
+        .unwrap();
+        assert_unread(&r, "pattern fills");
+        // A color set before the tile is drawn replaces the missing pattern, and the pattern is kept.
+        let repainted = def.replace(&format!("{prefix}{tile}f"), &format!("{prefix}0 g\n{prefix}{tile}f"));
+        let s = read_ok(&format!("{repainted}{}", layer(&(rect_path(0.0, 0.0, 1.0, 1.0) + "f\n"))));
+        assert!(s.doc.pattern("Nest").is_some(), "{prefix:?}");
+    }
+}
+
 #[test]
 fn compound_paths_and_clipping() {
     let art_ = format!(

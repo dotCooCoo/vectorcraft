@@ -248,7 +248,10 @@ impl<'a> Reader<'a> {
         let op: String = w.chars().take(24).collect();
         // A pattern definition or an owning mask can be on `%_` lines while still
         // determining visible art. Unknown operators there must remain unread.
-        if self.gs.hidden || (hidden && self.pattern.is_none() && !self.frames.iter().any(|f| matches!(f.kind, Kind::Mask))) || !self.shown() {
+        if (self.gs.hidden && self.pattern.is_none())
+            || (hidden && self.pattern.is_none() && !self.frames.iter().any(|f| matches!(f.kind, Kind::Mask)))
+            || !self.shown()
+        {
             if self.hidden_unread.len() < 16 {
                 self.hidden_unread.insert(format!("`{op}`"));
             }

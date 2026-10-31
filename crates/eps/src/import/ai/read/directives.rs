@@ -190,7 +190,8 @@ impl<'a> Reader<'a> {
 
     /// A pattern's definition (`section`: what follows `%AI3_BeginPattern`), read by a reader of its
     /// own into a pattern swatch, its art in the pattern's space (y down). A definition it can't
-    /// read whole (an operator it doesn't know, type, unbalanced groups, no tile) isn't kept: art
+    /// read whole (an operator it doesn't know, type, a pattern it doesn't have, unbalanced groups,
+    /// no tile) isn't kept: art
     /// filled with it can't be read.
     fn define_pattern(&mut self, section: &[u8]) {
         if self.pattern_tiles.len() >= MAX_PATTERNS || self.subreader_depth >= MAX_SUBREADERS {
@@ -206,7 +207,13 @@ impl<'a> Reader<'a> {
         let read = sub.open(Kind::Group, false).and_then(|()| sub.run());
         self.nodes = sub.nodes;
         self.gradients = std::mem::take(&mut sub.gradients);
-        let whole = read.is_ok() && sub.unsupported.is_empty() && sub.unknown.is_empty() && sub.frames.len() == 1;
+        // Unread art in the definition, hidden or not, leaves the tile incomplete.
+        let whole = read.is_ok()
+            && sub.unsupported.is_empty()
+            && sub.unknown.is_empty()
+            && sub.unread.is_empty()
+            && sub.hidden_unread.is_empty()
+            && sub.frames.len() == 1;
         let (Some(head), Some(frame)) = (sub.pattern.take(), sub.frames.pop()) else { return };
         let Some(tile) = head.tile.filter(|t| whole && sane(*t) && t.width() > 0.0 && t.height() > 0.0 && !frame.children.is_empty()) else {
             return;

@@ -216,7 +216,10 @@ impl<'a> Reader<'a> {
         let unread_bounds = unread.then(|| node.visual_bounds()).flatten();
         let unread_id = node.id;
         self.add(node, hidden)?;
-        if unread && (hidden || gs.hidden || !self.shown()) {
+        if unread && self.pattern.is_some() {
+            // Art in a pattern's definition painted with a pattern it doesn't have: the tile can't be read.
+            self.unsupported.insert("pattern fills".into());
+        } else if unread && (hidden || gs.hidden || !self.shown()) {
             self.hidden_unread.insert("pattern fills".into());
         } else if unread {
             match unread_bounds {
