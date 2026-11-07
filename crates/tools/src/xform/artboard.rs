@@ -293,11 +293,11 @@ fn bleed_offset(cx: &ToolContext, rect: Rect, handle: Handle) -> Vec2 {
 /// How far outside the middle of an edge its add button sits, in screen pixels: past the handle
 /// on that edge.
 const EDGE_BUTTON_OFFSET: f64 = 18.0;
-/// The add button's radius in screen pixels: a press this near its centre takes it.
+/// The add button's radius in screen pixels: a press this near its center takes it.
 const EDGE_BUTTON_RADIUS: f64 = 7.0;
 
 impl ArtboardTool {
-    /// The add buttons on the active artboard's edges, each with its side and centre: shown while
+    /// The add buttons on the active artboard's edges, each with its side and center: shown while
     /// it is the only one selected and nothing is being dragged, and only on the sides with room
     /// for an artboard of the same size ([`vectorcraft_doc::Document::room_beside_artboard`]).
     fn edge_buttons(&self, cx: &ToolContext) -> Vec<(ArtboardSide, Point)> {
