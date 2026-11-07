@@ -26,8 +26,9 @@
 //! outside the middle of each of its edges where an artboard of the same size fits on that side
 //! ([`vectorcraft_doc::Document::room_beside_artboard`]: within the canvas, 20 pt away, overlapping
 //! no other artboard). Clicking one adds an empty artboard there (`artboard.new {beside, side}`);
-//! Alt-clicking duplicates the artboard with its art there (`artboard.duplicate {index, side}`).
-//! Each is one undo step, and the new artboard becomes the active one.
+//! Alt-clicking duplicates the artboard with its art there (`artboard.duplicate {index, side}`),
+//! except on a locked artboard, where an Alt-click does nothing. Each is one undo step, and the new
+//! artboard becomes the active one.
 
 use serde_json::{Value, json};
 use vectorcraft_doc::ArtboardSide;
@@ -352,9 +353,13 @@ impl Tool for ArtboardTool {
             (PointerKind::Down, _) => {
                 self.click_art = None;
                 // An add button: an empty artboard of the same size on that side, or with Alt a
-                // copy of the artboard and its art there; the new one becomes active.
+                // copy of the artboard and its art there; the new one becomes active. An Alt-click
+                // on a locked artboard's button does nothing: the tool doesn't copy a locked artboard.
                 if let Some(side) = self.edge_button_at(cx, p) {
                     let index = self.active;
+                    if m.alt && cx.doc.artboards.get(index).is_some_and(|a| a.locked) {
+                        return vec![];
+                    }
                     let (id, v) = if m.alt {
                         ("artboard.duplicate", json!({ "index": index, "side": side.name(), "art": true }))
                     } else {

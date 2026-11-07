@@ -3954,7 +3954,7 @@ and `artboard.new` refuses `side` given with `x`, `y`, `width` or `height`; each
 history as they were. With the Artboard tool and one artboard selected, a button with a plus shows just outside the
 middle of each edge where an artboard of the same size fits on that side (within the canvas and overlapping no other
 artboard): a click runs `artboard.new {beside, side}`, an Alt-click `artboard.duplicate {index, side, art: true}`, and
-the new artboard becomes the active one.
+the new artboard becomes the active one. An Alt-click on a locked artboard's button does nothing.
 `artboard.move {copy: true, moveArt: true}` is the Artboard tool's Alt-drag. `artboard.duplicate` and `artboard.move`
 also move the pattern tiles of the copies when `patterns` is true (default: prefs `transformPatternTiles`);
 `edit.paste` leaves the tiles of a pasted artboard's art where they were.

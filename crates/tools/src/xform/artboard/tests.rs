@@ -637,3 +637,22 @@ fn an_add_button_adds_an_empty_artboard_and_alt_duplicates_on_that_side() {
     t.notify(&cx(&d3, &s, &p), "created");
     assert_eq!((t.active, t.others.clone()), (2, vec![]));
 }
+
+/// On a locked artboard, a click on an add button still adds an empty artboard beside it, but an
+/// Alt-click does nothing: the tool doesn't copy a locked artboard.
+#[test]
+fn an_alt_click_on_a_locked_artboards_add_button_does_not_duplicate_it() {
+    let mut d = two_boards();
+    d.artboards[0].locked = true;
+    let (s, p) = (Selection::default(), paint());
+    let c = cx(&d, &s, &p);
+    let off = c.tol(EDGE_BUTTON_OFFSET);
+    let left = Point::new(-off, 250.0);
+    let mut t = ArtboardTool::default();
+    let alt = Mods { alt: true, ..Mods::default() };
+    assert_eq!(t.pointer(&c, &ev(PointerKind::Down, left.x, left.y).with_mods(alt)), vec![]);
+    assert_eq!(t.pointer(&c, &ev(PointerKind::Up, left.x, left.y).with_mods(alt)), vec![]);
+    assert_eq!((t.active, t.others.clone()), (0, vec![]));
+    let a = t.pointer(&c, &ev(PointerKind::Down, left.x, left.y));
+    assert_eq!(a, vec![Action::Exec("artboard.new".into(), json!({"beside": 0, "side": "left"})), Action::Notify("created".into())]);
+}
