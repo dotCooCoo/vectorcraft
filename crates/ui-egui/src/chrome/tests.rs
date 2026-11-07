@@ -2054,6 +2054,7 @@ fn the_control_bar_shows_the_inline_transform_fields_only_when_they_fit() {
         ctx.enable_accesskit();
         crate::theme::install_fonts(&ctx);
         let mut seen = false;
+        let mut menu_seen = false;
         // The Align group, then for two objects the Distribute group (#5372): each by its controls.
         let mut groups: Vec<(&str, Vec<&str>)> = vec![(
             "Align",
@@ -2101,16 +2102,22 @@ fn the_control_bar_shows_the_inline_transform_fields_only_when_they_fit() {
             let fields = ["X:", "Y:", "W:", "H:"].map(right);
             assert!(fields.iter().all(Option::is_some) || fields.iter().all(Option::is_none), "{count} objects, {width}: {fields:?}");
             assert!(nodes.iter().any(|(_, n)| n.label() == Some("Transform")), "{count} objects, {width}: the Transform link shows");
-            // The bar's content ends at its 10-point inner margin.
+            // The panel menu button takes the bar's right end, and the bar's content ends before it
+            // (without the button, at the bar's 10-point inner margin). Once a bar shows the button,
+            // a wider one keeps it: the fields and groups trim to the room left of it.
+            let menu = nodes.iter().find(|(_, n)| n.label() == Some("Panel menu")).and_then(|(_, n)| n.bounds());
+            assert!(!menu_seen || menu.is_some(), "{count} objects, {width}: the panel menu button left out after a narrower bar showed it");
+            menu_seen |= menu.is_some();
+            let edge = menu.map_or(f64::from(width) - 10.0, |m| m.x0);
             if let Some(h) = fields[3] {
-                assert!(h <= f64::from(width) - 10.0, "{count} objects, {width}: H ends at {h}");
+                assert!(h <= edge, "{count} objects, {width}: H ends at {h}, the content's room at {edge}");
             }
             assert!(!seen || fields[3].is_some(), "{count} objects, {width}: left out after a narrower bar showed them");
             seen |= fields[3].is_some();
             // The Align and Distribute buttons show whole inside the margin, with the Transform
             // link after them, or are left out; once shown, a wider bar keeps them.
             let end = |name: &str| nodes.iter().find(|(_, n)| n.label() == Some(name)).and_then(|(_, n)| n.bounds()).map(|b| b.x1);
-            let inside = |x: f64| x <= f64::from(width) - 10.0;
+            let inside = |x: f64| x <= edge;
             for ((group, names), was) in groups.iter().zip(groups_seen.iter_mut()) {
                 let ends: Vec<Option<f64>> = names.iter().map(|n| end(n)).collect();
                 let shown = ends.iter().all(Option::is_some);
@@ -2125,6 +2132,7 @@ fn the_control_bar_shows_the_inline_transform_fields_only_when_they_fit() {
             }
         }
         assert!(seen, "{count} objects: a wide bar has room for the fields");
+        assert!(menu_seen, "{count} objects: a wide bar has room for the panel menu button");
         assert!(groups_seen.iter().all(|s| *s), "{count} objects: a wide bar shows every group: {groups_seen:?}");
     }
 }

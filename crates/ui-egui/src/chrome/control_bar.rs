@@ -330,11 +330,13 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
         .exact_size(34.0)
         .frame(egui::Frame::NONE.fill(t.panel).inner_margin(egui::Margin::symmetric(10, 0)).stroke(Stroke::new(1.0, t.border)))
         .show(ui, |ui| {
-            // The panel menu button takes the right end, and the controls trim to the room left of it.
+            // The panel menu button takes the right end, and the controls trim to the room left of it:
+            // they are laid out in that room, so every room check below leaves the button's width.
             let full = ui.max_rect();
             let menu = egui::Rect::from_center_size(egui::pos2(full.right() - MENU_BUTTON / 2.0, full.center().y), vec2(MENU_BUTTON, MENU_BUTTON));
-            ui.set_max_width(full.width() - MENU_BUTTON - ui.spacing().item_spacing.x);
-            let controls = ui.horizontal_centered(|ui| {
+            let room = egui::Rect::from_min_max(full.min, egui::pos2(menu.left() - ui.spacing().item_spacing.x, full.bottom()));
+            let layout = egui::Layout::left_to_right(egui::Align::Center);
+            let controls = ui.scope_builder(egui::UiBuilder::new().max_rect(room).layout(layout), |ui| {
                 gripper(app, ui, &t);
                 if app.session.active().is_none() {
                     ui.label(egui::RichText::new(tl!("No Document")).color(t.text_dim));
@@ -467,8 +469,8 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                     }
                 }
             });
-            // Controls that keep their size (the Artboard tool's, in the narrowest window) can run
-            // into the button's room; the button is left out then.
+            // Controls that keep their size can still run into the button's room in a narrow window;
+            // the button is left out then.
             if controls.response.rect.right() <= menu.left() {
                 panel_menu(app, ui, menu);
             }
