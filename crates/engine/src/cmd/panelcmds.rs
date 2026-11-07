@@ -16,7 +16,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Duplicate Artboard",
             ["Window", "Artboards"],
             None,
-            "{index?: n | indices?: [n…] (default: the artboards the Artboard tool has selected), selectedArtboards?: [n…] (the journal records that default here, for a replay), art?: bool (default: the Artboard tool's moveArt option), patterns?: bool (Transform Patterns: pattern fills and strokes transform with the art; default: prefs transformPatternTiles)} a copy of each artboard, the copies placed together right of the last artboard as they lay, with copies of the art fully inside each when `art` (locked and hidden art only with prefs moveLockedWithArtboard), in one undo step → {index: the first copy's index, indices: the copies' indices, ids: the art's copies}",
+            "{index?: n | indices?: [n…] (default: the artboards the Artboard tool has selected), selectedArtboards?: [n…] (the journal records that default here, for a replay), art?: bool (default: the Artboard tool's moveArt option), patterns?: bool (Transform Patterns: pattern fills and strokes transform with the art; default: prefs transformPatternTiles), side?: \"left\"|\"right\"|\"top\"|\"bottom\" (the copies go together on that side of the artboards they copy, 20 pt away)} a copy of each artboard, the copies placed together right of the last artboard as they lay (or on `side`), with copies of the art fully inside each when `art` (locked and hidden art only with prefs moveLockedWithArtboard), in one undo step → {index: the first copy's index, indices: the copies' indices, ids: the art's copies}",
             has_doc,
             artboard_duplicate
         ),
@@ -287,9 +287,11 @@ pub(crate) fn beside_artboards(d: &vectorcraft_doc::Document, rect: Rect) -> Vec
 }
 
 /// Duplicate Artboards: a copy of each artboard with its art, in one undo step. The copies keep
-/// their places relative to each other, together right of the last artboard.
+/// their places relative to each other, together right of the last artboard, or with `side`
+/// together on that side of the artboards they copy.
 fn artboard_duplicate(s: &mut Session, p: &Value) -> Result<Value> {
     check_switches(p, &["patterns"], "artboard.duplicate")?;
+    let side = super::layer::artboard_side(p, "artboard.duplicate")?;
     let (indices, art) = boards_and_art_noted(s, p, "artboard.duplicate")?;
     let arts = artboards_art(s, &indices, art, false)?;
     let all: Vec<NodeId> = arts.iter().flat_map(|(_, a)| a.iter().copied()).collect();
@@ -300,7 +302,7 @@ fn artboard_duplicate(s: &mut Session, p: &Value) -> Result<Value> {
             .filter_map(|(i, _)| d.artboards.get(*i))
             .map(|a| a.rect)
             .reduce(|a, b| a.union(b))
-            .map(|r| beside_artboards(d, r))
+            .map(|r| side.map_or_else(|| beside_artboards(d, r), |side| side.offset(r)))
             .unwrap_or_default();
         let (mut index, mut ids) = (vec![], vec![]);
         for (i, art) in &arts {
