@@ -45,6 +45,16 @@ pub(super) fn label_style(styles: &vectorcraft_doc::LabelStyles, role: Role) -> 
     st
 }
 
+/// The anti-aliasing method labels of `role` are drawn with: the kept one, else Sharp.
+pub(super) fn label_anti_alias(styles: &vectorcraft_doc::LabelStyles, role: Role) -> vectorcraft_doc::text::TypeAntiAlias {
+    let kept = match role {
+        Role::Value => styles.values_anti_alias,
+        Role::Category => styles.categories_anti_alias,
+        Role::Legend => styles.legend_anti_alias,
+    };
+    kept.unwrap_or_default()
+}
+
 /// How big labels of `role` are set: a kept style's size, else 9 pt. The labels' spacing follows it.
 pub(super) fn label_size(styles: &vectorcraft_doc::LabelStyles, role: Role) -> f64 {
     label_style(styles, role).size
@@ -63,6 +73,7 @@ impl Gen<'_> {
     pub(super) fn text(&mut self, role: Role, at: Point, s: &str, justify: Justify) -> Arc<Node> {
         let style = label_style(self.styles, role);
         let mut t = TextObject::point(at, s, style);
+        t.anti_alias = label_anti_alias(self.styles, role);
         t.para.justify = justify;
         t.system_layout = self.d.setup.system_layout;
         refresh_bounds(&mut t);

@@ -3827,6 +3827,45 @@ fn formatting_the_whole_graphs_text_survives_it_being_drawn_again() {
     assert_eq!(spec(&s, id).label_styles, vectorcraft_doc::LabelStyles::default());
 }
 
+/// An anti-aliasing method given to one category label is kept for every category label when the graph is drawn
+/// again, through save and open, and undoes with the change.
+#[test]
+fn a_graph_labels_anti_aliasing_method_survives_it_being_drawn_again() {
+    use vectorcraft_doc::text::TypeAntiAlias;
+    let methods = |s: &Session, id: NodeId| -> Vec<(String, TypeAntiAlias)> {
+        let n = s.doc().unwrap().doc.node(id).unwrap().clone();
+        let mut out = vec![];
+        for g in ["Axes", "Legend"] {
+            for c in group(&n, g).children().unwrap() {
+                if let NodeKind::Text(t) = &c.kind {
+                    out.push((t.plain_text(), t.anti_alias));
+                }
+            }
+        }
+        out
+    };
+    let mut s = Session::new();
+    s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
+    let id = graph(&mut s, "column");
+    let c = text_id(&s, id, "Axes", "Q2");
+    s.execute("text.setFormat", &json!({"ids": [c.0], "antiAlias": "strong"})).unwrap();
+    label_looks(&mut s, id);
+    let drawn = methods(&s, id);
+    let method = |t: &str| drawn.iter().find(|(x, _)| x == t).map(|(_, m)| *m).unwrap();
+    assert_eq!((method("Q1"), method("Q3")), (TypeAntiAlias::Strong, TypeAntiAlias::Strong), "every category label: {drawn:?}");
+    assert_eq!((method("0"), method("2024")), (TypeAntiAlias::Sharp, TypeAntiAlias::Sharp), "other labels: {drawn:?}");
+    // One undo takes the data change back, the next the method and the kept method together.
+    s.execute("edit.undo", &json!({})).unwrap();
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(spec(&s, id).label_styles.categories_anti_alias, None);
+    s.execute("edit.redo", &json!({})).unwrap();
+    let path = vectorcraft_testkit::temp_dir("graph-label-anti-alias").join("labels.vectorcraft");
+    s.execute("document.save", &json!({"path": path})).unwrap();
+    s.execute("document.open", &json!({"path": path})).unwrap();
+    assert_eq!(spec(&s, id).label_styles.categories_anti_alias, Some(TypeAntiAlias::Strong));
+    assert!(serde_json::to_value(GraphSpec::default()).unwrap().get("labelStyles").is_none());
+}
+
 /// A stroke given to all of a graph's text without a weight is kept at 1 pt, as `paint.setStroke` keeps it.
 #[test]
 fn a_stroke_given_to_the_whole_graphs_text_is_kept_at_1_pt() {

@@ -328,6 +328,27 @@ fn graph_labels(doc: &Document) -> HashMap<NodeId, (NodeId, Role)> {
     out
 }
 
+/// Keep the anti-aliasing method `method` given to graph labels `ids` for every label of their kind, as
+/// [`capture_label_styles`] keeps a formatting change. Returns whether a kept method changed.
+pub(crate) fn capture_label_anti_alias(doc: &mut Document, ids: &[NodeId], method: vectorcraft_doc::text::TypeAntiAlias) -> bool {
+    let labels = graph_labels(doc);
+    let mut kinds: Vec<(NodeId, Role)> = ids.iter().filter_map(|id| labels.get(id).copied()).collect();
+    kinds.sort_by_key(|(g, r)| (g.0, *r as u8));
+    kinds.dedup();
+    let mut changed = false;
+    for (graph, role) in kinds {
+        let Some(spec) = doc.node_mut(graph).and_then(|n| n.extras_if_any().and_then(|e| e.graph.as_deref_mut())) else { continue };
+        let slot = match role {
+            Role::Value => &mut spec.label_styles.values_anti_alias,
+            Role::Category => &mut spec.label_styles.categories_anti_alias,
+            Role::Legend => &mut spec.label_styles.legend_anti_alias,
+        };
+        changed |= *slot != Some(method);
+        *slot = Some(method);
+    }
+    changed
+}
+
 /// Keep a formatting change made to graph labels `ids` (Character or Appearance, on the whole graph or on labels
 /// picked with Group Selection) for every label of their kind: `change` is applied to the kind's kept style (or
 /// the default one), so the labels look the same when the graph is drawn again. Called inside the same edit, so

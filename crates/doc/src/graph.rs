@@ -136,9 +136,9 @@ impl crate::Document {
     }
 }
 
-/// The character style a graph's labels keep through regeneration once formatted (Format the text in graphs): the
-/// value axis numbers, the category labels (category axis, radar spokes, pie names) and the legend labels (beside or
-/// across the top, or in pie wedges). `None` draws the default 9 pt black.
+/// The character style and anti-aliasing method a graph's labels keep through regeneration once formatted (Format
+/// the text in graphs): the value axis numbers, the category labels (category axis, radar spokes, pie names) and the
+/// legend labels (beside or across the top, or in pie wedges). `None` draws the default 9 pt black.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct LabelStyles {
@@ -148,6 +148,16 @@ pub struct LabelStyles {
     pub categories: Option<crate::CharStyle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub legend: Option<crate::CharStyle>,
+    /// The anti-aliasing method the value axis numbers keep once set (Character panel › Anti-aliasing Method).
+    /// `None` draws them Sharp.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub values_anti_alias: Option<crate::text::TypeAntiAlias>,
+    /// The anti-aliasing method the category labels keep once set. `None` draws them Sharp.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub categories_anti_alias: Option<crate::text::TypeAntiAlias>,
+    /// The anti-aliasing method the legend labels keep once set. `None` draws them Sharp.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub legend_anti_alias: Option<crate::text::TypeAntiAlias>,
 }
 
 impl LabelStyles {
