@@ -206,6 +206,13 @@ fn script_file_link_escape_refused() {
          Folder.current.getFiles().map(function (f) { return f.name; }), new Folder('near').alias, new Folder('near').resolve().name]);",
     );
     assert_eq!(log, json!([[false, null, DENIED, null, false, false, DENIED, ["inner", "main.jsx", "near", "own.txt"], true, "inner"]]));
+    // A missing file or folder behind a link that leads out is refused too.
+    let log = logged(
+        &base,
+        "var n = new File('away/none.txt'), d = new Folder('away/none');\n\
+         vc.log([n.exists, n.open('r'), n.error, d.getFiles(), d.error, new File('inner/none.txt').open('r')]);",
+    );
+    assert_eq!(log, json!([[false, false, DENIED, null, DENIED, false]]));
     #[cfg(unix)]
     let made = |target: &Path, link: &Path| std::os::unix::fs::symlink(target, link).is_ok();
     #[cfg(windows)]

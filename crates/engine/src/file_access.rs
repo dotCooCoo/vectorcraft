@@ -394,6 +394,17 @@ impl ScriptScope {
             || (cfg!(windows) && (windows_name_refusal(&text).is_some() || network_path(&text)))
     }
 
+    /// Why `path`, which leads to nothing, is not read: refused when it is a link (a link whose
+    /// target is missing is not followed) or when the nearest folder above it that exists leads
+    /// out of every granted folder, and missing otherwise.
+    fn not_found(&self, path: &Path) -> ScriptRead {
+        if std::fs::symlink_metadata(path).is_ok() {
+            return ScriptRead::Refused;
+        }
+        let above = path.ancestors().skip(1).find_map(|a| std::fs::canonicalize(a).ok());
+        if above.is_some_and(|real| self.roots.iter().any(|r| inside(&real, r))) { ScriptRead::Missing } else { ScriptRead::Refused }
+    }
+
     /// The real path of the file at `path` and its first `max` bytes, at most.
     pub(crate) fn read(&self, path: &Path, max: usize) -> Result<(PathBuf, Vec<u8>), ScriptRead> {
         use std::io::Read;
@@ -402,10 +413,7 @@ impl ScriptScope {
         }
         let real = match std::fs::canonicalize(path) {
             Ok(real) => real,
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                // A link whose target is missing is there all the same: it is not followed.
-                return Err(if std::fs::symlink_metadata(path).is_ok() { ScriptRead::Refused } else { ScriptRead::Missing });
-            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Err(self.not_found(path)),
             Err(e) => return Err(ScriptRead::Failed(e.to_string())),
         };
         if !self.roots.iter().any(|r| inside(&real, r)) {
@@ -462,9 +470,7 @@ impl ScriptScope {
         }
         let real = match std::fs::canonicalize(path) {
             Ok(real) => real,
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                return Err(if std::fs::symlink_metadata(path).is_ok() { ScriptRead::Refused } else { ScriptRead::Missing });
-            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Err(self.not_found(path)),
             Err(e) => return Err(ScriptRead::Failed(e.to_string())),
         };
         if !self.roots.iter().any(|r| inside(&real, r)) {
