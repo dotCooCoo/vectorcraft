@@ -74,7 +74,7 @@ fn file_names_are_uri_encoded_and_current_relative() {
     assert_eq!(
         log,
         json!([
-            ["caf%C3%A9%20x.txt", "caf\u{e9} x.txt", "caf%C3%A9%20x.txt", true, "%C3%A9%20%2F", "\u{e9}", "sub/y.txt", true, true],
+            ["caf%C3%A9%20x.txt", "caf\u{e9} x.txt", "caf%C3%A9%20x.txt", true, "%C3%A9%20/", "\u{e9}", "sub/y.txt", true, true],
             ["sub", "w", "w"],
             ["literal%20name.txt", "literal%2520name.txt", "literal%2520name.txt", true, "p%41", "p%41"]
         ])
@@ -83,6 +83,59 @@ fn file_names_are_uri_encoded_and_current_relative() {
         let log = logged(&base, "vc.log([new File('/c/a b/x.txt').fsName, new File('C:/a/x.txt').absoluteURI, new File('d:\\\\q').fsName]);");
         assert_eq!(log, json!([["C:\\a b\\x.txt", "/c/a/x.txt", "D:\\q"]]));
     }
+    let _ = std::fs::remove_dir_all(base);
+}
+
+/// `exists` is true for a `File` that names a file and for a `Folder` that names a folder.
+#[test]
+fn script_file_exists_matches_the_class() {
+    let base = folder("exists");
+    write(&base.join("main/data.txt"), b"x");
+    std::fs::create_dir_all(base.join("main/sub")).unwrap();
+    let log =
+        logged(&base, "vc.log([new File('data.txt').exists, new File('sub').exists, new Folder('sub').exists, new Folder('data.txt').exists]);");
+    assert_eq!(log, json!([[true, false, true, false]]));
+    let _ = std::fs::remove_dir_all(base);
+}
+
+/// A file date before 1970 is read as a negative time.
+#[test]
+fn script_file_dates_before_1970() {
+    let base = folder("dates");
+    let path = base.join("main/old.txt");
+    write(&path, b"x");
+    let day = std::time::Duration::from_secs(86_400);
+    std::fs::File::options().write(true).open(&path).unwrap().set_modified(std::time::UNIX_EPOCH - day).unwrap();
+    let log = logged(&base, "vc.log(new File('old.txt').modified.getTime());");
+    assert_eq!(log, json!([-86_400_000]));
+    let _ = std::fs::remove_dir_all(base);
+}
+
+/// The host's results are read from their own fields, so a script that adds fields to
+/// `Object.prototype` gets the same results.
+#[test]
+fn script_file_results_ignore_object_prototype() {
+    let base = folder("prototype");
+    write(&base.join("main/data.txt"), b"x");
+    let log = logged(
+        &base,
+        "Object.prototype.error = 'inherited'; Object.prototype.exists = true;\n\
+         var f = new File('data.txt'), ok = f.open('r');\n\
+         vc.log([ok, f.read(), new File('nope').exists]);",
+    );
+    assert_eq!(log, json!([[true, "x", false]]));
+    let _ = std::fs::remove_dir_all(base);
+}
+
+/// `File.encode`, `File.decode`, `File.isEncodingAvailable` and the `Folder` locations count as
+/// file calls.
+#[test]
+fn script_file_calls_count_encoding_and_locations() {
+    let base = folder("calls");
+    let calls = |text: &str| run(&base, text)["hostCallCounts"]["fileCalls"].as_u64().unwrap();
+    let none = calls("");
+    assert_eq!(calls("File.encode('a'); File.decode('a'); Folder.isEncodingAvailable('UTF-8');") - none, 3);
+    assert_eq!(calls("Folder.temp; Folder.desktop;") - none, 2);
     let _ = std::fs::remove_dir_all(base);
 }
 

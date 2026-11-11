@@ -1792,7 +1792,9 @@ script reads files with them:
   without `new` gives a `Folder` for an existing folder, and `Folder(path)` gives a `File` for an existing file. Two
   objects for the same path are different objects.
 - `name`, `displayName`, `fsName`, `absoluteURI`, `fullName`, `relativeURI`, `path`, `parent` and `toString()` come
-  from the path. `exists`, `length`, `created`, `modified`, `hidden`, `readonly` and `alias` read the file system.
+  from the path. `exists`, `length`, `created`, `modified`, `hidden`, `readonly` and `alias` read the file system;
+  `exists` is true for a `File` that names a file and for a `Folder` that names a folder, and `created` and
+  `modified` give dates before 1970 as well. `File.encode` escapes every character but letters, digits and `/-_.!~*'()`.
   `File.encode`, `File.decode` and `File.isEncodingAvailable` (and the same on `Folder`), `File.fs`, and the folders
   `Folder.temp`, `Folder.desktop`, `Folder.myDocuments`, `Folder.userData` and the others are there too.
 - `open('r')` opens a file to read, and `read([chars])`, `readln()`, `readch()`, `seek(pos[, mode])`, `tell()`, `eof`

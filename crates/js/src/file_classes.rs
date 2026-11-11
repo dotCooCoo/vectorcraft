@@ -67,8 +67,13 @@ fn message(i: &mut Interp, name: &str) -> JsResult<Value> {
     i.get_value(&text, &key(name))
 }
 
+/// The own field `name` of the host's result `v`, `undefined` when it has none; fields a script
+/// adds to `Object.prototype` are not read.
 fn field(i: &mut Interp, v: &Value, name: &str) -> JsResult<Value> {
-    i.get_value(v, &key(name))
+    match v.as_object() {
+        Some(o) => slot(i, o, name),
+        None => Ok(Value::Undefined),
+    }
 }
 
 /// The value of the own data property `name` of `o`, `undefined` when it has none.
@@ -305,8 +310,19 @@ fn parent(i: &mut Interp, this: Value, _: &[Value], _: bool) -> JsResult<Value> 
     instance(i, proto, up)
 }
 
-fn exists(i: &mut Interp, this: Value, _: &[Value], _: bool) -> JsResult<Value> {
-    Ok(Value::Bool(stat_field(i, &this, "exists", "exists", Value::Bool(false))?.truthy()))
+/// `exists` of a `File` (`folder` false) or a `Folder`: whether the path names an entry of that
+/// kind.
+fn exists_as(i: &mut Interp, this: &Value, folder: bool) -> JsResult<Value> {
+    let Some(r) = stat(i, this, "exists")? else { return Ok(Value::Bool(false)) };
+    i.rooted(std::slice::from_ref(&r), |i| Ok(Value::Bool(field(i, &r, "exists")?.truthy() && field(i, &r, "dir")?.truthy() == folder)))
+}
+
+fn file_exists(i: &mut Interp, this: Value, _: &[Value], _: bool) -> JsResult<Value> {
+    exists_as(i, &this, false)
+}
+
+fn folder_exists(i: &mut Interp, this: Value, _: &[Value], _: bool) -> JsResult<Value> {
+    exists_as(i, &this, true)
 }
 
 fn created(i: &mut Interp, this: Value, _: &[Value], _: bool) -> JsResult<Value> {
@@ -702,7 +718,6 @@ fn common(i: &mut Interp, ctor: ObjId, proto: ObjId) -> JsResult<()> {
     accessor(i, proto, "displayName", display_name, None)?;
     accessor(i, proto, "path", path, None)?;
     accessor(i, proto, "parent", parent, None)?;
-    accessor(i, proto, "exists", exists, None)?;
     accessor(i, proto, "created", created, None)?;
     accessor(i, proto, "modified", modified, None)?;
     accessor(i, proto, "alias", alias, None)?;
@@ -722,6 +737,7 @@ fn common(i: &mut Interp, ctor: ObjId, proto: ObjId) -> JsResult<()> {
 }
 
 fn file_members(i: &mut Interp, ctor: ObjId, proto: ObjId) -> JsResult<()> {
+    accessor(i, proto, "exists", file_exists, None)?;
     accessor(i, proto, "length", length, Some(no_writes_setter))?;
     accessor(i, proto, "hidden", hidden, Some(no_writes_setter))?;
     accessor(i, proto, "readonly", readonly, Some(no_writes_setter))?;
@@ -748,6 +764,7 @@ fn file_members(i: &mut Interp, ctor: ObjId, proto: ObjId) -> JsResult<()> {
 }
 
 fn folder_members(i: &mut Interp, ctor: ObjId, proto: ObjId) -> JsResult<()> {
+    accessor(i, proto, "exists", folder_exists, None)?;
     method(i, proto, "getFiles", get_files, 1)?;
     method(i, proto, "create", no_writes, 0)?;
     method(i, proto, "selectDlg", no_picker, 0)?;
