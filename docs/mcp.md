@@ -5955,14 +5955,15 @@ while such an image that the art shows has a plate of its name; deleting the swa
 file's composite is drawn through clips the image (a clipping group, its path under the nonzero fill rule, an even-odd
 clipping path kept as the same area), and `file.place` answers the image's id as
 `image`, since the Links commands take the image and not the group. `links.update` and `links.relink` clip the image
-by the file's clipping path again (in a new clipping group when none holds it, and inside a clipping mask made in the
+by the file's clipping path again (a plain group holding just the image becomes its clipping group, a new clipping group holds it when no group does, and it goes inside a clipping mask made in the
 document, whose path is kept), unless Placement Options clip the image, the same way for the images in symbols, graph designs, patterns and opacity masks; when the new file has no
 clipping path, a clipping group holding just the image whose path is the old file's clipping path loses that path and
 stays as a plain group of the image, with its id, name, visibility and transparency (one whose path was given the
 even-odd fill rule stays as it is). The link shows as modified when a plate file of its own changes
 or is gone, as it does when the DCS file changes, and the app's link watch acts on a changed plate file as on a
 changed DCS file. `links.relink {copy: true}` fails for a DCS file that reads plate files of its own, and copies
-nothing. These rules are VectorCraft's own: the screen, composite print and exports show the image as its plates
+nothing. Opening a document reads a DCS file and its plates again even with the `lowResProxyEps` preference, which
+keeps the saved preview of other linked EPS files. These rules are VectorCraft's own: the screen, composite print and exports show the image as its plates
 mixed into CMYK (each ink amount times the ink's CMYK values, plates combined as `1 − (1 − a)(1 − b)`); Separations
 Preview and `file.print` separations show each plate on its own ink, and a spot plate prints as the document's swatch
 of its ink (else its CMYK values) with `spotsToProcess`. Separations Preview shows a reduced image's plates as the
