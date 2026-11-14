@@ -855,6 +855,23 @@ fn selection_faces(app: &VectorcraftApp, ui: &Ui) -> Vec<u32> {
     ids
 }
 
+/// The East Asian glyph form every character [`glyph_form_items`] acts on has: the Type tool's
+/// selected range, all the text of the object at a caret (the menu formats all of it there), else
+/// every frame of the selected stories. `None` where they differ, or with no type.
+fn selection_glyph_form(app: &VectorcraftApp) -> Option<GlyphForm> {
+    match super::character::text_editing(app) {
+        Some((id, a, b)) if b <= a && super::character::text_story(app).is_none() => {
+            let NodeKind::Text(t) = &app.session.active()?.doc.node(id)?.kind else { return None };
+            let mut acc = super::character::Shared::None;
+            for r in &t.runs {
+                acc.add(r.style.glyph_form);
+            }
+            acc.value()
+        }
+        _ => super::character::shared(app, |s| s.glyph_form),
+    }
+}
+
 /// The East Asian glyph forms of the panel menu, with Show East Asian Options: each draws the
 /// selected characters (all the text of the selected type objects without a Type tool range) in
 /// one form of their font, and is checked when they all have it; a form none of the faces that
@@ -866,10 +883,12 @@ fn glyph_form_items(app: &mut VectorcraftApp, ui: &mut Ui) {
     let has = super::character::text_style(app).is_some();
     let db = FontDb::global();
     let faces: Vec<_> = selection_faces(app, ui).into_iter().filter_map(|id| db.face_by_id(id)).collect();
-    let current = super::character::shared(app, |s| s.glyph_form);
+    let current = selection_glyph_form(app);
     for form in GlyphForm::ALL {
+        // A width form may be drawn with other widths for the same glyphs (`GPOS`) instead of
+        // other glyphs.
         let enabled = match form.feature() {
-            Some(tag) => faces.iter().any(|f| f.has_substitution_feature(*tag)),
+            Some(tag) => faces.iter().any(|f| f.has_substitution_feature(*tag) || (form.is_width() && f.has_positioning_feature(*tag))),
             None => has,
         };
         let checked = form != GlyphForm::Default && current == Some(form);
@@ -1136,6 +1155,30 @@ mod tests {
         assert_eq!(forms(&app)[1].1, GlyphForm::Jis78);
         choose(&ctx, &mut app, "Revert To Default Forms");
         assert!(forms(&app).iter().all(|(_, f)| *f == GlyphForm::Default), "{:?}", forms(&app));
+    }
+
+    /// At a caret the glyph form items act on all the text of the object, so they are checked, and
+    /// skipped as changing nothing, by every character's form, not the caret's: with the caret in
+    /// text of the default form and other text in JIS 78 forms, Revert To Default Forms reverts
+    /// that text.
+    #[test]
+    fn glyph_form_items_at_a_caret_follow_all_the_text() {
+        let (mut app, id) = editing("亜唖");
+        app.session.prefs.show_east_asian_options = true;
+        let ctx = egui::Context::default();
+        let node = NodeId(id.as_u64().unwrap_or(0));
+        let forms = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(node).unwrap().kind {
+            NodeKind::Text(t) => t.runs.iter().map(|r| r.style.glyph_form).collect::<Vec<_>>(),
+            _ => panic!("text"),
+        };
+        app.run("text.setRangeStyle", json!({"id": id, "start": 0, "end": 3, "glyphForm": "jis78"})).unwrap();
+        select(&mut app, 6, 6);
+        assert_eq!(selection_glyph_form(&app), None, "the caret's form is not every character's");
+        choose(&ctx, &mut app, "Revert To Default Forms");
+        assert!(forms(&app).iter().all(|f| *f == GlyphForm::Default), "{:?}", forms(&app));
+        app.run("text.setRangeStyle", json!({"id": id, "glyphForm": "jis78"})).unwrap();
+        select(&mut app, 6, 6);
+        assert_eq!(selection_glyph_form(&app), Some(GlyphForm::Jis78));
     }
 
     /// Show › Alternates for Current Selection lists the selected character's alternates from the

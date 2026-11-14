@@ -190,8 +190,9 @@ pub(crate) fn type_props(st: &CharStyle, len: &dyn Fn(f64) -> String) -> Props {
         .filter(|(tag, _)| tag.len() == 4 && tag.bytes().all(|b| b.is_ascii_alphanumeric()))
         .map(|(tag, value)| format!("\"{tag}\" {value}"))
         .collect();
-    // Proportional Metrics: `palt` (SVG writes vertical type as outlines).
-    if st.proportional_metrics {
+    // Proportional Metrics: `palt` (SVG writes vertical type as outlines), not with a monospaced
+    // width form, which sets the characters on a fixed width.
+    if st.proportional_metrics && !st.glyph_form.is_width() {
         v.push("\"palt\" 1".into());
     }
     // The East Asian glyph form: its one feature.
@@ -875,5 +876,22 @@ mod tests {
         assert!(family("a\n} * {color:red").starts_with(r"'a\a } * {color:red'"), "{}", family("a\n} * {color:red"));
         assert_eq!(css_string("w\r\"</style>"), r#""w\d \"\3c /style\3e ""#);
         assert_eq!(css_string("wght"), "\"wght\"");
+    }
+
+    /// A monospaced width form sets the characters on a fixed width: Proportional Metrics' `palt`
+    /// is not written with it, and is with the other forms.
+    #[test]
+    fn width_forms_leave_out_proportional_metrics() {
+        use vectorcraft_doc::GlyphForm;
+        let features = |form| {
+            let st = CharStyle { proportional_metrics: true, glyph_form: form, ..CharStyle::default() };
+            type_props(&st, &|v| format!("{v}px")).into_iter().find(|(k, _)| *k == "font-feature-settings").map(|(_, v)| v)
+        };
+        assert_eq!(features(GlyphForm::Default).as_deref(), Some("\"palt\" 1"));
+        assert_eq!(features(GlyphForm::Jis78).as_deref(), Some("\"palt\" 1, \"jp78\" 1"));
+        for form in [GlyphForm::FullWidth, GlyphForm::HalfWidth, GlyphForm::ThirdWidth, GlyphForm::QuarterWidth] {
+            let tag = std::str::from_utf8(form.feature().unwrap()).unwrap();
+            assert_eq!(features(form), Some(format!("\"{tag}\" 1")), "{form:?}");
+        }
     }
 }
