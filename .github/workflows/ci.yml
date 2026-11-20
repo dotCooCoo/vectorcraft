@@ -27,6 +27,7 @@ jobs:
       # The test binaries build without debug info or symbols, at about a third of the size. A
       # panic still names its file and line.
       dev-strip: true
+      linux-env: CARGO_BUILD_JOBS=3
       command: |
         nproc; free -m; df -h /
         ( while sleep 60; do echo "SAMPLE $(date -u +%T) mem=$(free -m | awk '/Mem:/{print $3"/"$2" avail "$7}') swap=$(free -m | awk '/Swap:/{print $3"/"$2}') disk=$(df -h / | awk 'NR==2{print $3"/"$2" avail "$4}') top=$(ps -eo rss=,comm= --sort=-rss | head -3 | awk '{printf "%s:%dM ", $2, $1/1024}')"; done ) &
