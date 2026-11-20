@@ -33,8 +33,24 @@ jobs:
       # passes only when all five did. On pushes to main, a `cache warm` leg builds what every
       # shard builds and saves the dependency cache.
       test-shards: 5
-      shard-command: cargo xtask ci shard
-      warm-command: cargo xtask ci warm
+      # Trial only: memory and disk samples every 2 minutes, and the target size at the end.
+      shard-command: |
+        ( while true; do echo "sample $(date -u +%H:%M:%S) $(free -m | awk '/^Mem/{print "mem_used="$3" avail="$7} /^Swap/{print "swap_used="$3}' | tr '\n' ' ') disk: $(df -h / | tail -1)"; sleep 120; done ) &
+        sampler=$!
+        status=0
+        cargo xtask ci shard || status=$?
+        kill "$sampler" || true
+        echo "sample target: $(du -sh target 2>/dev/null)"
+        exit "$status"
+      warm-command: |
+        ( while true; do echo "sample $(date -u +%H:%M:%S) $(free -m | awk '/^Mem/{print "mem_used="$3" avail="$7} /^Swap/{print "swap_used="$3}' | tr '\n' ' ') disk: $(df -h / | tail -1)"; sleep 120; done ) &
+        sampler=$!
+        status=0
+        cargo xtask ci warm || status=$?
+        kill "$sampler" || true
+        echo "sample target: $(du -sh target 2>/dev/null)"
+        exit "$status"
+      cache-save-on-dispatch: true
       packages: >-
         pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxcb1-dev libxcursor-dev
         libxrandr-dev libxi-dev libfontconfig1-dev libfreetype-dev mesa-vulkan-drivers
