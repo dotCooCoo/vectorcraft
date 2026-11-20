@@ -25,7 +25,9 @@ jobs:
       craft-fonts-ref: b076417b5880bd4154bd22f00695b1d28c6bea83
       timeout-minutes: 90
       command: |
-        nproc; free -m; df -h /
+        nproc; free -m; df -h / /mnt; swapon --show
+        sudo fallocate -l 12G /mnt/gate-swap && sudo chmod 600 /mnt/gate-swap && sudo mkswap /mnt/gate-swap && sudo swapon /mnt/gate-swap
+        swapon --show; free -m
         ( while sleep 60; do echo "SAMPLE $(date -u +%T) mem=$(free -m | awk '/Mem:/{print $3"/"$2" avail "$7}') swap=$(free -m | awk '/Swap:/{print $3"/"$2}') disk=$(df -h / | awk 'NR==2{print $3"/"$2" avail "$4}') top=$(ps -eo rss=,comm= --sort=-rss | head -3 | awk '{printf "%s:%dM ", $2, $1/1024}')"; done ) &
         sampler=$!
         s=0; cargo xtask ci || s=$?
