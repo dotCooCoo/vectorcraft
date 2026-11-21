@@ -79,7 +79,8 @@ pub struct HitOptions {
     /// clicks, so they reach the art behind (#7274).
     pub area_type_interior: bool,
     /// The point hit tests ([`hit_test`], [`hit_test_visible`] and [`hit_test_visible_skipping`])
-    /// hit the art on a layer whose Preview is off as painted, not in outline.
+    /// hit the art on a layer whose Preview is off as painted, not in outline. [`symbol_part_at`]
+    /// and [`symbol_part_outline_in_view`] treat the art of a symbol instance the same way.
     pub ignore_layer_preview: bool,
 }
 
@@ -1751,14 +1752,15 @@ fn moved(n: &Node, xf: vectorcraft_geom::Affine) -> Node {
 /// [`HitOptions::skip_guides`]. Nothing is picked in art that placing through the symbol's 9-slice
 /// guides could make more than [`crate::MAX_SYMBOL_NODES`] objects of, which the canvas does not
 /// draw. Art in a layer of the symbol whose Preview is off, and the art of an instance below such a
-/// layer, is tested in outline ([`HitOptions::outline`]), as the canvas draws it. `None` when `inst` is not a symbol instance or
+/// layer, is tested in outline ([`HitOptions::outline`]), as the canvas draws it, unless `opt` has
+/// [`HitOptions::ignore_layer_preview`]. `None` when `inst` is not a symbol instance or
 /// no editable object of its art is under `p`.
 pub fn symbol_part_at(doc: &Document, inst: &Node, p: Point, opt: HitOptions) -> Option<Vec<u32>> {
     let _walk = ArtWalk::open();
     let art = InstanceArt::of(doc, inst)?;
     let symbols = doc.kept_symbol_boxes();
     let mut path = vec![];
-    let outline = opt.outline || below_preview_off(doc, inst, opt.scope);
+    let outline = opt.outline || !opt.ignore_layer_preview && below_preview_off(doc, inst, opt.scope);
     let find = FindPart { art: &art, p, opt, symbols: &symbols, whole_instance: false };
     find.find(&art.art, &mut path, None, outline).map(|_| path)
 }
@@ -1793,7 +1795,7 @@ impl FindPart<'_> {
         if !n.visible || !self.whole_instance && (n.locked || n.is_template()) || self.skips_guide(n) || ArtWalk::used_up() {
             return None;
         }
-        let outline = outline || previews_off(n);
+        let outline = outline || !self.opt.ignore_layer_preview && previews_off(n);
         let opt = HitOptions { outline, ..self.opt };
         let (NodeKind::Group { children, .. } | NodeKind::Layer { children, .. }) = &n.kind else { return self.hit(n, whole, opt) };
         if path.len() >= crate::symbol_overrides::MAX_PATH_DEPTH {
@@ -2012,7 +2014,7 @@ pub fn symbol_part_outline(doc: &Document, inst: &Node, path: &[u32]) -> Option<
 pub fn symbol_part_outline_in_view(doc: &Document, inst: &Node, path: &[u32], opt: HitOptions) -> Option<BezPath> {
     let art = InstanceArt::of(doc, inst)?;
     let part = crate::symbol_overrides::part(&art.art, path)?;
-    let mut outline = opt.outline || below_preview_off(doc, inst, opt.scope);
+    let mut outline = opt.outline || !opt.ignore_layer_preview && below_preview_off(doc, inst, opt.scope);
     let mut out = BezPath::new();
     let mut limit = None;
     let mut whole = None;
@@ -2020,7 +2022,7 @@ pub fn symbol_part_outline_in_view(doc: &Document, inst: &Node, path: &[u32], op
     for &i in path {
         let children = n.children()?;
         whole = art.whole(n, whole);
-        outline = outline || previews_off(n);
+        outline = outline || !opt.ignore_layer_preview && previews_off(n);
         if i != 0
             && n.clips()
             && let Some(first) = children.first()
@@ -2030,7 +2032,7 @@ pub fn symbol_part_outline_in_view(doc: &Document, inst: &Node, path: &[u32], op
         }
         n = children.get(usize::try_from(i).ok()?)?;
     }
-    outline_within(&art.place(part, whole)?, limit, outline, &mut out);
+    outline_within(&art.place(part, whole)?, limit, outline, opt.ignore_layer_preview, &mut out);
     Some(out)
 }
 
@@ -2052,8 +2054,9 @@ fn limit_within(clip: &Node, limit: Option<Rect>, outline: bool) -> Option<Optio
     }
 }
 
-/// [`symbol_part_outline_in_view`] for placed object `n`, cut to `limit` when there is one.
-fn outline_within(n: &Node, limit: Option<Rect>, outline: bool, out: &mut BezPath) {
+/// [`symbol_part_outline_in_view`] for placed object `n`, cut to `limit` when there is one. With
+/// `ignore_preview`, a layer whose Preview is off does not switch to outline.
+fn outline_within(n: &Node, limit: Option<Rect>, outline: bool, ignore_preview: bool, out: &mut BezPath) {
     use vectorcraft_geom::kurbo::Shape;
     if let Some(pd) = n.path_data() {
         match limit {
@@ -2067,15 +2070,15 @@ fn outline_within(n: &Node, limit: Option<Rect>, outline: bool, out: &mut BezPat
         out.extend(b.to_path(0.1));
     }
     let Some(children) = n.children() else { return };
-    let outline = outline || previews_off(n);
+    let outline = outline || !ignore_preview && previews_off(n);
     if n.clips()
         && let Some((first, rest)) = children.split_first()
     {
         let Some(inner) = limit_within(first, limit, outline) else { return };
-        rest.iter().for_each(|c| outline_within(c, inner, outline, out));
+        rest.iter().for_each(|c| outline_within(c, inner, outline, ignore_preview, out));
         return;
     }
-    children.iter().for_each(|c| outline_within(c, limit, outline, out));
+    children.iter().for_each(|c| outline_within(c, limit, outline, ignore_preview, out));
 }
 
 /// The overlap of `a` and `b` (`a` alone without `b`), `None` when they do not overlap.

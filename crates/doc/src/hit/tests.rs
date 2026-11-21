@@ -2668,7 +2668,8 @@ fn an_object_a_clipping_layer_in_symbol_art_hides_is_not_picked_there() {
 /// In a dynamic symbol's art, an object in a clipping layer whose clipping path has a live effect
 /// is picked and outlined in the region the effect gives the clipping path. In Outline view, and
 /// when Preview is off for the layer in the art or for the layer the instance is on, the plain
-/// clipping path counts, as the canvas draws it. An effect that leaves no region leaves no outline.
+/// clipping path counts, as the canvas draws it, unless the hit test ignores the layers' Preview.
+/// An effect that leaves no region leaves no outline.
 #[test]
 fn a_symbol_part_follows_the_region_its_clipping_layers_effects_give_it() {
     set_clip_region(moved_clip_region);
@@ -2714,6 +2715,15 @@ fn a_symbol_part_follows_the_region_its_clipping_layers_effects_give_it() {
         assert_eq!(symbol_part_at(&d, n, Point::new(150.0, 0.5), opt), None, "past the plain clipping path, Preview off for {what}");
         let b = outline_box(&d, inst, opt);
         assert!(b.x0.abs() < 1e-6 && (b.x1 - 100.0).abs() < 1e-6, "Preview off for {what}: the plain clipping path: {b:?}");
+        // With the layers' Preview ignored, the moved region counts as with Preview on.
+        let ignore = HitOptions { ignore_layer_preview: true, ..opt };
+        assert_eq!(symbol_part_at(&d, n, Point::new(150.0, 50.0), ignore), Some(vec![0, 1]), "Preview ignored for {what}: in the moved region");
+        assert_eq!(symbol_part_at(&d, n, Point::new(50.0, 50.0), ignore), None, "Preview ignored for {what}: where the clipping path was");
+        let b = outline_box(&d, inst, ignore);
+        assert!((b.x0 - 100.0).abs() < 1e-6 && (b.x1 - 200.0).abs() < 1e-6, "Preview ignored for {what}: the moved region: {b:?}");
+        let o = symbol_part_outline_in_view(&d, n, &[0], ignore).unwrap();
+        let b = vectorcraft_geom::kurbo::Shape::bounding_box(&o);
+        assert!((b.x0 - 100.0).abs() < 1e-6 && (b.x1 - 200.0).abs() < 1e-6, "Preview ignored for {what}: the clipping layer's outline: {b:?}");
     }
     // An effect that leaves the clipping path no region hides the art: no pick and no outline.
     let (d, inst) = instance("test.empty", [true, true]);
@@ -2829,6 +2839,31 @@ fn a_symbol_instance_is_hit_on_the_stroke_of_its_art_past_its_box() {
     assert_eq!(at(50.0, HitOptions::default()), Some(inst), "in the box");
     assert_eq!(at(116.0, HitOptions::default()), None, "past the stroke");
     assert_eq!(at(108.0, HitOptions { outline: true, ..HitOptions::default() }), None, "Outline view");
+}
+
+/// A layer with Preview off inside a symbol's art hits its stroke in outline, unless the hit test
+/// ignores the layers' Preview ([`HitOptions::ignore_layer_preview`]).
+#[test]
+fn a_preview_off_layer_in_symbol_art_counts_its_stroke_when_preview_is_ignored() {
+    let mut d = Document::new(300.0, 200.0);
+    let l = d.layers[0].id;
+    let look = Appearance::basic(Paint::solid(Color::BLACK), Paint::solid(Color::BLACK), 20.0);
+    let square = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)), look);
+    let mut sublayer = (*d.layers[0]).clone();
+    sublayer.id = d.alloc_id();
+    if let NodeKind::Layer { children, preview, .. } = &mut sublayer.kind {
+        (*children, *preview) = (vec![Arc::new(square)], false);
+    }
+    let art = Node::group(d.alloc_id(), vec![Arc::new(sublayer)]);
+    d.symbols.push(crate::Symbol { dynamic: false, name: "Stroked".into(), art: Arc::new(art) });
+    let inst = d.alloc_id();
+    let xf = vectorcraft_geom::Affine::IDENTITY;
+    d.insert(Some(l), 0, Node::new(inst, NodeKind::SymbolInstance { symbol: "Stroked".into(), xf })).unwrap();
+    let at = |x: f64, opt: HitOptions| hit_test(&d, Point::new(x, 50.0), opt).map(|h| h.leaf);
+    let ignore = HitOptions { ignore_layer_preview: true, ..HitOptions::default() };
+    assert_eq!(at(108.0, HitOptions::default()), None, "on the stroke, in outline");
+    assert_eq!(at(108.0, ignore), Some(inst), "on the stroke, Preview ignored");
+    assert_eq!(at(116.0, ignore), None, "past the stroke, Preview ignored");
 }
 
 /// Outside a symbol instance's box, an instance nested in its art counts where its own art is, not
