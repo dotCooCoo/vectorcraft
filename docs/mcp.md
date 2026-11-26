@@ -13663,7 +13663,8 @@ background when it runs at once or OK runs it with Preview off, and returns `{ba
 Last Filter) runs the object filter whose `plugin.run` last succeeded in the app's session again on the selection, with
 the same parameters and without a dialog, and returns `plugin.run`'s result, or `{background: true, status}` for a
 filter that runs in the background; `plugin.lastFilter {}` (Last Filter…) opens its dialog with those parameters
-instead. Both return an error with no document open, before a filter ran and once that filter was removed, installed
+instead, except that a filter without parameters runs at once and the call returns the same result as
+`plugin.applyLastFilter`. Both return an error with no document open, before a filter ran and once that filter was removed, installed
 again (the same module too) or no longer takes the parameters as they are; `plugin.dialog {id}` opens a filter's dialog with the
 parameters it last ran with. A plug-in's own commands and live effects don't change what they run. A plug-in that
 lists `settings` or `cache` keeps settings or a cache of its own in the `Plug-ins` folder
