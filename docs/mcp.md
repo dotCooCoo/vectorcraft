@@ -6673,6 +6673,11 @@ the first object `paint.editGradient` edits for them, whatever tool is active. C
 four-component JPEG, or an 8- or 16-bit chunky CMYK TIFF) gives its ink amounts as they are, and an RGB image's sRGB
 pixel is taken into the working RGB space.
 
+An Eyedropper click inside an artboard that misses visible artwork samples that artboard's paper color.
+The sample combines the artboard's background color with the document's Simulate Colored Paper setting.
+The tool converts the combined sRGB color into the active RGB color space.
+Gradient-stop picks and Alt-clicks require artwork. Clicks outside all artboards do not sample paper.
+
 ```json
 {"name":"run_command","arguments":{"command":"eyedropper.setOptions","params":{"pickUp":{"appearance":{"stroke":{"weight":false}}}}}}
 {"name":"run_command","arguments":{"command":"appearance.copyFrom","params":{"source":12,"ids":[7,8]}}}

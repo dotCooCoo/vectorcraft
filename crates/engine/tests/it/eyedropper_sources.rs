@@ -1,6 +1,7 @@
 //! Visible art is readable by the Eyedropper without making it editable (#1251).
 
 use serde_json::json;
+use vectorcraft_color::{Color, Paint};
 use vectorcraft_doc::NodeId;
 use vectorcraft_engine::{Session, UiRequest, ViewInfo};
 use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
@@ -96,11 +97,23 @@ fn alt_reverse_still_respects_locks_and_isolation_and_hidden_sources_are_skipped
                 s.execute("layer.setProps", &json!({"id": if restriction == "layer" { layer } else { source }, "locked": true})).unwrap();
             }
         }
-        let before = json!(s.doc().unwrap().doc);
+        let before_doc = s.doc().unwrap().doc.clone();
+        let before = json!(before_doc);
         let history = s.doc().unwrap().history.undo.len();
         click(&mut s, Mods { alt: restriction != "hidden", ..Default::default() });
-        assert_eq!(json!(s.doc().unwrap().doc), before);
-        assert_eq!(s.doc().unwrap().history.undo.len(), history);
+        if restriction == "hidden" {
+            let mut expected = (*before_doc).clone();
+            expected.node_mut(target).unwrap().appearance.set_fill(Paint::solid(Color::WHITE));
+            assert_eq!(json!(s.doc().unwrap().doc), json!(expected));
+            assert_eq!(s.doc().unwrap().history.undo.len(), history + 1);
+            s.execute("edit.undo", &json!({})).unwrap();
+            assert_eq!(json!(s.doc().unwrap().doc), before);
+            s.execute("edit.redo", &json!({})).unwrap();
+            assert_eq!(json!(s.doc().unwrap().doc), json!(expected));
+        } else {
+            assert_eq!(json!(s.doc().unwrap().doc), before);
+            assert_eq!(s.doc().unwrap().history.undo.len(), history);
+        }
         s.select_tool("selection", ViewInfo::default()).unwrap();
         s.pointer(&PointerEvent::new(PointerKind::Down, 40.0, 40.0), ViewInfo::default()).unwrap();
         assert!(!s.doc().unwrap().selection.objects.contains(&source));

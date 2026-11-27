@@ -10,10 +10,12 @@
 //! blend's steps, an envelope's distorted contents). Clicking an image samples its pixels
 //! (averaged over the options' raster sample size; a CMYK image gives its ink amounts).
 //!
-//! A click that hits no visible art samples the document's paper colour when it is inside an
-//! artboard (`paint.sampleColor`). That includes a gap inside a layer's bounding box. A gradient
-//! stop still waits for an object, Alt has nothing to paint onto, and a click outside every
-//! artboard does nothing.
+//! A click that hits no visible art inside an artboard samples that artboard's paper color
+//! (`paint.sampleColor`). The tool combines the artboard's background color with the document's
+//! Simulate Colored Paper setting and converts the sample into the active RGB color space.
+//! The tool also samples paper in gaps inside a layer's bounding box.
+//! Gradient-stop picks and Alt-clicks require artwork. Clicks outside every artboard do not
+//! sample paper.
 //!
 //! With a gradient mesh selected, a click on one of its points gives that point the current solid
 //! fill color, and a click inside one of its patches gives it to the patch's four points
@@ -709,7 +711,7 @@ enum Click {
     /// gradient stop of `stop` (the tool to switch back to and the stop), else to the active fill
     /// or stroke.
     Sample { color: Color, source: NodeId, meshes: Vec<NodeId>, stop: Option<(String, usize)> },
-    /// The document's paper colour, sampled where no visible art was hit inside an artboard.
+    /// The click samples the artboard's paper color when it hits no visible art.
     Paper(Color),
 }
 
@@ -769,14 +771,18 @@ impl EyedropperTool {
             sample_source(cx, p)
         };
         let Some((src, _)) = source else {
-            // A hit-test miss means nothing visible is under the cursor. Sample the artboard
-            // paper there, including a gap inside a layer's bounding box. A gradient stop still
-            // waits for an object, and Alt has nothing to paint onto.
-            let on_art = cx.doc.artboards.iter().any(|a| a.rect.contains(p));
-            if stop.is_some() || mods.alt || !on_art {
+            // A miss inside an artboard samples its paper color. Gradient-stop and Alt clicks
+            // require an artwork source.
+            if stop.is_some() || mods.alt {
                 return None;
             }
-            return Some(Click::Paper(cx.doc.setup.paper()));
+            let artboard = cx.doc.artboards.iter().rev().find(|a| a.rect.contains(p))?;
+            let paper = if cx.doc.setup.simulate_paper { cx.doc.setup.paper() } else { Color::WHITE };
+            let background = artboard.color.unwrap_or(Color::WHITE).to_rgba8(1.0);
+            let paper = paper.to_rgba8(1.0);
+            let channel = |i: usize| f32::from((u16::from(background[i]) * u16::from(paper[i]) + 127) / 255) / 255.0;
+            let [r, g, b] = vectorcraft_color::cms::active().srgb_to_rgb([channel(0), channel(1), channel(2)]);
+            return Some(Click::Paper(Color::rgb(r, g, b)));
         };
         let n = cx.doc.node(src)?;
         if mods.alt && stop.is_none() {
@@ -841,6 +847,50 @@ mod tests {
         );
         // Outside every artboard there is nothing to sample.
         assert!(t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 2000.0, 2000.0)).is_empty());
+    }
+
+    #[test]
+    fn empty_artboard_samples_its_effective_paper_color() {
+        let (mut d, _) = doc_with_rect();
+        let (s, p) = (Selection::default(), paint());
+        d.setup.grid_colors[0] = Color::rgb(1.0, 238.0 / 255.0, 204.0 / 255.0);
+        for (simulate, background, expected) in [
+            (false, None, "#ffffff"),
+            (true, None, "#ffeecc"),
+            (false, Some(Color::rgb(0.2, 0.4, 0.6)), "#336699"),
+            (true, Some(Color::rgb(0.2, 0.4, 0.6)), "#335f7a"),
+        ] {
+            d.setup.simulate_paper = simulate;
+            d.artboards[0].color = background;
+            let action = EyedropperTool::default().pointer(&cx(&d, &s, &p), &PointerEvent::new(PointerKind::Down, 400.0, 400.0));
+            assert_eq!(sampled_hex(&action), expected, "simulate={simulate}, background={background:?}");
+        }
+        let mut top = d.artboards[0].clone();
+        top.id += 1;
+        top.color = Some(Color::rgb(1.0, 0.0, 0.0));
+        d.artboards.push(top);
+        d.setup.simulate_paper = false;
+        let action = EyedropperTool::default().pointer(&cx(&d, &s, &p), &PointerEvent::new(PointerKind::Down, 400.0, 400.0));
+        assert_eq!(sampled_hex(&action), "#ff0000");
+    }
+
+    #[test]
+    fn sampled_paper_keeps_its_display_color_in_other_rgb_profiles() {
+        use vectorcraft_color::cms;
+        for profile in [cms::DISPLAY_P3, cms::PROPHOTO_RGB] {
+            let context = cms::for_document(Some(profile), None);
+            assert_eq!(context.settings().rgb, profile);
+            cms::with_active(context, || {
+                let (mut d, _) = doc_with_rect();
+                let (s, p) = (Selection::default(), paint());
+                let background = Color::rgb(0.2, 0.4, 0.6);
+                d.artboards[0].color = Some(background);
+                let [r, g, b, _] = background.to_rgba8(1.0);
+                let expected = format!("#{r:02x}{g:02x}{b:02x}");
+                let action = EyedropperTool::default().pointer(&cx(&d, &s, &p), &PointerEvent::new(PointerKind::Down, 400.0, 400.0));
+                assert_eq!(sampled_hex(&action), expected, "{profile}");
+            });
+        }
     }
 
     /// A click in the empty gap between two objects on one layer is a hit-test miss, so it
