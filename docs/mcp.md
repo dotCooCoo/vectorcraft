@@ -10367,6 +10367,10 @@ image `object.rasterize` makes with the same options.
 {"name":"run_command","arguments":{"command":"effect.apply","params":{"effect":"rasterize","params":{"useDocumentResolution":false,"resolution":150,"background":"white"}}}}
 ```
 
+Color Halftone (`pixelate.colorHalftone`) screens cyan, magenta and yellow ink in RGB mode and also black ink in CMYK
+mode. Dot area follows each cell's mean ink coverage. A full-strength dot has a finite radius that fills the cell,
+including its corners.
+
 ## Glass textures
 
 Glass (`distort.glass`) takes an image file as its surface in `params.textureImage`, as `{path}` or

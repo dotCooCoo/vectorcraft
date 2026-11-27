@@ -687,7 +687,7 @@ pub fn effect_catalog() -> Vec<EffectInfo> {
             "pixelate.colorHalftone",
             "Color Halftone…",
             PIXELATE,
-            "{maxRadius: px 4..127 (8; the radius of a dot at full strength, which fills its square cell, in pixels of the Document Raster Effects resolution), channel1: screen angle deg -360..360 (108), channel2: deg (162), channel3: deg (90), channel4: deg (45)} screens each colour channel (red, green, blue: channels 1 to 3; in CMYK documents cyan, magenta, yellow, black: 1 to 4) at its angle into dots whose area follows the channel's mean over their cell",
+            "{maxRadius: px 4..127 (8; the radius of a dot at full strength, which fills its square cell, in pixels of the Document Raster Effects resolution), channel1: screen angle deg -360..360 (108), channel2: deg (162), channel3: deg (90), channel4: deg (45)} The effect screens cyan, magenta and yellow ink (channels 1 to 3; CMYK mode adds black as channel 4) at their angles into dots whose area follows the cell's mean ink coverage.",
             json!({"maxRadius": 8.0, "channel1": 108.0, "channel2": 162.0, "channel3": 90.0, "channel4": 45.0}),
         ),
         r(
