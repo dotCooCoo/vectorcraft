@@ -2455,8 +2455,8 @@ fn proof_previews_draw_changes_as_a_new_renderer_does() {
 }
 
 /// A thumbnail of an object under a filter that treats color channels apart (Color Halftone) is
-/// made again when the document's color mode changes: CMYK documents screen ink channels, RGB
-/// documents light ones.
+/// made again when the document's color mode changes. RGB documents screen three ink planes.
+/// CMYK documents screen four ink planes.
 #[test]
 fn filtered_thumbnails_follow_the_color_mode() {
     let _fonts = fonts_steady();
@@ -2464,9 +2464,9 @@ fn filtered_thumbnails_follow_the_color_mode() {
     let mut d = Document::new(200.0, 100.0);
     d.color_mode = vectorcraft_doc::ColorMode::Cmyk;
     let halftone = effect("pixelate.colorHalftone", serde_json::json!({"maxRadius": 4}));
-    let orange = filled(&mut d, rectangle(Rect::new(20.0, 20.0, 180.0, 80.0)), Paint::solid(Color::rgb(1.0, 0.5, 0.0)), vec![halftone]);
-    let id = orange.id;
-    let mut d = with_art(d, vec![orange]);
+    let gray = filled(&mut d, rectangle(Rect::new(20.0, 20.0, 180.0, 80.0)), Paint::solid(Color::rgb(0.5, 0.5, 0.5)), vec![halftone]);
+    let id = gray.id;
+    let mut d = with_art(d, vec![gray]);
     let mut r = Renderer::new();
     let before = r.render_thumbnail(&d, id, 128).unwrap().pixels;
     d.color_mode = vectorcraft_doc::ColorMode::Rgb;

@@ -479,7 +479,7 @@ pub(super) fn color_halftone(px: &mut [[u8; 4]], w: usize, h: usize, space: &Pix
             let mean = if sum[1] > 1e-6 { f64::from(sum[0] / sum[1]) } else { 0.0 };
             // Full strength fills the cell, corners too; none leaves no speck.
             let radius = match mean {
-                m if m >= 254.5 / 255.0 => f64::INFINITY,
+                m if m >= 254.5 / 255.0 => side / std::f64::consts::SQRT_2 + 0.5 * place.px,
                 m if m <= 0.5 / 255.0 => 0.0,
                 m => dot_radius(m) * side,
             };

@@ -1088,6 +1088,18 @@ fn color_halftone_draws_dark_dots_on_light_rgb() {
 }
 
 #[test]
+fn color_halftone_full_coverage_does_not_fill_an_empty_neighbor() {
+    let (w, h) = (96, 64);
+    let source = image(w, h, |x, _| grey(if x < w / 2 { 0 } else { 255 }));
+    let mut screened = source.clone();
+    fx("pixelate.colorHalftone", json!({"maxRadius": 8, "channel1": 0, "channel2": 0, "channel3": 0})).apply(&mut screened, w, h, &space(w, h));
+    let half_cell = (8.0 * std::f64::consts::SQRT_2 / 2.0) as usize;
+    let (x, y) = (w / 2 + half_cell, h / 2 + half_cell);
+    assert_eq!(at(&screened, w, x, y), at(&source, w, x, y), "the empty cell keeps its center beside a full cell");
+    assert_eq!(at(&screened, w, w / 2 - half_cell, y), at(&source, w, w / 2 - half_cell, y), "the full cell keeps its center");
+}
+
+#[test]
 fn color_halftone_sizes_its_dots_in_pixels_of_the_raster_effects_resolution() {
     // Max Radius counts the document's raster grid pixels (#3260): 16 px at 144 ppi (lines half a
     // point apart) are the 8 px of 72 ppi, and draw the same dots.
