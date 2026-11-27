@@ -6676,6 +6676,7 @@ pixel is taken into the working RGB space.
 An Eyedropper click inside an artboard that misses visible artwork samples that artboard's paper color.
 The sample combines the artboard's background color with the document's Simulate Colored Paper setting.
 The tool converts the combined sRGB color into the active RGB color space.
+With mesh points picked, a paper sample changes only those points, even when the Stroke proxy is active or other objects are selected.
 Gradient-stop picks and Alt-clicks require artwork. Clicks outside all artboards do not sample paper.
 
 ```json

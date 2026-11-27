@@ -571,7 +571,16 @@ impl Tool for EyedropperTool {
                 self.stop = None;
                 vec![Action::SwitchTool(back)]
             }
-            Click::Paper(color) => vec![Action::Exec("paint.sampleColor".into(), json!({ "color": color_json(&color) }))],
+            Click::Paper(color) => {
+                let color = color_json(&color);
+                let meshes = picked_meshes(cx, &self.mesh_points);
+                if meshes.is_empty() {
+                    vec![Action::Exec("paint.sampleColor".into(), json!({ "color": color }))]
+                } else {
+                    let ids: Vec<u64> = meshes.iter().map(|id| id.0).collect();
+                    vec![Action::Exec("paint.sampleColor".into(), json!({ "color": color, "stroke": false, "ids": ids }))]
+                }
+            }
             Click::MeshPoints(id, points, color) => {
                 let params = json!({ "id": id.0, "points": points, "color": color_json(&color), "keepModel": true });
                 vec![Action::Exec("object.mesh.setPointColor".into(), params)]

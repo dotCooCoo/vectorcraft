@@ -2,7 +2,7 @@
 
 use serde_json::json;
 use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::NodeId;
+use vectorcraft_doc::{NodeId, NodeKind};
 use vectorcraft_engine::{Session, UiRequest, ViewInfo};
 use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
 
@@ -138,4 +138,31 @@ fn a_gradient_stop_can_read_a_locked_source_and_return_to_the_gradient_tool() {
     let paint = s.doc().unwrap().doc.node(target).unwrap().appearance.fill_paint();
     let vectorcraft_color::Paint::Gradient(g) = paint else { panic!("gradient retained") };
     assert_eq!(g.gradient.stops[1].color.to_hex(), "#e23355");
+}
+
+#[test]
+fn paper_samples_recolor_only_picked_mesh_points_with_either_active_proxy() {
+    for fill_active in [true, false] {
+        let (mut s, mesh, target, _) = fixture();
+        s.execute("object.mesh.create", &json!({"ids": [mesh], "rows": 1, "cols": 1})).unwrap();
+        s.execute("select.set", &json!({"ids": [mesh, target]})).unwrap();
+        s.select_tool("eyedropper", ViewInfo::default()).unwrap();
+        s.set_tool_option("meshPoints", &json!([{"id": mesh, "index": 0}]));
+        s.execute("paint.toggleActive", &json!({"fill": fill_active})).unwrap();
+        let before = s.doc().unwrap().doc.clone();
+        let history = s.doc().unwrap().history.undo.len();
+        let mut expected = (*before).clone();
+        let NodeKind::Mesh(points) = &mut expected.node_mut(mesh).unwrap().kind else { panic!("mesh retained") };
+        assert_ne!(points.points[0].color, Color::WHITE);
+        points.points[0].color = Color::WHITE;
+        for kind in [PointerKind::Down, PointerKind::Up] {
+            s.pointer(&PointerEvent::new(kind, 350.0, 250.0), ViewInfo::default()).unwrap();
+        }
+        assert_eq!(json!(s.doc().unwrap().doc), json!(expected), "fill proxy active: {fill_active}");
+        assert_eq!(s.doc().unwrap().history.undo.len(), history + 1);
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert_eq!(json!(s.doc().unwrap().doc), json!(before));
+        s.execute("edit.redo", &json!({})).unwrap();
+        assert_eq!(json!(s.doc().unwrap().doc), json!(expected));
+    }
 }
