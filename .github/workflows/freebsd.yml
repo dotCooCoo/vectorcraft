@@ -6,7 +6,7 @@ name: FreeBSD
 # PRs that change the FreeBSD workflow or packaging itself still run it.
 on:
   push:
-    branches: [release]
+    branches: [release, ci/freebsd-oom-validate]
   pull_request:
     paths:
       - .github/workflows/freebsd.yml
